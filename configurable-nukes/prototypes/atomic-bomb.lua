@@ -36,6 +36,16 @@ local get_repeat_multiplier = function ()
   return setting
 end
 
+local clamp_max_distance = function (value, multiplier)
+  local modified_value = value * multiplier
+
+  if (modified_value > 65535) then
+    modified_value = 65535
+  end
+
+  return modified_value
+end
+
 local area_multiplier = get_area_multiplier()
 local damage_multiplier = get_damage_multiplier()
 local repeat_multiplier = get_repeat_multiplier()
@@ -455,20 +465,24 @@ data:extend({
             ease_out_duration = 60,
             delay = 0,
             strength = 6,
-            full_strength_max_distance = 200 * area_multiplier,
-            max_distance = 800 * area_multiplier
+            -- full_strength_max_distance = 200 * area_multiplier,
+            -- max_distance = 800 * area_multiplier
+            full_strength_max_distance = clamp_max_distance(200, area_multiplier),
+            max_distance = clamp_max_distance(800, area_multiplier)
           },
           {
             type = "play-sound",
             sound = sounds.nuclear_explosion(0.9),
             play_on_target_position = false,
-            max_distance = 1000 * area_multiplier,
+            -- max_distance = 1000 * area_multiplier,
+            max_distance = clamp_max_distance(1000, area_multiplier),
           },
           {
             type = "play-sound",
             sound = sounds.nuclear_explosion_aftershock(0.4),
             play_on_target_position = false,
-            max_distance = 1000 * area_multiplier,
+            -- max_distance = 1000 * area_multiplier,
+            max_distance = clamp_max_distance(1000, area_multiplier),
           },
           {
             type = "damage",

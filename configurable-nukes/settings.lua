@@ -7,7 +7,7 @@ data:extend({
     setting_type = "startup",
     order = "cba",
     default_value = 1,
-    maximum_value = 111,
+    maximum_value = 11,
     minimum_value = 0.01
   },
   {
@@ -16,7 +16,7 @@ data:extend({
     setting_type = "startup",
     order = "cbb",
     default_value = 1,
-    maximum_value = 111,
+    maximum_value = 11,
     minimum_value = 0.01
   },
   {
@@ -25,7 +25,7 @@ data:extend({
     setting_type = "startup",
     order = "cbc",
     default_value = 1,
-    maximum_value = 111,
+    maximum_value = 11,
     minimum_value = 0.01
   },
   {
