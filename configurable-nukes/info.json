@@ -2,9 +2,9 @@
 	"name": "configurable-nukes",
 	"version": "0.1.0",
 	"factorio_version": "2.0",
-	"title": "configurable-nukes",
+	"title": "Configurable Nukes",
 	"author": "TheEckelmonster",
-	"description": "See title",
+	"description": "Adds configurable settings for the atomic bomb's explosion radius, damage, and repeat modifiers. Also adds optional, configurable pollution on detonation",
 	"dependencies": [
 		"base >= 2.0.55"
 	]

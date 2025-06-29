@@ -28,4 +28,13 @@ data:extend({
     maximum_value = 111,
     minimum_value = 0.01
   },
+  {
+    type = "double-setting",
+    name = "configurable-nukes-pollution",
+    setting_type = "runtime-global",
+    order = "cbd",
+    default_value = 0.166,
+    maximum_value = 11,
+    minimum_value = 0
+  },
 })

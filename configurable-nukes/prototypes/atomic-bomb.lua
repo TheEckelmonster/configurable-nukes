@@ -636,8 +636,31 @@ data:extend({
                   }
                 }
               }
-            }
-          }
+            },
+          },
+          {
+              type = "nested-result",
+              action = {
+                action_delivery = {
+                  target_effects = {
+                    {
+                      type = "script",
+                      effect_id = "atomic-bomb-pollution"
+                    }
+                  },
+                  type = "instant"
+                },
+                -- radius = 64 * explosion_modifier + 1,
+                radius = 26 * area_multiplier + 1,
+                -- repeat_count = 128 * explosion_modifier + 1,
+                repeat_count = 1000 * repeat_multiplier + 1,
+                repeat_count_deviation = 42 * repeat_multiplier,
+                show_in_tooltip = false,
+                target_entities = false,
+                trigger_from_target = true,
+                type = "area"
+              },
+            },
         }
       }
     },
