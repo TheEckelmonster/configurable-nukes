@@ -1,5 +1,5 @@
 -- If already defined, return
-if _log_constants_functions and _log_constants_functions.sdpr then
+if _log_constants_functions and _log_constants_functions.configurable_nukes then
   return _log_constants_functions
 end
 
@@ -84,7 +84,7 @@ log_constants_functions.levels.get_level_by_name = function (level)
   return Log_Constants.levels[Log_Constants.NONE.num_val].level
 end
 
-log_constants_functions.sdpr = true
+log_constants_functions.configurable_nukes = true
 
 local _log_constants_functions = log_constants_functions
 
