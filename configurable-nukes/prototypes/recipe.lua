@@ -75,7 +75,7 @@ local found_func = function (param, param_val, t, type)
     for _, j in pairs(t) do
         if (j.name == param) then
             found_match = true
-            log("found " .. type .."; breaking")
+            -- log("found " .. type .."; breaking")
             break
         elseif (j.name:find(param, 1, true)) then
             possible_matches[j.name] = { param = param, param_val = param_val, }
