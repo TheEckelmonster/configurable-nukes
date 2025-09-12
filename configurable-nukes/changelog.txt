@@ -1,4 +1,35 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: 2025-09-12
+  Minor Features:
+    - Added additional, optional, "Fire wave" setting
+      -> Things in the blast radius will be set on fire
+    - Added additional settings for the atomic-bomb item
+      - Range_Modifier
+        -> Multiplier of the range at which nukes can be fired from a rocket launcher, default = 1.5
+      - Cooldown_Modifier
+        -> Multiplier of the cooldown between firing shots, default = 10
+      - Stack_Size
+        -> Stack size of atomic-bombs, default = 10
+      - Weight_Modifier
+        -> Multiplier of the atomic-bombs weight; affects whether they can be launched into orbit or not, default = 1.5 * tons
+    - Added additional settings for the atomic-bomb recipe
+      - Crafting_time
+        -> Crafting time, in seconds, for one crafting cycle of the atomic-bomb recipe
+      - Input_Multiplier
+        -> Multiplier of the quantity needed for each input item to the atomic-bomb recipe
+      - Result_Count
+        -> Number of atomic-bombs created from one crafting cycle
+      - Recipe
+        -> String setting used to define the recipe and amounts for each ingredient for the atomic-bomb recipe
+      - i.e.
+        -> Vanilla = processing-unit=10,explosives=10,uranium-235=30
+        -> Space Age = processing-unit=10,explosives=10,uranium-235=100
+        -> Custom Defined = item-name-1=amount-1,item-name-2=amount-2,item-name-3=amount-3, etc...
+      - Recipe_Allow_None
+        -> Whether to fallback to the default vanilla recipe if none of the provided ingredients can be found
+        -> Allows for free crafting of nukes if enabled with no recipe set (i.e. an empty string)
+---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 2025-06-29
   Minor Features:
