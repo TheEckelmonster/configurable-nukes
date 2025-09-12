@@ -1,10 +1,10 @@
 -- If already defined, return
-if _log and _log.sdpr then
+if _log and _log.configurable_nukes then
   return _log
 end
 
-Log_Constants = require("libs.log.log-constants")
-Log_Constants_Functions = require("libs.log.log-constants-functions")
+local Log_Constants = require("libs.log.log-constants")
+local Log_Constants_Functions = require("libs.log.log-constants-functions")
 
 local Log = {}
 
@@ -37,12 +37,13 @@ end
 
 function Log.get_log_level()
   local _log_level = Log_Constants.levels[Log_Constants.NONE.num_val]
+  local log_level = {
+    level = Log_Constants.levels[Log_Constants.NONE.num_val],
+    valid = false
+  }
+
   if (settings and settings.global and settings.global[Log_Constants.settings.DEBUG_LEVEL.name]) then
     _log_level = settings.global[Log_Constants.settings.DEBUG_LEVEL.name].value
-    log_level = {
-      level = Log_Constants.levels[Log_Constants.NONE.num_val],
-      valid = false
-    }
 
     if (log_level and _log_level == Log_Constants.NONE.string_val) then
       log_level = Log_Constants.levels[Log_Constants.NONE.num_val]
@@ -59,13 +60,11 @@ function Log.get_log_level()
     end
 
     if (not storage.log_level and log_level) then
-      -- storage.log_level = log_level
       storage.log_level = {
         level = log_level,
         valid = true
       }
     elseif (storage.log_level and log_level) then
-      -- storage.log_level = log_level
       storage.log_level = {
         level = log_level,
         valid = true
@@ -96,19 +95,18 @@ function Log.set_log_level(new_log_level)
     return
   end
 
-  -- log(serpent.block(new_log_level))
   if (not new_log_level or not storage) then return default_return_val() end
 
   if (  new_log_level.level
-  and new_log_level.level.num_val
-  and new_log_level.level.num_val < 0)
+    and new_log_level.level.num_val
+    and new_log_level.level.num_val < 0)
   then
     return default_return_val()
   end
 
   if (  new_log_level.level
-  and new_log_level.level.num_val
-  and new_log_level.level.num_val >= 0)
+    and new_log_level.level.num_val
+    and new_log_level.level.num_val >= 0)
   then
     -- log("Setting log level")
     storage.log_level = {
@@ -161,7 +159,7 @@ function log_message(message, log_level, traceback)
 
   local _log_level = Log.get_log_level()
   if (not _log_level or not _log_level.valid) then
-    log_print_message("Log level was invalid", { level = Log_Constants.levels[Log_Constants.NONE.num_val], valid = true })
+    log_print_message("Log level was invalid", { level = Log_Constants.levels[Log_Constants.NONE.num_val].level, valid = true })
     return
   end
 
@@ -172,7 +170,7 @@ function log_message(message, log_level, traceback)
     and _log_level.valid
     and _log_level.level
     and log_level.level.num_val >= _log_level.level.num_val) then
-    log_print_message(message, log_level, traceback)
+      log_print_message(message, log_level, traceback)
   end
 end
 
@@ -225,21 +223,16 @@ function log_print_message(message, log_level, traceback)
 
   if (traceback_setting and traceback_setting.value) then traceback = traceback_setting.value end
 
-  -- Always print the traceback for a nil message
-  -- log("traceback: " .. serpent.block(traceback))
-  -- log("message: " .. serpent.block(message))
-  if (message == nil and not traceback) then
-    traceback = true
-  end
-
   -- Always traceback messages that were broadcasted via logging
-  -- or anything that used the .none(..) method
+  -- -- or anything that used the .none(..) method
+    -- -> Do I want to traceback even the .none(..) method?
   if (  traceback
-    or (  log_level
-      and log_level.valid
-      and log_level.level
-      and log_level.level.num_val
-        >= Log_Constants.levels[Log_Constants.NONE.num_val].level.num_val))
+    -- or (  log_level
+    --   and log_level.valid
+    --   and log_level.level
+    --   and log_level.level.num_val
+    --     >= Log_Constants.levels[Log_Constants.NONE.num_val].level.num_val)
+    )
   then
     log(debug.traceback())
     message = "(traced) " .. serpent.block(message)
@@ -274,7 +267,7 @@ function is_string(value)
   return tostring(value) and true or false
 end
 
-Log.sdpr = true
+Log.configurable_nukes = true
 
 local _log = Log
 

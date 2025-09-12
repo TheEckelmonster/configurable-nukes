@@ -5,45 +5,56 @@ local sounds = require("__base__.prototypes.entity.sounds")
 
 -- AREA_MULTIPLIER
 local get_area_multiplier = function ()
-  local setting = 1
+    local setting = 1
 
-  if (settings and settings.startup and settings.startup["configurable-nukes-area-multiplier"]) then
-    setting = settings.startup["configurable-nukes-area-multiplier"].value
-  end
+    if (settings and settings.startup and settings.startup["configurable-nukes-area-multiplier"]) then
+        setting = settings.startup["configurable-nukes-area-multiplier"].value
+    end
 
-  return setting
+    return setting
 end
 
 -- DAMAGE_MULTIPLIER
 local get_damage_multiplier = function ()
-  local setting = 1
+    local setting = 1
 
-  if (settings and settings.startup and settings.startup["configurable-nukes-damage-multiplier"]) then
-    setting = settings.startup["configurable-nukes-damage-multiplier"].value
-  end
+    if (settings and settings.startup and settings.startup["configurable-nukes-damage-multiplier"]) then
+        setting = settings.startup["configurable-nukes-damage-multiplier"].value
+    end
 
-  return setting
+    return setting
 end
 
 -- REPEAT_MULTIPLIER
 local get_repeat_multiplier = function ()
-  local setting = 1
+    local setting = 1
 
-  if (settings and settings.startup and settings.startup["configurable-nukes-repeat-multiplier"]) then
-    setting = settings.startup["configurable-nukes-repeat-multiplier"].value
-  end
+    if (settings and settings.startup and settings.startup["configurable-nukes-repeat-multiplier"]) then
+        setting = settings.startup["configurable-nukes-repeat-multiplier"].value
+    end
 
-  return setting
+    return setting
+end
+
+-- FIRE_WAVE
+local get_fire_wave = function ()
+    local setting = false
+
+    if (settings and settings.startup and settings.startup["configurable-nukes-fire-wave"]) then
+        setting = settings.startup["configurable-nukes-fire-wave"].value
+    end
+
+    return setting
 end
 
 local clamp_max_distance = function (value, multiplier)
-  local modified_value = value * multiplier
+    local modified_value = value * multiplier
 
-  if (modified_value > 65535) then
-    modified_value = 65535
-  end
+    if (modified_value > 65535) then
+        modified_value = 65535
+    end
 
-  return modified_value
+    return modified_value
 end
 
 local area_multiplier = get_area_multiplier()
@@ -99,6 +110,44 @@ local atomic_bomb_ground_zero_projectile_action =
         }
     }
 }
+
+local atomic_bomb_fire_action =
+{
+    type = "nested-result",
+    action = {
+        {
+            type = "area",
+            radius = 26 * area_multiplier + 1,
+            repeat_count = 10 * repeat_multiplier + 1,
+            action_delivery =
+            {
+                type = "instant",
+                radius = 2.5 * area_multiplier + 1,
+                repeat_count = 10 * repeat_multiplier + 1,
+                target_effects =
+                {
+                    {
+                        type = "create-sticker",
+                        sticker = "fire-sticker",
+                        show_in_tooltip = true
+                    },
+                    {
+                        type = "create-fire",
+                        entity_name = "fire-flame",
+                        repeat_count = 10 * repeat_multiplier + 1,
+                        repeat_count_deviation = 42 * repeat_multiplier,
+                        show_in_tooltip = true,
+                        initial_ground_flame_count = 2
+                    }
+                }
+            }
+        }
+    },
+}
+
+if (not get_fire_wave()) then
+    atomic_bomb_fire_action = nil
+end
 
 data:extend({
 
@@ -303,25 +352,6 @@ data:extend({
     speed_modifier = { 1.0, 0.707 },
     action =
     {
-    --   {
-    --     type = "area",
-    --     radius = 3,
-    --     ignore_collision_condition = true,
-    --     action_delivery =
-    --     {
-    --       type = "instant",
-    --       target_effects =
-    --       {
-    --         type = "damage",
-    --         vaporize = false,
-    --         lower_distance_threshold = 0,
-    --         upper_distance_threshold = 35,
-    --         lower_damage_modifier = 1,
-    --         upper_damage_modifier = 0.1,
-    --         damage = {amount = 400, type = "explosion"}
-    --       }
-    --     }
-    --   }
         atomic_bomb_wave_action
     },
     animation = nil,
@@ -429,6 +459,7 @@ data:extend({
   {
     type = "projectile",
     name = "atomic-rocket",
+    icon = "__base__/graphics/icons/atomic-bomb.png",
     flags = {"not-on-map"},
     hidden = true,
     acceleration = 0.005,
@@ -653,28 +684,28 @@ data:extend({
             },
           },
           {
-              type = "nested-result",
-              action = {
-                action_delivery = {
-                  target_effects = {
-                    {
-                      type = "script",
-                      effect_id = "atomic-bomb-pollution"
-                    }
-                  },
-                  type = "instant"
+            type = "nested-result",
+            action = {
+              action_delivery = {
+                target_effects = {
+                  {
+                    type = "script",
+                    effect_id = "atomic-bomb-pollution"
+                  }
                 },
-                -- radius = 64 * explosion_modifier + 1,
-                radius = 26 * area_multiplier + 1,
-                -- repeat_count = 128 * explosion_modifier + 1,
-                repeat_count = 1000 * repeat_multiplier + 1,
-                repeat_count_deviation = 42 * repeat_multiplier,
-                show_in_tooltip = false,
-                target_entities = false,
-                trigger_from_target = true,
-                type = "area"
+                type = "instant"
               },
+              radius = 26 * area_multiplier + 1,
+              repeat_count = 1000 * repeat_multiplier + 1,
+              repeat_count_deviation = 42 * repeat_multiplier,
+              show_in_tooltip = false,
+              target_entities = false,
+              trigger_from_target = true,
+              type = "area"
             },
+          },
+          atomic_bomb_fire_action,
+
         }
       }
     },

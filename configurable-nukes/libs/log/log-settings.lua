@@ -1,5 +1,5 @@
 -- If already defined, return
-if _log_settings and _log_settings.sdpr then
+if _log_settings and _log_settings.configurable_nukes then
   return _log_settings
 end
 
@@ -22,7 +22,7 @@ data:extend({
   Log_Constants.settings.DO_NOT_PRINT,
 })
 
-log_settings.sdpr = true
+log_settings.configurable_nukes = true
 
 local _log_settings = log_settings
 
