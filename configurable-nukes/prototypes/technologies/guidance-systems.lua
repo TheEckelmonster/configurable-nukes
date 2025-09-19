@@ -145,7 +145,7 @@ local get_guidance_systems_research_ingredients = function ()
             if (k == "tool") then found_func(param, param_val, v, "tool")
             end
 
-            if (found_match) then log("found match; breaking"); break end
+            if (found_match) then break end
         end
 
         if (found_match) then table.insert(ingredients, { param, tonumber(param_val), }) end

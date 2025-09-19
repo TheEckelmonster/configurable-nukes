@@ -3,9 +3,9 @@ if _planet_service and _planet_service.configurable_nukes then
     return _planet_service
 end
 
-local Constants = require("libs.constants.constants")
+local Constants = require("scripts.constants.constants")
 local Log = require("libs.log.log")
-local Rocket_Silo_Meta_Repository = require("scripts.repositories.satellite-meta-repository")
+local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 
 local planet_service = {}
 

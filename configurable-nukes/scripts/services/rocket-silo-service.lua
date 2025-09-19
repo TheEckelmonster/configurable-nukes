@@ -34,8 +34,6 @@ function rocket_silo_service.cargo_pod_finished_ascending(event)
     Log.debug("rocket_silo_service.cargo_pod_finished_ascending")
     Log.info(event)
 
-    log("rocket_silo_service.cargo_pod_finished_ascending")
-
     if (not event) then return end
     if (not event.launched_by_rocket) then return end
     if (not event.cargo_pod or not event.cargo_pod.valid) then return end

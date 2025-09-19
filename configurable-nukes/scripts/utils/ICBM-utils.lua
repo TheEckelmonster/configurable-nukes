@@ -79,7 +79,6 @@ local icbm_utils = {}
 function icbm_utils.cargo_pod_finished_ascending(data)
     Log.debug("icbm_utils.cargo_pod_finished_ascending")
     Log.info(data)
-    log("icbm_utils.cargo_pod_finished_ascending")
 
     if (data == nil) then return -1 end
     if (data.surface == nil or not data.surface.valid) then return -1 end

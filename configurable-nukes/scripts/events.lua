@@ -1,4 +1,5 @@
 local Log = require("libs.log.log")
+local Planet_Controller = require("scripts.controllers.planet-controller")
 local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-contoller")
@@ -77,8 +78,9 @@ script.on_event(defines.events.on_tick, Configurable_Nukes_Controller.do_tick)
 
 script.on_event(defines.events.on_research_finished, Configurable_Nukes_Controller.research_finished)
 
-script.on_event(defines.events.on_player_selected_area, Rocket_Silo_Controller.launch_rocket)
+script.on_event(defines.events.on_surface_created, Planet_Controller.on_surface_created)
 
+script.on_event(defines.events.on_player_selected_area, Rocket_Silo_Controller.launch_rocket)
 script.on_event(defines.events.on_cargo_pod_finished_ascending, Rocket_Silo_Controller.cargo_pod_finished_ascending)
 
 --[[ rocket-silo tracking ]]

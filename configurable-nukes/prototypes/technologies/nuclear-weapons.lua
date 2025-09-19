@@ -97,8 +97,6 @@ local get_nuclear_weapons_research_ingredients = function ()
         setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESERACH_INGREDIENTS.name].value
     end
 
-    log(setting)
-
     local ingredients = {}
 
     --[[ Looks for:
@@ -166,8 +164,6 @@ local get_nuclear_weapons_research_ingredients = function ()
             { "space-science-pack",      1 },
         }
     end
-
-    log(serpent.block(ingredients))
 
     return ingredients
 end
