@@ -4,8 +4,14 @@ if _constants and _constants.configurable_nukes then
 end
 
 local Log = require("libs.log.log")
+local String_Utils = require("scripts.utils.string-utils")
+local Planet_Data = require("scripts.data.planet-data")
 
-local constants = {}
+local locals = {}
+
+local constants = {
+    mod_name = "Configurable-Nukes"
+}
 
 local depth = function ()
     local self = { depth = 0 }
@@ -26,6 +32,7 @@ constants.table = {
     calls = 0,
     file = {
         prefix = "configurable-nukes/",
+        -- prefix = "cn_",
         postfix = ".json",
     },
     depth = depth(),
@@ -153,7 +160,7 @@ constants.table = {
 
         local do_traverse; do_traverse = function(data, file_name, found_data, optionals)
 
-            if (type(optionals.max_depth) == "number" and depth.get() > optionals.max_depth) then return --[[else log("depth = " .. depth.get())]] end
+            if (not optionals.full and type(optionals.max_depth) == "number" and depth.get() > optionals.max_depth) then return --[[else log("depth = " .. depth.get())]] end
 
             if (depth.get() == 0) then
                 -- constants.table.calls = 0
@@ -182,7 +189,7 @@ constants.table = {
                         end
                     else
                         local func; func = function (data, file_name, found_data, optionals)
-                            if (type(optionals.max_depth) == "number" and depth.get() > optionals.max_depth) then return --[[else log("depth = " .. depth.get())]] end
+                            if (not optionals.full and type(optionals.max_depth) == "number" and depth.get() > optionals.max_depth) then return --[[else log("depth = " .. depth.get())]] end
 
                             if (constants.table.calls > 2 ^ 16) then return end
                             constants.table.calls = constants.table.calls + 1
@@ -254,6 +261,63 @@ constants.table = {
         return do_traverse(data, file_name, found_data, optionals)
     end,
 }
+
+function constants.get_planets(reindex)
+    if (not reindex and constants.planets and #constants.planets > 0) then
+        return constants.planets
+    end
+
+    Log.debug("Reindexing constants.planets")
+    return locals.get_planets()
+end
+
+locals.get_planets = function()
+    constants.planets = {}
+    constants.planets_dictionary = {}
+
+    if (prototypes) then
+        local planet_prototypes = prototypes.mod_data["configurable-nukes-mod-data"]
+
+        if (planet_prototypes and type(planet_prototypes) == "table") then
+            Log.debug("Found planet prototypes")
+        end
+        Log.info(planet_prototypes)
+
+        for planet_name, planet_data in pairs(planet_prototypes.data) do
+            if (not String_Utils.find_invalid_substrings(planet_name)
+                    and planet_data and type(planet_data) == "table")
+            then
+                Log.debug("Found valid planet")
+                Log.info(planet_data)
+                if (planet_name and game) then
+                    local planet_surface = game.get_surface(planet_name)
+                    local planet_magnitude = planet_data.magnitude
+
+                    if (not planet_magnitude or type(planet_magnitude) ~= "number" or planet_magnitude <= 0) then
+                        Log.warn("Planet magnitude not found, or was invalid - defaulting to 1")
+                        planet_magnitude = 1
+                    end
+
+                    -- Surface can be nil
+                    -- Trying to use on_surface_created event to add them to the appropriate planet after the fact
+                    local new_planet_data = Planet_Data:new({
+                        name = planet_name,
+                        surface = planet_surface,
+                        magnitude = planet_magnitude,
+                        valid = true,
+                    })
+
+                    Log.debug("Adding planet")
+                    Log.info(new_planet_data)
+                    table.insert(constants.planets, new_planet_data)
+                    constants.planets_dictionary[planet_name] = new_planet_data
+                end
+            end
+        end
+    end
+
+    return constants.planets
+end
 
 constants.configurable_nukes = true
 

@@ -50,6 +50,80 @@ local get_atomic_bomb_recipe_allow_none = function ()
 
     return setting
 end
+-- ATOMIC_BOMB_CRAFTING_MACHINE
+local get_atomic_bomb_crafting_machine = function ()
+    local setting = Startup_Settings_Constants.settings.ATOMIC_BOMB_CRAFTING_MACHINE.default_value
+
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_BOMB_CRAFTING_MACHINE.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_BOMB_CRAFTING_MACHINE.name].value
+    end
+
+    return setting
+end
+-- ATOMIC_BOMB_ADDITIONAL_CRAFTING_MACHINES
+local get_atomic_bomb_additional_crafting_machines = function ()
+    local setting = Startup_Settings_Constants.settings.ATOMIC_BOMB_ADDITIONAL_CRAFTING_MACHINES.default_value
+
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_BOMB_ADDITIONAL_CRAFTING_MACHINES.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_BOMB_ADDITIONAL_CRAFTING_MACHINES.name].value
+    end
+
+    local crafting_machines = {}
+
+    --[[ Looks for:
+            >= 0 commas,
+            >= 0 space characters,
+            >= 1 alphanumerics/dashes/space characters,
+            >= 0 space characters,
+            >= 0 commas,
+    ]]
+    local search_pattern = ",*%s*([%w%-%s]+)%s*,*"
+    local i, j, param = string.find(setting, search_pattern, 1)
+    local possible_matches = {}
+    local found_match = false
+
+    local found_func = function(param, t, type)
+        for _, j in pairs(t) do
+            if (j.name == param) then
+                found_match = true
+                -- log("found " .. type .."; breaking")
+                break
+            elseif (j.name:find(param, 1, true)) then
+                possible_matches[j.name] = { param = param, }
+            end
+        end
+    end
+
+    while param ~= nil do
+        --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
+        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+
+        for k, v in pairs(data.raw) do
+            found_match = false
+            if (k == "recipe-category") then
+                found_func(param, v, "recipe-category")
+            end
+
+            if (found_match) then break end
+        end
+
+        if (found_match) then table.insert(crafting_machines, param) end
+
+        setting = string.sub(setting, j + 1, #setting)
+
+        i, j, param = string.find(setting, search_pattern, 1)
+    end
+
+    -- if (#crafting_machines <= 0) then
+    --     for k, v in pairs(possible_matches) do
+    --         table.insert(crafting_machines, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
+    --     end
+    -- end
+
+    if (#crafting_machines <= 0) then crafting_machines = nil end
+
+    return crafting_machines
+end
 
 local ingredients = {}
 local atomic_bomb_recipe_string = get_atomic_bomb_recipe_string()
@@ -75,7 +149,6 @@ local found_func = function (param, param_val, t, type)
     for _, j in pairs(t) do
         if (j.name == param) then
             found_match = true
-            -- log("found " .. type .."; breaking")
             break
         elseif (j.name:find(param, 1, true)) then
             possible_matches[j.name] = { param = param, param_val = param_val, }
@@ -105,7 +178,7 @@ while param ~= nil and param_val ~= nil do
         elseif (k == "upgrade-item") then found_func(param, param_val, v, "upgrade-item")
         end
 
-        if (found_match) then log("found match; breaking"); break end
+        if (found_match) then break end
     end
 
     if (found_match) then table.insert(ingredients, { type = "item", name = param, amount = param_val * get_input_multiplier(), }) end
@@ -139,7 +212,9 @@ local recipe_atomic_bomb =
     enabled = false,
     energy_required = get_crafting_time(),
     ingredients = ingredients,
-    results = {{ type = "item", name = "atomic-bomb", amount = get_result_count() }}
+    results = {{ type = "item", name = "atomic-bomb", amount = get_result_count() }},
+    category = get_atomic_bomb_crafting_machine(),
+    additional_categories = get_atomic_bomb_additional_crafting_machines(),
 }
 
 data:extend({recipe_atomic_bomb})

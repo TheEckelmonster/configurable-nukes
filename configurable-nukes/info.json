@@ -2,11 +2,12 @@
 	"name": "configurable-nukes",
 	"version": "0.3.0",
 	"factorio_version": "2.0",
-	"title": "Configurable Nukes",
+	"title": "Configurable Nukes & ICBMs",
 	"author": "TheEckelmonster",
-	"description": "Makes most/many aspects of the atomic bomb configurable including its explosion radius, damage, and repeat modifiers; range, cooldown, stack size, and weight; as well as its recipe. Also adds additional optional settings, including configurable pollution on detonation, as well as a fire wave on detonation.",
+	"description": "Makes most/many aspects of the atomic bomb configurable, and affected by quality; as well as introduces ICBMs and an atomic warhead: why shouldn't rocket-silo rockets be used offensively?",
 	"dependencies": [
 		"base >= 2.0.66",
-		"? space-age >= 2.0.66"
+		"? space-age >= 2.0.66",
+		"? quality >= 2.0.66"
 	]
 }
