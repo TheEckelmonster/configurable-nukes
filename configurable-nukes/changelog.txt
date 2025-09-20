@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.1
+Date: 2025-09-20
+  Bug Fixes:
+    - Fixed atomic-rockets being invisible when fired from a Spidertron while in "automatic" fire mode, while the Quality mod is present
+    - Corrected the orientation of atomic-rockets when fired from a Spidertron to not always be the same direction as the target
+      - Vanilla behavior is for rockets to be fired initially in the direction the Spidertron's head is facing
+      - Orientation is still slightly off if manually firing from a Spidertron, working on this
+---------------------------------------------------------------------------------------------------
 Version: 0.3.0
 Date: 2025-09-19
   Minor Features:
