@@ -13,6 +13,12 @@ local constants = {
     mod_name = "Configurable-Nukes"
 }
 
+constants.direction_table = {}
+
+for k, v in pairs(defines.direction) do
+    constants.direction_table[v] = k
+end
+
 local depth = function ()
     local self = { depth = 0 }
     local get = function () return self.depth end
