@@ -1,0 +1,35 @@
+local Data = require("scripts.data.data")
+local Log = require("libs.log.log")
+
+local rocket_silo_meta_data = Data:new()
+
+rocket_silo_meta_data.planet_name = nil
+rocket_silo_meta_data.rocket_silos = {}
+rocket_silo_meta_data.surface_index = -1
+
+function rocket_silo_meta_data:new(o)
+    Log.debug("rocket_silo_meta_data:new")
+    Log.info(o)
+
+    local defaults = {
+        planet_name = self.planet_name,
+        rocket_silos = {},
+        surface_index = self.surface_index,
+    }
+
+    local obj = o or defaults
+
+    for k, v in pairs(defaults) do if (obj[k] == nil and type(v) ~= "function") then obj[k] = v end end
+
+    obj = Data:new(obj)
+
+    setmetatable(obj, self)
+    self.__index = self
+
+    return obj
+end
+
+setmetatable(rocket_silo_meta_data, Data)
+local Rocket_Silo_Meta_Data = rocket_silo_meta_data:new(Rocket_Silo_Meta_Data)
+
+return Rocket_Silo_Meta_Data
