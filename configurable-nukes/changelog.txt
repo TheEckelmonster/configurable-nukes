@@ -1,4 +1,31 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+Date: 2025-09-19
+  Minor Features:
+    - Atomic-bombs/atomic-rockets are now affected by quality if the "quality" mod is installed
+      - Quality now also affects the AoE and Repeat modifiers of a nuclear explosion; i.e. more dakka, bigger boom
+    - Added ICBMs
+      - Allows the launching of atomic-warheads (and optionally, atomic-bombs) via a rocket-silo to a designated target
+        -> Target designated via the new ICBM-remote, unlocked from researching ICBMs
+        -> Launches from the closest rocket-silo, with a valid payload (atomic bomb/rocket and/or atomic warhead), to the designated target
+      - Added rocket-control-units and guidance systems research
+        - The further the target is from the launching rocket-silo, the more likely the ICBM  will deviate off course
+          -> Optional, "Perfect Guidance" option prevents any deviation, ignoring research level
+        - Guidance systems research reduces the probability of target deviation by %10 each level (10 levels), i.e. at level 10, ICBMs will never deviate off target
+          -> Guidance deviation threshold setting is the base chance that an ICBM will not deviate off target while en route (checked every 8 chunks worth of distance to target)
+      - Unlocked after researching space, production, and utility science
+      - Distance to/time to target are affected by planet magnitude
+        -> i.e. the larger the magnitude, the larger the planet, thus the longer it takes an ICBM to reach its target
+        -> vice-versa for a smaller planet
+        -> Nauvis has a magnitude of 1; Space Age Planets: Vulcanus = 1.5, Gleba = 1.1, Aquilo = 1, Fulgora = 0.9
+    - Added, optional and configurable, atomic warhead
+      - Much more expensive (by default, configurable) than an atomic bomb, and can only be used via a rocket-silo, but can remotely target any position on the same surface as the launching rocket-silo (interplanetary ballistic missiles are on my todo list for the future)
+      - Distinct from the atomic bomb, but (should) have equivalent matching configurable settings
+    - Added optional "Nuclear" ammo category
+      -> If disabled (default), atomic bombs/rockets and the atomic warhead default to the "projectile" ammo category, benefitting instead from explosive weapons damage research (Vanilla behavior)
+      - Separate category specifically for the atomic-bomb and atomic-warhead
+      - Allows for/adds, configurable, inifinite research for nuclear weapons damage
+---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2025-09-12
   Minor Features:
