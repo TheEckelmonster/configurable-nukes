@@ -509,8 +509,6 @@ local atomic_bomb = {
             ease_out_duration = 60,
             delay = 0,
             strength = 6,
-            -- full_strength_max_distance = 200 * area_multiplier,
-            -- max_distance = 800 * area_multiplier
             full_strength_max_distance = clamp_max_distance(200, area_multiplier),
             max_distance = clamp_max_distance(800, area_multiplier)
           },
@@ -518,14 +516,12 @@ local atomic_bomb = {
             type = "play-sound",
             sound = Sounds.nuclear_explosion(0.9),
             play_on_target_position = false,
-            -- max_distance = 1000 * area_multiplier,
             max_distance = clamp_max_distance(1000, area_multiplier),
           },
           {
             type = "play-sound",
             sound = Sounds.nuclear_explosion_aftershock(0.4),
             play_on_target_position = false,
-            -- max_distance = 1000 * area_multiplier,
             max_distance = clamp_max_distance(1000, area_multiplier),
           },
           {

@@ -404,7 +404,6 @@ startup_settings_constants.settings = {
         name = prefix .. "rocket-control-unit-weight-modifier",
         setting_type = "startup",
         order = "ddc",
-        -- default_value = 0.0025,
         default_value = 0.2,
         maximum_value = tons,
         minimum_value = 0.0005

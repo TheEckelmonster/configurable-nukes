@@ -89,7 +89,7 @@ function icbm_utils.cargo_pod_finished_ascending(data)
     local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(data.surface.name)
 
     local k, icbm_data = next(icbm_meta_data.item_numbers, nil)
-    while k and (not k or icbm_data) do
+    while k or (not k and icbm_data) do
         if (icbm_data and icbm_data.created <= game.tick) then
             icbm_meta_data.item_numbers[icbm_data.item_number] = nil
             break
