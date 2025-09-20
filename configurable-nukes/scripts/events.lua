@@ -47,9 +47,9 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
         local quality = event.quality
         quality = quality and prototypes.quality[quality] and quality or "normal"
 
-        local orientation = event.source_entity and event.source_entity.valid and (event.source_entity.type == "spider-vehicle" and event.source_entity.torso_orientation * 16 or event.source_entity.orientation)
+        local orientation = event.source_entity and event.source_entity.valid and (event.source_entity.type == "spider-vehicle" and event.source_entity.torso_orientation or event.source_entity.orientation)
         local _orientation = orientation
-        orientation = math.floor(orientation)
+        orientation = math.floor(orientation * 16)
 
         if (target == nil and event.target_entity and event.target_entity.valid) then
             target = event.target_entity.position
