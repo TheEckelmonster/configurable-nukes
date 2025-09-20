@@ -1,3 +1,4 @@
+local Constants = require("scripts.constants.constants")
 local Log = require("libs.log.log")
 local Planet_Controller = require("scripts.controllers.planet-controller")
 local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
@@ -28,29 +29,37 @@ end
 script.on_event(defines.events.on_script_trigger_effect, function (event)
     Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
     Log.info(event)
+
     if (    event and event.effect_id
         and event.effect_id ~= "atomic-bomb-pollution"
         and event.effect_id ~= "atomic-warhead-pollution"
         and event.effect_id ~= "atomic-bomb-fired")
     then
+        Log.debug("returning")
         return
     end
-    if (not game or not event.surface_index or game.surfaces[event.surface_index] == nil) then return end
+    if (not game or not event.surface_index or game.get_surface(event.surface_index) == nil) then return end
 
-    local surface = game.surfaces[event.surface_index]
+    local surface = game.get_surface(event.surface_index)
 
     if (event.effect_id == "atomic-bomb-fired") then
         local source, target = event.source_position, event.target_position
         local quality = event.quality
         quality = quality and prototypes.quality[quality] and quality or "normal"
 
-        local orientation = event.source_entity and event.source_entity.valid and (event.source_entity.type == "spider-vehicle" and event.source_entity.torso_orientation or event.source_entity.orientation)
+        local orientation = event.source_entity and event.source_entity.valid and (event.source_entity.type == "spider-vehicle" and event.source_entity.torso_orientation * 16 or event.source_entity.orientation)
+        local _orientation = orientation
+        orientation = math.floor(orientation)
+
+        if (target == nil and event.target_entity and event.target_entity.valid) then
+            target = event.target_entity.position
+        end
 
         if (source ~= nil and target ~= nil) then
-            surface.create_entity({
+            local entity = surface.create_entity({
                 name = "atomic-rocket" .. "-" .. quality,
                 position = source,
-                direction = orientation,
+                direction = defines.direction[Constants.direction_table[orientation]],
                 force = event.cause_entity and event.cause_entity.valid and event.cause_entity.force or "player",
                 target = target,
                 source = source,
@@ -58,6 +67,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 -- speed = 0.1 * math.exp(1),
                 speed = 0.05,
             })
+            if (entity and entity.valid and event.source_entity.type == "spider-vehicle") then entity.orientation = _orientation end
         end
     else
         local position = event.source_position or event.target_position
