@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.1
+Date: 2025-09-21
+  Bug Fixes:
+    - Fixed ICBMs (rocket-silo rockets with a valid payload) not being circuit launchable when space-age was not present
+      - Should now be able to launch ICBMs via a circuit-network when playing Vanilla
+---------------------------------------------------------------------------------------------------
 Version: 0.4.0
 Date: 2025-09-21
   Minor Features:
