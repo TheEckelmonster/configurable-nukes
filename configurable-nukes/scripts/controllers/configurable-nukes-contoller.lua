@@ -9,6 +9,10 @@ local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository"
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Initialization = require("scripts.initialization")
 local Log = require("libs.log.log")
+local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
+local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
+local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
+local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 local Version_Validations = require("scripts.validations.version-validations")
 
@@ -111,6 +115,52 @@ function configurable_nukes_controller.do_tick(event)
                 k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, k.surface_name })
             end
             v.five = true
+        end
+    end
+
+    local rocket_silo_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(planet.surface.name)
+
+    for k, v in pairs(rocket_silo_data.rocket_silos) do
+        if (v and v.entity and v.entity.valid) then
+            local rocket_silo = v.entity
+
+            local circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red)
+            if (not circuit_network) then circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green) end
+            if (circuit_network and circuit_network.valid and circuit_network.entity and circuit_network.entity.valid) then
+                log("found valid circuit_network")
+                -- Check if the rocket silo has signals different from default
+                local rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
+                if (not rocket_silo_data or not rocket_silo_data.valid) then
+                    rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+                    if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
+                end
+
+                -- Look for non-default signals
+                -- Use defaults if, for some reason, nothing is defined for the rocket_silo_data
+                local signal_x = circuit_network.get_signal(rocket_silo_data.signals.x or Rocket_Silo_Data.signals.x)
+                local signal_y = circuit_network.get_signal(rocket_silo_data.signals.y or Rocket_Silo_Data.signals.y)
+                local signal_launch = circuit_network.get_signal(rocket_silo_data.signals.launch or Rocket_Silo_Data.signals.launch)
+
+                if (signal_x and signal_y and signal_launch) then
+                    if (type(signal_x) == "number" and type(signal_y) == "number" and type(signal_launch) == "number") then
+                        if (signal_launch > 0) then
+                            local entity = circuit_network.entity
+
+                            Rocket_Silo_Service.launch_rocket({
+                                rocket_silo = rocket_silo,
+                                tick = game.tick,
+                                surface = entity.surface,
+                                area = { left_top = { x = signal_x, y = signal_y }, right_bottom = { x = signal_x, y = signal_y }, },
+                                --[[ Pretty sure valid player indices start at 1, so 0 should be safe for indicating a circuit launch? ]]
+                                player_index = 0,
+                                last_user_index = entity.last_user and entity.last_user.index,
+                            })
+                        end
+                    end
+                end
+
+                ::continue::
+            end
         end
     end
 

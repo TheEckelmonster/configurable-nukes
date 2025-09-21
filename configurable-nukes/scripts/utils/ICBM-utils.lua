@@ -174,9 +174,14 @@ function icbm_utils.launch_initiated(data)
     if (data.area == nil or type(data.area) ~= "table") then return -1 end
     if (data.cargo_pod == nil or not data.cargo_pod.valid) then return -1 end
     if (data.rocket_silo == nil or not data.rocket_silo.valid) then return -1 end
-    if (data.player_index == nil or type(data.player_index) ~= "number" or data.player_index < 1) then return -1 end
-    local player = game.get_player(data.player_index)
-    if (player == nil or not player.valid or type(player) ~= "userdata") then return -1 end
+    if (data.player_index == nil or type(data.player_index) ~= "number" or data.player_index < 0) then return -1 end
+    local player = data.player_index > 0 and game.get_player(data.player_index) or nil
+    if (data.player_index == 0) then
+        player = { name = "cicruit-launched", index = 0 }
+    else
+        if (player == nil or not player.valid or type(player) ~= "userdata") then return -1 end
+    end
+    if (not player) then return -1 end
 
     local target_position = {
         x = (data.area.left_top.x + data.area.right_bottom.x) / 2,
@@ -231,10 +236,24 @@ function icbm_utils.launch_initiated(data)
     end
 
     --[[ TODO: Make configurable ]]
-    game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, icbm_data.source_silo.surface.name })
+    if (icbm_data.player_launched_index == 0) then
+        --[[ Circuit launched ]]
+        local force = game.forces[icbm_data.force_index]
+        if (not force or not force.valid) then return end
 
-    if (get_pin_targets()) then
-        game.get_player(icbm_data.player_launched_index).add_pin({ label = "ICBM target-" .. icbm_data.item_number, surface = data.surface, position = target_position, preview_distance = 2 ^ 6 })
+        for k, v in pairs(force.connected_players) do
+            v.print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, icbm_data.source_silo.surface.name })
+
+            if (get_pin_targets()) then
+                v.add_pin({ label = "ICBM target-" .. icbm_data.item_number, surface = data.surface, position = target_position, preview_distance = 2 ^ 6 })
+            end
+        end
+    else --[[ TODO: Make configurable ]]
+        game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, icbm_data.source_silo.surface.name })
+
+        if (get_pin_targets()) then
+            game.get_player(icbm_data.player_launched_index).add_pin({ label = "ICBM target-" .. icbm_data.item_number, surface = data.surface, position = target_position, preview_distance = 2 ^ 6 })
+        end
     end
 end
 

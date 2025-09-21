@@ -3,11 +3,14 @@ if _initialization and _initialization.configurable_nukes then
     return _initialization
 end
 
+local Util = require("__core__.lualib.util")
+
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Log = require("libs.log.log")
+local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local String_Utils = require("scripts.utils.string-utils")
@@ -164,6 +167,9 @@ function locals.migrate(maintain_data)
     if (not type(storage_old) == "table") then return end
 
     if (storage_old.configurable_nukes) then
+        if (storage_old.configurable_nukes.version_data) then
+            Log.warn(storage_old.configurable_nukes.version_data)
+        end
         Constants.get_planets(true)
         if (storage_old.configurable_nukes.icbm_meta_data) then
             for k, v in pairs(storage_old.configurable_nukes.icbm_meta_data) do
@@ -173,13 +179,25 @@ function locals.migrate(maintain_data)
                 end
             end
         end
+
         if (storage_old.configurable_nukes.rocket_silo_meta_data) then
             for k, v in pairs(storage_old.configurable_nukes.rocket_silo_meta_data) do
                 if (Constants.planets_dictionary[k]) then
+                    if (not v.signals) then v.signals = {} end
+
+                    v.signals.launch = Util.table.deepcopy(Rocket_Silo_Data.signals.launch)
+                    v.signals.x = Util.table.deepcopy(Rocket_Silo_Data.signals.x)
+                    v.signals.y = Util.table.deepcopy(Rocket_Silo_Data.signals.y)
+
                     Rocket_Silo_Meta_Repository.update_rocket_silo_meta_data(v)
+
                     storage_old.configurable_nukes.rocket_silo_meta_data[k] = nil
                 end
             end
+        end
+
+        if (storage_old.icbm_data) then
+            storage.icbm_data = storage_old.icbm_data
         end
     end
 end

@@ -5,6 +5,11 @@ local rocket_silo_data = {}
 
 rocket_silo_data.unit_number = -1
 rocket_silo_data.entity = nil
+rocket_silo_data.signals = {
+    x = { type = "virtual", name = "signal-X" },
+    y = { type = "virtual", name = "signal-Y" },
+    launch = { type = "virtual", name = "signal-check" },
+}
 
 function rocket_silo_data:new(o)
     Log.debug("rocket_silo_data:new")
@@ -13,6 +18,11 @@ function rocket_silo_data:new(o)
     local defaults = {
         unit_number = self.unit_number,
         entity = self.entity,
+        signals = {
+            x = { type = "virtual", name = "signal-X" },
+            y = { type = "virtual", name = "signal-Y" },
+            launch = { type = "virtual", name = "signal-check" },
+        },
     }
 
     local obj = o or defaults
