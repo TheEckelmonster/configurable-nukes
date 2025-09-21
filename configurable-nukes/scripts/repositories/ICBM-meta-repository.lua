@@ -43,7 +43,7 @@ function icbm_meta_repository.save_icbm_meta_data(planet_name, optionals)
 
     return_val.valid = true
 
-    return icbm_meta_repository.update_icbm_meta_data(return_val)
+    return icbm_meta_repository.update_icbm_meta_data(optionals.update_data or return_val)
 end
 
 function icbm_meta_repository.update_icbm_meta_data(update_data, optionals)
@@ -66,7 +66,7 @@ function icbm_meta_repository.update_icbm_meta_data(update_data, optionals)
     if (not storage.configurable_nukes.icbm_meta_data) then storage.configurable_nukes.icbm_meta_data = {} end
     if (not storage.configurable_nukes.icbm_meta_data[planet_name]) then
         -- If it doesn't exist, generate it
-        return icbm_meta_repository.save_icbm_meta_data(planet_name)
+        return icbm_meta_repository.save_icbm_meta_data(planet_name, { update_data = update_data })
     end
 
     local icbm_meta_data = storage.configurable_nukes.icbm_meta_data[planet_name]

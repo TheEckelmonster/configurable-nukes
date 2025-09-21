@@ -6,6 +6,7 @@ end
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
+local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Log = require("libs.log.log")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
@@ -162,6 +163,25 @@ function locals.migrate(maintain_data)
     if (not storage_old) then return end
     if (not type(storage_old) == "table") then return end
 
+    if (storage_old.configurable_nukes) then
+        Constants.get_planets(true)
+        if (storage_old.configurable_nukes.icbm_meta_data) then
+            for k, v in pairs(storage_old.configurable_nukes.icbm_meta_data) do
+                if (Constants.planets_dictionary[k]) then
+                    ICBM_Meta_Repository.update_icbm_meta_data(v)
+                    storage_old.configurable_nukes.icbm_meta_data[k] = nil
+                end
+            end
+        end
+        if (storage_old.configurable_nukes.rocket_silo_meta_data) then
+            for k, v in pairs(storage_old.configurable_nukes.rocket_silo_meta_data) do
+                if (Constants.planets_dictionary[k]) then
+                    Rocket_Silo_Meta_Repository.update_rocket_silo_meta_data(v)
+                    storage_old.configurable_nukes.rocket_silo_meta_data[k] = nil
+                end
+            end
+        end
+    end
 end
 
 initialization.configurable_nukes = true
