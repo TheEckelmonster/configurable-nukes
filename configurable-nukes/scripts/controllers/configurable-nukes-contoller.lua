@@ -70,7 +70,10 @@ function configurable_nukes_controller.do_tick(event)
         configurable_nukes_controller.checked_research = true
     end
 
-    if (not Constants.planets_dictionary or configurable_nukes_controller.reinitialized) then Constants.get_planets(true) end
+    if (not Constants.planets_dictionary or configurable_nukes_controller.reinitialized) then
+        Constants.get_planets(true)
+        configurable_nukes_controller.reinitialized = false
+    end
     configurable_nukes_controller.planet_index, configurable_nukes_controller.planet = next(Constants.planets_dictionary, configurable_nukes_controller.planet_index)
 
     local planet = configurable_nukes_controller.planet
