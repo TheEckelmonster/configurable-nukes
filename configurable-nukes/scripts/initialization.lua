@@ -188,6 +188,8 @@ function locals.migrate(maintain_data)
                     v.signals.launch = Util.table.deepcopy(Rocket_Silo_Data.signals.launch)
                     v.signals.x = Util.table.deepcopy(Rocket_Silo_Data.signals.x)
                     v.signals.y = Util.table.deepcopy(Rocket_Silo_Data.signals.y)
+                    v.signals.origin_override = Util.table.deepcopy(Rocket_Silo_Data.signals.origin_override)
+                    -- v.signals.planet = Util.table.deepcopy(Rocket_Silo_Data.signals.planet)
 
                     Rocket_Silo_Meta_Repository.update_rocket_silo_meta_data(v)
 

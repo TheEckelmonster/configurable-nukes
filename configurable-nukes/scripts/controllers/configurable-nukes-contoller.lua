@@ -13,6 +13,7 @@ local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
+local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 local Version_Validations = require("scripts.validations.version-validations")
 
@@ -22,6 +23,36 @@ local get_nuclear_ammo_category = function ()
 
     if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name]) then
         setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name].value
+    end
+
+    return setting
+end
+-- ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN
+local get_allow_targeting_origin = function ()
+    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.name].value
+    end
+
+    return setting
+end
+-- PRINT_FLIGHT_MESSAGES
+local get_print_flight_messages = function()
+    local setting = Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.name].value
+    end
+
+    return setting
+end
+-- ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES
+local get_icbm_circuit_print_flight_messages = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.name].value
     end
 
     return setting
@@ -96,23 +127,71 @@ function configurable_nukes_controller.do_tick(event)
                 -- error("Payload failed to arrive successfully")
             end
         elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 and not v.one) then
-            if (k and k.force and k.force.valid) then
-                k.force.print({ "configurable-nukes-controller.seconds-to-target", 1 })
+            local print_message = function ()
+                if (k and k.force and k.force.valid) then
+                    k.force.print({ "configurable-nukes-controller.seconds-to-target", 1 })
+                end
+            end
+
+            if (k.player_launched_index == 0) then
+                if (get_icbm_circuit_print_flight_messages()) then
+                    print_message()
+                end
+            else
+                if (get_print_flight_messages()) then
+                    print_message()
+                end
             end
             v.one, v.two, v.three, v.five = true, true, true, true
         elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 120 and not v.two) then
-            if (k and k.force and k.force.valid) then
-                k.force.print({ "configurable-nukes-controller.seconds-to-target", 2 })
+            local print_message = function ()
+                if (k and k.force and k.force.valid) then
+                    k.force.print({ "configurable-nukes-controller.seconds-to-target", 2 })
+                end
+            end
+
+            if (k.player_launched_index == 0) then
+                if (get_icbm_circuit_print_flight_messages()) then
+                    print_message()
+                end
+            else
+                if (get_print_flight_messages()) then
+                    print_message()
+                end
             end
             v.two, v.three, v.five = true, true, true
         elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 180 and not v.three) then
-            if (k and k.force and k.force.valid) then
-                k.force.print({ "configurable-nukes-controller.seconds-to-target", 3 })
+            local print_message = function ()
+                if (k and k.force and k.force.valid) then
+                    k.force.print({ "configurable-nukes-controller.seconds-to-target", 3 })
+                end
+            end
+
+            if (k.player_launched_index == 0) then
+                if (get_icbm_circuit_print_flight_messages()) then
+                    print_message()
+                end
+            else
+                if (get_print_flight_messages()) then
+                    print_message()
+                end
             end
             v.three, v.five = true, true
         elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 300 and not v.five) then
-            if (k and k.force and k.force.valid) then
-                k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, k.surface_name })
+            local print_message = function ()
+                if (k and k.force and k.force.valid) then
+                    k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, k.surface_name })
+                end
+            end
+
+            if (k.player_launched_index == 0) then
+                if (get_icbm_circuit_print_flight_messages()) then
+                    print_message()
+                end
+            else
+                if (get_print_flight_messages()) then
+                    print_message()
+                end
             end
             v.five = true
         end
@@ -127,7 +206,6 @@ function configurable_nukes_controller.do_tick(event)
             local circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red)
             if (not circuit_network) then circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green) end
             if (circuit_network and circuit_network.valid and circuit_network.entity and circuit_network.entity.valid) then
-                log("found valid circuit_network")
                 -- Check if the rocket silo has signals different from default
                 local rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
                 if (not rocket_silo_data or not rocket_silo_data.valid) then
@@ -140,10 +218,23 @@ function configurable_nukes_controller.do_tick(event)
                 local signal_x = circuit_network.get_signal(rocket_silo_data.signals.x or Rocket_Silo_Data.signals.x)
                 local signal_y = circuit_network.get_signal(rocket_silo_data.signals.y or Rocket_Silo_Data.signals.y)
                 local signal_launch = circuit_network.get_signal(rocket_silo_data.signals.launch or Rocket_Silo_Data.signals.launch)
+                --[[ Intentionally letting it be nil in the case of either the settings being disabled or not explicitly defined ]]
+                local signal_origin_override =  get_allow_targeting_origin()
+                                            and rocket_silo_data.signals.origin_override
+                                            and circuit_network.get_signal(rocket_silo_data.signals.origin_override)
+                                            or nil
 
                 if (signal_x and signal_y and signal_launch) then
                     if (type(signal_x) == "number" and type(signal_y) == "number" and type(signal_launch) == "number") then
-                        if (signal_launch > 0) then
+                        if (        (signal_launch > 0
+                                and (  signal_x ~= 0
+                                    or signal_y ~= 0))
+                            or
+                                   (signal_launch > 0
+                                and get_allow_targeting_origin()
+                                and type(signal_origin_override) == "number"
+                                and signal_origin_override > 0))
+                        then
                             local entity = circuit_network.entity
 
                             Rocket_Silo_Service.launch_rocket({

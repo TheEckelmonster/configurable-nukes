@@ -48,6 +48,10 @@ local default_technology_ingredients_atomic_warhead = {
     { name = "space-science-pack",      amount = 1 },
 }
 
+if (mods and mods["atan-nuclear-science"]) then
+    table.insert(default_technology_ingredients_atomic_warhead, { name = "nuclear-science-pack", amount = 1 })
+end
+
 local default_technology_prerequisites_ICBMs = {
     "production-science-pack",
     "utility-science-pack",
@@ -92,6 +96,10 @@ local default_technology_ingredients_nuclear_weapons = {
     { name = "production-science-pack", amount = 1 },
     { name = "space-science-pack",      amount = 1 },
 }
+
+if (mods and mods["atan-nuclear-science"]) then
+    table.insert(default_technology_ingredients_nuclear_weapons, { name = "nuclear-science-pack", amount = 1 })
+end
 
 startup_settings_constants.settings = {
     NUCLEAR_AMMO_CATEGORY = {

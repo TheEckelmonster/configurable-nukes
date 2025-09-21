@@ -129,7 +129,7 @@ function rocket_silo_utils.launch_rocket(event)
                         end
 
                         if (rocket_silo.launch_rocket()) then
-                            Log.info("Launched rocket_silo:")
+                            Log.debug("Launched rocket_silo:")
                             Log.info(rocket_silo)
                             ICBM_Utils.launch_initiated({
                                 type = item.name == "atomic-bomb" and "atomic-rocket" or "atomic-warhead",
@@ -144,8 +144,8 @@ function rocket_silo_utils.launch_rocket(event)
                             launched = true
                             break
                         else
-                            Log.info("Failed to launch rocket_silo: ")
-                            Log.info(rocket_silo)
+                            Log.error("Failed to launch rocket_silo: ")
+                            Log.warn(rocket_silo)
                         end
                     end
                 end

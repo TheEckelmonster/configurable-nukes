@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.0
+Date: 2025-09-21
+  Minor Features:
+    - ICBMs (rocket-silo rockets with a valid payload) are now circuit launchable
+      - When a circuit network is attached to a rocket-silo, a new "ICBM" GUI to the right of the normal rocket-silo GUI containing the circuit launch signals is provided
+        - Signals controlling the target and launch condition can be changed, as well as copy-pasted from one silo to another
+        - Default of "signal-X", "signal-Y", and "signal-check" define the target coordinates and the launch signal respectively
+          - Launch signal must be a value of > 0 for a rocket to launch
+          - Target coordinates of "signal-X" = 0 and "signal-Y" = 0, i.e. {0,0}, are disabled by default, as they also corespond with no coordinates provided
+            - Can be overidden by enabling "Alllow Targeting Origin" runtime setting, and providing an appropriate override signal
+    - Added settings for toggling manually launched ICBM messages
+    - Added settings for toggling circuit launched ICBM messages
+    - Added settings for toggling circuit launched ICBM target pins
+  Misc:
+    - Added automatic compatability for "Nuclear Science" by atanvarno
+---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: 2025-09-20
   Bug Fixes:

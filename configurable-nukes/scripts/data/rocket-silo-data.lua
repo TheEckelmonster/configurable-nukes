@@ -9,6 +9,7 @@ rocket_silo_data.signals = {
     x = { type = "virtual", name = "signal-X" },
     y = { type = "virtual", name = "signal-Y" },
     launch = { type = "virtual", name = "signal-check" },
+    origin_override = nil,
 }
 
 function rocket_silo_data:new(o)
@@ -22,6 +23,7 @@ function rocket_silo_data:new(o)
             x = { type = "virtual", name = "signal-X" },
             y = { type = "virtual", name = "signal-Y" },
             launch = { type = "virtual", name = "signal-check" },
+            origin_override = nil,
         },
     }
 

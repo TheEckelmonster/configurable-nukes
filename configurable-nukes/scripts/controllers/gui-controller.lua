@@ -6,6 +6,18 @@ end
 local Log = require("libs.log.log")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
+local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
+
+-- ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN
+local get_icbm_allow_targeting_origin = function ()
+    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.name].value
+    end
+
+    return setting
+end
 
 local gui_controller = {}
 
@@ -33,6 +45,7 @@ function gui_controller.on_gui_opened(event)
     local signal_launch = rocket_silo_data.signals.launch or Rocket_Silo_Data.signals.launch
     local signal_x = rocket_silo_data.signals.x or Rocket_Silo_Data.signals.x
     local signal_y = rocket_silo_data.signals.y or Rocket_Silo_Data.signals.y
+    local signal_origin_override = get_icbm_allow_targeting_origin() and rocket_silo_data.signals.origin_override -- Intentionally not getting a default from Rocket_Silo_Data
     -- local signal_planet = rocket_silo_data.signals.planet or Rocket_Silo_Data.signals.planet
 
     local player = game.get_player(event.player_index)
@@ -98,7 +111,23 @@ function gui_controller.on_gui_opened(event)
             elem_type = "signal",
             signal = signal_y
         })
-        gui_flow.style.padding = { 4, 24, 4, 4 }
+        if (get_icbm_allow_targeting_origin()) then
+            gui_flow.add({
+                type = "label",
+                name = "cn_label_signal_origin_override",
+                caption = { "cn-launch-signal-gui.signal_origin_override" },
+                direction = "vertical",
+            })
+            gui_flow.add({
+                type = "choose-elem-button",
+                name = "cn_button_signal_select_origin_override",
+                elem_type = "signal",
+                signal = signal_origin_override
+            })
+        end
+
+        gui_inner.style.padding = { 4, 6, 4, 4 }
+        gui_flow.style.padding = { 4, 6, 4, 4 }
     end
 end
 
@@ -139,6 +168,7 @@ function gui_controller.on_gui_elem_changed(event)
             if (event.element.name == "cn_button_signal_select_launch") then do_update = true; rocket_silo_data.signals.launch = event.element.elem_value end
             if (event.element.name == "cn_button_signal_select_x") then do_update = true; rocket_silo_data.signals.x = event.element.elem_value end
             if (event.element.name == "cn_button_signal_select_y") then do_update = true; rocket_silo_data.signals.y = event.element.elem_value end
+            if (event.element.name == "cn_button_signal_select_origin_override") then do_update = true; rocket_silo_data.signals.origin_override = event.element.elem_value end
 
             if (do_update) then Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo_data) end
         end
@@ -176,6 +206,7 @@ function gui_controller.on_entity_settings_pasted(event)
     rocket_silo_data_destination.signals.launch = rocket_silo_data_source.signals.launch
     rocket_silo_data_destination.signals.x = rocket_silo_data_source.signals.x
     rocket_silo_data_destination.signals.y = rocket_silo_data_source.signals.y
+    rocket_silo_data_destination.signals.origin_override = get_icbm_allow_targeting_origin() and rocket_silo_data_source.signals.origin_override or nil
     Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo_data_destination)
 end
 
