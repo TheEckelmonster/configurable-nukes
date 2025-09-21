@@ -174,7 +174,6 @@ function locals.migrate(maintain_data)
             end
         end
         if (storage_old.configurable_nukes.rocket_silo_meta_data) then
-            Constants.get_planets(true)
             for k, v in pairs(storage_old.configurable_nukes.rocket_silo_meta_data) do
                 if (Constants.planets_dictionary[k]) then
                     Rocket_Silo_Meta_Repository.update_rocket_silo_meta_data(v)
