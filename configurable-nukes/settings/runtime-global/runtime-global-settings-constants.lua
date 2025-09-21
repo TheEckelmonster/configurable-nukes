@@ -47,26 +47,33 @@ runtime_global_settings_constants.settings = {
         order = "ccb",
         default_value = true,
     },
+    PRINT_FLIGHT_MESSAGES = {
+        type = "bool-setting",
+        name = prefix .. "icbms-print-flight-messages",
+        setting_type = "runtime-global",
+        order = "ccc",
+        default_value = true,
+    },
     --[[ ICBM ]]
     ICBM_PERFECT_GUIDANCE = {
         type = "bool-setting",
         name = prefix .. "icbms-perfect-guidance",
         setting_type = "runtime-global",
-        order = "ccc",
+        order = "ccd",
         default_value = false,
     },
     ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME = {
         type = "bool-setting",
         name = prefix .. "icbms-planet-magnitude-affects-travel-time",
         setting_type = "runtime-global",
-        order = "ccd",
+        order = "cce",
         default_value = true,
     },
     ICBM_PLANET_MAGNITUDE_MODIFIER = {
         type = "double-setting",
         name = prefix .. "icbms-magnitude-modifier",
         setting_type = "runtime-global",
-        order = "cce",
+        order = "ccf",
         default_value = 1,
         minimum_value = (1 / 2) ^ 11,
         maximum_value = 11,
@@ -75,7 +82,7 @@ runtime_global_settings_constants.settings = {
         type = "double-setting",
         name = prefix .. "icbms-travel-multiplier",
         setting_type = "runtime-global",
-        order = "ccf",
+        order = "ccg",
         default_value = 1,
         minimum_value = 0,
         maximum_value = 2 ^ 11
@@ -84,10 +91,31 @@ runtime_global_settings_constants.settings = {
         type = "double-setting",
         name = prefix .. "icbms-guidance-deviation-threshold",
         setting_type = "runtime-global",
-        order = "ccg",
+        order = "cch",
         default_value = 0.25,
         minimum_value = 0,
         maximum_value = 1
+    },
+    ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN = {
+        type = "bool-setting",
+        name = prefix .. "icbms-circuit-allow-targeting-origin",
+        setting_type = "runtime-global",
+        order = "dcc",
+        default_value = false,
+    },
+    ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES = {
+        type = "bool-setting",
+        name = prefix .. "icbms-circuit-print-flight-messages",
+        setting_type = "runtime-global",
+        order = "dcd",
+        default_value = false,
+    },
+    ICBM_CIRCUIT_PIN_TARGETS = {
+        type = "bool-setting",
+        name = prefix .. "icbms-circuit-print-pin-targets",
+        setting_type = "runtime-global",
+        order = "dce",
+        default_value = false,
     },
 }
 

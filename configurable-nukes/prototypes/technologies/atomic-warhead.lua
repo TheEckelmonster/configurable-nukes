@@ -143,6 +143,10 @@ local get_atomic_warhead_research_ingredients = function ()
             { "production-science-pack", 1 },
             { "space-science-pack",      1 },
         }
+
+        if (mods and mods["atan-nuclear-science"]) then
+            table.insert(ingredients, { name = "nuclear-science-pack", amount = 1 })
+        end
     end
 
     return ingredients

@@ -28,6 +28,15 @@ local get_do_ICBMs_reveal_target = function()
 
     return setting
 end
+local get_print_flight_messages = function()
+    local setting = Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.name].value
+    end
+
+    return setting
+end
 local get_icbms_perfect_guidance = function()
     local setting = Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.default_value
 
@@ -69,6 +78,24 @@ local get_icbm_guidance_deviation_threshold = function()
 
     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.name]) then
         setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.name].value
+    end
+
+    return setting
+end
+local get_icbm_circuit_print_flight_messages = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.name].value
+    end
+
+    return setting
+end
+local get_icbm_circuit_pin_targets = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.name].value
     end
 
     return setting
@@ -158,7 +185,15 @@ function icbm_utils.cargo_pod_finished_ascending(data)
     }
 
     if (math.floor(time_to_target / 60) >= 1) then
-        icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
+        if (icbm_data.player_launched_index == 0) then
+            if (get_icbm_circuit_print_flight_messages()) then
+                icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
+            end
+        else
+            if (get_print_flight_messages()) then
+                icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
+            end
+        end
     end
 end
 
@@ -174,9 +209,14 @@ function icbm_utils.launch_initiated(data)
     if (data.area == nil or type(data.area) ~= "table") then return -1 end
     if (data.cargo_pod == nil or not data.cargo_pod.valid) then return -1 end
     if (data.rocket_silo == nil or not data.rocket_silo.valid) then return -1 end
-    if (data.player_index == nil or type(data.player_index) ~= "number" or data.player_index < 1) then return -1 end
-    local player = game.get_player(data.player_index)
-    if (player == nil or not player.valid or type(player) ~= "userdata") then return -1 end
+    if (data.player_index == nil or type(data.player_index) ~= "number" or data.player_index < 0) then return -1 end
+    local player = data.player_index > 0 and game.get_player(data.player_index) or nil
+    if (data.player_index == 0) then
+        player = { name = "cicruit-launched", index = 0 }
+    else
+        if (player == nil or not player.valid or type(player) ~= "userdata") then return -1 end
+    end
+    if (not player) then return -1 end
 
     local target_position = {
         x = (data.area.left_top.x + data.area.right_bottom.x) / 2,
@@ -231,10 +271,27 @@ function icbm_utils.launch_initiated(data)
     end
 
     --[[ TODO: Make configurable ]]
-    game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, icbm_data.source_silo.surface.name })
+    if (icbm_data.player_launched_index == 0) then
+        --[[ Circuit launched ]]
+        local force = game.forces[icbm_data.force_index]
+        if (not force or not force.valid) then return end
 
-    if (get_pin_targets()) then
-        game.get_player(icbm_data.player_launched_index).add_pin({ label = "ICBM target-" .. icbm_data.item_number, surface = data.surface, position = target_position, preview_distance = 2 ^ 6 })
+        if (get_icbm_circuit_print_flight_messages()) then
+            force.print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, icbm_data.source_silo.surface.name })
+        end
+        for k, v in pairs(force.connected_players) do
+            if (get_icbm_circuit_pin_targets()) then
+                v.add_pin({ label = "ICBM target-" .. icbm_data.item_number, surface = data.surface, position = target_position, preview_distance = 2 ^ 6 })
+            end
+        end
+    else --[[ TODO: Make configurable ]]
+        if (get_print_flight_messages()) then
+            game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, icbm_data.source_silo.surface.name })
+        end
+
+        if (get_pin_targets()) then
+            game.get_player(icbm_data.player_launched_index).add_pin({ label = "ICBM target-" .. icbm_data.item_number, surface = data.surface, position = target_position, preview_distance = 2 ^ 6 })
+        end
     end
 end
 
