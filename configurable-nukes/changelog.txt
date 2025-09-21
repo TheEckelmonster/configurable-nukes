@@ -2,7 +2,9 @@
 Version: 0.3.2
 Date: 2025-09-20
   Bug Fixes:
-    -
+    - Added proper storage data migration on version update
+      - Prevents loss of in-flight rockets on version update
+      - Apologies for any previously lost rockets due to not having this ready in time for the previous update
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 2025-09-20
