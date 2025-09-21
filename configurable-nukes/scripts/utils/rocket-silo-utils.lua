@@ -68,24 +68,33 @@ function rocket_silo_utils.launch_rocket(event)
     }
 
     local rocket_silo_array = {}
-    for k, v in pairs(rocket_silo_meta_data.rocket_silos) do
-        if (v.entity and v.entity.valid and v.entity.position) then
-            local position = v.entity.position
-            local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
-            if (#rocket_silo_array == 0) then
-                table.insert(rocket_silo_array, { entity = v.entity, distance = distance, })
-            else
-                local found = false
-                for i, j in ipairs(rocket_silo_array) do
-                    if (distance < j.distance) then
-                        table.insert(rocket_silo_array, i, { entity = v.entity, distance = distance, })
-                        found = true
-                        break
-                    end
-                end
 
-                if (not found) then
+    if (event.rocket_silo and event.rocket_silo.valid) then
+        local position = event.rocket_silo.position
+        local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
+        table.insert(rocket_silo_array, { entity = event.rocket_silo, distance = distance })
+    end
+
+    if (not next(rocket_silo_array)) then
+        for k, v in pairs(rocket_silo_meta_data.rocket_silos) do
+            if (v.entity and v.entity.valid and v.entity.position) then
+                local position = v.entity.position
+                local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
+                if (#rocket_silo_array == 0) then
                     table.insert(rocket_silo_array, { entity = v.entity, distance = distance, })
+                else
+                    local found = false
+                    for i, j in ipairs(rocket_silo_array) do
+                        if (distance < j.distance) then
+                            table.insert(rocket_silo_array, i, { entity = v.entity, distance = distance, })
+                            found = true
+                            break
+                        end
+                    end
+
+                    if (not found) then
+                        table.insert(rocket_silo_array, { entity = v.entity, distance = distance, })
+                    end
                 end
             end
         end
@@ -120,7 +129,7 @@ function rocket_silo_utils.launch_rocket(event)
                         end
 
                         if (rocket_silo.launch_rocket()) then
-                            Log.info("Launched rocket_silo:")
+                            Log.debug("Launched rocket_silo:")
                             Log.info(rocket_silo)
                             ICBM_Utils.launch_initiated({
                                 type = item.name == "atomic-bomb" and "atomic-rocket" or "atomic-warhead",
@@ -135,15 +144,15 @@ function rocket_silo_utils.launch_rocket(event)
                             launched = true
                             break
                         else
-                            Log.info("Failed to launch rocket_silo: ")
-                            Log.info(rocket_silo)
+                            Log.error("Failed to launch rocket_silo: ")
+                            Log.warn(rocket_silo)
                         end
                     end
                 end
             end
         end
 
-        if (launched) then break end
+        if (launched) then return end
     end
 end
 

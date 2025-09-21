@@ -1,6 +1,6 @@
 {
 	"name": "configurable-nukes",
-	"version": "0.3.2",
+	"version": "0.4.0",
 	"factorio_version": "2.0",
 	"title": "Configurable Nukes & ICBMs",
 	"author": "TheEckelmonster",
@@ -8,6 +8,7 @@
 	"dependencies": [
 		"base >= 2.0.66",
 		"? space-age >= 2.0.66",
-		"? quality >= 2.0.66"
+		"? quality >= 2.0.66",
+		"? atan-nuclear-science >= 0.3.3"
 	]
 }

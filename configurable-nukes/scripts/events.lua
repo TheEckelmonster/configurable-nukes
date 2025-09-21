@@ -1,5 +1,6 @@
 local Constants = require("scripts.constants.constants")
 local Log = require("libs.log.log")
+local Gui_Controller = require("scripts.controllers.gui-controller")
 local Planet_Controller = require("scripts.controllers.planet-controller")
 local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
@@ -92,6 +93,11 @@ script.on_event(defines.events.on_surface_created, Planet_Controller.on_surface_
 
 script.on_event(defines.events.on_player_selected_area, Rocket_Silo_Controller.launch_rocket)
 script.on_event(defines.events.on_cargo_pod_finished_ascending, Rocket_Silo_Controller.cargo_pod_finished_ascending)
+
+script.on_event(defines.events.on_gui_opened, Gui_Controller.on_gui_opened)
+script.on_event(defines.events.on_gui_closed, Gui_Controller.on_gui_closed)
+script.on_event(defines.events.on_gui_elem_changed, Gui_Controller.on_gui_elem_changed)
+script.on_event(defines.events.on_entity_settings_pasted, Gui_Controller.on_entity_settings_pasted)
 
 --[[ rocket-silo tracking ]]
 script.on_event(defines.events.on_entity_died, Rocket_Silo_Controller.rocket_silo_mined, Rocket_Silo_Controller.filter)
