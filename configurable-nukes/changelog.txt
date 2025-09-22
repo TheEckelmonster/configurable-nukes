@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.3
+Date: 2025-09-22
+  Bug Fixes:
+    - Added explicit/restored compatibility with "Mushroom Cloud Reborn", by SergiX44
+  Misc:
+    - Separated manual and circuit-network "Flight messages" settings each into two distinct settings: "Launch" and "Delivery"
+      - Launch: controls whether to print the launch messages for manual and/or circuit-network launched ICBMs
+      - Delivery: controls whether to print the payload delivery messages for manual and/or circuit-network launched ICBMs
+    - Added additional runtime "modifier" and "addition" damage settings for atomic-bombs/rockets and atomic-warheads
+      - These settings provide the ability to change the damage without having to restart the game
+---------------------------------------------------------------------------------------------------
 Version: 0.4.2
 Date: 2025-09-21
   Bug Fixes:
@@ -24,7 +35,7 @@ Date: 2025-09-21
     - Added setting for toggling circuit launched ICBM messages
     - Added setting for toggling circuit launched ICBM target pins
   Misc:
-    - Added automatic compatability for "Nuclear Science" by atanvarno
+    - Added automatic compatibility for "Nuclear Science" by atanvarno
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: 2025-09-20
