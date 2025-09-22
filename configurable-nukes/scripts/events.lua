@@ -26,6 +26,90 @@ local get_atomic_warhead_pollution = function ()
 
   return setting
 end
+-- ATOMIC_BOMB_BASE_DAMAGE_MODIFIER
+local get_atomic_bomb_base_damage_modifier = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.default_value
+
+    log(serpent.block(setting))
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name].value
+    end
+
+    log(serpent.block(setting))
+
+    return setting
+end
+-- ATOMIC_BOMB_BASE_DAMAGE_ADDITION
+local get_atomic_bomb_base_damage_addition = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.default_value
+
+    log(serpent.block(setting))
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name].value
+    end
+
+    log(serpent.block(setting))
+
+    return setting
+end
+-- -- ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER
+-- local get_atomic_bomb_base_damage_radius_modifier = function()
+--     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.default_value
+
+--     log(serpent.block(setting))
+
+--     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.name]) then
+--         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.name].value
+--     end
+
+--     log(serpent.block(setting))
+
+--     return setting
+-- end
+-- ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER
+local get_atomic_bomb_bonus_damage_modifier = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.default_value
+
+    log(serpent.block(setting))
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name].value
+    end
+
+    log(serpent.block(setting))
+
+    return setting
+end
+-- ATOMIC_BOMB_BONUS_DAMAGE_ADDITION
+local get_atomic_bomb_bonus_damage_addition = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.default_value
+
+    log(serpent.block(setting))
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name].value
+    end
+
+    log(serpent.block(setting))
+
+    return setting
+end
+-- -- ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER
+-- local get_atomic_bomb_bonus_damage_radius_modifier = function()
+--     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.default_value
+
+--     log(serpent.block(setting))
+
+--     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.name]) then
+--         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.name].value
+--     end
+
+--     log(serpent.block(setting))
+
+--     return setting
+-- end
 
 script.on_event(defines.events.on_script_trigger_effect, function (event)
     Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
@@ -67,6 +151,16 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 cause = event.cause_entity and event.cause_entity.valid and event.cause_entity,
                 -- speed = 0.1 * math.exp(1),
                 speed = 0.05,
+                base_damage_modifiers = {
+                    damage_modifier = get_atomic_bomb_base_damage_modifier(),
+                    damage_addition = get_atomic_bomb_base_damage_addition(),
+                    radius_modifier = 1,
+                },
+                bonus_damage_modifiers = {
+                    damage_modifier = get_atomic_bomb_bonus_damage_modifier(),
+                    damage_addition = get_atomic_bomb_bonus_damage_addition(),
+                    radius_modifier = 1,
+                },
             })
             if (entity and entity.valid and event.source_entity.type == "spider-vehicle") then entity.orientation = _orientation end
         end

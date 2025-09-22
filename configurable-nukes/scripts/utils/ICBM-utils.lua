@@ -10,6 +10,7 @@ local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
+-- PIN_TARGETS
 local get_pin_targets = function()
     local setting = Runtime_Global_Settings_Constants.settings.PIN_TARGETS.default_value
 
@@ -19,6 +20,7 @@ local get_pin_targets = function()
 
     return setting
 end
+-- DO_ICBMS_REVEAL_TARGET
 local get_do_ICBMs_reveal_target = function()
     local setting = Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET.default_value
 
@@ -28,6 +30,7 @@ local get_do_ICBMs_reveal_target = function()
 
     return setting
 end
+-- PRINT_FLIGHT_MESSAGES
 local get_print_flight_messages = function()
     local setting = Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.default_value
 
@@ -37,6 +40,7 @@ local get_print_flight_messages = function()
 
     return setting
 end
+-- ICBM_PERFECT_GUIDANCE
 local get_icbms_perfect_guidance = function()
     local setting = Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.default_value
 
@@ -46,6 +50,7 @@ local get_icbms_perfect_guidance = function()
 
     return setting
 end
+-- ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME
 local get_icbms_planet_magnitude_affects_travel_time = function()
     local setting = Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME.default_value
 
@@ -55,6 +60,7 @@ local get_icbms_planet_magnitude_affects_travel_time = function()
 
     return setting
 end
+-- ICBM_PLANET_MAGNITUDE_MODIFIER
 local get_icbms_magnitude_modifier = function()
     local setting = Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_MODIFIER.default_value
 
@@ -64,6 +70,7 @@ local get_icbms_magnitude_modifier = function()
 
     return setting
 end
+-- ICBM_TRAVEL_MULTIPLIER
 local get_icbms_travel_multiplier = function()
     local setting = Runtime_Global_Settings_Constants.settings.ICBM_TRAVEL_MULTIPLIER.default_value
 
@@ -73,6 +80,7 @@ local get_icbms_travel_multiplier = function()
 
     return setting
 end
+-- ICBM_GUIDANCE_DEVIATION_THRESHOLD
 local get_icbm_guidance_deviation_threshold = function()
     local setting = Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.default_value
 
@@ -82,6 +90,7 @@ local get_icbm_guidance_deviation_threshold = function()
 
     return setting
 end
+-- ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES
 local get_icbm_circuit_print_flight_messages = function()
     local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.default_value
 
@@ -91,6 +100,7 @@ local get_icbm_circuit_print_flight_messages = function()
 
     return setting
 end
+-- ICBM_CIRCUIT_PIN_TARGETS
 local get_icbm_circuit_pin_targets = function()
     local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.default_value
 
@@ -100,6 +110,126 @@ local get_icbm_circuit_pin_targets = function()
 
     return setting
 end
+-- ATOMIC_BOMB_BASE_DAMAGE_MODIFIER
+local get_atomic_bomb_base_damage_modifier = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name].value
+    end
+
+    return setting
+end
+-- ATOMIC_BOMB_BASE_DAMAGE_ADDITION
+local get_atomic_bomb_base_damage_addition = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name].value
+    end
+
+    return setting
+end
+-- -- ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER
+-- local get_atomic_bomb_base_damage_radius_modifier = function()
+--     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.default_value
+
+--     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.name]) then
+--         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.name].value
+--     end
+
+--     return setting
+-- end
+-- ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER
+local get_atomic_bomb_bonus_damage_modifier = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name].value
+    end
+
+    return setting
+end
+-- ATOMIC_BOMB_BONUS_DAMAGE_ADDITION
+local get_atomic_bomb_bonus_damage_addition = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name].value
+    end
+
+    return setting
+end
+-- -- ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER
+-- local get_atomic_bomb_bonus_damage_radius_modifier = function()
+--     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.default_value
+
+--     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.name]) then
+--         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.name].value
+--     end
+
+--     return setting
+-- end
+-- ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER
+local get_atomic_warhead_base_damage_modifier = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name].value
+    end
+
+    return setting
+end
+-- ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION
+local get_atomic_warhead_base_damage_addition = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name].value
+    end
+
+    return setting
+end
+-- -- ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER
+-- local get_atomic_warhead_base_damage_radius_modifier = function()
+--     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER.default_value
+
+--     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER.name]) then
+--         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER.name].value
+--     end
+
+--     return setting
+-- end
+-- ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER
+local get_atomic_warhead_bonus_damage_modifier = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.name].value
+    end
+
+    return setting
+end
+-- ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION
+local get_atomic_warhead_bonus_damage_addition = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.default_value
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.name].value
+    end
+
+    return setting
+end
+-- -- ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER
+-- local get_atomic_warhead_bonus_damage_radius_modifier = function()
+--     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER.default_value
+
+--     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER.name]) then
+--         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER.name].value
+--     end
+
+--     return setting
+-- end
 
 local icbm_utils = {}
 
@@ -334,8 +464,16 @@ function icbm_utils.payload_arrived(data)
             --[[ TODO: Make configurable ]]
             cause = icbm.source_silo,
             speed = 0.1 * math.exp(1),
-            base_damage_modifiers = nil,
-            bonus_damage_modifiers = nil
+            base_damage_modifiers = {
+                damage_modifier = icbm.type == "atomic-rocket" and get_atomic_bomb_base_damage_modifier() or icbm.type == "atomic-warhead" and get_atomic_warhead_base_damage_modifier() or 1,
+                damage_addition = icbm.type == "atomic-rocket" and get_atomic_bomb_base_damage_addition() or icbm.type == "atomic-warhead" and get_atomic_warhead_base_damage_addition() or 1,
+                radius_modifier = 1,
+            },
+            bonus_damage_modifiers = {
+                damage_modifier = icbm.type == "atomic-rocket" and get_atomic_bomb_bonus_damage_modifier() or icbm.type == "atomic-warhead" and get_atomic_warhead_bonus_damage_modifier() or 1,
+                damage_addition = icbm.type == "atomic-rocket" and get_atomic_bomb_bonus_damage_addition() or icbm.type == "atomic-warhead" and get_atomic_warhead_bonus_damage_addition() or 1,
+                radius_modifier = icbm.type == 1,
+            },
         })
     else
         -- log(serpent.block(icbm))
