@@ -30,12 +30,12 @@ local get_do_ICBMs_reveal_target = function()
 
     return setting
 end
--- PRINT_FLIGHT_MESSAGES
-local get_print_flight_messages = function()
-    local setting = Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.default_value
+-- PRINT_LAUNCH_MESSAGES
+local get_print_launch_messages = function()
+    local setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.default_value
 
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.name].value
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name].value
     end
 
     return setting
@@ -90,12 +90,12 @@ local get_icbm_guidance_deviation_threshold = function()
 
     return setting
 end
--- ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES
-local get_icbm_circuit_print_flight_messages = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.default_value
+-- ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES
+local get_icbm_circuit_print_launch_messages = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.default_value
 
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.name].value
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name].value
     end
 
     return setting
@@ -316,11 +316,11 @@ function icbm_utils.cargo_pod_finished_ascending(data)
 
     if (math.floor(time_to_target / 60) >= 1) then
         if (icbm_data.player_launched_index == 0) then
-            if (get_icbm_circuit_print_flight_messages()) then
+            if (get_icbm_circuit_print_launch_messages()) then
                 icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
             end
         else
-            if (get_print_flight_messages()) then
+            if (get_print_launch_messages()) then
                 icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
             end
         end
@@ -406,7 +406,7 @@ function icbm_utils.launch_initiated(data)
         local force = game.forces[icbm_data.force_index]
         if (not force or not force.valid) then return end
 
-        if (get_icbm_circuit_print_flight_messages()) then
+        if (get_icbm_circuit_print_launch_messages()) then
             force.print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, icbm_data.source_silo.surface.name })
         end
         for k, v in pairs(force.connected_players) do
@@ -415,7 +415,7 @@ function icbm_utils.launch_initiated(data)
             end
         end
     else --[[ TODO: Make configurable ]]
-        if (get_print_flight_messages()) then
+        if (get_print_launch_messages()) then
             game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, icbm_data.source_silo.surface.name })
         end
 

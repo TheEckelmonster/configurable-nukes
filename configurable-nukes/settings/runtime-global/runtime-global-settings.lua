@@ -22,7 +22,8 @@ data:extend({
 
     Runtime_Global_Settings_Constants.settings.PIN_TARGETS,
     Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET,
-    Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES,
+    Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES,
+    Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES,
 
     Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE,
     Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_MODIFIER,
@@ -31,6 +32,7 @@ data:extend({
     Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD,
 
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN,
-    Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES,
+    Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES,
+    Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES,
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS,
 })
