@@ -1,6 +1,8 @@
 require("prototypes.categories.ammo-category")
-require("prototypes.entities.atomic-bomb")
-require("prototypes.entities.atomic-warhead")
+if (mods and not mods["mushroom-cloud"]) then
+    require("prototypes.entities.atomic-bomb")
+    require("prototypes.entities.atomic-warhead")
+end
 if (mods and not mods["space-age"]) then
     require("prototypes.entities.rocket-silo")
 end
