@@ -470,6 +470,17 @@ data:extend({
 -- Rocket PROJECTILE
 -----------------------------------------------------------------------
 
+local origimal_atomic_warhead = Util.table.deepcopy(data.raw["projectile"]["atomic-rocket"])
+origimal_atomic_warhead.name = "atomic-warhead"
+origimal_atomic_warhead.icon = "__base__/graphics/icons/signal/signal-radioactivity.png"
+
+
+if (get_fire_wave()) then
+    local target_effects = origimal_atomic_warhead.action.action_delivery.target_effects
+    table.insert(target_effects, atomic_warhead_fire_action)
+    origimal_atomic_warhead.action.action_delivery.target_effects = target_effects
+end
+
 local atomic_warhead =
 {
     type = "projectile",
@@ -494,16 +505,18 @@ local atomic_warhead =
                     explosion_at_trigger = "explosion"
                 },
                 -- Explosion entities for other surface-specific effects are added here
-                {
-                    type = "create-entity",
-                    check_buildability = true,
-                    -- This entity can have surface conditions
-                    entity_name = "nuke-effects-nauvis"
-                },
-                {
-                    type = "create-entity",
-                    entity_name = "nuke-explosion"
-                },
+                -- {
+                --     type = "create-entity",
+                --     check_buildability = true,
+                --     -- This entity can have surface conditions
+                --     entity_name = "nuke-effects-nauvis"
+                -- },
+                origimal_atomic_warhead.action.action_delivery.target_effects[2],
+                -- {
+                --     type = "create-entity",
+                --     entity_name = "nuke-explosion"
+                -- },
+                origimal_atomic_warhead.action.action_delivery.target_effects[3],
                 {
                     type = "camera-effect",
                     duration = 60,
@@ -726,22 +739,18 @@ local atomic_warhead =
     smoke = require("__base__.prototypes.entity.rocket-projectile-pictures").smoke,
 }
 
-
-
 if (mods and mods["quality"]) then
-    data:extend({atomic_warhead})
-
     for k_0, quality in pairs(data.raw["quality"]) do
 
         local quality_atomic_warhead = nil
         local default_multiplier = get_quality_base_multiplier()
 
         if (default_multiplier) then
-            quality_atomic_warhead = Util.table.deepcopy(atomic_warhead)
+            quality_atomic_warhead = Util.table.deepcopy(origimal_atomic_warhead)
 
             local quality_level_multiplier = default_multiplier ^ quality.level
 
-            for k_1,v_1 in pairs(quality_atomic_warhead.action.action_delivery.target_effects) do
+            for k_1, v_1 in pairs(quality_atomic_warhead.action.action_delivery.target_effects) do
                 if (v_1.type) then
                     if (v_1.type == "destroy-cliffs") then
                         v_1.radius = 9 * area_multiplier * quality_level_multiplier
@@ -757,7 +766,8 @@ if (mods and mods["quality"]) then
                         v_1.spawn_max = 40 * area_multiplier * qquality_level_multiplier
                     elseif (v_1.type == "nested-result" and v_1.action.type == "area") then
                         if (v_1.action.action_delivery and v_1.action.action_delivery.type == "projectile") then
-                            if (v_1.action.action_delivery.projectile == "atomic-warhead-ground-zero-projectile") then
+                            -- if (v_1.action.action_delivery.projectile == "atomic-warhead-ground-zero-projectile") then
+                            if (v_1.action.action_delivery.projectile == "atomic-bomb-ground-zero-projectile") then
                                 v_1.action =
                                 {
                                     type = "area",
@@ -769,11 +779,13 @@ if (mods and mods["quality"]) then
                                     {
                                         type = "projectile",
                                         projectile = "atomic-warhead-ground-zero-projectile",
+                                        -- projectile = "atomic-bomb-ground-zero-projectile",
                                         starting_speed = 0.6 * 0.8 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier
                                     }
                                 }
-                            elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave") then
+                            -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave") then
+                            elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave") then
                                 v_1.action = {
                                     type = "area",
                                     target_entities = false,
@@ -784,11 +796,13 @@ if (mods and mods["quality"]) then
                                     {
                                         type = "projectile",
                                         projectile = "atomic-warhead-wave",
+                                        -- projectile = "atomic-bomb-wave",
                                         starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
                                     }
                                 }
-                            elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-cluster-nuke-explosion") then
+                            -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-cluster-nuke-explosion") then
+                            elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-cluster-nuke-explosion") then
                                 v_1.action = {
                                     type = "area",
                                     show_in_tooltip = false,
@@ -804,7 +818,8 @@ if (mods and mods["quality"]) then
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
                                     }
                                 }
-                            elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-fire-smoke-explosion") then
+                            -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-fire-smoke-explosion") then
+                            elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-fire-smoke-explosion") then
                                 v_1.action = {
                                     type = "area",
                                     show_in_tooltip = false,
@@ -816,11 +831,13 @@ if (mods and mods["quality"]) then
                                         {
                                             type = "projectile",
                                             projectile = "atomic-warhead-wave-spawns-fire-smoke-explosion",
+                                            -- projectile = "atomic-bomb-wave-spawns-fire-smoke-explosion",
                                             starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
                                             starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
                                         }
                                     }
-                            elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-nuke-shockwave-explosion") then
+                            -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-nuke-shockwave-explosion") then
+                            elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-nuke-shockwave-explosion") then
                                 v_1.action = {
                                 type = "area",
                                 show_in_tooltip = false,
@@ -832,11 +849,13 @@ if (mods and mods["quality"]) then
                                     {
                                         type = "projectile",
                                         projectile = "atomic-warhead-wave-spawns-nuke-shockwave-explosion",
+                                        -- projectile = "atomic-bomb-wave-spawns-nuke-shockwave-explosion",
                                         starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
                                     }
                                 }
-                            elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-nuclear-smoke") then
+                            -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-nuclear-smoke") then
+                            elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-nuclear-smoke") then
                                 v_1.action = {
                                     type = "area",
                                     show_in_tooltip = false,
@@ -848,6 +867,7 @@ if (mods and mods["quality"]) then
                                     {
                                         type = "projectile",
                                         projectile = "atomic-warhead-wave-spawns-nuclear-smoke",
+                                        -- projectile = "atomic-bomb-wave-spawns-nuclear-smoke",
                                         starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
                                     }
@@ -858,7 +878,8 @@ if (mods and mods["quality"]) then
                                 and v_1.action.action_delivery.target_effects
                                 and v_1.action.action_delivery.target_effects.type == "script"
                                 and v_1.action.action_delivery.target_effects.effect_id
-                                and v_1.action.action_delivery.target_effects.effect_id == "atomic-warhead-pollution")
+                                -- and v_1.action.action_delivery.target_effects.effect_id == "atomic-warhead-pollution")
+                                and v_1.action.action_delivery.target_effects.effect_id == "atomic-bomb-pollution")
                         then
                             v_1.action = {
                             action_delivery = {
@@ -929,7 +950,6 @@ if (mods and mods["quality"]) then
                     end
                 end
             end
-
         end
 
         if (quality_atomic_warhead ~= nil) then
@@ -937,9 +957,285 @@ if (mods and mods["quality"]) then
             data:extend({quality_atomic_warhead})
         end
     end
+
+    data:extend({atomic_warhead})
+
+    local atomic_warhead_placeholder = Util.table.deepcopy(origimal_atomic_warhead)
+    atomic_warhead_placeholder.name = "atomic-warhead-placeholder"
+
+    atomic_warhead_placeholder.animation = nil
+    atomic_warhead_placeholder.shadow = nil
+    atomic_warhead_placeholder.smoke = nil
+
+    atomic_warhead_placeholder.action =
+    {
+        type = "direct",
+        action_delivery =
+        {
+            type = "instant",
+            target_effects =
+            {
+                {
+                    type = "damage",
+                    damage = { amount = 400 * damage_multiplier, type = "explosion" }
+                },
+                {
+                    type = "nested-result",
+                    action =
+                    {
+                        type = "area",
+                        target_entities = false,
+                        trigger_from_target = true,
+                        repeat_count = 1000 * repeat_multiplier,
+                        radius = 7 * area_multiplier,
+                        action_delivery =
+                        {
+                            type = "projectile",
+                            projectile = "atomic-warhead-ground-zero-projectile",
+                            starting_speed = 0.6 * 0.8 * area_multiplier,
+                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation
+                        }
+                    }
+                },
+                {
+                    type = "nested-result",
+                    action =
+                    {
+                        type = "area",
+                        target_entities = false,
+                        trigger_from_target = true,
+                        repeat_count = 1000 * repeat_multiplier,
+                        radius = 35 * area_multiplier,
+                        action_delivery =
+                        {
+                            type = "projectile",
+                            projectile = "atomic-warhead-wave",
+                            starting_speed = 0.5 * 0.7 * area_multiplier,
+                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation
+                        }
+                    }
+                },
+                atomic_warhead_fire_action,
+            }
+        }
+    }
+
+    data:extend({atomic_warhead_placeholder})
 else
-    local icbm_atomic_warhead = Util.table.deepcopy(atomic_warhead)
+    local quality_atomic_warhead = nil
+    local default_multiplier = get_quality_base_multiplier()
+
+    if (default_multiplier) then
+        quality_atomic_warhead = Util.table.deepcopy(origimal_atomic_warhead)
+
+        local quality_level_multiplier = default_multiplier ^ 0
+
+        for k_1, v_1 in pairs(quality_atomic_warhead.action.action_delivery.target_effects) do
+            if (v_1.type) then
+                if (v_1.type == "destroy-cliffs") then
+                    v_1.radius = 9 * area_multiplier * quality_level_multiplier
+                elseif (v_1.type == "camera-effect") then
+                    v_1.full_strength_max_distance = clamp_max_distance(200, area_multiplier * quality_level_multiplier)
+                    v_1.max_distance = clamp_max_distance(800, area_multiplier * quality_level_multiplier)
+                elseif (v_1.type == "play-sound") then
+                    v_1.max_distance = clamp_max_distance(1000, area_multiplier * quality_level_multiplier)
+                elseif (v_1.type == "destroy-decoratives") then
+                    v_1.radius = 14 * area_multiplier * quality_level_multiplier
+                elseif (v_1.type == "create-decoratives") then
+                    v_1.spawn_min = 30 * area_multiplier * quality_level_multiplier
+                    v_1.spawn_max = 40 * area_multiplier * qquality_level_multiplier
+                elseif (v_1.type == "nested-result" and v_1.action.type == "area") then
+                    if (v_1.action.action_delivery and v_1.action.action_delivery.type == "projectile") then
+                        -- if (v_1.action.action_delivery.projectile == "atomic-warhead-ground-zero-projectile") then
+                        if (v_1.action.action_delivery.projectile == "atomic-bomb-ground-zero-projectile") then
+                            v_1.action =
+                            {
+                                type = "area",
+                                target_entities = false,
+                                trigger_from_target = true,
+                                repeat_count = 1000 * repeat_multiplier * quality_level_multiplier,
+                                radius = 7 * area_multiplier * quality_level_multiplier,
+                                action_delivery =
+                                {
+                                    type = "projectile",
+                                    -- projectile = "atomic-warhead-ground-zero-projectile",
+                                    projectile = "atomic-bomb-ground-zero-projectile",
+                                    starting_speed = 0.6 * 0.8 * area_multiplier * quality_level_multiplier,
+                                    starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier
+                                }
+                            }
+                        -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave") then
+                        elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave") then
+                            v_1.action = {
+                                type = "area",
+                                target_entities = false,
+                                trigger_from_target = true,
+                                repeat_count = 1000 * repeat_multiplier * quality_level_multiplier,
+                                radius = 35 * area_multiplier * quality_level_multiplier,
+                                action_delivery =
+                                {
+                                    type = "projectile",
+                                    -- projectile = "atomic-warhead-wave",
+                                    projectile = "atomic-bomb-wave",
+                                    starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
+                                    starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                }
+                            }
+                        -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-cluster-nuke-explosion") then
+                        elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-cluster-nuke-explosion") then
+                            v_1.action = {
+                                type = "area",
+                                show_in_tooltip = false,
+                                target_entities = false,
+                                trigger_from_target = true,
+                                repeat_count = 1000 * repeat_multiplier * quality_level_multiplier,
+                                radius = 26 * area_multiplier * quality_level_multiplier,
+                                action_delivery =
+                                {
+                                    type = "projectile",
+                                    projectile = "atomic-warhead-wave-spawns-cluster-nuke-explosion",
+                                    starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
+                                    starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                }
+                            }
+                        -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-fire-smoke-explosion") then
+                        elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-fire-smoke-explosion") then
+                            v_1.action = {
+                                type = "area",
+                                show_in_tooltip = false,
+                                target_entities = false,
+                                trigger_from_target = true,
+                                repeat_count = 700 * repeat_multiplier * quality_level_multiplier,
+                                radius = 4 * area_multiplier * quality_level_multiplier,
+                                action_delivery =
+                                    {
+                                        type = "projectile",
+                                        -- projectile = "atomic-warhead-wave-spawns-fire-smoke-explosion",
+                                        projectile = "atomic-bomb-wave-spawns-fire-smoke-explosion",
+                                        starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
+                                        starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                    }
+                                }
+                        -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-nuke-shockwave-explosion") then
+                        elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-nuke-shockwave-explosion") then
+                            v_1.action = {
+                            type = "area",
+                            show_in_tooltip = false,
+                            target_entities = false,
+                            trigger_from_target = true,
+                            repeat_count = 1000 * repeat_multiplier * quality_level_multiplier,
+                            radius = 8 * area_multiplier * quality_level_multiplier,
+                            action_delivery =
+                                {
+                                    type = "projectile",
+                                    -- projectile = "atomic-warhead-wave-spawns-nuke-shockwave-explosion",
+                                    projectile = "atomic-bomb-wave-spawns-nuke-shockwave-explosion",
+                                    starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
+                                    starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                }
+                            }
+                        -- elseif (v_1.action.action_delivery.projectile == "atomic-warhead-wave-spawns-nuclear-smoke") then
+                        elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-nuclear-smoke") then
+                            v_1.action = {
+                                type = "area",
+                                show_in_tooltip = false,
+                                target_entities = false,
+                                trigger_from_target = true,
+                                repeat_count = 300 * repeat_multiplier * quality_level_multiplier,
+                                radius = 26 * area_multiplier * quality_level_multiplier,
+                                action_delivery =
+                                {
+                                    type = "projectile",
+                                    -- projectile = "atomic-warhead-wave-spawns-nuclear-smoke",
+                                    projectile = "atomic-bomb-wave-spawns-nuclear-smoke",
+                                    starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
+                                    starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                }
+                            }
+                        end
+                    elseif (    v_1.action
+                            and v_1.action.action_delivery
+                            and v_1.action.action_delivery.target_effects
+                            and v_1.action.action_delivery.target_effects.type == "script"
+                            and v_1.action.action_delivery.target_effects.effect_id
+                            -- and v_1.action.action_delivery.target_effects.effect_id == "atomic-warhead-pollution")
+                            and v_1.action.action_delivery.target_effects.effect_id == "atomic-bomb-pollution")
+                    then
+                        v_1.action = {
+                        action_delivery = {
+                            target_effects = {
+                                {
+                                    type = "script",
+                                    effect_id = "atomic-warhead-pollution"
+                                }
+                            },
+                            type = "instant"
+                        },
+                            radius = (26 * area_multiplier + 1) * quality_level_multiplier,
+                            repeat_count = (1000 * repeat_multiplier + 1) * quality_level_multiplier,
+                            repeat_count_deviation = (42 * repeat_multiplier) * quality_level_multiplier,
+                            show_in_tooltip = false,
+                            target_entities = false,
+                            trigger_from_target = true,
+                            type = "area"
+                        }
+                    elseif (    v_1.action
+                            and v_1.action.type
+                            and v_1.action.type == "area"
+                            and v_1.action.action_delivery
+                            and v_1.action.action_delivery.type
+                            and v_1.action.action_delivery.type == "instant"
+                            and v_1.action.action_delivery.target_effects
+                            and v_1.action.action_delivery.target_effects[1]
+                            and v_1.action.action_delivery.target_effects[1].type
+                            and v_1.action.action_delivery.target_effects[1].type == "create-sticker"
+                            and v_1.action.action_delivery.target_effects[1].sticker
+                            and v_1.action.action_delivery.target_effects[1].sticker == "fire-sticker"
+                            and v_1.action.action_delivery.target_effects[2]
+                            and v_1.action.action_delivery.target_effects[2].type
+                            and v_1.action.action_delivery.target_effects[2].type == "create-fire"
+                            and v_1.action.action_delivery.target_effects[2].entity_name
+                            and v_1.action.action_delivery.target_effects[2].entity_name == "fire-flame")
+                    then
+                        v_1.action = {
+                            {
+                                type = "area",
+                                radius = (26 * area_multiplier + 1) * quality_level_multiplier,
+                                repeat_count = (10 * repeat_multiplier + 1) * quality_level_multiplier,
+                                action_delivery =
+                                {
+                                    type = "instant",
+                                    radius = (2.5 * area_multiplier + 1) * quality_level_multiplier,
+                                    repeat_count = (10 * repeat_multiplier + 1) * quality_level_multiplier,
+                                    target_effects =
+                                    {
+                                        {
+                                            type = "create-sticker",
+                                            sticker = "fire-sticker",
+                                            show_in_tooltip = true
+                                        },
+                                        {
+                                            type = "create-fire",
+                                            entity_name = "fire-flame",
+                                            repeat_count = (10 * repeat_multiplier + 1) * quality_level_multiplier,
+                                            repeat_count_deviation = (42 * repeat_multiplier) * quality_level_multiplier,
+                                            show_in_tooltip = true,
+                                            initial_ground_flame_count = (2) * quality_level_multiplier
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    end
+                end
+            end
+        end
+    end
+
+    local icbm_atomic_warhead = Util.table.deepcopy(quality_atomic_warhead)
     icbm_atomic_warhead.name = "atomic-warhead-normal"
     data:extend({icbm_atomic_warhead})
-    data:extend({atomic_warhead})
+    if (quality_atomic_warhead) then
+        data:extend({quality_atomic_warhead})
+    end
 end
