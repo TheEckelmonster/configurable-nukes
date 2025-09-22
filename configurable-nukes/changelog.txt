@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.2
+Date: 2025-09-21
+  Bug Fixes:
+    - Implemented a potential fix/workaround for an unusual error someone is experiencing that I personally can't reproduce
+---------------------------------------------------------------------------------------------------
 Version: 0.4.1
 Date: 2025-09-21
   Bug Fixes:
