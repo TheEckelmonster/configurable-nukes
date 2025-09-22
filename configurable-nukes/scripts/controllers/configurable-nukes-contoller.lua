@@ -37,22 +37,26 @@ local get_allow_targeting_origin = function ()
 
     return setting
 end
--- PRINT_FLIGHT_MESSAGES
-local get_print_flight_messages = function()
-    local setting = Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.default_value
+-- PRINT_DELIVERY_MESSAGES
+local get_print_delivery_messages = function()
+    local setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.default_value
 
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.PRINT_FLIGHT_MESSAGES.name].value
+    log(serpent.block(setting))
+
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name].value
     end
+
+    log(serpent.block(setting))
 
     return setting
 end
--- ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES
-local get_icbm_circuit_print_flight_messages = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.default_value
+-- ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES
+local get_icbm_circuit_print_delivery_messages = function()
+    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.default_value
 
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_FLIGHT_MESSAGES.name].value
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name].value
     end
 
     return setting
@@ -134,11 +138,11 @@ function configurable_nukes_controller.do_tick(event)
             end
 
             if (k.player_launched_index == 0) then
-                if (get_icbm_circuit_print_flight_messages()) then
+                if (get_icbm_circuit_print_delivery_messages()) then
                     print_message()
                 end
             else
-                if (get_print_flight_messages()) then
+                if (get_print_delivery_messages()) then
                     print_message()
                 end
             end
@@ -151,11 +155,11 @@ function configurable_nukes_controller.do_tick(event)
             end
 
             if (k.player_launched_index == 0) then
-                if (get_icbm_circuit_print_flight_messages()) then
+                if (get_icbm_circuit_print_delivery_messages()) then
                     print_message()
                 end
             else
-                if (get_print_flight_messages()) then
+                if (get_print_delivery_messages()) then
                     print_message()
                 end
             end
@@ -168,11 +172,11 @@ function configurable_nukes_controller.do_tick(event)
             end
 
             if (k.player_launched_index == 0) then
-                if (get_icbm_circuit_print_flight_messages()) then
+                if (get_icbm_circuit_print_delivery_messages()) then
                     print_message()
                 end
             else
-                if (get_print_flight_messages()) then
+                if (get_print_delivery_messages()) then
                     print_message()
                 end
             end
@@ -185,11 +189,11 @@ function configurable_nukes_controller.do_tick(event)
             end
 
             if (k.player_launched_index == 0) then
-                if (get_icbm_circuit_print_flight_messages()) then
+                if (get_icbm_circuit_print_delivery_messages()) then
                     print_message()
                 end
             else
-                if (get_print_flight_messages()) then
+                if (get_print_delivery_messages()) then
                     print_message()
                 end
             end
