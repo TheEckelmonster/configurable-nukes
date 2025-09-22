@@ -1,4 +1,20 @@
-local Item_Sounds = require("__base__.prototypes.Item_Sounds")
+-- local Item_Sounds = require("__base__.prototypes.item_sounds")
+
+local function item_sound(filename, volume)
+    return
+    {
+        filename = "__base__/sound/item/" .. filename,
+        volume = volume,
+        aggregation = {max_count = 1, remove = true},
+    }
+end
+
+local Item_Sounds = {
+    atomic_bomb_inventory_move = item_sound("atomic-bomb-inventory-move.ogg", 0.6),
+    atomic_bomb_inventory_pickup = item_sound("atomic-bomb-inventory-pickup.ogg", 0.6),
+    planner_inventory_move = item_sound("planner-inventory-move.ogg", 0.7),
+    planner_inventory_pickup = item_sound("planner-inventory-pickup.ogg", 0.7),
+}
 
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
