@@ -9,8 +9,6 @@ local Log = require("libs.log.log")
 local Rocket_Silo_Meta_Data = require("scripts.data.rocket-silo-meta-data")
 local String_Utils = require("scripts.utils.string-utils")
 
-local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
 local rocket_silo_meta_repository = {}
 
 function rocket_silo_meta_repository.save_rocket_silo_meta_data(space_location_name, optionals)
@@ -24,9 +22,14 @@ function rocket_silo_meta_repository.save_rocket_silo_meta_data(space_location_n
     if (not space_location_name or type(space_location_name) ~= "string") then return return_val end
     if (String_Utils.find_invalid_substrings(space_location_name)) then return return_val end
 
+    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
     if (not se_active) then
         if (not Constants.planets_dictionary) then Constants.get_planets(true) end
-        if (not Constants.planets_dictionary[space_location_name:lower()]) then return return_val end
+        if (not Constants.planets_dictionary[space_location_name:lower()]) then
+            if (not space_location_name:lower():find("platform-", 1, true)) then
+                return return_val
+            end
+        end
     else
         if (not space_location_name:find("spaceship-", 1, true) and not Constants.space_exploration_dictionary) then Constants.get_space_exploration_universe(true) end
         if (not space_location_name:find("spaceship-", 1, true) and not Constants.space_exploration_dictionary[space_location_name:lower()]) then return return_val end

@@ -120,8 +120,8 @@ function rocket_silo_controller.on_player_reverse_selected_area(event)
 end
 
 function rocket_silo_controller.launch_rocket(event)
-    Log.error("rocket_silo_controller.launch_rocket")
-    Log.warn(event)
+    Log.debug("rocket_silo_controller.launch_rocket")
+    Log.info(event)
 
     if (not event) then return end
     if (not event.tick) then return end
