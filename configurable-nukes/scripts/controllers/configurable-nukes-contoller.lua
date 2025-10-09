@@ -18,9 +18,6 @@ local Startup_Settings_Constants = require("settings.startup.startup-settings-co
 local String_Utils = require("scripts.utils.string-utils")
 local Version_Validations = require("scripts.validations.version-validations")
 
-local sa_active = script and script.active_mods and script.active_mods["space-age"]
-local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
 -- NUCLEAR_AMMO_CATEGORY
 local get_nuclear_ammo_category = function ()
     local setting = false
@@ -97,6 +94,9 @@ function configurable_nukes_controller.do_tick(event)
     local nth_tick = configurable_nukes_controller.nth_tick or 4
     local tick_modulo = tick % nth_tick
 
+    local sa_active = storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
+    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
+
     if (tick_modulo ~= 0) then return end
 
     -- Check/validate the storage version
@@ -105,6 +105,11 @@ function configurable_nukes_controller.do_tick(event)
         if (storage and (not storage.configurable_nukes_controller or not storage.configurable_nukes_controller.initialized)) then
             Initialization.init({ maintain_data = true })
             configurable_nukes_controller.reinitialized = true
+            sa_active = script and script.active_mods and script.active_mods["space-age"]
+            se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+            storage.sa_active = sa_active
+            storage.se_active = se_active
         end
         configurable_nukes_controller.initialized = true
 
@@ -117,6 +122,12 @@ function configurable_nukes_controller.do_tick(event)
             configurable_nukes_controller.reinitialized = true
 
             if (not storage.constants) then Constants.get_mod_data(true) end
+
+            sa_active = script and script.active_mods and script.active_mods["space-age"]
+            se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+            storage.sa_active = sa_active
+            storage.se_active = se_active
 
             return
         end
