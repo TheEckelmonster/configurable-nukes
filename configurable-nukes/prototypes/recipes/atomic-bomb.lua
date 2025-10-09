@@ -144,10 +144,12 @@ local search_pattern = ",*%s*([%w%-%s]+)%s*=%s*(%d+)%s*,*"
 local i, j, param, param_val = atomic_bomb_recipe_string:find(search_pattern, 1)
 local possible_matches = {}
 local found_match = false
+local ingredient_type = "item"
 
 local found_func = function (param, param_val, t, type)
     for _, j in pairs(t) do
         if (j.name == param) then
+            ingredient_type = type == "fluid" and "fluid" or "item"
             found_match = true
             break
         elseif (j.name:find(param, 1, true)) then
@@ -170,6 +172,7 @@ while param ~= nil and param_val ~= nil do
         elseif (k == "gun") then found_func(param, param_val, v, "gun")
         elseif (k == "item")  then found_func(param, param_val, v, "item")
         elseif (k == "item-with-entity-data") then found_func(param, param_val, v, "item-with-entity-data")
+        elseif (k == "fluid")  then found_func(param, param_val, v, "fluid")
         elseif (k == "module") then found_func(param, param_val, v, "module")
         elseif (k == "rail-planner") then found_func(param, param_val, v, "rail-planner")
         elseif (k == "repair-tool") then found_func(param, param_val, v, "repair-tool")
@@ -181,7 +184,8 @@ while param ~= nil and param_val ~= nil do
         if (found_match) then break end
     end
 
-    if (found_match) then table.insert(ingredients, { type = "item", name = param, amount = param_val * get_input_multiplier(), }) end
+    -- if (found_match) then table.insert(ingredients, { type = "item", name = param, amount = param_val * get_input_multiplier(), }) end
+    if (found_match) then table.insert(ingredients, { type = ingredient_type or "item", name = param, amount = param_val * get_input_multiplier(), }) end
 
     atomic_bomb_recipe_string = atomic_bomb_recipe_string:sub(j + 1, #atomic_bomb_recipe_string)
 

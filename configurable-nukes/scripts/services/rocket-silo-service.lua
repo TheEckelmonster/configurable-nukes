@@ -4,6 +4,7 @@ if _rocket_silo_service and _rocket_silo_service.configurable_nukes then
 end
 
 local Log = require("libs.log.log")
+local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
@@ -35,18 +36,43 @@ function rocket_silo_service.cargo_pod_finished_ascending(event)
     Log.info(event)
 
     if (not event) then return end
-    if (not event.launched_by_rocket) then return end
+    local space_exploration = script and script.active_mods and script.active_mods["space-exploration"]
+    if (not event.launched_by_rocket) then
+        if (not space_exploration) then
+            return
+        else
+            if (not event.cargo_pod or not event.cargo_pod.valid) then return end
+            if (not event.cargo_pod.surface or not event.cargo_pod.surface.valid) then return end
+            local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(event.cargo_pod.surface.name)
+
+            local k, icbm_data = next(icbm_meta_data.item_numbers, nil)
+            while k or (not k and icbm_data) do
+                if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == event.cargo_pod.unit_number) then
+                    break
+                end
+
+                if (k) then k, icbm_data = next(icbm_meta_data.item_numbers, k) end
+            end
+
+            if (icbm_data == nil) then
+                Log.warn("no icbm_data found")
+                return -1
+            end
+        end
+    end
     if (not event.cargo_pod or not event.cargo_pod.valid) then return end
     local cargo_pod = event.cargo_pod
+    Log.warn(cargo_pod)
+    Log.warn(cargo_pod.cargo_pod_destination)
     if (not cargo_pod.cargo_pod_destination) then return end
+
 
     -- Check the carge; if the cargo pod doesn't have a station and has a destination type of 1
     --   -> no station implies it was sent to "orbit"
     --   -> .type is 1 for some reason, and not defines.cargo_destination.orbit as I would have thought
-    if (cargo_pod.cargo_pod_destination
-            and not cargo_pod.cargo_pod_destination.station
-            and (cargo_pod.cargo_pod_destination.type == 1 or cargo_pod.cargo_pod_destination.type == defines.cargo_destination.orbit)
-            and event.launched_by_rocket)
+    if (    cargo_pod.cargo_pod_destination
+        and not cargo_pod.cargo_pod_destination.station
+        and cargo_pod.cargo_pod_destination.type == defines.cargo_destination.surface)
     then
         local inventory = cargo_pod.get_inventory(defines.inventory.cargo_unit)
 
@@ -56,15 +82,21 @@ function rocket_silo_service.cargo_pod_finished_ascending(event)
                     or
                         (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
                 then
-                    ICBM_Utils.cargo_pod_finished_ascending({
+                    local return_val = ICBM_Utils.cargo_pod_finished_ascending({
                         surface = cargo_pod.surface,
                         item = item,
                         tick = event.tick,
                         cargo_pod = cargo_pod,
                     })
 
+                    if (Log.get_log_level().level.num_val <= 3) then
+                        log(serpent.block(return_val))
+                    end
+                    if (return_val and return_val ~= 1) then
+                        Log.error("cargo_pod_finished_ascending failed to process successfully")
+                    end
                     Log.info("destroying cargo pod")
-                    if (cargo_pod.destroy()) then
+                    if (cargo_pod.destroy({ raise_destroy = true })) then
                         Log.debug("cargo pod destroyed")
                     end
                 end
@@ -82,6 +114,18 @@ function rocket_silo_service.rocket_silo_built(rocket_silo)
         Log.info("Built rocket silo")
         Log.info(rocket_silo)
     end
+end
+
+function rocket_silo_service.rocket_silo_cloned(data)
+    Log.debug("rocket_silo_service.rocket_silo_cloned")
+    Log.info(data)
+
+    if (not data or type(data) ~= "table") then return end
+    if (not data.destination_silo or not data.destination_silo.valid) then return end
+
+    Rocket_Silo_Utils.add_rocket_silo(data.destination_silo)
+    Log.debug("Cloned a rocket silo")
+    Log.info(data.destination_silo)
 end
 
 function rocket_silo_service.rocket_silo_mined(event)

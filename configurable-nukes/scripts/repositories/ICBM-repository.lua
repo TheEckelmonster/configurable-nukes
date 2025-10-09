@@ -3,10 +3,13 @@ if _icbm_repository and _icbm_repository.configurable_nukes then
     return _icbm_repository
 end
 
+local Constants = require("scripts.constants.constants")
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Log = require("libs.log.log")
 local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
+
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local icbm_repository = {}
 
@@ -24,19 +27,61 @@ function icbm_repository.save_icbm_data(icbm, optionals)
     if (not icbm.item or type(icbm.item) ~= "table") then return return_val end
     if (not icbm.tick_launched or type(icbm.tick_launched) ~= "number") then return return_val end
     if (not icbm.tick_to_target or type(icbm.tick_to_target) ~= "number") then return return_val end
+    if (not icbm.same_surface or type(icbm.same_surface) ~= "boolean") then icbm.same_surface = false end
     if (not icbm.source_silo or not icbm.source_silo.valid) then return return_val end
+    if (not icbm.silo_type or not type(icbm.silo_type) == "string") then icbm.silo_type = icbm.source_silo.name end
     if (not icbm.target_position or type(icbm.target_position) ~= "table") then return return_val end
+    if (not icbm.target_surface or not icbm.target_surface.valid or type(icbm.target_surface) ~= "userdata") then return return_val end
     if (not icbm.cargo_pod or not icbm.cargo_pod.valid) then return return_val end
+    if (not icbm.circuit_launch or type(icbm.circuit_launch) ~= "boolean") then icbm.circuit_launch = false end
     if (icbm.player_launched_index == nil or type(icbm.player_launched_index) ~= "number" or icbm.player_launched_index < 0) then return return_val end
     local player = icbm.player_launched_index > 0 and game.get_player(icbm.player_launched_index) or nil
     if (not player or not player.valid or type(player) ~= "userdata") then
-        if (icbm.player_launched_index == 0) then
-            player = icbm.player_launched_by
-        else
-            return return_val
-        end
+        if (icbm.player_launched_index ~= 0) then return return_val end
     end
-    if (icbm.player_launched_by ~= player) then return return_val end
+    if (icbm.player_launched_by ~= player and not icbm.circuit_launch) then return return_val end
+    if (not icbm.launched_from or type(icbm.launched_from) ~= "string") then return return_val end
+    if (icbm.launched_from_space == nil or type(icbm.launched_from_space) ~= "boolean") then icbm.launched_from_space = false end
+    if (icbm.base_target_distance == nil or type(icbm.base_target_distance) ~= "number") then icbm.base_target_distance = false end
+    if (icbm.speed == nil or type(icbm.speed) ~= "number") then icbm.speed = 0 end
+    if (icbm.is_travelling == nil or type(icbm.is_travelling) ~= "boolean") then icbm.is_travelling = false end
+    if (icbm.space_origin_pos ~= nil and (type(icbm.space_origin_pos) ~= "table" or not icbm.space_origin_pos.x or type(icbm.space_origin_pos.x) ~= "number" or not icbm.space_origin_pos.y or type(icbm.space_origin_pos.y) ~= "number")) then return return_val end
+    if (icbm.se_active and (icbm.source_system == nil or type(icbm.source_system) ~= "string")) then
+        if (not Constants.space_exploration_dictionary[icbm.surface.name:lower()]) then Constants.get_space_exploration_universe(true) end
+        local space_location = Constants.space_exploration_dictionary[icbm.surface.name:lower()]
+
+        if (not space_location) then return return_val end
+
+        local parent_system_name = space_location:get_stellar_system()
+        icbm.source_system = parent_system_name
+        if (icbm.source_system == nil or type(icbm.source_system) ~= "string") then return return_val end
+
+        -- if (not Constants.space_exploration_dictionary[parent_system_name]) then Constants.get_space_exploration_universe(true) end
+        -- local parent_system = Constants.space_exploration_dictionary[parent_system_name]
+
+        -- if (not parent_system) then return return_val end
+
+        -- icbm.source_system = parent_system
+        -- if (icbm.source_system == nil or type(icbm.source_system) ~= "table") then return return_val end
+    end
+    if (icbm.se_active and (icbm.target_system == nil or type(icbm.target_system) ~= "string")) then
+        if (not Constants.space_exploration_dictionary[icbm.surface.name:lower()]) then Constants.get_space_exploration_universe(true) end
+        local space_location = Constants.space_exploration_dictionary[icbm.target_surface.name:lower()]
+
+        if (not space_location) then return return_val end
+
+        local parent_system_name = space_location:get_stellar_system()
+        icbm.target_system = parent_system_name
+        if (icbm.target_system == nil or type(icbm.target_system) ~= "string") then return return_val end
+
+        -- if (not Constants.space_exploration_dictionary[parent_system_name]) then Constants.get_space_exploration_universe(true) end
+        -- local parent_system = Constants.space_exploration_dictionary[parent_system_name]
+
+        -- if (not parent_system) then return return_val end
+
+        -- icbm.target_system = parent_system
+        -- if (icbm.target_system == nil or type(icbm.target_system) ~= "table") then return return_val end
+    end
 
     optionals = optionals or {}
 
@@ -61,17 +106,31 @@ function icbm_repository.save_icbm_data(icbm, optionals)
     return_val.item = icbm.item
     return_val.tick_launched = icbm.tick_launched
     return_val.tick_to_target = icbm.tick_to_target
+    return_val.same_surface = icbm.same_surface
     return_val.source_silo = icbm.source_silo
+    return_val.silo_type = icbm.silo_type
     return_val.source_position = icbm.source_silo.position
+    -- return_val.source_system = icbm.source_system
     return_val.original_target_position = icbm.original_target_position
     return_val.target_position = icbm.target_position
     return_val.target_distance = icbm.target_distance
+    return_val.target_surface = icbm.target_surface
+    return_val.target_surface_name = icbm.target_surface.name
+    return_val.target_surface_index = icbm.target_surface.index
+    -- return_val.target_system = icbm.target_system
     return_val.cargo_pod = icbm.cargo_pod
     return_val.cargo_pod_unit_number = icbm.cargo_pod.unit_number
     return_val.force = icbm.force
     return_val.force_index = icbm.force_index
+    return_val.circuit_launch = icbm.circuit_launch
     return_val.player_launched_by = icbm.player_launched_by
     return_val.player_launched_index = icbm.player_launched_index
+    return_val.launched_from = icbm.launched_from
+    return_val.launched_from_space = icbm.launched_from_space
+    return_val.base_target_distance = icbm.base_target_distance
+    return_val.speed = icbm.speed
+    return_val.is_travelling = icbm.is_travelling
+    return_val.space_origin_pos = icbm.space_origin_pos
 
     return_val.valid = true
 
@@ -97,11 +156,14 @@ function icbm_repository.update_icbm_data(update_data, optionals)
     if (not planet_name) then return return_val end
 
     if (not storage) then return return_val end
-    if (not storage.configurable_nukes) then storage.configurable_nukes = {} end
-    if (not storage.configurable_nukes.icbm_meta_data) then storage.configurable_nukes.icbm_meta_data = Configurable_Nukes_Data:new() end
+    if (not storage.configurable_nukes) then storage.configurable_nukes = Configurable_Nukes_Data:new() end
+    if (not storage.configurable_nukes.icbm_meta_data) then storage.configurable_nukes.icbm_meta_data = {} end
     if (not storage.configurable_nukes.icbm_meta_data[planet_name]) then
         -- If it doesn't exist, generate it
-        if (not ICBM_Meta_Repository.save_icbm_meta_data(planet_name).valid) then return return_val end
+        local icbm_meta_data = icbm_meta_repository.save_icbm_meta_data(planet_name, { update_data = update_data })
+        if (not icbm_meta_data or not icbm_meta_data.valid) then
+            return return_val
+        end
     end
     if (not storage.configurable_nukes.icbm_meta_data[planet_name].icbms) then storage.configurable_nukes.icbm_meta_data[planet_name].icbms = {} end
 
@@ -152,7 +214,6 @@ function icbm_repository.get_icbm_data(planet_name, item_number, optionals)
     Log.info(planet_name)
     Log.info(item_number)
     Log.info(optionals)
-    log("icbm_repository.get_icbm_data")
 
     local return_val = ICBM_Data:new({ item_number = -1 })
 

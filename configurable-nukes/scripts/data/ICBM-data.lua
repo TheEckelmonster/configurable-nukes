@@ -1,9 +1,16 @@
 local Data = require("scripts.data.data")
 local Log = require("libs.log.log")
 
+local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
+local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
+
 local icbm_data = {}
 
 icbm_data.type = nil
+
+icbm_data.sa_active = sa_active
+icbm_data.se_active = se_active
+
 icbm_data.surface = nil
 icbm_data.surface_name = nil
 icbm_data.item_number = {
@@ -54,13 +61,33 @@ icbm_data.force = nil
 icbm_data.force_index = -1
 icbm_data.tick_launched = -1
 icbm_data.tick_to_target = -1
+icbm_data.same_surface = false
 icbm_data.source_silo = nil
+icbm_data.silo_type = nil
 icbm_data.source_position = nil
+icbm_data.source_system = nil
 icbm_data.original_target_position = nil
 icbm_data.target_position = nil
 icbm_data.target_distance = -1
+icbm_data.target_surface = nil
+icbm_data.target_surface_name = nil
+icbm_data.target_surface_index = -1
+icbm_data.target_system = nil
+icbm_data.circuit_launch = false
 icbm_data.player_launched_by = nil
 icbm_data.player_launched_index = -1
+--[[
+    Current possible values:
+    -> "surface"
+    -> "orbit"
+    -> "inteplanetary"
+]]
+icbm_data.launched_from = nil
+icbm_data.launched_from_space = false
+icbm_data.base_target_distance = 0
+icbm_data.speed = 0
+icbm_data.is_travelling = false
+icbm_data.space_origin_pos = nil
 
 function icbm_data:new(o)
     Log.debug("icbm_data:new")
@@ -68,6 +95,8 @@ function icbm_data:new(o)
 
     local defaults = {
         type = nil,
+        -- sa_active = self.sa_active,
+        -- se_active = self.se_active,
         surface = nil,
         surface_name = nil,
         item_number = icbm_data.item_number.get(),
@@ -79,12 +108,26 @@ function icbm_data:new(o)
         tick_launched = -1,
         tick_to_target = -1,
         source_silo = nil,
-        original_target_position = nil,
+        silo_type = nil,
+        same_surface = self.same_surface,
         source_position = nil,
+        source_system = self.source_system,
+        original_target_position = nil,
         target_position = nil,
         target_distance = self.target_distance,
+        target_surface = self.target_surface,
+        target_surface_name = self.target_surface_name,
+        target_surface_index = self.target_surface_index,
+        target_system = self.target_system,
+        circuit_launch = self.circuit_launch,
         player_launched_by = self.player_launched_by,
         player_launched_index = self.player_launched_index,
+        launched_from = self.launched_from,
+        launched_from_space = self.launched_from_space,
+        base_target_distance = self.base_target_distance,
+        speed = self.speed,
+        is_travelling = self.is_travelling,
+        space_origin_pos = nil,
     }
 
     local obj = o or defaults

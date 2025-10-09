@@ -64,6 +64,7 @@ local get_atomic_warhead_research_prerequisites = function ()
     if (#prerequisites <= 0) then
         prerequisites = {
             "atomic-bomb",
+            "icbms",
             "rocket-control-unit",
         }
     end
@@ -71,10 +72,10 @@ local get_atomic_warhead_research_prerequisites = function ()
     return prerequisites
 end
 local get_atomic_warhead_research_ingredients = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS.default_value
+    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.name].value
     end
 
     local ingredients = {}
@@ -136,16 +137,29 @@ local get_atomic_warhead_research_ingredients = function ()
     if (#ingredients <= 0) then
         ingredients = {
             { "automation-science-pack", 1 },
-            { "logistic-science-pack",   1 },
-            { "chemical-science-pack",   1 },
-            { "military-science-pack",   1 },
-            { "utility-science-pack",    1 },
+            { "logistic-science-pack", 1 },
+            { "chemical-science-pack", 1 },
+            { "military-science-pack", 1 },
+            { "utility-science-pack", 1 },
             { "production-science-pack", 1 },
-            { "space-science-pack",      1 },
+            { "space-science-pack", 1 },
         }
 
+        if (mods and mods["space-exploration"]) then
+            ingredients = {
+                { "automation-science-pack", 1 },
+                { "logistic-science-pack", 1 },
+                { "chemical-science-pack", 1 },
+                { "military-science-pack", 1 },
+                { "utility-science-pack", 1 },
+                { "production-science-pack", 1 },
+                { "space-science-pack", 1 },
+                { "se-rocket-science-pack", 1 },
+            }
+        end
+
         if (mods and mods["atan-nuclear-science"]) then
-            table.insert(ingredients, { name = "nuclear-science-pack", amount = 1 })
+            table.insert(ingredients, { "nuclear-science-pack", 1 })
         end
     end
 
