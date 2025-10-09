@@ -9,6 +9,8 @@ local Log = require("libs.log.log")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local String_Utils = require("scripts.utils.string-utils")
 
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
 local icbm_meta_repository = {}
 
 function icbm_meta_repository.save_icbm_meta_data(planet_name, optionals)
@@ -22,7 +24,11 @@ function icbm_meta_repository.save_icbm_meta_data(planet_name, optionals)
     if (not planet_name or type(planet_name) ~= "string") then return return_val end
     if (String_Utils.find_invalid_substrings(planet_name)) then return return_val end
     if (not Constants.planets_dictionary) then Constants.get_planets(true) end
-    if (not Constants.planets_dictionary[planet_name]) then return return_val end
+    if (not Constants.planets_dictionary[planet_name]) then
+        if (not se_active and not string.find(planet_name, "platform-", 1, true)) then
+            return return_val
+        end
+    end
 
     optionals = optionals or {
         surface = game.get_surface(planet_name)
@@ -30,7 +36,6 @@ function icbm_meta_repository.save_icbm_meta_data(planet_name, optionals)
 
     local surface = optionals.surface or game.get_surface(planet_name)
     if (not surface or not surface.valid) then return return_val end
-    if (surface.platform) then return return_val end
 
     if (not storage) then return return_val end
     if (not storage.configurable_nukes) then storage.configurable_nukes = Configurable_Nukes_Data:new() end
@@ -66,7 +71,10 @@ function icbm_meta_repository.update_icbm_meta_data(update_data, optionals)
     if (not storage.configurable_nukes.icbm_meta_data) then storage.configurable_nukes.icbm_meta_data = {} end
     if (not storage.configurable_nukes.icbm_meta_data[planet_name]) then
         -- If it doesn't exist, generate it
-        return icbm_meta_repository.save_icbm_meta_data(planet_name, { update_data = update_data })
+        local icbm_meta_data = icbm_meta_repository.save_icbm_meta_data(planet_name, { update_data = update_data })
+        if (not icbm_meta_data or not icbm_meta_data.valid) then
+            return return_val
+        end
     end
 
     local icbm_meta_data = storage.configurable_nukes.icbm_meta_data[planet_name]
@@ -123,7 +131,10 @@ function icbm_meta_repository.get_icbm_meta_data(planet_name, optionals)
     if (not storage.configurable_nukes.icbm_meta_data) then storage.configurable_nukes.icbm_meta_data = {} end
     if (not storage.configurable_nukes.icbm_meta_data[planet_name]) then
         -- If it doesn't exist, generate it
-        return icbm_meta_repository.save_icbm_meta_data(planet_name)
+        local icbm_meta_data = icbm_meta_repository.save_icbm_meta_data(planet_name)
+        if (not icbm_meta_data or not icbm_meta_data.valid) then
+            return return_val
+        end
     end
 
     return storage.configurable_nukes.icbm_meta_data[planet_name]

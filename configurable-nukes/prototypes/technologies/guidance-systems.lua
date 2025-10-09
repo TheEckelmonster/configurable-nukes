@@ -2,6 +2,9 @@ local Util = require("__core__.lualib.util")
 
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local sa_active = mods and mods["space-age"] and true
+local se_active = mods and mods["space-exploration"] and true
+
 local get_atomic_warhead_enabled = function ()
     local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.default_value
 
@@ -16,6 +19,15 @@ local get_guidance_systems_research_modifier = function ()
 
     if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name]) then
         setting = settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name].value
+    end
+
+    return setting
+end
+local get_guidance_systems_research_top_speed_modifier = function()
+    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.default_value
+
+    if (settings and settings.global and settings.global[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name]) then
+        setting = settings.global[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name].value
     end
 
     return setting
@@ -92,17 +104,35 @@ local get_guidance_systems_research_prerequisites = function ()
 
     if (#prerequisites <= 0) then
         prerequisites = {
-            get_atomic_warhead_enabled() and "rocket-control-unit" or "icbms"
+            get_atomic_warhead_enabled() and "rocket-control-unit" or "icbms",
+            "automation-science-pack",
+            "logistic-science-pack",
+            "chemical-science-pack",
+            "military-science-pack",
+            "production-science-pack",
+            "utility-science-pack",
+            "space-science-pack",
         }
+
+        if (mods and mods["space-exploration"]) then
+            prerequisites =
+            {
+                "icbms",
+                "automation-science-pack",
+                "logistic-science-pack",
+                "chemical-science-pack",
+                "military-science-pack",
+            }
+        end
     end
 
     return prerequisites
 end
-local get_guidance_systems_research_ingredients = function ()
-    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS.default_value
+local get_guidance_systems_research_ingredients = function (param_data)
+    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.name].value
     end
 
     local ingredients = {}
@@ -164,13 +194,70 @@ local get_guidance_systems_research_ingredients = function ()
     if (#ingredients <= 0) then
         ingredients = {
             { "automation-science-pack", 1 },
-            { "logistic-science-pack",   1 },
-            { "chemical-science-pack",   1 },
-            { "military-science-pack",   1 },
-            { "utility-science-pack",    1 },
+            { "logistic-science-pack", 1 },
+            { "chemical-science-pack", 1 },
+            { "military-science-pack", 1 },
+            { "utility-science-pack", 1 },
             { "production-science-pack", 1 },
-            { "space-science-pack",      1 },
+            { "space-science-pack", 1 },
         }
+
+        if (mods and mods["space-exploration"]) then
+            ingredients = {
+                { "automation-science-pack", 1 },
+                { "logistic-science-pack", 1 },
+                { "chemical-science-pack", 1 },
+                { "military-science-pack", 1 },
+                { "se-rocket-science-pack", 1 },
+                { "space-science-pack", 1 },
+            }
+        end
+    end
+
+    if (se_active) then
+        local ingredients_dictionary = {}
+        for k, v in pairs(ingredients) do
+            ingredients_dictionary[v[1]] = true
+        end
+
+        if (param_data and type(param_data) == "table" and param_data.level and type(param_data.level) == "number") then
+            if (param_data.level > 3 and not ingredients_dictionary["utility-science-pack"]) then
+                table.insert(ingredients, {"utility-science-pack", 1 })
+            end
+            if (param_data.level > 4 and not ingredients_dictionary["production-science-pack"]) then
+                table.insert(ingredients, { "production-science-pack", 1 })
+            end
+            if (param_data.level == 6) then
+                table.insert(ingredients, { "se-astronomic-science-pack-1", 1 })
+            end
+            if (param_data.level == 7) then
+                table.insert(ingredients, { "se-astronomic-science-pack-2", 1 })
+                table.insert(ingredients, { "se-energy-science-pack-2", 1 })
+            end
+            if (param_data.level == 8) then
+                table.insert(ingredients, { "se-astronomic-science-pack-3", 1 })
+                table.insert(ingredients, { "se-energy-science-pack-3", 1 })
+                table.insert(ingredients, { "se-material-science-pack-3", 1 })
+            end
+            if (param_data.level >= 9) then
+                table.insert(ingredients, { "se-astronomic-science-pack-4", 1 })
+                table.insert(ingredients, { "se-energy-science-pack-4", 1 })
+                table.insert(ingredients, { "se-material-science-pack-4", 1 })
+                table.insert(ingredients, { "se-biological-science-pack-4", 1 })
+            end
+            if (param_data.level == 10) then
+                table.insert(ingredients, { "se-deep-space-science-pack-1", 1 })
+            end
+            if (param_data.level == 11) then
+                table.insert(ingredients, { "se-deep-space-science-pack-2", 1 })
+            end
+            if (param_data.level == 12) then
+                table.insert(ingredients, { "se-deep-space-science-pack-3", 1 })
+            end
+            if (param_data.level == 13) then
+                table.insert(ingredients, { "se-deep-space-science-pack-4", 1 })
+            end
+        end
     end
 
     return ingredients
@@ -188,39 +275,141 @@ end
 --[[ Guidance Systems Deviation Chance Reduction ]]
 local guidance_systems_levels = {}
 
-for i = 1, 10, 1 do
-    table.insert(guidance_systems_levels, {
+local guidance_systems_levels_max = 13
+
+local guidance_effect =
+{
+    type = "ammo-damage",
+    ammo_category = "icbm-guidance",
+    modifier = get_guidance_systems_research_modifier(),
+    icons =
+    {
+        {
+            icon = "__base__/graphics/icons/signal/signal-damage.png",
+        },
+        {
+            icon = "__base__/graphics/icons/atomic-bomb.png",
+            floating = true,
+        },
+    }
+}
+
+for i = 1, guidance_systems_levels_max, 1 do
+    local guidance_systems_technology = {
         type = "technology",
         name = i < 2 and "guidance-systems" or "guidance-systems-" .. i,
         icons = Util.technology_icon_constant_range("__configurable-nukes__/graphics/technology/rocket-control-unit.png"),
         localised_description = { "technology-description.guidance-systems" },
-        effects =
-        {
-            {
-                type = "ammo-damage",
-                ammo_category = "icbm-guidance",
-                modifier = get_guidance_systems_research_modifier(),
-                icons =
-                {
-                    {
-                        icon = "__base__/graphics/icons/signal/signal-damage.png",
-                    },
-                    {
-                        icon = "__base__/graphics/icons/atomic-bomb.png",
-                        floating = true,
-                    },
-                }
-            },
-        },
+        effects = {},
         prerequisites = i < 2 and get_guidance_systems_research_prerequisites() or i == 2 and { "guidance-systems" } or { "guidance-systems-" .. (i - 1) },
         unit =
         {
             count_formula = get_guidance_systems_research_formula(),
-            ingredients = get_guidance_systems_research_ingredients(),
+            ingredients = get_guidance_systems_research_ingredients({ level = i }),
             time = get_guidance_systems_research_time(),
         },
         upgrade = i > 1 and true
-    })
+    }
+
+    local top_speed_effect =
+    {
+        type = "ammo-damage",
+        ammo_category = "icbm-top-speed",
+        modifier = get_guidance_systems_research_top_speed_modifier(),
+        use_icon_overlay_constant = false,
+    }
+
+    if (i <= 10) then
+        table.insert(guidance_systems_technology.effects, guidance_effect)
+        table.insert(guidance_systems_technology.effects, top_speed_effect)
+    end
+    if (i == 11) then
+        top_speed_effect.modifier = top_speed_effect.modifier * 6
+        table.insert(guidance_systems_technology.effects, top_speed_effect)
+    end
+    if (i == 12) then
+        top_speed_effect.modifier = top_speed_effect.modifier * 14
+        table.insert(guidance_systems_technology.effects, top_speed_effect)
+    end
+    if (i == 13) then
+        top_speed_effect.modifier = top_speed_effect.modifier * 25
+        table.insert(guidance_systems_technology.effects, top_speed_effect)
+    end
+
+    if (se_active or sa_active) then
+        if (i == 6) then
+            table.insert(guidance_systems_technology.effects, { type = "unlock-recipe", recipe = "ipbm-rocket-part-intermediate" })
+        elseif (i == 8) then
+            table.insert(guidance_systems_technology.effects, { type = "unlock-recipe", recipe = "ipbm-rocket-part-advanced" })
+        elseif (i == 12) then
+            table.insert(guidance_systems_technology.effects, { type = "unlock-recipe", recipe = "ipbm-rocket-part-beyond" })
+            if (sa_active) then
+                table.insert(guidance_systems_technology.effects, { type = "unlock-recipe", recipe = "ipbm-rocket-part-beyond-2" })
+            end
+        end
+    end
+
+    if (sa_active) then
+        --[[ TODO: Add space-age science packs to guidance_systems research? ]]
+        if (i >= 11) then
+            table.insert(guidance_systems_technology.prerequisites, "agricultural-science-pack")
+            table.insert(guidance_systems_technology.prerequisites, "cryogenic-science-pack")
+            table.insert(guidance_systems_technology.prerequisites, "electromagnetic-science-pack")
+            table.insert(guidance_systems_technology.prerequisites, "metallurgic-science-pack")
+            table.insert(guidance_systems_technology.prerequisites, "promethium-science-pack")
+            table.insert(guidance_systems_technology.unit.ingredients, { "agricultural-science-pack", 1 })
+            table.insert(guidance_systems_technology.unit.ingredients, { "cryogenic-science-pack", 1 })
+            table.insert(guidance_systems_technology.unit.ingredients, { "electromagnetic-science-pack", 1 })
+            table.insert(guidance_systems_technology.unit.ingredients, { "metallurgic-science-pack", 1 })
+            table.insert(guidance_systems_technology.unit.ingredients, { "promethium-science-pack", 1 })
+
+            if (mods and mods["atan-nuclear-science"]) then
+                table.insert(guidance_systems_technology.prerequisites, "nuclear-science-pack")
+                table.insert(guidance_systems_technology.unit.ingredients, { "nuclear-science-pack", 1 })
+            end
+        end
+    end
+
+    if (se_active) then
+        if (i > 3) then
+            table.insert(guidance_systems_technology.prerequisites, "utility-science-pack")
+        end
+        if (i > 4) then
+            table.insert(guidance_systems_technology.prerequisites, "production-science-pack")
+        end
+        if (i == 6) then
+            table.insert(guidance_systems_technology.prerequisites, "se-astronomic-science-pack-1")
+        end
+        if (i == 7) then
+            table.insert(guidance_systems_technology.prerequisites, "se-astronomic-science-pack-2")
+            table.insert(guidance_systems_technology.prerequisites, "se-energy-science-pack-2")
+        end
+        if (i == 8) then
+            table.insert(guidance_systems_technology.prerequisites, "se-astronomic-science-pack-3")
+            table.insert(guidance_systems_technology.prerequisites, "se-energy-science-pack-3")
+            table.insert(guidance_systems_technology.prerequisites, "se-material-science-pack-3")
+        end
+        if (i >= 9) then
+            table.insert(guidance_systems_technology.prerequisites, "se-astronomic-science-pack-4")
+            table.insert(guidance_systems_technology.prerequisites, "se-energy-science-pack-4")
+            table.insert(guidance_systems_technology.prerequisites, "se-material-science-pack-4")
+            table.insert(guidance_systems_technology.prerequisites, "se-biological-science-pack-4")
+        end
+        if (i == 10) then
+            table.insert(guidance_systems_technology.prerequisites, "se-deep-space-science-pack-1")
+        end
+        if (i == 11) then
+            table.insert(guidance_systems_technology.prerequisites, "se-deep-space-science-pack-2")
+        end
+        if (i == 12) then
+            table.insert(guidance_systems_technology.prerequisites, "se-deep-space-science-pack-3")
+        end
+        if (i == 13) then
+            table.insert(guidance_systems_technology.prerequisites, "se-deep-space-science-pack-4")
+        end
+    end
+
+    table.insert(guidance_systems_levels, guidance_systems_technology)
 end
 
 data:extend(guidance_systems_levels)

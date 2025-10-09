@@ -11,6 +11,7 @@ rocket_silo_data.signals = {
     launch = { type = "virtual", name = "signal-check" },
     origin_override = nil,
 }
+rocket_silo_data.planet_gui_id = 0
 
 function rocket_silo_data:new(o)
     Log.debug("rocket_silo_data:new")
@@ -25,6 +26,7 @@ function rocket_silo_data:new(o)
             launch = { type = "virtual", name = "signal-check" },
             origin_override = nil,
         },
+        planet_gui_id = self.planet_gui_id,
     }
 
     local obj = o or defaults

@@ -31,7 +31,10 @@ function rocket_silo_repository.save_rocket_silo_data(rocket_silo, optionals)
     if (not storage.configurable_nukes.rocket_silo_meta_data) then storage.configurable_nukes.rocket_silo_meta_data = {} end
     if (not storage.configurable_nukes.rocket_silo_meta_data[planet_name]) then
         -- If it doesn't exist, generate it
-        if (not Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(planet_name).valid) then return return_val end
+        local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(planet_name, { update_data = update_data })
+        if (not rocket_silo_meta_data or not rocket_silo_meta_data.valid) then
+            return return_val
+        end
     end
     if (not storage.configurable_nukes.rocket_silo_meta_data[planet_name].rocket_silos) then storage.configurable_nukes.rocket_silo_meta_data[planet_name].rocket_silos = {} end
 
@@ -67,7 +70,10 @@ function rocket_silo_repository.update_rocket_silo_data(update_data, optionals)
     if (not storage.configurable_nukes.rocket_silo_meta_data) then storage.configurable_nukes.rocket_silo_meta_data = {} end
     if (not storage.configurable_nukes.rocket_silo_meta_data[planet_name]) then
         -- If it doesn't exist, generate it
-        if (not Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(planet_name).valid) then return return_val end
+        local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(planet_name, { update_data = update_data })
+        if (not rocket_silo_meta_data or not rocket_silo_meta_data.valid) then
+            return return_val
+        end
     end
     if (not storage.configurable_nukes.rocket_silo_meta_data[planet_name].rocket_silos) then storage.configurable_nukes.rocket_silo_meta_data[planet_name].rocket_silos = {} end
 
@@ -117,7 +123,7 @@ function rocket_silo_repository.delete_rocket_silo_data_by_unit_number(planet_na
 end
 
 function rocket_silo_repository.get_rocket_silo_data(planet_name, unit_number, optionals)
-    Log.debug("rocket_silo_repository.get_charaget_rocket_silo_datacter_data")
+    Log.debug("rocket_silo_repository.get_rocket_silo_data")
     Log.info(planet_name)
     Log.info(unit_number)
     Log.info(optionals)

@@ -1,3 +1,8 @@
+--[[ Space-Exploration is already doing its own thing with the rocket-control-unit technology
+    -> Simply return to avoid mucking things up
+]]
+if ((mods and mods["space-exploration"])) then return end
+
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local get_rocket_control_unit_research_prerequisites = function ()
@@ -65,15 +70,24 @@ local get_rocket_control_unit_research_prerequisites = function ()
         prerequisites = {
             "icbms",
         }
+
+        if (mods and mods["space-exploration"]) then
+            prerequisites =
+            {
+                "chemical-science-pack",
+                "advanced-circuit",
+                "battery",
+            }
+        end
     end
 
     return prerequisites
 end
 local get_rocket_control_unit_research_ingredients = function ()
-    local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS.default_value
+    local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.name].value
     end
 
     local ingredients = {}
@@ -135,13 +149,22 @@ local get_rocket_control_unit_research_ingredients = function ()
     if (#ingredients <= 0) then
         ingredients = {
             { "automation-science-pack", 1 },
-            { "logistic-science-pack",   1 },
-            { "chemical-science-pack",   1 },
-            { "military-science-pack",   1 },
-            { "utility-science-pack",    1 },
+            { "logistic-science-pack", 1 },
+            { "chemical-science-pack", 1 },
+            { "military-science-pack", 1 },
+            { "utility-science-pack", 1 },
             { "production-science-pack", 1 },
-            { "space-science-pack",      1 },
+            { "space-science-pack", 1 },
         }
+
+        if (mods and mods["space-exploration"]) then
+            ingredients =
+            {
+                { name = "automation-science-pack",    amount = 1 },
+                { name = "logistic-science-pack",      amount = 1 },
+                { name = "chemical-science-pack",      amount = 1 },
+            }
+        end
     end
 
     return ingredients

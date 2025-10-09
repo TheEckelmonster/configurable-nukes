@@ -1,4 +1,9 @@
+local Util = require("__core__.lualib.util")
 -- local Item_Sounds = require("__base__.prototypes.item_sounds")
+
+local sa_active = mods and mods["space-age"] and true
+local se_active = mods and mods["space-exploration"] and true
+local name_prefix = se_active and "se-" or ""
 
 local function item_sound(filename, volume)
     return
@@ -235,6 +240,7 @@ data:extend({
         draw_label_for_cursor_render = false,
         skip_fog_of_war = true,
         auto_recycle = false,
+        always_include_tiles = false,
         select =
         {
             border_color = { 71, 255, 73 },
@@ -247,6 +253,24 @@ data:extend({
             mode = { "nothing" },
             cursor_box_type = "copy",
         },
+        -- super_forced_select =
+        -- {
+        --     border_color = { 0, 126, 255 },
+        --     mode = { "nothing" },
+        --     cursor_box_type = "copy",
+        -- },
+        -- reverse_select =
+        -- {
+        --     border_color = { 255 - 71, 255 - 255, 255 - 73 },
+        --     mode = { "nothing" },
+        --     cursor_box_type = "copy",
+        -- },
+        -- alt_reverse_select =
+        -- {
+        --     border_color = { 255 - 239, 255 - 153, 255 - 34 },
+        --     mode = { "nothing" },
+        --     cursor_box_type = "copy",
+        -- },
         open_sound = "__base__/sound/item-open.ogg",
         close_sound = "__base__/sound/item-close.ogg"
     },
@@ -351,3 +375,18 @@ local rocket_control_unit =
 }
 
 data:extend({rocket_control_unit})
+
+if (sa_active or se_active) then
+    local ipbm_rocket_silo = Util.table.deepcopy(data.raw["item"]["rocket-silo"])
+    ipbm_rocket_silo.name = "ipbm-rocket-silo"
+    ipbm_rocket_silo.order = "b[icbm-rocket-silo]"
+    ipbm_rocket_silo.place_result = "ipbm-rocket-silo"
+
+    data:extend({ipbm_rocket_silo})
+
+    local ipbm_rocket_part = Util.table.deepcopy(data.raw["item"]["rocket-part"])
+    ipbm_rocket_part.name = name_prefix .. "ipbm-rocket-part"
+    ipbm_rocket_part.hidden = false
+
+    data:extend({ipbm_rocket_part})
+end

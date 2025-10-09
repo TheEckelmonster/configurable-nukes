@@ -43,17 +43,25 @@ data:extend({
 })
 
 data:extend({
-    --[[ rocket-control-unit research ]]
+    --[[ ICBMs research ]]
     Startup_Settings_Constants.settings.ICBMS_RESEARCH_PREREQUISITES,
-    Startup_Settings_Constants.settings.ICBMS_RESERACH_INGREDIENTS,
+    Startup_Settings_Constants.settings.ICBMS_RESEARCH_INGREDIENTS,
     Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME,
     Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT,
 })
 
 data:extend({
+    --[[ IPBMs research ]]
+    Startup_Settings_Constants.settings.IPBMS_RESEARCH_PREREQUISITES,
+    Startup_Settings_Constants.settings.IPBMS_RESEARCH_INGREDIENTS,
+    Startup_Settings_Constants.settings.IPBMS_RESEARCH_TIME,
+    Startup_Settings_Constants.settings.IPBMS_RESEARCH_COUNT,
+})
+
+data:extend({
     --[[ atomic-warhead research ]]
     Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_PREREQUISITES,
-    Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS,
+    Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS,
     Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_TIME,
     Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_COUNT,
 })
@@ -71,25 +79,35 @@ data:extend({
     Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_ADDITIONAL_CRAFTING_MACHINES,
     --[[ rocket-control-unit research ]]
     Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES,
-    Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS,
+    Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS,
     Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_TIME,
     Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_COUNT,
 })
+
+if (mods and (mods["space-age"] or mods["space-exploration"])) then
+    data:extend({
+        Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME,
+        Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE,
+        Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT,
+        Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE,
+    })
+end
 
 data:extend({
     --[[ nuclear-weapons research ]]
     Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER,
     Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_FORMULA,
     Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES,
-    Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESERACH_INGREDIENTS,
+    Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS,
     Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_TIME,
 })
 
 data:extend({
     --[[ guidance-systems research ]]
     Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER,
+    Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER,
     Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_FORMULA,
     Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES,
-    Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS,
+    Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS,
     Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TIME,
 })

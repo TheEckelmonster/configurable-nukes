@@ -8,6 +8,7 @@ icbm_meta_data.surface_name = nil
 icbm_meta_data.item_numbers = {}
 icbm_meta_data.items = {}
 icbm_meta_data.in_transit = {}
+icbm_meta_data.icbms = {}
 
 function icbm_meta_data:new(o)
     Log.debug("icbm_meta_data:new")
@@ -19,6 +20,7 @@ function icbm_meta_data:new(o)
         item_numbers = {},
         items = {},
         in_transit = {},
+        icbms = {},
     }
 
     local obj = o or defaults

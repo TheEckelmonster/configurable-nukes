@@ -4,6 +4,9 @@ local Log = require("libs.log.log")
 local rocket_silo_meta_data = Data:new()
 
 rocket_silo_meta_data.planet_name = nil
+rocket_silo_meta_data.surface_name = nil
+rocket_silo_meta_data.space_location_name = nil
+rocket_silo_meta_data.surface = nil
 rocket_silo_meta_data.rocket_silos = {}
 rocket_silo_meta_data.surface_index = -1
 
@@ -13,6 +16,9 @@ function rocket_silo_meta_data:new(o)
 
     local defaults = {
         planet_name = self.planet_name,
+        surface_name = self.surface_name,
+        space_location_name = self.space_location_name,
+        surface = self.surface,
         rocket_silos = {},
         surface_index = self.surface_index,
     }
