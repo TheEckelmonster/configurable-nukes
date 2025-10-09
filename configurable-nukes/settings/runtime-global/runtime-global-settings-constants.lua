@@ -3,6 +3,9 @@ if _runtime_global_settings_constants and _runtime_global_settings_constants.con
     return _runtime_global_settings_constants
 end
 
+local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
+local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
+
 local prefix = "configurable-nukes-"
 
 local runtime_global_settings_constants = {}
@@ -170,25 +173,66 @@ runtime_global_settings_constants.settings = {
     --     minimum_value = 0,
     --     maximum_value = 11,
     -- },
+    ICBM_ALLOW_MULTISURFACE = {
+        type = "bool-setting",
+        name = prefix .. "icbms-allow-multisurface",
+        setting_type = "runtime-global",
+        order = "cjd",
+        default_value = false,
+    },
+    ICBM_MULTISURFACE_TRAVEL_TIME_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "icbms-multisurface-travel-time-modifier",
+        setting_type = "runtime-global",
+        order = "cjd",
+        default_value = 1,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0,
+    },
+    MULTISURFACE_BASE_DISTANCE_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "multisurface-base-distance-modifier",
+        setting_type = "runtime-global",
+        order = "cje",
+        default_value = 3000,
+        maximum_value = 2 ^ 42,
+        minimum_value = 0,
+    },
+    MULTISURFACE_ORBIT_BASE_DISTANCE_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "multisurface-orbit-base-distance-modifier",
+        setting_type = "runtime-global",
+        order = "cjf",
+        default_value = 10,
+        maximum_value = 2 ^ 42,
+        minimum_value = 0,
+    },
+    ALWAYS_USE_CLOSEST_SILO = {
+        type = "bool-setting",
+        name = prefix .. "always-use-closest-silo",
+        setting_type = "runtime-global",
+        order = "ckd",
+        default_value = false,
+    },
     ICBM_PERFECT_GUIDANCE = {
         type = "bool-setting",
         name = prefix .. "icbms-perfect-guidance",
         setting_type = "runtime-global",
-        order = "cjd",
+        order = "cke",
         default_value = false,
     },
     ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME = {
         type = "bool-setting",
         name = prefix .. "icbms-planet-magnitude-affects-travel-time",
         setting_type = "runtime-global",
-        order = "cje",
+        order = "cld",
         default_value = true,
     },
     ICBM_PLANET_MAGNITUDE_MODIFIER = {
         type = "double-setting",
         name = prefix .. "icbms-magnitude-modifier",
         setting_type = "runtime-global",
-        order = "cjf",
+        order = "cle",
         default_value = 1,
         minimum_value = (1 / 2) ^ 11,
         maximum_value = 11,
@@ -197,7 +241,7 @@ runtime_global_settings_constants.settings = {
         type = "double-setting",
         name = prefix .. "icbms-travel-multiplier",
         setting_type = "runtime-global",
-        order = "cjg",
+        order = "cmd",
         default_value = 1,
         minimum_value = 0,
         maximum_value = 2 ^ 11
@@ -206,10 +250,19 @@ runtime_global_settings_constants.settings = {
         type = "double-setting",
         name = prefix .. "icbms-guidance-deviation-threshold",
         setting_type = "runtime-global",
-        order = "cjh",
-        default_value = 0.25,
+        order = "cme",
+        default_value = 0.45,
         minimum_value = 0,
         maximum_value = 1
+    },
+    ICBM_DEVIATION_SCALING_FACTOR = {
+        type = "double-setting",
+        name = prefix .. "icbms-deviation-scaling-factor",
+        setting_type = "runtime-global",
+        order = "cmf",
+        default_value = 0.55,
+        minimum_value = 0,
+        maximum_value = 2
     },
     ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN = {
         type = "bool-setting",
@@ -245,6 +298,15 @@ runtime_global_settings_constants.settings = {
         setting_type = "runtime-global",
         order = "dcf",
         default_value = false,
+    },
+    NUM_SURFACES_PROCESSED_PER_TICK = {
+        type = "int-setting",
+        name = prefix .. "num-surfaces-processed-per-tick",
+        setting_type = "runtime-global",
+        order = "gcc",
+        default_value = se_active and 12 or sa_active and 3 or 1,
+        minimum_value = 1,
+        maximum_value = 2 ^ 11
     },
 }
 

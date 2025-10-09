@@ -1,4 +1,30 @@
+--[[ Data types and metatables ]]
+local Anomaly_Data = require("scripts.data.space.celestial-objects.anomaly-data")
+local Asteroid_Belt_Data = require("scripts.data.space.celestial-objects.asteroid-belt-data")
+local Asteroid_Field_Data = require("scripts.data.space.celestial-objects.asteroid-field-data")
+local Data = require("scripts.data.data")
+local Moon_Data = require("scripts.data.space.celestial-objects.moon-data")
+local Orbit_Data = require("scripts.data.space.celestial-objects.orbit-data")
+local Planet_Data = require("scripts.data.space.celestial-objects.planet-data")
+local Spaceship_Data = require("scripts.data.space.spaceship-data")
+local Space_Location_Data = require("scripts.data.space.space-location-data")
+local Star_Data = require("scripts.data.space.celestial-objects.star-data")
+
+script.register_metatable("Anomaly_Data", Anomaly_Data.mt)
+script.register_metatable("Asteroid_Belt_Data", Asteroid_Belt_Data.mt)
+script.register_metatable("Asteroid_Field_Data", Asteroid_Field_Data.mt)
+script.register_metatable("Data", Data.mt)
+script.register_metatable("Moon_Data", Moon_Data.mt)
+script.register_metatable("Orbit_Data", Orbit_Data.mt)
+script.register_metatable("Planet_Data", Planet_Data.mt)
+script.register_metatable("Spaceship_Data", Spaceship_Data.mt)
+script.register_metatable("Space_Location_Data", Space_Location_Data.mt)
+script.register_metatable("Star_Data", Star_Data.mt)
+
+---
+
 local Constants = require("scripts.constants.constants")
+-- local Custom_Input = require("prototypes.custom-input.custom-input")
 local Log = require("libs.log.log")
 local Gui_Controller = require("scripts.controllers.gui-controller")
 local Planet_Controller = require("scripts.controllers.planet-controller")
@@ -8,23 +34,23 @@ local Configurable_Nukes_Controller = require("scripts.controllers.configurable-
 
 -- POLLUTION
 local get_pollution = function ()
-  local setting = 0
+    local setting = 0
 
-  if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.POLLUTION.name]) then
-    setting = settings.global[Runtime_Global_Settings_Constants.settings.POLLUTION.name].value
-  end
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.POLLUTION.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.POLLUTION.name].value
+    end
 
-  return setting
+    return setting
 end
 -- ATOMIC_WARHEAD_POLLUTION
 local get_atomic_warhead_pollution = function ()
-  local setting = 0
+    local setting = 0
 
-  if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_POLLUTION.name]) then
-    setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_POLLUTION.name].value
-  end
+    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_POLLUTION.name]) then
+        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_POLLUTION.name].value
+    end
 
-  return setting
+    return setting
 end
 -- ATOMIC_BOMB_BASE_DAMAGE_MODIFIER
 local get_atomic_bomb_base_damage_modifier = function()
@@ -72,13 +98,9 @@ end
 local get_atomic_bomb_bonus_damage_modifier = function()
     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.default_value
 
-    log(serpent.block(setting))
-
     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name]) then
         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name].value
     end
-
-    log(serpent.block(setting))
 
     return setting
 end
@@ -86,13 +108,9 @@ end
 local get_atomic_bomb_bonus_damage_addition = function()
     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.default_value
 
-    log(serpent.block(setting))
-
     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name]) then
         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name].value
     end
-
-    log(serpent.block(setting))
 
     return setting
 end
@@ -186,16 +204,25 @@ script.on_event(defines.events.on_research_finished, Configurable_Nukes_Controll
 script.on_event(defines.events.on_surface_created, Planet_Controller.on_surface_created)
 
 script.on_event(defines.events.on_player_selected_area, Rocket_Silo_Controller.launch_rocket)
+-- script.on_event(defines.events.on_player_reverse_selected_area, Rocket_Silo_Controller.on_player_reverse_selected_area)
 script.on_event(defines.events.on_cargo_pod_finished_ascending, Rocket_Silo_Controller.cargo_pod_finished_ascending)
+
+--[[ custom-inputs-events ]]
+
+-- script.on_event(Custom_Input.LAUNCH_IPBM.name, Rocket_Silo_Controller.launch_ipbm)
+
+--[[ GUI ]]
 
 script.on_event(defines.events.on_gui_opened, Gui_Controller.on_gui_opened)
 script.on_event(defines.events.on_gui_closed, Gui_Controller.on_gui_closed)
 script.on_event(defines.events.on_gui_elem_changed, Gui_Controller.on_gui_elem_changed)
+-- script.on_event(defines.events.on_gui_selection_state_changed, Gui_Controller.on_gui_selection_state_changed)
 script.on_event(defines.events.on_entity_settings_pasted, Gui_Controller.on_entity_settings_pasted)
 
 --[[ rocket-silo tracking ]]
 script.on_event(defines.events.on_entity_died, Rocket_Silo_Controller.rocket_silo_mined, Rocket_Silo_Controller.filter)
 script.on_event(defines.events.on_built_entity, Rocket_Silo_Controller.rocket_silo_built, Rocket_Silo_Controller.filter)
+script.on_event(defines.events.on_entity_cloned, Rocket_Silo_Controller.rocket_silo_cloned, Rocket_Silo_Controller.filter)
 script.on_event(defines.events.on_robot_built_entity, Rocket_Silo_Controller.rocket_silo_built, Rocket_Silo_Controller.filter)
 script.on_event(defines.events.script_raised_built, Rocket_Silo_Controller.rocket_silo_built, Rocket_Silo_Controller.filter)
 script.on_event(defines.events.script_raised_revive, Rocket_Silo_Controller.rocket_silo_built, Rocket_Silo_Controller.filter)

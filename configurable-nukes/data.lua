@@ -1,16 +1,33 @@
+local sa_active = mods and mods["space-age"] and true
+local se_active = mods and mods["space-exploration"] and true
+
 require("prototypes.categories.ammo-category")
-if (mods and not mods["mushroom-cloud"]) then
-    require("prototypes.entities.atomic-bomb")
-    require("prototypes.entities.atomic-warhead")
-end
-if (mods and not mods["space-age"]) then
-    require("prototypes.entities.rocket-silo")
-end
+-- require("prototypes.entities.cargo-pod")
+-- require("prototypes.custom-input.custom-input")
+require("prototypes.entities.rocket-silo")
+require("prototypes.entities.rocket-silo-rocket")
 require("prototypes.items")
 require("prototypes.recipes.rocket-control-unit")
+
+if (sa_active or se_active) then
+    require("prototypes.recipes.advanced-rocket-control-unit")
+end
 require("prototypes.shortcuts")
-require("prototypes.technologies.icbms")
 require("prototypes.technologies.rocket-control-unit")
-require("prototypes.technologies.atomic-warhead")
-require("prototypes.technologies.guidance-systems")
 require("prototypes.technologies.nuclear-weapons")
+if (not se_active) then
+    require("prototypes.technologies.icbms")
+    require("prototypes.technologies.atomic-warhead")
+    require("prototypes.technologies.guidance-systems")
+
+    if (sa_active) then
+        require("prototypes.recipes.ipbm-rocket-silo")
+        require("prototypes.technologies.ipbms")
+        require("prototypes.technologies.rocket-part-productivity")
+    end
+end
+
+-- for k, v in pairs(defines.cargo_destination) do
+--     log(serpent.block(k))
+--     log(serpent.block(v))
+-- end

@@ -153,10 +153,12 @@ local search_pattern = ",*%s*([%w%-%s]+)%s*=%s*(%d+)%s*,*"
 local i, j, param, param_val = string.find(rocket_control_unit_recipe_string, search_pattern, 1)
 local possible_matches = {}
 local found_match = false
+local ingredient_type = "item"
 
 local found_func = function (param, param_val, t, type)
     for _, j in pairs(t) do
         if (j.name == param) then
+            ingredient_type = type == "fluid" and "fluid" or "item"
             found_match = true
             break
         elseif (j.name:find(param, 1, true)) then
@@ -179,6 +181,7 @@ while param ~= nil and param_val ~= nil do
         elseif (k == "gun") then found_func(param, param_val, v, "gun")
         elseif (k == "item")  then found_func(param, param_val, v, "item")
         elseif (k == "item-with-entity-data") then found_func(param, param_val, v, "item-with-entity-data")
+        elseif (k == "fluid")  then found_func(param, param_val, v, "fluid")
         elseif (k == "module") then found_func(param, param_val, v, "module")
         elseif (k == "rail-planner") then found_func(param, param_val, v, "rail-planner")
         elseif (k == "repair-tool") then found_func(param, param_val, v, "repair-tool")
@@ -190,7 +193,7 @@ while param ~= nil and param_val ~= nil do
         if (found_match) then break end
     end
 
-    if (found_match) then table.insert(ingredients, { type = "item", name = param, amount = param_val * get_input_multiplier(), }) end
+    if (found_match) then table.insert(ingredients, { type = ingredient_type or "item", name = param, amount = param_val * get_input_multiplier(), }) end
 
     rocket_control_unit_recipe_string = string.sub(rocket_control_unit_recipe_string, j + 1, #rocket_control_unit_recipe_string)
 
@@ -207,11 +210,25 @@ if (not get_rocket_control_unit_recipe_allow_none()) then
     if (#ingredients <= 0) then
         ingredients =
         {
-            { type = "item", name = "processing-unit", amount = 2 * get_input_multiplier() },
-            { type = "item", name = "speed-module", amount = 1 * get_input_multiplier() },
+            { type = "item", name = "processing-unit", amount = 4 * get_input_multiplier() },
+            { type = "item", name = "speed-module", amount = 2 * get_input_multiplier() },
+            { type = "item", name = "efficiency-module", amount = 2 * get_input_multiplier() },
             { type = "item", name = "radar", amount = 1 * get_input_multiplier() },
-            { type = "item", name = "battery", amount = 4 * get_input_multiplier() },
+            { type = "item", name = "battery", amount = 8 * get_input_multiplier() },
         }
+
+        if (mods and mods["space-exploration"]) then
+            ingredients =
+            {
+                { type = "item", name = "advanced-circuit", amount = 5 * get_input_multiplier() },
+                --[[ Should I keep this? It gets removed by SE given when this is currently loaded ]]
+                -- { type = "item", name = "speed-module", amount = 1 * get_input_multiplier() },
+                { type = "item", name = "efficiency-module", amount = 1 * get_input_multiplier() },
+                { type = "item", name = "radar", amount = 1 * get_input_multiplier() },
+                { type = "item", name = "battery", amount = 5 * get_input_multiplier() },
+                { type = "item", name = "glass", amount = 5 * get_input_multiplier() },
+            }
+        end
     end
 end
 

@@ -7,34 +7,59 @@ local Util = require("__core__.lualib.util")
 
 local startup_settings_constants = {}
 
+local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
+local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
+
 local prefix = "configurable-nukes-"
 
-local default_recipe_atomic_bomb = {
-    { name = "processing-unit", amount = 10 },
-    { name = "explosives", amount = 10 },
-    { name = "uranium-235", amount = 30 },
+--[[ Reminder for myself:
+    -> this is a settings file
+    -> data.raw doesn't exist yet
+    -> hence needing to explicitly define the recipe, rather than making a copy of the vanilla one
+]]
+local atomic_bomb_recipe = {
+    energy_required = 50,
+    result_amount = 1,
+    ingredients =
+    {
+        { name = "processing-unit", amount = 10 },
+        { name = "explosives", amount = 10 },
+        { name = "uranium-235", amount = 30 },
+    }
 }
+local default_recipe_atomic_bomb = Util.table.deepcopy(atomic_bomb_recipe)
 
-local default_recipe_rocket_control_unit =
-{
-    { type = "item", name = "processing-unit", amount = 2 },
-    { type = "item", name = "speed-module", amount = 1 },
-    { type = "item", name = "radar", amount = 1 },
-    { type = "item", name = "battery", amount = 4 },
-}
-
-if (mods and mods["space-age"]) then
-    default_recipe_atomic_bomb[3].amount = 100
+if (mods and (mods["space-age"] or se_active)) then
+    if (default_recipe_atomic_bomb and default_recipe_atomic_bomb.ingredients) then
+        for k, v in pairs(default_recipe_atomic_bomb.ingredients) do
+            if (v.name == "uranium-235") then
+                v.amount = 100
+            end
+        end
+    end
 end
 
 local default_recipe_atomic_warhead = Util.table.deepcopy(default_recipe_atomic_bomb)
 
-for k, v in pairs(default_recipe_atomic_warhead) do v.amount = v.amount * 5 end
+if (default_recipe_atomic_warhead) then
+    for k, v in pairs(default_recipe_atomic_warhead.ingredients) do
+        if (mods and (mods["space-age"] or se_active) and v.name == "uranium-235") then
+            v.amount = v.amount * 2.71
+        else
+            v.amount = v.amount * 5
+        end
+    end
 
-table.insert(default_recipe_atomic_warhead, { name = "rocket-control-unit", amount = 10 })
+    if (se_active) then
+        table.insert(default_recipe_atomic_warhead.ingredients, { name = "rocket-control-unit", amount = 25 })
+    else
+        table.insert(default_recipe_atomic_warhead.ingredients, { name = "rocket-control-unit", amount = 25 })
+    end
+end
 
 local default_technology_prerequisites_atomic_warhead = {
     "atomic-bomb",
+    "icbms",
     "rocket-control-unit",
 }
 
@@ -48,13 +73,30 @@ local default_technology_ingredients_atomic_warhead = {
     { name = "space-science-pack",      amount = 1 },
 }
 
+if (se_active) then
+    default_technology_ingredients_atomic_warhead = {
+        { name = "automation-science-pack", amount = 1 },
+        { name = "logistic-science-pack",   amount = 1 },
+        { name = "chemical-science-pack",   amount = 1 },
+        { name = "military-science-pack",   amount = 1 },
+        { name = "utility-science-pack",    amount = 1 },
+        { name = "production-science-pack", amount = 1 },
+        { name = "space-science-pack",      amount = 1 },
+        { name = "se-rocket-science-pack",  amount = 1 },
+    }
+end
+
 if (mods and mods["atan-nuclear-science"]) then
     table.insert(default_technology_ingredients_atomic_warhead, { name = "nuclear-science-pack", amount = 1 })
 end
 
 local default_technology_prerequisites_ICBMs = {
-    "production-science-pack",
+    "automation-science-pack",
+    "logistic-science-pack",
+    "chemical-science-pack",
+    "military-science-pack",
     "utility-science-pack",
+    "production-science-pack",
     "space-science-pack",
 }
 
@@ -67,6 +109,116 @@ local default_technology_ingredients_ICBMs = {
     { name = "production-science-pack", amount = 1 },
     { name = "space-science-pack",      amount = 1 },
 }
+
+if (se_active) then
+    default_technology_prerequisites_ICBMs = {
+        "automation-science-pack",
+        "logistic-science-pack",
+        "chemical-science-pack",
+        "military-science-pack",
+        -- "utility-science-pack",
+        -- "production-science-pack",
+        "space-science-pack",
+        "se-rocket-science-pack",
+    }
+
+    default_technology_ingredients_ICBMs = {
+        { name = "automation-science-pack", amount = 1 },
+        { name = "logistic-science-pack",   amount = 1 },
+        { name = "chemical-science-pack",   amount = 1 },
+        { name = "military-science-pack",   amount = 1 },
+        -- { name = "utility-science-pack",    amount = 1 },
+        -- { name = "production-science-pack", amount = 1 },
+        { name = "space-science-pack",      amount = 1 },
+        { name = "se-rocket-science-pack",   amount = 1 },
+    }
+end
+
+local default_technology_prerequisites_IPBMs = {
+    "icbms",
+    "guidance-systems-4",
+}
+
+local default_technology_ingredients_IPBMs = {
+    { name = "automation-science-pack", amount = 1 },
+    { name = "logistic-science-pack",   amount = 1 },
+    { name = "chemical-science-pack",   amount = 1 },
+    { name = "military-science-pack",   amount = 1 },
+    { name = "utility-science-pack",    amount = 1 },
+    { name = "production-science-pack", amount = 1 },
+    { name = "space-science-pack",      amount = 1 },
+}
+
+if (se_active) then
+    default_technology_ingredients_IPBMs = {
+        { name = "automation-science-pack", amount = 1 },
+        { name = "logistic-science-pack",   amount = 1 },
+        { name = "chemical-science-pack",   amount = 1 },
+        { name = "military-science-pack",   amount = 1 },
+        { name = "utility-science-pack",    amount = 1 },
+        { name = "production-science-pack", amount = 1 },
+        { name = "space-science-pack",      amount = 1 },
+        { name = "se-rocket-science-pack",  amount = 1 },
+    }
+end
+
+local default_recipe_rocket_control_unit =
+{
+    result_amount = 1,
+    energy_required = 30,
+    ingredients =
+    {
+        { type = "item", name = "processing-unit", amount = 4 },
+        { type = "item", name = "speed-module", amount = 2 },
+        { type = "item", name = "efficiency-module", amount = 2 },
+        { type = "item", name = "radar", amount = 1 },
+        { type = "item", name = "battery", amount = 8 },
+    }
+}
+
+if (se_active) then
+    default_recipe_rocket_control_unit.ingredients =
+    {
+        { type = "item", name = "advanced-circuit", amount = 5 },
+        --[[ Should I keep this? It gets removed by SE given when this is currently loaded ]]
+        -- { type = "item", name = "speed-module", amount = 1 },
+        { type = "item", name = "efficiency-module", amount = 1 },
+        { type = "item", name = "radar", amount = 1 },
+        { type = "item", name = "battery", amount = 5 },
+        { type = "item", name = "glass", amount = 5 },
+        { type = "item", name = "iron-plate", amount = 5 },
+    }
+end
+
+local advanced_recipe_rocket_control_unit = {
+    energy_required = default_recipe_rocket_control_unit.energy_required * 2.5,
+    result_amount = 25,
+}
+
+if (mods) then
+    if (mods["space-age"]) then
+        advanced_recipe_rocket_control_unit.ingredients =
+        {
+            { type = "item", name = "quantum-processor", amount = 5 },
+            { type = "item", name = "radar", amount = 5 },
+            { type = "item", name = "supercapacitor", amount = 10 },
+            { type = "item", name = "speed-module-3", amount = 1 },
+            { type = "item", name = "efficiency-module-3", amount = 1 },
+            { type = "fluid", name = "fluoroketone-cold", amount = 50 },
+        }
+    elseif (se_active) then
+        advanced_recipe_rocket_control_unit.result_amount = advanced_recipe_rocket_control_unit.result_amount - 9
+
+        advanced_recipe_rocket_control_unit.ingredients =
+        {
+            { type = "item", name = "processing-unit", amount = 4 },
+            { type = "item", name = "radar", amount = 4 },
+            { type = "item", name = "se-holmium-solenoid", amount = 4 },
+            { type = "item", name = "efficiency-module-2", amount = 4 },
+            { type = "fluid", name = "se-cryonite-slush", amount = 100 },
+        }
+    end
+end
 
 local default_technology_prerequisites_rocket_control_unit = {
     "icbms",
@@ -81,6 +233,20 @@ local default_technology_ingredients_rocket_control_unit = {
     { name = "production-science-pack", amount = 1 },
     { name = "space-science-pack",      amount = 1 },
 }
+
+if (se_active) then
+    default_technology_prerequisites_rocket_control_unit =
+    {
+        "chemical-science-pack",
+        "advanced-circuit",
+        "battery",
+    }
+    default_technology_ingredients_rocket_control_unit = {
+        { name = "automation-science-pack",    amount = 1 },
+        { name = "logistic-science-pack",      amount = 1 },
+        { name = "chemical-science-pack",      amount = 1 },
+    }
+end
 
 local default_technology_prerequisites_nuclear_weapons = {
     "atomic-bomb",
@@ -99,6 +265,50 @@ local default_technology_ingredients_nuclear_weapons = {
 
 if (mods and mods["atan-nuclear-science"]) then
     table.insert(default_technology_ingredients_nuclear_weapons, { name = "nuclear-science-pack", amount = 1 })
+end
+
+
+local default_technology_prerequisites_guidance_systems = {
+    "rocket-control-unit",
+    "automation-science-pack",
+    "logistic-science-pack",
+    "chemical-science-pack",
+    "military-science-pack",
+    "production-science-pack",
+    "utility-science-pack",
+    "space-science-pack",
+}
+
+local default_technology_ingredients_guidance_systems = {
+    { name = "automation-science-pack", amount = 1 },
+    { name = "logistic-science-pack",   amount = 1 },
+    { name = "chemical-science-pack",   amount = 1 },
+    { name = "military-science-pack",   amount = 1 },
+}
+
+local default_guidance_systems_research_formula = "(1096+((((2.71^(L))*1000)^0.5)*0.75)*100)/1.547635"
+
+if (se_active) then
+    default_technology_prerequisites_guidance_systems = {
+        "icbms",
+        "automation-science-pack",
+        "logistic-science-pack",
+        "chemical-science-pack",
+        "military-science-pack",
+    }
+
+    default_technology_ingredients_guidance_systems = {
+        { name = "automation-science-pack", amount = 1 },
+        { name = "logistic-science-pack",   amount = 1 },
+        { name = "chemical-science-pack",   amount = 1 },
+        { name = "military-science-pack",   amount = 1 },
+        { name = "se-rocket-science-pack",  amount = 1 },
+        { name = "space-science-pack",      amount = 1 },
+    }
+elseif (not se_active) then
+    table.insert(default_technology_ingredients_guidance_systems, { name = "utility-science-pack",    amount = 1 })
+    table.insert(default_technology_ingredients_guidance_systems, { name = "production-science-pack", amount = 1 })
+    table.insert(default_technology_ingredients_guidance_systems, { name = "space-science-pack",      amount = 1 })
 end
 
 startup_settings_constants.settings = {
@@ -259,7 +469,7 @@ startup_settings_constants.settings = {
         name = prefix .. "atomic-bomb-crafting-time",
         setting_type = "startup",
         order = "cce",
-        default_value = 50,
+        default_value = atomic_bomb_recipe.energy_required,
         maximum_value = 2 ^ 11,
         minimum_value = 0.0001
     },
@@ -277,7 +487,7 @@ startup_settings_constants.settings = {
         name = prefix .. "atomic-bomb-result-count",
         setting_type = "startup",
         order = "ccg",
-        default_value = 1,
+        default_value = atomic_bomb_recipe.result_amount,
         maximum_value = 2 ^ 11,
         minimum_value = 1
     },
@@ -331,7 +541,7 @@ startup_settings_constants.settings = {
         name = prefix .. "atomic-warhead-crafting-time",
         setting_type = "startup",
         order = "dce",
-        default_value = 50,
+        default_value = atomic_bomb_recipe.energy_required * 2.5,
         maximum_value = 2 ^ 11,
         minimum_value = 0.0001
     },
@@ -421,7 +631,7 @@ startup_settings_constants.settings = {
         name = prefix .. "rocket-control-unit-crafting-time",
         setting_type = "startup",
         order = "dde",
-        default_value = 30,
+        default_value = default_recipe_rocket_control_unit.energy_required,
         maximum_value = 2 ^ 11,
         minimum_value = 0.0001
     },
@@ -487,6 +697,52 @@ startup_settings_constants.settings = {
         allow_blank = true,
         auto_trim = true,
     },
+    ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "advanced-rocket-control-unit-crafting-time",
+        setting_type = "startup",
+        order = "ddl",
+        default_value = advanced_recipe_rocket_control_unit.energy_required,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001
+    },
+    ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "advanced-rocket-control-unit-result-count",
+        setting_type = "startup",
+        order = "ddm",
+        default_value = advanced_recipe_rocket_control_unit.result_amount,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1
+    },
+    ADVANCED_ROCKET_CONTROL_UNIT_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "advanced-rocket-control-unit-recipe",
+        setting_type = "startup",
+        order = "ddn",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "advanced-rocket-control-unit-crafting-machine",
+        setting_type = "startup",
+        order = "ddo",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+    },
     --[[ Technology ]]
     --[[ ICBMS ]]
     ICBMS_RESEARCH_PREREQUISITES = {
@@ -498,7 +754,7 @@ startup_settings_constants.settings = {
         allow_blank = true,
         auto_trim = true,
     },
-    ICBMS_RESERACH_INGREDIENTS = {
+    ICBMS_RESEARCH_INGREDIENTS = {
         type = "string-setting",
         name = prefix .. "icbms-research-ingredients",
         setting_type = "startup",
@@ -525,21 +781,62 @@ startup_settings_constants.settings = {
         minimum_value = 1,
         maximum_value = 2 ^ 42,
     },
-    --[[ Warhead ]]
-    ATOMIC_WARHEAD_RESEARCH_PREREQUISITES = {
+    --[[ IPBMS ]]
+    IPBMS_RESEARCH_PREREQUISITES = {
         type = "string-setting",
-        name = prefix .. "atomic-warhead-research-prerequisites",
+        name = prefix .. "ipbms-research-prerequisites",
         setting_type = "startup",
         order = "dfa",
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
+        hidden = not sa_active and not se_active,
     },
-    ATOMIC_WARHEAD_RESERACH_INGREDIENTS = {
+    IPBMS_RESEARCH_INGREDIENTS = {
+        type = "string-setting",
+        name = prefix .. "ipbms-research-ingredients",
+        setting_type = "startup",
+        order = "dfb",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        hidden = not sa_active and not se_active,
+    },
+    IPBMS_RESEARCH_TIME = {
+        type = "int-setting",
+        name = prefix .. "ipbms-research-time",
+        setting_type = "startup",
+        order = "dfc",
+        default_value = 60,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+        hidden = not sa_active and not se_active,
+    },
+    IPBMS_RESEARCH_COUNT = {
+        type = "int-setting",
+        name = prefix .. "ipbms-research-count",
+        setting_type = "startup",
+        order = "dfd",
+        default_value = se_active and 20000 or 30000,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+        hidden = not sa_active and not se_active,
+    },
+    --[[ Warhead ]]
+    ATOMIC_WARHEAD_RESEARCH_PREREQUISITES = {
+        type = "string-setting",
+        name = prefix .. "atomic-warhead-research-prerequisites",
+        setting_type = "startup",
+        order = "dga",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    ATOMIC_WARHEAD_RESEARCH_INGREDIENTS = {
         type = "string-setting",
         name = prefix .. "atomic-warhead-research-ingredients",
         setting_type = "startup",
-        order = "dfb",
+        order = "dgb",
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
@@ -548,7 +845,7 @@ startup_settings_constants.settings = {
         type = "int-setting",
         name = prefix .. "atomic-warhead-research-time",
         setting_type = "startup",
-        order = "dfc",
+        order = "dgc",
         default_value = 60,
         minimum_value = 1,
         maximum_value = 2 ^ 42,
@@ -557,7 +854,7 @@ startup_settings_constants.settings = {
         type = "int-setting",
         name = prefix .. "atomic-warhead-research-count",
         setting_type = "startup",
-        order = "dfd",
+        order = "dgd",
         default_value = 10000,
         minimum_value = 1,
         maximum_value = 2 ^ 42,
@@ -567,16 +864,16 @@ startup_settings_constants.settings = {
         type = "string-setting",
         name = prefix .. "rocket-control-unit-research-prerequisites",
         setting_type = "startup",
-        order = "dga",
+        order = "dha",
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
     },
-    ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS = {
+    ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS = {
         type = "string-setting",
         name = prefix .. "rocket-control-unit-research-ingredients",
         setting_type = "startup",
-        order = "dgb",
+        order = "dhb",
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
@@ -585,7 +882,7 @@ startup_settings_constants.settings = {
         type = "int-setting",
         name = prefix .. "rocket-control-unit-research-time",
         setting_type = "startup",
-        order = "dgc",
+        order = "dhc",
         default_value = 60,
         minimum_value = 1,
         maximum_value = 2 ^ 42,
@@ -594,7 +891,7 @@ startup_settings_constants.settings = {
         type = "int-setting",
         name = prefix .. "rocket-control-unit-research-count",
         setting_type = "startup",
-        order = "dgd",
+        order = "dhd",
         default_value = 2000,
         minimum_value = 1,
         maximum_value = 2 ^ 42,
@@ -604,7 +901,7 @@ startup_settings_constants.settings = {
         type = "double-setting",
         name = prefix .. "nuclear-weapons-research-damage-modifier",
         setting_type = "startup",
-        order = "dha",
+        order = "dia",
         default_value = 0.85,
         minimum_value = (1 / 11) ^ 11,
         maximum_value = 2 ^ 11,
@@ -613,7 +910,7 @@ startup_settings_constants.settings = {
         type = "string-setting",
         name = prefix .. "nuclear-weapons-research-formula",
         setting_type = "startup",
-        order = "dhb",
+        order = "dib",
         default_value = "2^(L-1)*1000",
         allow_blank = false,
         auto_trim = true,
@@ -621,17 +918,17 @@ startup_settings_constants.settings = {
     NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES = {
         type = "string-setting",
         name = prefix .. "nuclear-weapons-research-prerequisites",
-        order = "dhc",
+        order = "dic",
         setting_type = "startup",
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
     },
-    NUCLEAR_WEAPONS_RESERACH_INGREDIENTS = {
+    NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS = {
         type = "string-setting",
         name = prefix .. "nuclear-weapons-research-ingredients",
         setting_type = "startup",
-        order = "dhd",
+        order = "did",
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
@@ -640,7 +937,7 @@ startup_settings_constants.settings = {
         type = "int-setting",
         name = prefix .. "nuclear-weapons-research-time",
         setting_type = "startup",
-        order = "dhe",
+        order = "die",
         default_value = 60,
         minimum_value = 1,
         maximum_value = 2 ^ 42,
@@ -666,34 +963,43 @@ startup_settings_constants.settings = {
         type = "double-setting",
         name = prefix .. "guidance-systems-research-modifier",
         setting_type = "startup",
-        order = "dia",
+        order = "dja",
         default_value = -0.1,
-        minimum_value = -1,
-        maximum_value = 1,
+        minimum_value = -11,
+        maximum_value = 0,
+    },
+    GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "guidance-systems-research-top-speed-modifier",
+        setting_type = "startup",
+        order = "djb",
+        default_value = 0.1,
+        minimum_value = 0,
+        maximum_value = 11,
     },
     GUIDANCE_SYSTEMS_RESEARCH_FORMULA = {
         type = "string-setting",
         name = prefix .. "guidance-systems-research-formula",
         setting_type = "startup",
-        order = "dib",
-        default_value = "2^(L)*1000",
+        order = "djc",
+        default_value = default_guidance_systems_research_formula,
         allow_blank = false,
         auto_trim = true,
     },
     GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES = {
         type = "string-setting",
         name = prefix .. "guidance-systems-research-prerequisites",
-        order = "dic",
+        order = "djd",
         setting_type = "startup",
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
     },
-    GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS = {
+    GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS = {
         type = "string-setting",
         name = prefix .. "guidance-systems-research-ingredients",
         setting_type = "startup",
-        order = "did",
+        order = "dje",
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
@@ -702,25 +1008,11 @@ startup_settings_constants.settings = {
         type = "int-setting",
         name = prefix .. "guidance-systems-research-time",
         setting_type = "startup",
-        order = "die",
+        order = "djf",
         default_value = 60,
         minimum_value = 1,
         maximum_value = 2 ^ 42,
     },
-}
-
-local default_technology_prerequisites_guidance_systems = {
-    "rocket-control-unit",
-}
-
-local default_technology_ingredients_guidance_systems = {
-    { name = "automation-science-pack", amount = 1 },
-    { name = "logistic-science-pack",   amount = 1 },
-    { name = "chemical-science-pack",   amount = 1 },
-    { name = "military-science-pack",   amount = 1 },
-    { name = "utility-science-pack",    amount = 1 },
-    { name = "production-science-pack", amount = 1 },
-    { name = "space-science-pack",      amount = 1 },
 }
 
 -- Atomic Bomb
@@ -781,39 +1073,61 @@ if (mods and mods["space-age"]) then
     table.insert(startup_settings_constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "cryogenics-or-assembling")
     table.insert(startup_settings_constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "cryogenics")
 
+    --Advanced Rocket Control Unit
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "chemistry-or-cryogenics")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "pressing")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "crushing")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "crafting-with-fluid-or-metallurgy")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "metallurgy-or-assembling")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "metallurgy")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "organic")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "organic-or-hand-crafting")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "organic-or-assembling")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "organic-or-chemistry")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "captive-spawner-process")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "electronics-or-assembling")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "electronics")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "electronics-with-fluid")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "electromagnetics")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "cryogenics-or-assembling")
+    table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, "cryogenics")
 end
 
 -- ATOMIC_BOMB_RECIPE
-for k, v in pairs(default_recipe_atomic_bomb) do
-    if (not startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value or startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value == "") then
-        startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value =
-            v.name
-            .. "="
-            .. v.amount
-    else
-        startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value =
-            startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
+if (default_recipe_atomic_bomb and default_recipe_atomic_bomb.ingredients) then
+    for k, v in pairs(default_recipe_atomic_bomb.ingredients) do
+        if (not startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value or startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value == "") then
+            startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value =
+                v.name
+                .. "="
+                .. v.amount
+        else
+            startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value =
+                startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value
+                .. ","
+                .. v.name
+                .. "="
+                .. v.amount
+        end
     end
 end
 
 -- ATOMIC_WARHEAD_RECIPE
-for k, v in pairs(default_recipe_atomic_warhead) do
-    if (not startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value or startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value == "") then
-        startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value =
-            v.name
-            .. "="
-            .. v.amount
-    else
-        startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value =
-            startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
+if (default_recipe_atomic_bomb and default_recipe_atomic_bomb.ingredients) then
+    for k, v in pairs(default_recipe_atomic_warhead.ingredients) do
+        if (not startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value or startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value == "") then
+            startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value =
+                v.name
+                .. "="
+                .. v.amount
+        else
+            startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value =
+                startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value
+                .. ","
+                .. v.name
+                .. "="
+                .. v.amount
+        end
     end
 end
 
@@ -827,16 +1141,16 @@ for k, v in pairs(default_technology_prerequisites_atomic_warhead) do
     end
 end
 
--- ATOMIC_WARHEAD_RESERACH_INGREDIENTS
+-- ATOMIC_WARHEAD_RESEARCH_INGREDIENTS
 for k, v in pairs(default_technology_ingredients_atomic_warhead) do
-    if (not startup_settings_constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS.default_value or startup_settings_constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS.default_value =
+    if (not startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value == "") then
+        startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value =
             v.name
             .. "="
             .. v.amount
     else
-        startup_settings_constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.ATOMIC_WARHEAD_RESERACH_INGREDIENTS.default_value
+        startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value =
+            startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value
             .. ","
             .. v.name
             .. "="
@@ -854,16 +1168,43 @@ for k, v in pairs(default_technology_prerequisites_ICBMs) do
     end
 end
 
--- ICBMS_RESERACH_INGREDIENTS
+-- ICBMS_RESEARCH_INGREDIENTS
 for k, v in pairs(default_technology_ingredients_ICBMs) do
-    if (not startup_settings_constants.settings.ICBMS_RESERACH_INGREDIENTS.default_value or startup_settings_constants.settings.ICBMS_RESERACH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.ICBMS_RESERACH_INGREDIENTS.default_value =
+    if (not startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value == "") then
+        startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value =
             v.name
             .. "="
             .. v.amount
     else
-        startup_settings_constants.settings.ICBMS_RESERACH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.ICBMS_RESERACH_INGREDIENTS.default_value
+        startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value =
+            startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value
+            .. ","
+            .. v.name
+            .. "="
+            .. v.amount
+    end
+end
+
+-- IPBMS_RESEARCH_PREREQUISITES
+for k, v in pairs(default_technology_prerequisites_IPBMs) do
+    if (not startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value or startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value == "") then
+        startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value = v
+    else
+        startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value =
+            startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value .. ",".. v
+    end
+end
+
+-- IPBMS_RESEARCH_INGREDIENTS
+for k, v in pairs(default_technology_ingredients_IPBMs) do
+    if (not startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value == "") then
+        startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value =
+            v.name
+            .. "="
+            .. v.amount
+    else
+        startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value =
+            startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value
             .. ","
             .. v.name
             .. "="
@@ -872,19 +1213,40 @@ for k, v in pairs(default_technology_ingredients_ICBMs) do
 end
 
 -- ROCKET_CONTROL_UNIT_RECIPE
-for k, v in pairs(default_recipe_rocket_control_unit) do
-    if (not startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value or startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value == "") then
-        startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value =
-            v.name
-            .. "="
-            .. v.amount
-    else
-        startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value =
-            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
+if (default_recipe_rocket_control_unit and default_recipe_rocket_control_unit.ingredients) then
+    for k, v in pairs(default_recipe_rocket_control_unit.ingredients) do
+        if (not startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value or startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value == "") then
+            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value =
+                v.name
+                .. "="
+                .. v.amount
+        else
+            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value =
+                startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value
+                .. ","
+                .. v.name
+                .. "="
+                .. v.amount
+        end
+    end
+end
+
+-- ADVANCED_ROCKET_CONTROL_UNIT_RECIPE
+if (advanced_recipe_rocket_control_unit and advanced_recipe_rocket_control_unit.ingredients) then
+    for k, v in pairs(advanced_recipe_rocket_control_unit.ingredients) do
+        if (not startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value or startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value == "") then
+            startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value =
+                v.name
+                .. "="
+                .. v.amount
+        else
+            startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value =
+                startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value
+                .. ","
+                .. v.name
+                .. "="
+                .. v.amount
+        end
     end
 end
 
@@ -898,20 +1260,25 @@ for k, v in pairs(default_technology_prerequisites_rocket_control_unit) do
     end
 end
 
--- ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS
+-- ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS
 for k, v in pairs(default_technology_ingredients_rocket_control_unit) do
-    if (not startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS.default_value or startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS.default_value =
-            v.name
-            .. "="
-            .. v.amount
+    if (v.name and v.amount) then
+        if (not startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value == "") then
+            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value =
+                v.name
+                .. "="
+                .. v.amount
+        else
+            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value =
+                startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value
+                .. ","
+                .. v.name
+                .. "="
+                .. v.amount
+        end
     else
-        startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESERACH_INGREDIENTS.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
+        startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value = ""
+        break
     end
 end
 
@@ -925,16 +1292,16 @@ for k, v in pairs(default_technology_prerequisites_nuclear_weapons) do
     end
 end
 
--- NUCLEAR_WEAPONS_RESERACH_INGREDIENTS
+-- NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS
 for k, v in pairs(default_technology_ingredients_nuclear_weapons) do
-    if (not startup_settings_constants.settings.NUCLEAR_WEAPONS_RESERACH_INGREDIENTS.default_value or startup_settings_constants.settings.NUCLEAR_WEAPONS_RESERACH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.NUCLEAR_WEAPONS_RESERACH_INGREDIENTS.default_value =
+    if (not startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value == "") then
+        startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value =
             v.name
             .. "="
             .. v.amount
     else
-        startup_settings_constants.settings.NUCLEAR_WEAPONS_RESERACH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.NUCLEAR_WEAPONS_RESERACH_INGREDIENTS.default_value
+        startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value =
+            startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value
             .. ","
             .. v.name
             .. "="
@@ -952,20 +1319,25 @@ for k, v in pairs(default_technology_prerequisites_guidance_systems) do
     end
 end
 
--- GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS
+-- GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS
 for k, v in pairs(default_technology_ingredients_guidance_systems) do
-    if (not startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS.default_value or startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS.default_value =
-            v.name
-            .. "="
-            .. v.amount
+    if (v.name and v.amount) then
+        if (not startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value == "") then
+            startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value =
+                v.name
+                .. "="
+                .. v.amount
+        else
+            startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value =
+                startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value
+                .. ","
+                .. v.name
+                .. "="
+                .. v.amount
+        end
     else
-        startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESERACH_INGREDIENTS.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
+        startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value = ""
+        break
     end
 end
 

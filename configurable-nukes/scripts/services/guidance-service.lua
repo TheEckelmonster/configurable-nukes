@@ -24,7 +24,6 @@ function guidance_service.research_finished(data)
         force_name = force.name,
         research_level = force.level,
     })
-
 end
 
 guidance_service.configurable_nukes = true

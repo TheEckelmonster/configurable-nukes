@@ -41,3 +41,13 @@ data:extend({
         subgroup = "ammo-category"
     },
 })
+
+data:extend({
+    {
+        type = "ammo-category",
+        name = "icbm-top-speed",
+        hidden = true,
+        hidden_in_factoriopedia = true,
+        subgroup = "ammo-category"
+    },
+})

@@ -1,5 +1,5 @@
 -- If already defined, return
-if (_version_validations and _version_validations.all_seeing_satellite) then
+if (_version_validations and _version_validations.configurable_nukes) then
     return _version_validations
 end
 
@@ -25,11 +25,11 @@ function version_validations.validate_version()
             return_val = false
             Log.error(Constants.mod_name .. ": invalid version detected relative to version " .. Version_Data.string_val .. "; naive reinitialization failed")
             if (version_data.string_val) then
-                game.print(Constants.mod_name .. ": Version (" .. Version_Data.string_val .. ") is invalid relative to previously installed version: (" .. version_data.string_val .. ")")
+                game.print({ "version-validations.invalid-version-message-1a", Constants.mod_name, Version_Data.string_val, version_data.string_val })
             else
-                game.print(Constants.mod_name .. ": Version is invalid relative to previously installed version: (" .. Version_Data.string_val .. ")")
+                game.print({ "version-validations.invalid-version-message-1b", Constants.mod_name, Version_Data.string_val })
             end
-            game.print(Constants.mod_name .. ": If this error persists, recommend executing command /configurable_nukes.init")
+            game.print({ "version-validations.invalid-version-message-2", Constants.mod_name })
         end
         return return_val
     end -- local validate_fun = function ()
@@ -41,7 +41,7 @@ function version_validations.validate_version()
     return return_val
 end
 
-version_validations.all_seeing_satellite = true
+version_validations.configurable_nukes = true
 
 local _version_validations = version_validations
 return version_validations

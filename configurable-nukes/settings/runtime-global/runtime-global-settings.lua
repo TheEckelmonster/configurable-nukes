@@ -25,14 +25,24 @@ data:extend({
     Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES,
     Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES,
 
+    Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE,
+    Runtime_Global_Settings_Constants.settings.ICBM_MULTISURFACE_TRAVEL_TIME_MODIFIER,
+    Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER,
+    Runtime_Global_Settings_Constants.settings.MULTISURFACE_ORBIT_BASE_DISTANCE_MODIFIER,
+
+    Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO,
+
     Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE,
     Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_MODIFIER,
     Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME,
     Runtime_Global_Settings_Constants.settings.ICBM_TRAVEL_MULTIPLIER,
     Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD,
+    Runtime_Global_Settings_Constants.settings.ICBM_DEVIATION_SCALING_FACTOR,
 
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN,
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES,
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES,
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS,
+
+    Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK,
 })

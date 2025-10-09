@@ -78,5 +78,6 @@ function _data:update(data)
 end
 
 local Data = _data:new(Data)
+Data.mt = _data
 
 return Data

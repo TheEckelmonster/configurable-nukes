@@ -3,6 +3,7 @@ if _gui_controller and _gui_controller.configurable_nukes then
   return _gui_controller
 end
 
+local Constants = require("scripts.constants.constants")
 local Log = require("libs.log.log")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
@@ -46,7 +47,7 @@ function gui_controller.on_gui_opened(event)
     local signal_x = rocket_silo_data.signals.x or Rocket_Silo_Data.signals.x
     local signal_y = rocket_silo_data.signals.y or Rocket_Silo_Data.signals.y
     local signal_origin_override = get_icbm_allow_targeting_origin() and rocket_silo_data.signals.origin_override -- Intentionally not getting a default from Rocket_Silo_Data
-    -- local signal_planet = rocket_silo_data.signals.planet or Rocket_Silo_Data.signals.planet
+    local planet_gui_id = rocket_silo_data.planet_gui_id or Rocket_Silo_Data.planet_gui_id
 
     local player = game.get_player(event.player_index)
     local gui = player.gui.relative.cn_frame_outer_circuit_launchable
@@ -125,6 +126,31 @@ function gui_controller.on_gui_opened(event)
                 signal = signal_origin_override
             })
         end
+        -- if (script and script.active_mods and script.active_mods["space-age"]) then
+        --     gui_flow.add({
+        --         type = "label",
+        --         name = "cn_label_planet",
+        --         caption = { "cn-launch-signal-gui.planet" },
+        --         direction = "vertical",
+        --     })
+
+        --     local planets = Constants.get_planets(true)
+        --     local items = {}
+
+        --     for k, v in pairs(planets) do
+        --         if (v.surface and v.surface.valid) then
+        --             table.insert(items, { "cn-launch-signal-gui.list-item", v.name })
+        --         end
+        --     end
+
+        --     gui_inner.add({
+        --         type = "drop-down",
+        --         -- type = "list-box",
+        --         name = "cn_dropdown_planet",
+        --         selected_index = planet_gui_id,
+        --         items = items
+        --     })
+        -- end
 
         gui_inner.style.padding = { 4, 6, 4, 4 }
         gui_flow.style.padding = { 4, 6, 4, 4 }
@@ -175,6 +201,34 @@ function gui_controller.on_gui_elem_changed(event)
     end
 end
 
+function gui_controller.on_gui_selection_state_changed(event)
+    Log.debug("gui_controller.on_gui_selection_state_changed")
+    Log.info(event)
+
+    --[[ Come back to, remove ths ]]
+    return
+
+    -- if (not event or not type(event) == "table") then return end
+    -- if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
+
+    -- if (string.find(event.element.name, "cn_dropdown", 1, true)) then
+    --     local player = game.get_player(event.player_index)
+    --     local rocket_silo = player.opened
+    --     if (rocket_silo and rocket_silo.valid) then
+    --         local rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
+    --         if (not rocket_silo_data or not rocket_silo_data.valid) then
+    --             rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+    --             if (not rocket_silo_data or not rocket_silo_data.valid) then return end
+    --         end
+    --         local do_update = false
+
+    --         if (event.element.name == "cn_dropdown_planet") then do_update = true; rocket_silo_data.planet_gui_id = event.element.selected_index end
+
+    --         if (do_update) then Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo_data) end
+    --     end
+    -- end
+end
+
 function gui_controller.on_entity_settings_pasted(event)
     Log.debug("gui_controller.on_entity_settings_pasted")
     Log.info(event)
@@ -207,6 +261,11 @@ function gui_controller.on_entity_settings_pasted(event)
     rocket_silo_data_destination.signals.x = rocket_silo_data_source.signals.x
     rocket_silo_data_destination.signals.y = rocket_silo_data_source.signals.y
     rocket_silo_data_destination.signals.origin_override = get_icbm_allow_targeting_origin() and rocket_silo_data_source.signals.origin_override or nil
+
+    -- if (script and script.active_mods and script.active_mods["space-age"]) then
+    --     rocket_silo_data_destination.planet_gui_id = rocket_silo_data_source.planet_gui_id
+    -- end
+
     Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo_data_destination)
 end
 
