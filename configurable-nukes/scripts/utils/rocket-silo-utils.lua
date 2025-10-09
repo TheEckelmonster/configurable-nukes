@@ -13,9 +13,6 @@ local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-reposit
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
-local sa_active = script and script.active_mods and script.active_mods["space-age"]
-local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
 -- ATOMIC_BOMB_ROCKET_LAUNCHABLE
 local get_atomic_bomb_rocket_launchable = function ()
     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.default_value
@@ -101,6 +98,19 @@ function rocket_silo_utils.launch_rocket(event)
     if (not player and event.player_index == 0) then circuit_launch_initiated = true end
     if (not circuit_launch_initiated and (not player or not player.valid)) then return end
 
+    local has_power = function (data)
+        if (data and type(type(data) == "table")) then
+            if (data.rocket_silo and data.rocket_silo.valid) then
+                return  data.rocket_silo.is_connected_to_electric_network()
+                    and data.rocket_silo.energy > 0
+                    and data.rocket_silo.energy >= data.rocket_silo.electric_buffer_size
+            end
+        end
+    end
+
+    local sa_active = storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
+    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
+
     local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(surface.name)
 
     local target_position = {
@@ -117,7 +127,7 @@ function rocket_silo_utils.launch_rocket(event)
 
     --[[ Circuit-network launched ]]
     local circuit_launch = false
-    if (event.rocket_silo and event.rocket_silo.valid) then
+    if (event.rocket_silo and event.rocket_silo.valid and has_power({ rocket_silo = event.rocket_silo })) then
         circuit_launch = true
         local position = event.rocket_silo.position
         local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
@@ -212,6 +222,7 @@ function rocket_silo_utils.launch_rocket(event)
                                 if (    v.entity
                                     and v.entity.valid
                                     and v.entity.type == "rocket-silo"
+                                    and has_power({ rocket_silo = v.entity })
                                     and v.entity.position
                                     and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
                                     and (
@@ -277,6 +288,7 @@ function rocket_silo_utils.launch_rocket(event)
                             if (    v.entity
                                 and v.entity.valid
                                 and v.entity.type == "rocket-silo"
+                                and has_power({ rocket_silo = v.entity })
                                 and v.entity.position
                                 and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
                                 and (
@@ -338,6 +350,7 @@ function rocket_silo_utils.launch_rocket(event)
             if (    v.entity
                 and v.entity.valid
                 and v.entity.type == "rocket-silo"
+                and has_power({ rocket_silo = v.entity })
                 and v.entity.position
                 and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
                 and (
@@ -405,6 +418,7 @@ function rocket_silo_utils.launch_rocket(event)
                                     if (    v.entity
                                         and v.entity.valid
                                         and v.entity.type == "rocket-silo"
+                                        and has_power({ rocket_silo = v.entity })
                                         and v.entity.position
                                         and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
                                         and v.entity.name == "ipbm-rocket-silo")
@@ -464,6 +478,7 @@ function rocket_silo_utils.launch_rocket(event)
                                 if (    v.entity
                                     and v.entity.valid
                                     and v.entity.type == "rocket-silo"
+                                    and has_power({ rocket_silo = v.entity })
                                     and v.entity.position
                                     and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
                                     and v.entity.name == "ipbm-rocket-silo")
@@ -529,6 +544,7 @@ function rocket_silo_utils.launch_rocket(event)
             if (    v.entity
                 and v.entity.valid
                 and v.entity.type == "rocket-silo"
+                and has_power({ rocket_silo = v.entity })
                 and v.entity.position
                 and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
                 and v.entity.name == "ipbm-rocket-silo")
@@ -586,6 +602,7 @@ function rocket_silo_utils.launch_rocket(event)
                 if (    v.entity
                     and v.entity.valid
                     and v.entity.type == "rocket-silo"
+                    and has_power({ rocket_silo = v.entity })
                     and v.entity.position
                     and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
                     and (

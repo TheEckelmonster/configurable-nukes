@@ -11,8 +11,6 @@ local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository"
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
-local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
 -- PIN_TARGETS
 local get_pin_targets = function()
     local setting = Runtime_Global_Settings_Constants.settings.PIN_TARGETS.default_value
@@ -344,6 +342,8 @@ function icbm_utils.cargo_pod_finished_ascending(data)
     local destination = nil
     local from, to = nil, nil
     local origin_space_location = nil
+
+    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     --[[ Check if there is a platform attached to the given surface; and if the potential platform has a schedule with a valid destination ]]
     if (not se_active and icbm_data.source_silo.surface.valid and icbm_data.source_silo.surface.platform and icbm_data.source_silo.surface.platform.valid) then
@@ -1059,7 +1059,7 @@ function icbm_utils.launch_initiated(data)
         Log.warn("from origin, target_distance = " .. target_distance)
     end
 
-    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     local icbm_data = ICBM_Data:new({
         se_active = se_active,

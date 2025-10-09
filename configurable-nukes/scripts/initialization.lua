@@ -168,7 +168,7 @@ function locals.initialize(from_scratch, maintain_data)
             local rocket_silos = surface.find_entities_filtered({ type = "rocket-silo" })
             for i = 1, #rocket_silos do
                 local rocket_silo = rocket_silos[i]
-                if (rocket_silo and rocket_silo.valid and rocket_silo.surface and (rocket_silo.name == "rocket-silo" or "ipbm-rocket-silo")) then
+                if (rocket_silo and rocket_silo.valid and rocket_silo.surface and (rocket_silo.name == "rocket-silo" or rocket_silo.name == "ipbm-rocket-silo")) then
                     locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
                 end
             end

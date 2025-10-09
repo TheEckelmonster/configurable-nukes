@@ -9,8 +9,6 @@ local Log = require("libs.log.log")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local String_Utils = require("scripts.utils.string-utils")
 
-local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
 local icbm_meta_repository = {}
 
 function icbm_meta_repository.save_icbm_meta_data(planet_name, optionals)
@@ -25,6 +23,7 @@ function icbm_meta_repository.save_icbm_meta_data(planet_name, optionals)
     if (String_Utils.find_invalid_substrings(planet_name)) then return return_val end
     if (not Constants.planets_dictionary) then Constants.get_planets(true) end
     if (not Constants.planets_dictionary[planet_name]) then
+        local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
         if (not se_active and not string.find(planet_name, "platform-", 1, true)) then
             return return_val
         end
