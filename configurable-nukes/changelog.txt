@@ -1,4 +1,64 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.0
+Date: 2025-10-09
+  Minor Features:
+    - Space-Age: rocket-silos can now be placed on space platforms
+      - Allows for staging rockets in the orbit of a surface, for faster delivery time and greater accuracy
+      - Can also be fired while a platform is travelling from one space-location to another
+       - The platform's speed at the time of launch is added proportionally to the speed  of the rocket being fired
+         - i.e. Orientation/direction the platform is travelling relative to the designated target is considered when applying the speed
+    - Space-Age and Space-Exploration: Added IPBMs (Interplanetary Ballistic Missiles) and ISBMs (Interstellar Ballistic Missiles)
+      - Available in the form of the new ipbm-rocket-silo/ballistic-rocket-silo (former for Space-Age; latter for Space-Exploration)
+        - Rocket silo capable of deliverying payloads accros vast interplanetary, and even interstellar distances
+        - i.e. the designated target can be on a different surface than that of the rocket-silo
+      - By default, ICBMs are not allowed to fire from one surface to another
+       - One exception are rocket-silos in "orbit" of a given  surface
+         - For Space-Age, orbit is defined as: a platform that is not mid-flight to/from a space-location
+         - For Space-Exploration, orbit is defined as the explicit "orbit" surface for each planet/moon
+       - Configurable runtime setting to allow ICBM multifsurface targeting
+      - ipbm-rocket-silos/ballistic-rocket-silos require 100 ballistic-rocket-parts to create an IPBM/ISBM rocket
+        - Ballistic-rocket-parts are made separately from the silo itself, but are consumed in the silo to create the rocket
+        - This is to allow for multiple different recipes to provide rocket parts
+          - Idea is that the initial recipe is simple, but expensive, with each successive recipe being more complex, but ultimtely more efficient
+          - Also allows for productivity to be applied both when making the ballistic-rocket-part, as well as when providing parts to a silo
+      - Rockets fired from the ipbm-rocket-silo/ballistic-rocket-silo are much faster and more accurate than the standard rocket-silo ICBM
+      - With SA present, ipbm-rocket-silos/ballistic-rocket-silos are affected by rocket-part productivity research
+      - Current default source-silo selection when a target is designated is as follows:
+        - First check for rocket-silos in "orbit" of the targeted surface
+        - Then check for rocket-silos on the targeted surface, selecting the closest silo, if any are found, to the designated target
+        - If neither check finds an available rocket-silo with an available payload, repeat the same two searches as above, but looking for ipbm-rocket-silos/ballistic-rocket-silos
+        - If this also doesn't find an available rocket to launch, iterate through all available ipbm-rocket-silos/ballistic-rocket-silos (and rocket-silos if enabled), selecting the silo that is closest to the designated target
+      - Optional runtime setting to always select the closest silo, ignoring what type it is
+        - Follows the same pattern as above by first checking in orbit of given surface; then the surface proper; then other surfaces
+    - Changed the default guidance systems formula to reflect the fact that it goes to level 13 now (previously 10)
+      - Default devaiation chance still goes to 0 by level 10
+      - Levels above 11, 12, and 13 give significantly higher top speed increases for ballistic missiles (reduces travel time)
+        - SA: Also requires all science packs, including promethium for levels 11+
+        - SE: Each tier has progressively increased science pack requirements
+        - Additional settings for configuring the requirements, amounts, research time, etc. are in the works
+      - Levels 6, 8, and 11 give additional, progressively more complex, but also more efficient means of crafting ballistic-rocket-parts
+        - Additional configurable settings for changing the recipes ingredients, amounts, crafting times, etc. are in the works
+      - Final research should still be approximately the same in cost (1 million)
+  Bug Fixes:
+    - Fixed a non-recoverable runtime error that could occur if a the coordinates of a target position were too large
+      - Limit of the function being used actually went to negative infinity, rather than positive infinity as intended
+    - Fixed some settings not being mapped properly
+      - Issue was that changing some settings had seemingly no effect, and changing some other settings changed more than just what was intended
+  Misc:
+    - Added compatibility for space-exploration by Earendel
+      - Known issue/non-recoverable error thrown by SE when a rocket is launched from an ipbm-silo on a spaceship as it takes off
+        - Need to reach out about adding the missing ".valid" check before accessing a cargo-pod during the on_cargo_pod_finished_ascending event
+      - Continuing to look into how to determine a spachip's destination
+        - Needed to allow for firing a rocket from a spaceship that is in mid-flight, i.e. parallel features between SA and SE
+    - Tested/added support for Temporary_nuclear_scorchmarks by CocaineTM
+    - Changed update/initialization message to indicate if/when it (re)initializes, whether it is migrating any existing data
+    - Tweaked/altered deviation calculations to be somewhat more forgiving at extreme distances
+      - Intention is to maintain the fact that perfect guidance is not guaranteed without research investment; however, firing a rocket as expensive as an IPBM/ISBM with an atomic payload (rocket or warhead) just to have it go wildly off target feels... not great
+      - Rockets can, and still will deviate, just the maximum deviation amount (distance) is reduced for any given deviation attempt
+        - i.e. if deviation from the target occurs, the actual distance delta is much smaller at long distances
+    - Updated recipe settings to allow for fluid ingredients
+      - For the future, want to add the ability to define additional results (by-products, e.g. fluoroketone-hot/thermofluid-hot, scrap/contaminated scrap, etc.)
+---------------------------------------------------------------------------------------------------
 Version: 0.4.3
 Date: 2025-09-22
   Bug Fixes:
