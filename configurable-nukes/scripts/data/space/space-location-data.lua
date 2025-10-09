@@ -85,7 +85,7 @@ function space_location_data:get_stellar_system(data)
     if (not data) then data = {} end
     if (not data.count) then data.count = 1 end
     --[[ Pretty sure this should at most only recursively call itself ~4 times?
-        -> Regardsless, quit after 2 ^ 3 (8) calls
+        -> Regardless, quit after 2 ^ 3 (8) calls
     ]]
     if (data.count > 2 ^ 3) then return end
     if (not self.type) then return end

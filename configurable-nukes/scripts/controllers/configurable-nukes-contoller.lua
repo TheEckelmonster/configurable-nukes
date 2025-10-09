@@ -276,7 +276,6 @@ function configurable_nukes_controller.do_tick(event)
                     if (v and v.target_surface and v.target_surface.valid and v.tick_to_target and game.tick >= v.tick_to_target) then
                         if (    k.target_surface
                             and k.target_surface.valid
-                            -- and ICBM_Utils.payload_arrived({ icbm = k, surface = planet.surface, target_surface = k.target_surface }))
                             and ICBM_Utils.payload_arrived({ icbm = k, surface = space_location.surface, target_surface = k.target_surface }))
                         then
                             icbm_meta_data.in_transit[k] = nil
