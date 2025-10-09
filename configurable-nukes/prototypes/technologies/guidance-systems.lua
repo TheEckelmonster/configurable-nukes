@@ -362,6 +362,11 @@ for i = 1, guidance_systems_levels_max, 1 do
             table.insert(guidance_systems_technology.unit.ingredients, { "electromagnetic-science-pack", 1 })
             table.insert(guidance_systems_technology.unit.ingredients, { "metallurgic-science-pack", 1 })
             table.insert(guidance_systems_technology.unit.ingredients, { "promethium-science-pack", 1 })
+
+            if (mods and mods["atan-nuclear-science"]) then
+                table.insert(guidance_systems_technology.prerequisites, "nuclear-science-pack")
+                table.insert(guidance_systems_technology.unit.ingredients, { "nuclear-science-pack", 1 })
+            end
         end
     end
 

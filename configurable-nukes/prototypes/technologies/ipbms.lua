@@ -166,7 +166,7 @@ local get_ipbms_research_ingredients = function ()
                 { "utility-science-pack", 1 },
                 { "production-science-pack", 1 },
                 { "space-science-pack", 1 },
-                { "se-space-science-pack", 1 },
+                { "se-rocket-science-pack", 1 },
             }
         end
     end
