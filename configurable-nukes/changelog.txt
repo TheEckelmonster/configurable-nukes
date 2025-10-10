@@ -2,6 +2,7 @@
 Version: 0.5.3
 Date: 2025-10-10
   Misc:
+    - Made Space-Exploration added crafting categories available for crafting machine selection in "Startup" settings
     - Made ballistic-rocket-parts configurable in the same manner as atomic-bombs/atomic-warheads/rocket-control-units
       - Only available if Space-Age or Space-Exploration are present
       - Multiple "Startup" settings control the item and recipe properties
