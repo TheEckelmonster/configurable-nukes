@@ -123,16 +123,6 @@ local get_rocket_control_unit_additional_crafting_machines = function ()
 
     return crafting_machines
 end
--- ATOMIC_WARHEAD_ENABLED
-local get_atomic_warhead_enabled = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name].value
-    end
-
-    return setting
-end
 
 local ingredients = {}
 local rocket_control_unit_recipe_string = get_rocket_control_unit_recipe_string()
@@ -246,6 +236,6 @@ local rocket_control_unit_recipe =
     additional_categories = get_rocket_control_unit_additional_crafting_machines(),
 }
 
-if (get_atomic_warhead_enabled()) then
+if (mods and (mods["space-age"] or mods["space-exploration"])) then
     data:extend({rocket_control_unit_recipe})
 end
