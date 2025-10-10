@@ -287,6 +287,29 @@ if (se_active) then
     }
 end
 
+ local recipe_ballistic_rocket_silo =
+ {
+    ingredients =
+    {
+        { type = "item", name = "steel-plate", amount = 1000, },
+        { type = "item", name = "refined-concrete", amount = 1000, },
+        { type = "item", name = "pipe", amount = 100, },
+        { type = "item", name = "iron-gear-wheel", amount = 100, },
+        { type = "item", name = "processing-unit", amount = 200, },
+        { type = "item", name = "electric-engine-unit", amount = 200, },
+        { type = "item", name = "copper-cable", amount = 400, },
+        { type = "item", name = "radar", amount = 10, },
+        { type = "item", name = "steel-chest", amount = 10, },
+    },
+    energy_required = 60,
+    result_amount = 1,
+    results = {{ type = "item", name = "ipbm-rocket-silo", amount = 1, }}
+ }
+
+if (se_active) then
+    table.insert(recipe_ballistic_rocket_silo.ingredients, { type = "item", name = "se-heat-shielding", amount = 200, })
+end
+
 local recipe_ballistic_rocket_part_basic = {
     ingredients =
     {
@@ -916,6 +939,99 @@ startup_settings_constants.settings = {
             "centrifuging",
             "basic-crafting",
         },
+    },
+    --[[ Ballistic-rocket-silo ]]
+    BALLISTIC_ROCKET_SILO_STACK_SIZE = {
+        type = "int-setting",
+        name = prefix .. "ballistic-rocket-silo-stack-size",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 200,
+        minimum_value = 1,
+    },
+    BALLISTIC_ROCKET_SILO_WEIGHT_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "ballistic-rocket-silo-weight-modifier",
+        setting_type = "startup",
+        order = "",
+        default_value = 2,
+        maximum_value = tons,
+        minimum_value = 0.0005,
+    },
+    BALLISTIC_ROCKET_SILO_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "ballistic-rocket-silo-crafting-time",
+        setting_type = "startup",
+        order = "",
+        default_value = recipe_ballistic_rocket_silo.energy_required,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001,
+    },
+    BALLISTIC_ROCKET_SILO_INPUT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "ballistic-rocket-silo-input-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 111,
+        minimum_value = 0.0001,
+    },
+    BALLISTIC_ROCKET_SILO_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "ballistic-rocket-silo-result-count",
+        setting_type = "startup",
+        order = "",
+        default_value = recipe_ballistic_rocket_silo.result_amount,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1,
+    },
+    BALLISTIC_ROCKET_SILO_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "ballistic-rocket-silo-recipe",
+        setting_type = "startup",
+        order = "",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        ingredients = recipe_ballistic_rocket_silo.ingredients,
+    },
+    BALLISTIC_ROCKET_SILO_RECIPE_ALLOW_NONE = {
+        type = "bool-setting",
+        name = prefix .. "ballistic-rocket-silo-recipe-allow-none",
+        setting_type = "startup",
+        order = "ddi",
+        default_value = false,
+    },
+    BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "ballistic-rocket-silo-crafting-machine",
+        setting_type = "startup",
+        order = "",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+        hidden = not sa_active and not se_active,
+    },
+    BALLISTIC_ROCKET_SILO_ADDITIONAL_CRAFTING_MACHINES = {
+        type = "string-setting",
+        name = prefix .. "ballistic-rocket-silo-additional-crafting-machines",
+        setting_type = "startup",
+        order = "",
+        default_value = "",
+        allow_blank = true,
+        auto_trim = true,
+        hidden = not sa_active and not se_active,
     },
     --[[ Ballistic-rocket-part ]]
     BALLISTIC_ROCKET_PART_STACK_SIZE = {
@@ -1613,8 +1729,12 @@ if (sa_active) then
     for k, v in pairs(sa_crafting_categories) do
         table.insert(startup_settings_constants.settings.ATOMIC_BOMB_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ATOMIC_WARHEAD_CRAFTING_MACHINE.allowed_values, v)
+
         table.insert(startup_settings_constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
+
+        table.insert(startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE.allowed_values, v)
+
         table.insert(startup_settings_constants.settings.BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.allowed_values, v)
@@ -1691,8 +1811,12 @@ if (se_active) then
     for k, v in pairs(se_crafting_categories) do
         table.insert(startup_settings_constants.settings.ATOMIC_BOMB_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ATOMIC_WARHEAD_CRAFTING_MACHINE.allowed_values, v)
+
         table.insert(startup_settings_constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
+
+        table.insert(startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE.allowed_values, v)
+
         table.insert(startup_settings_constants.settings.BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.allowed_values, v)
@@ -1850,6 +1974,25 @@ if (advanced_recipe_rocket_control_unit and advanced_recipe_rocket_control_unit.
         else
             startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value =
                 startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value
+                .. ","
+                .. v.name
+                .. "="
+                .. v.amount
+        end
+    end
+end
+
+-- BALLISTIC_ROCKET_SILO_RECIPE
+if (recipe_ballistic_rocket_silo and recipe_ballistic_rocket_silo.ingredients) then
+    for k, v in pairs(recipe_ballistic_rocket_silo.ingredients) do
+        if (not startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value or startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value == "") then
+            startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value =
+                v.name
+                .. "="
+                .. v.amount
+        else
+            startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value =
+                startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value
                 .. ","
                 .. v.name
                 .. "="
