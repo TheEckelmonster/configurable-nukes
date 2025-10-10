@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.2
+Date: 2025-10-09
+  Bug Fixes:
+    - Fixed non-recoverable runtime error when a space-platform starter-pack is launched, before the space-platform surface is actually generated/valid
+---------------------------------------------------------------------------------------------------
 Version: 0.5.1
 Date: 2025-10-09
   Bug Fixes:
