@@ -123,6 +123,26 @@ local get_nuclear_ammo_category = function ()
 
     return setting
 end
+-- BALLISTIC_ROCKET_PART_STACK_SIZE
+local get_ballistic_rocket_part_stack_size = function ()
+    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_STACK_SIZE.default_value
+
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_STACK_SIZE.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_STACK_SIZE.name].value
+    end
+
+    return setting
+end
+-- BALLISTIC_ROCKET_PART_WEIGHT_MODIFIER
+local get_ballistic_rocket_part_weight_modifier = function ()
+    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_WEIGHT_MODIFIER.default_value
+
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_WEIGHT_MODIFIER.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_WEIGHT_MODIFIER.name].value
+    end
+
+    return setting
+end
 
 local action =
 {
@@ -383,10 +403,17 @@ if (sa_active or se_active) then
     ipbm_rocket_silo.place_result = "ipbm-rocket-silo"
 
     data:extend({ipbm_rocket_silo})
+end
 
+if (sa_active or se_active) then
     local ipbm_rocket_part = Util.table.deepcopy(data.raw["item"]["rocket-part"])
     ipbm_rocket_part.name = name_prefix .. "ipbm-rocket-part"
-    ipbm_rocket_part.hidden = false
+
+    ipbm_rocket_part.stack_size = get_ballistic_rocket_part_stack_size()
+    ipbm_rocket_part.weight = get_ballistic_rocket_part_weight_modifier() * tons
+
+    ipbm_rocket_part.hidden = not get_atomic_warhead_enabled()
+    ipbm_rocket_part.hidden_in_factoriopedia = not get_atomic_warhead_enabled()
 
     data:extend({ipbm_rocket_part})
 end
