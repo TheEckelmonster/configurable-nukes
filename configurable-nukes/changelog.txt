@@ -1,10 +1,12 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.5.4
 Date: 2025-10-10
+  Bug Fixes:
+    - Fixed game not loading if atomic-warheads are disabled
   Misc:
     - Made ballistic rocket-silo item/recipe configurable
       - Same usual set of configurable "Startup" settings
-    - Ballistic rocket-silo and ballistic rocket-parts should now be recyleable to their ingredients
+    - Ballistic rocket-silo and ballistic rocket-parts should now be recyleable to their base ingredients
 ---------------------------------------------------------------------------------------------------
 Version: 0.5.3
 Date: 2025-10-10
