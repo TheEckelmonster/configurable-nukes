@@ -143,6 +143,26 @@ local get_ballistic_rocket_part_weight_modifier = function ()
 
     return setting
 end
+-- BALLISTIC_ROCKET_SILO_STACK_SIZE
+local get_ballistic_rocket_silo_stack_size = function ()
+    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_STACK_SIZE.default_value
+
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_STACK_SIZE.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_STACK_SIZE.name].value
+    end
+
+    return setting
+end
+-- BALLISTIC_ROCKET_SILO_WEIGHT_MODIFIER
+local get_ballistic_rocket_silo_weight_modifier = function ()
+    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_WEIGHT_MODIFIER.default_value
+
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_WEIGHT_MODIFIER.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_WEIGHT_MODIFIER.name].value
+    end
+
+    return setting
+end
 
 local action =
 {
@@ -390,30 +410,31 @@ local rocket_control_unit =
     order = "n[rocket-control-unit]",
     stack_size = get_rocket_control_unit_stack_size(),
     weight = get_rocket_control_unit_weight_modifier() * tons,
-    hidden = not get_atomic_warhead_enabled(),
-    hidden_in_factoriopedia = not get_atomic_warhead_enabled(),
+    hidden = not get_atomic_warhead_enabled() and not se_active,
+    hidden_in_factoriopedia = not get_atomic_warhead_enabled() and not se_active,
 }
 
 data:extend({rocket_control_unit})
 
 if (sa_active or se_active) then
+    --[[ ipbm-rocket-silo ]]
     local ipbm_rocket_silo = Util.table.deepcopy(data.raw["item"]["rocket-silo"])
+    ipbm_rocket_silo.name = "ipbm-rocket-silo"
     ipbm_rocket_silo.name = "ipbm-rocket-silo"
     ipbm_rocket_silo.order = "b[icbm-rocket-silo]"
     ipbm_rocket_silo.place_result = "ipbm-rocket-silo"
 
-    data:extend({ipbm_rocket_silo})
-end
+    ipbm_rocket_silo.stack_size = get_ballistic_rocket_silo_stack_size()
+    ipbm_rocket_silo.weight = get_ballistic_rocket_silo_weight_modifier() * tons
 
-if (sa_active or se_active) then
+    data:extend({ipbm_rocket_silo})
+
+    --[[ ipbm-rocket-part ]]
     local ipbm_rocket_part = Util.table.deepcopy(data.raw["item"]["rocket-part"])
     ipbm_rocket_part.name = name_prefix .. "ipbm-rocket-part"
 
     ipbm_rocket_part.stack_size = get_ballistic_rocket_part_stack_size()
     ipbm_rocket_part.weight = get_ballistic_rocket_part_weight_modifier() * tons
-
-    ipbm_rocket_part.hidden = not get_atomic_warhead_enabled()
-    ipbm_rocket_part.hidden_in_factoriopedia = not get_atomic_warhead_enabled()
 
     data:extend({ipbm_rocket_part})
 end
