@@ -280,6 +280,7 @@ function configurable_nukes_controller.do_tick(event)
 
         if (space_location.surface.planet and sa_active) then
             for _, space_platform in pairs(space_location.surface.planet.get_space_platforms("player")) do
+                if (not space_platform.surface or not space_platform.surface.valid) then goto continue end
                 local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(space_platform.surface.name)
                 if (not icbm_meta_data or not icbm_meta_data.valid) then goto continue end
 
@@ -373,6 +374,7 @@ function configurable_nukes_controller.do_tick(event)
         if (sa_active) then
             if (game.forces["player"] and game.forces["player"].platforms) then
                 for _, space_platform in pairs(game.forces["player"].platforms) do
+                    if (not space_platform.surface or not space_platform.surface.valid) then goto continue end
                     local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(space_platform.surface.name)
                     if (not icbm_meta_data or not icbm_meta_data.valid) then goto continue end
 
