@@ -96,6 +96,18 @@ if (sa_active or se_active) then
     })
 
     data:extend({
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_STACK_SIZE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_WEIGHT_MODIFIER,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_TIME,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_INPUT_MULTIPLIER,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RESULT_COUNT,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE_ALLOW_NONE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_ADDITIONAL_CRAFTING_MACHINES,
+    })
+
+    data:extend({
         --[[ ballistic-rocket-part ]]
         Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_STACK_SIZE,
         Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_WEIGHT_MODIFIER,

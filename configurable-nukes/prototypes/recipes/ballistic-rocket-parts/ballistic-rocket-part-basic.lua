@@ -234,7 +234,7 @@ ipbm_rocket_part_basic.ingredients = ingredients
 ipbm_rocket_part_basic.category = get_ballistic_rocket_part_crafting_machine()
 ipbm_rocket_part_basic.additional_categories = get_ballistic_rocket_part_additional_crafting_machines()
 ipbm_rocket_part_basic.hide_from_player_crafting = false
-ipbm_rocket_part_basic.auto_recycle = false
+ipbm_rocket_part_basic.auto_recycle = true
 ipbm_rocket_part_basic.overload_multiplier = 2
 ipbm_rocket_part_basic.allow_inserter_overload = true
 ipbm_rocket_part_basic.results = {{ type = "item", name = name_prefix .. "ipbm-rocket-part", amount = get_result_count() }}
