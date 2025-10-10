@@ -3,29 +3,29 @@ Version: 0.5.3
 Date: 2025-10-10
   Misc:
     - Made ballistic-rocket-parts configurable in the same manner as atomic-bombs/atomic-warheads/rocket-control-units
-      - Only present if Space-Age or Space-Exploration are present
+      - Only available if Space-Age or Space-Exploration are present
       - Multiple "Startup" settings control the item and recipe properties
         - Stack size
         - Weight -> How many items can be put in one rocket-silo
         - Crafting time
-        - Input multiplier -> Simple multiplier of all the ingredients in a the recipe
+        - Input multiplier -> Simple multiplier of the amount of each ingredient in the recipe
         - Result count -> How many items does a single recipe craft result in
         - Recipe
         - Allow no recipe -> If no recipe is explicity defined, don't use the default fallback and allow the recipe to require no ingredients (i.e. free crafting)
         - Crafting machine
         - Additional crafting machines -> comma separated list of additional crafting machine categories beyond the base "Crafting machine" that is defined
       - Above settings are available for the following recipes:
-        - ballistic-rocket-part-basic
+        - basic ballistic-rocket-part
           - Standard, simple starting recipe for ballistic-rocket-parts; default 1 per craft
-        - ballistic-rocket-part-intermediate
+        - intermediate ballistic-rocket-part
           - Default 5 per craft
-        - ballistic-rocket-part-advanced
+        - advanced ballistic-rocket-part
           - Default 20 per craft
-        - ballistic-rocket-part-beyond
+        - beyond ballistic-rocket-part
           - Default 60 per craft
-        - ballistic-rocket-part-beyond-2
+        - beyond-2 ballistic-rocket-part
           - This recipe is only present with Space-Age so that it can be made with either biter or pentapod eggs
-          - Default 60 per craft
+          - Also defaults to 60 per craft
 ---------------------------------------------------------------------------------------------------
 Version: 0.5.2
 Date: 2025-10-09
