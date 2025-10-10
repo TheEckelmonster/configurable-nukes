@@ -10,6 +10,11 @@ if (se_active) then
     require("prototypes.technologies.atomic-warhead")
     require("prototypes.technologies.guidance-systems")
     if (not sa_active) then
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-basic")
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-intermediate")
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-advanced")
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond")
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond-2")
         require("prototypes.recipes.ipbm-rocket-silo")
         require("prototypes.technologies.ipbms")
     else

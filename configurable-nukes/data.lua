@@ -21,6 +21,11 @@ if (not se_active) then
     require("prototypes.technologies.guidance-systems")
 
     if (sa_active) then
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-basic")
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-intermediate")
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-advanced")
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond")
+        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond-2")
         require("prototypes.recipes.ipbm-rocket-silo")
         require("prototypes.technologies.ipbms")
         require("prototypes.technologies.rocket-part-productivity")
