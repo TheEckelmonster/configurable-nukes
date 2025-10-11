@@ -1,5 +1,8 @@
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local sa_active = mods and mods["space-age"] and true
+local se_active = mods and mods["space-exploration"] and true
+
 data:extend({
     Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY,
     Startup_Settings_Constants.settings.QUALITY_BASE_MULTIPLIER,
@@ -84,13 +87,78 @@ data:extend({
     Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_COUNT,
 })
 
-if (mods and (mods["space-age"] or mods["space-exploration"])) then
+if (sa_active or se_active) then
     data:extend({
         Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME,
         Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE,
         Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT,
         Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE,
     })
+
+    data:extend({
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_STACK_SIZE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_WEIGHT_MODIFIER,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_TIME,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_INPUT_MULTIPLIER,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RESULT_COUNT,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE_ALLOW_NONE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_ADDITIONAL_CRAFTING_MACHINES,
+    })
+
+    data:extend({
+        --[[ ballistic-rocket-part ]]
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_STACK_SIZE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_WEIGHT_MODIFIER,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_CRAFTING_TIME,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_RESULT_COUNT,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_RECIPE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_CRAFTING_MACHINE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES,
+
+        --[[ ballistic-rocket-part-intermediate ]]
+        Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_CRAFTING_TIME,
+        Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER,
+        Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RESULT_COUNT,
+        Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE,
+        Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE,
+        Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE,
+        Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES,
+
+        --[[ ballistic-rocket-part-advanced ]]
+        Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_TIME,
+        Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER,
+        Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RESULT_COUNT,
+        Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE,
+        Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE,
+        Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE,
+        Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES,
+
+        -- --[[ ballistic-rocket-part-beyond ]]
+        Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_CRAFTING_TIME,
+        Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER,
+        Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RESULT_COUNT,
+        Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE,
+        Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE,
+        Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE,
+        Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES,
+    })
+
+    if (sa_active) then
+        data:extend({
+            --[[ ballistic-rocket-part-beyond 2 ]]
+            Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_CRAFTING_TIME,
+            Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER,
+            Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RESULT_COUNT,
+            Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE,
+            Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE,
+            Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE,
+            Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES,
+        })
+    end
 end
 
 data:extend({

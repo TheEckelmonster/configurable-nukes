@@ -4,6 +4,8 @@ local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 local name_prefix = se_active and "se-" or ""
 
+if (not sa_active and not se_active) then return end
+
 local get_ipbms_research_count = function ()
     local setting = Startup_Settings_Constants.settings.IPBMS_RESEARCH_COUNT.default_value
 
@@ -204,9 +206,9 @@ local advanced_rocket_control_unit_recipe =
 
 local technology_effects =
 {
-    (sa_active or se_active) and rocket_part_basic_unlock,
-    (sa_active or se_active) and ipbm_silo_unlock,
-    (sa_active or se_active) and advanced_rocket_control_unit_recipe,
+    (sa_active or se_active) and rocket_part_basic_unlock or nil,
+    (sa_active or se_active) and ipbm_silo_unlock or nil,
+    (sa_active or se_active) and advanced_rocket_control_unit_recipe or nil,
 }
 
 data:extend({
