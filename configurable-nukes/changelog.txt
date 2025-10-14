@@ -1,10 +1,10 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.6.0
-Date: 2025-10-13
+Date: 2025-10-14
   Minor Features:
     - Added support for launching rocket silos via circuit-network against another surface
       - Allowed if it is a ballistic rocket silo, or if it is a rocket silo and the setting to allow ICBMs multisurface targetting is enabled
-      - Destination surface can be supplied either explicitly, or depending on settings (global and per rocket silo) inferred from the surface the silo is located on
+      - Destination surface can be supplied either explicitly, or depending on settings (global and per rocket silo), inferred from the surface the silo is located on
         - Can be provided explicitly either by:
           - Selecting and providing a signal with a value corresponding to the desired surface's index
           - Selecting a surface from the available dropdown list of currently known/targetable surfaces
@@ -12,8 +12,15 @@ Date: 2025-10-13
         - If not explicitly provided by either of the above means, by default (can be disabled) a rocket silo otherwise provided with a valid launch signal and coordinate signals will assume the surface it is located on is the target surface
           - Exceptions are:
             - Rocket silos on a space platform (Space-Age), if in orbit around a planet (i.e. not travelling) will fire at the planet surface, instead of the platform surface
+              - Depending on timing, when a platform transitions over/through/past a planet, but does not stay at the planet, it is possible for circuit-network connected rocket silos to initiate a launch against the surface of the planet in the split-second that the platform was "at" the planet
+                - Not guaranteed, but has happened on a number of occasions while testing
+                - Keep this in mind when using circuit-networks to initiate rocket silo launches from platforms
             - Rocket silos on an "orbit" surface (Space-Exploration), will default to targeting their parent (ground) surface
               - Can be manually set to target the actual "orbit" surface instead if desired
+              - Ballistic silos placed on spaceships will not fire while the spaceship is travelling even if otherwise provided valid launch signals via a circuit-network
+              - If continuously provided valid launch signals, once a spaceship has landed, the silo will automatically resume launching
+              - Do be careful when automatically launching rockets via a circuit-network (or also manually) just prior to launching a spaceship
+                - Space-Exploration throws an error in this scenario, as it is missing a '.valid' check before accessing the cargo-pod during the on_cargo_pod_finished_ascending event
       - Additional option, both global and per silo, to require a target surface be explicitly provided for a circuit-network launch to initiate successfully
       - Rocket silo GUI window configuration settings can be copy-pasted from one silo to another in the same manner as copy-pasting other entity settings
   Bug Fixes:
