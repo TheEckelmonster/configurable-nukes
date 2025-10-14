@@ -171,7 +171,7 @@ function circuit_network_service.attempt_launch_silos(data)
                                             end
                                         elseif (space_location_gui_available) then
                                             --[[ Verify that the target surface is among known potential surfaces
-                                                -> Nameley trying to avoid targetting a surface that isn't actually supposed to be targettable
+                                                -> Nameley trying to avoid targetting a surface that isn't actually supposed to be targetable
                                                 -> First example: aai-signals surface
                                             ]]
                                             if (not Constants.mod_data_dictionary) then Constants.get_mod_data(true) end
