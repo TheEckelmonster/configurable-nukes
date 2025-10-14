@@ -46,6 +46,15 @@ function rocket_silo_repository.save_rocket_silo_data(rocket_silo, optionals)
     return_val.surface = rocket_silo.surface
     return_val.surface_name = rocket_silo.surface.name
     return_val.surface_index = rocket_silo.surface.index
+
+    return_val.circuit_network_data.unit_number = rocket_silo.unit_number
+    return_val.circuit_network_data.entity = rocket_silo
+    return_val.circuit_network_data.surface = rocket_silo.surface
+    return_val.circuit_network_data.surface_name = rocket_silo.surface.name
+    return_val.circuit_network_data.surface_index = rocket_silo.surface.index
+
+    return_val.circuit_network_data.valid = true
+
     return_val.valid = true
 
     rocket_silos[return_val.unit_number] = return_val

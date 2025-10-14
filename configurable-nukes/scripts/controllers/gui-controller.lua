@@ -187,7 +187,18 @@ function gui_controller.on_entity_settings_pasted(event)
         if (not rocket_silo_data_destination or not rocket_silo_data_destination.valid) then return end
     end
 
-    rocket_silo_data_destination.circuit_network_data = Util.table.deepcopy(rocket_silo_data_source.circuit_network_data)
+    local circuit_network_data = Util.table.deepcopy(rocket_silo_data_source.circuit_network_data)
+
+    circuit_network_data.entity = rocket_silo_data_destination.entity and rocket_silo_data_destination.entity.valid and rocket_silo_data_destination.entity or nil
+    circuit_network_data.unit_number = rocket_silo_data_destination.unit_number or rocket_silo_data_destination.entity and rocket_silo_data_destination.entity.valid and rocket_silo_data_destination.entity.unit_number or -1
+    circuit_network_data.surface = rocket_silo_data_destination.surface and rocket_silo_data_destination.surface.valid and rocket_silo_data_destination.surface or nil
+    circuit_network_data.surface_index = rocket_silo_data_destination.surface_index or rocket_silo_data_destination.surface and rocket_silo_data_destination.surface.valid and rocket_silo_data_destination.surface.index or -1
+    circuit_network_data.surface_name = rocket_silo_data_destination.surface_name or rocket_silo_data_destination.surface and  rocket_silo_data_destination.surface.valid and rocket_silo_data_destination.surface.name or nil
+
+    circuit_network_data.created = rocket_silo_data_destination.circuit_network_data and rocket_silo_data_destination.circuit_network_data.created or rocket_silo_data_destination.created or game.tick
+    circuit_network_data.updated = game.tick
+
+    rocket_silo_data_destination.circuit_network_data = circuit_network_data
 
     Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo_data_destination.entity, rocket_silo_data_destination)
 end
