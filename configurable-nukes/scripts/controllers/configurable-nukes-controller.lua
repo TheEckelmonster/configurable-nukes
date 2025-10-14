@@ -3,71 +3,17 @@ if _configurable_nukes_controller and _configurable_nukes_controller.configurabl
     return _configurable_nukes_controller
 end
 
+local Circuit_Network_Service = require("scripts.services.circuit-network-service")
 local Constants = require("scripts.constants.constants")
-local Guidance_Service = require("scripts.services.guidance-service")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Initialization = require("scripts.initialization")
 local Log = require("libs.log.log")
-local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
-local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
-local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+local Settings_Service = require("scripts.services.settings-service")
 local String_Utils = require("scripts.utils.string-utils")
 local Version_Validations = require("scripts.validations.version-validations")
-
--- NUCLEAR_AMMO_CATEGORY
-local get_nuclear_ammo_category = function ()
-    local setting = false
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name].value
-    end
-
-    return setting
-end
--- ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN
-local get_allow_targeting_origin = function ()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.name].value
-    end
-
-    return setting
-end
--- PRINT_DELIVERY_MESSAGES
-local get_print_delivery_messages = function()
-    local setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name].value
-    end
-
-    return setting
-end
--- ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES
-local get_icbm_circuit_print_delivery_messages = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name].value
-    end
-
-    return setting
-end
--- NUM_SURFACES_PROCESSED_PER_TICK
-local get_num_surfaces_processed_per_tick = function()
-    local setting = Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK.name].value
-    end
-
-    return setting
-end
 
 local configurable_nukes_controller = {}
 
@@ -105,6 +51,7 @@ function configurable_nukes_controller.do_tick(event)
         if (storage and (not storage.configurable_nukes_controller or not storage.configurable_nukes_controller.initialized)) then
             Initialization.init({ maintain_data = true })
             configurable_nukes_controller.reinitialized = true
+            configurable_nukes_controller.reinit_tick = tick
             sa_active = script and script.active_mods and script.active_mods["space-age"]
             se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
@@ -112,6 +59,7 @@ function configurable_nukes_controller.do_tick(event)
             storage.se_active = se_active
         end
         configurable_nukes_controller.initialized = true
+        configurable_nukes_controller.init_tick = tick
 
         if (not storage.constants) then Constants.get_mod_data(true) end
 
@@ -120,6 +68,7 @@ function configurable_nukes_controller.do_tick(event)
         if (not Version_Validations.validate_version()) then
             Initialization.reinit()
             configurable_nukes_controller.reinitialized = true
+            configurable_nukes_controller.init_tick = tick
 
             if (not storage.constants) then Constants.get_mod_data(true) end
 
@@ -133,21 +82,27 @@ function configurable_nukes_controller.do_tick(event)
         end
     end
 
-    if (not configurable_nukes_controller.checked_research) then
-        if (game.forces["player"].technologies["nuclear-damage"]) then
-            game.forces["player"].technologies["nuclear-damage"].enabled = get_nuclear_ammo_category()
+    if (configurable_nukes_controller and configurable_nukes_controller.active_mod_check_tick) then
+        if (tick - 60 > configurable_nukes_controller.active_mod_check_tick) then
+            configurable_nukes_controller.active_mod_check_tick = tick
+
+            sa_active = script and script.active_mods and script.active_mods["space-age"]
+            se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+            storage.sa_active = sa_active
+            storage.se_active = se_active
         end
-        configurable_nukes_controller.checked_research = true
     end
 
     if ((not se_active and not Constants.planets_dictionary) or configurable_nukes_controller.reinitialized) then
-        Constants.get_planets(true)
+        -- Constants.get_planets(true)
+        Constants.get_planets(not Constants.planets_dictionary)
         configurable_nukes_controller.reinitialized = false
     end
 
     ICBM_Utils.print_space_launched_time_to_target_message()
 
-    local num_surfaces_to_process = get_num_surfaces_processed_per_tick()
+    local num_surfaces_to_process = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK.name, })
     local failure_limit = (num_surfaces_to_process * 4) ^ 0.75 + num_surfaces_to_process / 2
     local i, loops, failures = 0, 0, 0
     while i < num_surfaces_to_process do
@@ -214,11 +169,11 @@ function configurable_nukes_controller.do_tick(event)
                 end
 
                 if (k.player_launched_index == 0) then
-                    if (get_icbm_circuit_print_delivery_messages()) then
+                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                         print_message(k, v)
                     end
                 else
-                    if (get_print_delivery_messages()) then
+                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                         print_message(k, v)
                     end
                 end
@@ -231,11 +186,11 @@ function configurable_nukes_controller.do_tick(event)
                 end
 
                 if (k.player_launched_index == 0) then
-                    if (get_icbm_circuit_print_delivery_messages()) then
+                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                         print_message(k, v)
                     end
                 else
-                    if (get_print_delivery_messages()) then
+                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                         print_message(k, v)
                     end
                 end
@@ -248,11 +203,11 @@ function configurable_nukes_controller.do_tick(event)
                 end
 
                 if (k.player_launched_index == 0) then
-                    if (get_icbm_circuit_print_delivery_messages()) then
+                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                         print_message(k, v)
                     end
                 else
-                    if (get_print_delivery_messages()) then
+                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                         print_message(k, v)
                     end
                 end
@@ -266,11 +221,11 @@ function configurable_nukes_controller.do_tick(event)
                 end
 
                 if (k.player_launched_index == 0) then
-                    if (get_icbm_circuit_print_delivery_messages()) then
+                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                         print_message(k, v)
                     end
                 else
-                    if (get_print_delivery_messages()) then
+                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                         print_message(k, v)
                     end
                 end
@@ -303,11 +258,11 @@ function configurable_nukes_controller.do_tick(event)
                         end
 
                         if (k.player_launched_index == 0) then
-                            if (get_icbm_circuit_print_delivery_messages()) then
+                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                                 print_message(k, v)
                             end
                         else
-                            if (get_print_delivery_messages()) then
+                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                                 print_message(k, v)
                             end
                         end
@@ -320,11 +275,11 @@ function configurable_nukes_controller.do_tick(event)
                         end
 
                         if (k.player_launched_index == 0) then
-                            if (get_icbm_circuit_print_delivery_messages()) then
+                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                                 print_message(k, v)
                             end
                         else
-                            if (get_print_delivery_messages()) then
+                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                                 print_message(k, v)
                             end
                         end
@@ -337,11 +292,11 @@ function configurable_nukes_controller.do_tick(event)
                         end
 
                         if (k.player_launched_index == 0) then
-                            if (get_icbm_circuit_print_delivery_messages()) then
+                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                                 print_message(k, v)
                             end
                         else
-                            if (get_print_delivery_messages()) then
+                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                                 print_message(k, v)
                             end
                         end
@@ -355,11 +310,11 @@ function configurable_nukes_controller.do_tick(event)
                         end
 
                         if (k.player_launched_index == 0) then
-                            if (get_icbm_circuit_print_delivery_messages()) then
+                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                                 print_message(k, v)
                             end
                         else
-                            if (get_print_delivery_messages()) then
+                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                                 print_message(k, v)
                             end
                         end
@@ -371,10 +326,33 @@ function configurable_nukes_controller.do_tick(event)
             end
         end
 
+        local circuit_connected_silos_on_platforms = {}
+
         if (sa_active) then
             if (game.forces["player"] and game.forces["player"].platforms) then
+                local all_rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_all_rocket_silo_meta_data()
+
                 for _, space_platform in pairs(game.forces["player"].platforms) do
                     if (not space_platform.surface or not space_platform.surface.valid) then goto continue end
+
+                    local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(space_platform.surface.name, { create = false })
+                    if (rocket_silo_meta_data and rocket_silo_meta_data.valid) then
+                        if (rocket_silo_meta_data.rocket_silos and next(rocket_silo_meta_data.rocket_silos, nil)) then
+                            for k, v in pairs(rocket_silo_meta_data.rocket_silos) do
+                                if (v.circuit_network_data) then
+                                    circuit_connected_silos_on_platforms[k] = v
+                                end
+                            end
+                        end
+                    else
+                        goto continue
+                    end
+
+                    if (not rocket_silo_meta_data.rocket_silos or not next(rocket_silo_meta_data.rocket_silos, nil)) then
+                        all_rocket_silo_meta_data[space_platform.surface.name] = nil
+                        goto continue
+                    end
+
                     local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(space_platform.surface.name)
                     if (not icbm_meta_data or not icbm_meta_data.valid) then goto continue end
 
@@ -397,11 +375,11 @@ function configurable_nukes_controller.do_tick(event)
                             end
 
                             if (k.player_launched_index == 0) then
-                                if (get_icbm_circuit_print_delivery_messages()) then
+                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                                     print_message(k, v)
                                 end
                             else
-                                if (get_print_delivery_messages()) then
+                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                                     print_message(k, v)
                                 end
                             end
@@ -414,11 +392,11 @@ function configurable_nukes_controller.do_tick(event)
                             end
 
                             if (k.player_launched_index == 0) then
-                                if (get_icbm_circuit_print_delivery_messages()) then
+                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                                     print_message(k, v)
                                 end
                             else
-                                if (get_print_delivery_messages()) then
+                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                                     print_message(k, v)
                                 end
                             end
@@ -431,11 +409,11 @@ function configurable_nukes_controller.do_tick(event)
                             end
 
                             if (k.player_launched_index == 0) then
-                                if (get_icbm_circuit_print_delivery_messages()) then
+                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                                     print_message(k, v)
                                 end
                             else
-                                if (get_print_delivery_messages()) then
+                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                                     print_message(k, v)
                                 end
                             end
@@ -449,11 +427,11 @@ function configurable_nukes_controller.do_tick(event)
                             end
 
                             if (k.player_launched_index == 0) then
-                                if (get_icbm_circuit_print_delivery_messages()) then
+                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
                                     print_message(k, v)
                                 end
                             else
-                                if (get_print_delivery_messages()) then
+                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
                                     print_message(k, v)
                                 end
                             end
@@ -467,63 +445,10 @@ function configurable_nukes_controller.do_tick(event)
         end
 
         local rocket_silo_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(space_location.surface.name)
+        Circuit_Network_Service.attempt_launch_silos({ rocket_silos = rocket_silo_data.rocket_silos })
 
-        for k, v in pairs(rocket_silo_data.rocket_silos) do
-            if (v and v.entity and v.entity.valid) then
-                local rocket_silo = v.entity
-
-                if (rocket_silo.rocket_silo_status == defines.rocket_silo_status.rocket_ready) then
-                    local circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red)
-                    if (not circuit_network) then circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green) end
-                    if (circuit_network and circuit_network.valid and circuit_network.entity and circuit_network.entity.valid) then
-                        -- Check if the rocket silo has signals different from default
-                        local rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
-                        if (not rocket_silo_data or not rocket_silo_data.valid) then
-                            rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
-                            if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
-                        end
-
-                        -- Look for non-default signals
-                        -- Use defaults if, for some reason, nothing is defined for the rocket_silo_data
-                        local signal_x = circuit_network.get_signal(rocket_silo_data.signals.x or Rocket_Silo_Data.signals.x)
-                        local signal_y = circuit_network.get_signal(rocket_silo_data.signals.y or Rocket_Silo_Data.signals.y)
-                        local signal_launch = circuit_network.get_signal(rocket_silo_data.signals.launch or Rocket_Silo_Data.signals.launch)
-                        --[[ Intentionally letting it be nil in the case of either the settings being disabled or not explicitly defined ]]
-                        local signal_origin_override =  get_allow_targeting_origin()
-                                                    and rocket_silo_data.signals.origin_override
-                                                    and circuit_network.get_signal(rocket_silo_data.signals.origin_override)
-                                                    or nil
-
-                        if (signal_x and signal_y and signal_launch) then
-                            if (type(signal_x) == "number" and type(signal_y) == "number" and type(signal_launch) == "number") then
-                                if (        (signal_launch > 0
-                                        and (  signal_x ~= 0
-                                            or signal_y ~= 0))
-                                    or
-                                        (signal_launch > 0
-                                        and get_allow_targeting_origin()
-                                        and type(signal_origin_override) == "number"
-                                        and signal_origin_override > 0))
-                                then
-                                    local entity = circuit_network.entity
-
-                                    Rocket_Silo_Service.launch_rocket({
-                                        rocket_silo = rocket_silo,
-                                        tick = game.tick,
-                                        surface = entity.surface,
-                                        area = { left_top = { x = signal_x, y = signal_y }, right_bottom = { x = signal_x, y = signal_y }, },
-                                        --[[ Pretty sure valid player indices start at 1, so 0 should be safe for indicating a circuit launch? ]]
-                                        player_index = 0,
-                                        last_user_index = entity.last_user and entity.last_user.index,
-                                    })
-                                end
-                            end
-                        end
-
-                        ::continue::
-                    end
-                end
-            end
+        if (sa_active) then
+            Circuit_Network_Service.attempt_launch_silos({ rocket_silos = circuit_connected_silos_on_platforms })
         end
 
         ::continue::
@@ -536,26 +461,61 @@ function configurable_nukes_controller.do_tick(event)
         surface_name = configurable_nukes_controller.surface_name,
         space_location = configurable_nukes_controller.space_location,
         nth_tick = nth_tick,
+        tick = tick,
+        prev_tick = configurable_nukes_controller.tick,
+        active_mod_check_tick = configurable_nukes_controller.active_mod_check_tick,
         initialized = true,
+        initialized_tick = configurable_nukes_controller.init_tick,
         reinitialized = false,
+        reinitialized_tick = configurable_nukes_controller.reinit_tick,
     }
 end
 
-function configurable_nukes_controller.research_finished(event)
-    Log.debug("configurable_nukes_controller.research_finished")
+function configurable_nukes_controller.on_configuration_changed(event)
+    Log.debug("configurable_nukes_controller.on_configuration_changed")
     Log.info(event)
 
-    if (not event or type(event) ~= "table") then return end
-    if (not event.research or not event.research.valid or type(event.research) ~= "userdata") then return end
+    local sa_active = script and script.active_mods and script.active_mods["space-age"]
+    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
-    local research = event.research
-    if (not string.find(research.name, "ICBM-guidance-systems-", 1, true)) then return end
+    storage.sa_active = sa_active
+    storage.se_active = se_active
 
-    if (event.by_script == nil or type(event.by_script) ~= "boolean") then return end
-    if (not event.name or event.name ~= defines.events.on_research_finished) then return end
-    if (not event.tick or type(event.tick) ~= "number" or event.tick < 0) then return end
+    if (event.mod_changes) then
+        --[[ Check if our mod updated ]]
+        if (event.mod_changes["configurable-nukes"]) then
+            game.print({ "configurable-nukes-controller.on-configuration-changed", Constants.mod_name })
 
-    Guidance_Service.research_finished(event)
+            Initialization.init({ maintain_data = true })
+
+            local cn_controller_data = storage and storage.configurable_nukes_controller or configurable_nukes_controller
+
+            cn_controller_data.reinitialized = true
+            cn_controller_data.reinit_tick = game.tick
+
+            cn_controller_data.initialized = true
+            cn_controller_data.init_tick = game.tick
+
+            Constants.get_mod_data(true)
+
+            storage.configurable_nukes_controller = {
+                planet_index = cn_controller_data.planet_index,
+                surface_name = cn_controller_data.surface_name,
+                space_location = cn_controller_data.space_location,
+                tick = game.tick,
+                prev_tick = cn_controller_data.tick,
+                initialized = true,
+                initialized_tick = cn_controller_data.init_tick,
+                reinitialized = false,
+                reinitialized_tick = cn_controller_data.reinit_tick,
+            }
+        end
+    end
+end
+
+function configurable_nukes_controller.on_load(event)
+    Log.debug("configurable_nukes_controller.on_load")
+    Constants.get_mod_data(false, { on_load = true })
 end
 
 configurable_nukes_controller.configurable_nukes = true

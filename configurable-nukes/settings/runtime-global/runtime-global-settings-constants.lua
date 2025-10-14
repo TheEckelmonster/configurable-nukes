@@ -299,6 +299,13 @@ runtime_global_settings_constants.settings = {
         order = "dcf",
         default_value = false,
     },
+    ALLOW_LAUNCH_WHEN_NO_SURFACE_SELECTED = {
+        type = "bool-setting",
+        name = prefix .. "circuit-allow-launch-when-no-surface-selected",
+        setting_type = "runtime-global",
+        order = "dcg",
+        default_value = true,
+    },
     NUM_SURFACES_PROCESSED_PER_TICK = {
         type = "int-setting",
         name = prefix .. "num-surfaces-processed-per-tick",
@@ -309,6 +316,12 @@ runtime_global_settings_constants.settings = {
         maximum_value = 2 ^ 11
     },
 }
+
+runtime_global_settings_constants.settings_dictionary  = {}
+
+for k, v in pairs(runtime_global_settings_constants.settings) do
+    runtime_global_settings_constants.settings_dictionary[v.name] = v
+end
 
 runtime_global_settings_constants.configurable_nukes = true
 

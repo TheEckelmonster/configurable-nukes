@@ -149,6 +149,7 @@ function icbm_repository.update_icbm_data(update_data, optionals)
     if (not game) then return return_val end
     if (not update_data or not update_data.valid) then return return_val end
     if (not update_data.surface or not update_data.surface.valid) then return return_val end
+    if (update_data.item_number == nil or type(update_data.item_number) ~= "number") then return return_val end
 
     optionals = optionals or {}
 
@@ -169,11 +170,13 @@ function icbm_repository.update_icbm_data(update_data, optionals)
 
     local icbms = storage.configurable_nukes.icbm_meta_data[planet_name].icbms
 
-    return_val = icbms[update_data.item_number]
+    return_val = icbms[update_data.item_number] or {}
 
     for k, v in pairs(update_data) do return_val[k] = v end
 
     return_val.updated = game.tick
+
+    icbms[update_data.item_number] = return_val
 
     return return_val
 end

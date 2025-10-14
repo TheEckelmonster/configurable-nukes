@@ -3,9 +3,11 @@ if _rocket_silo_service and _rocket_silo_service.configurable_nukes then
   return _rocket_silo_service
 end
 
+local Circuit_Network_Validations = require("scripts.validations.circuit-network-data.rocket-silo-validations")
 local Log = require("libs.log.log")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
+local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
@@ -36,9 +38,9 @@ function rocket_silo_service.cargo_pod_finished_ascending(event)
     Log.info(event)
 
     if (not event) then return end
-    local space_exploration = script and script.active_mods and script.active_mods["space-exploration"]
+    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
     if (not event.launched_by_rocket) then
-        if (not space_exploration) then
+        if (not se_active) then
             return
         else
             if (not event.cargo_pod or not event.cargo_pod.valid) then return end
@@ -121,9 +123,26 @@ function rocket_silo_service.rocket_silo_cloned(data)
     Log.info(data)
 
     if (not data or type(data) ~= "table") then return end
+    if (not data.source_silo or not data.source_silo.valid) then return end
     if (not data.destination_silo or not data.destination_silo.valid) then return end
 
-    Rocket_Silo_Utils.add_rocket_silo(data.destination_silo)
+    local source_rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(data.source_silo.surface.name, data.source_silo.unit_number)
+    local destination_rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(data.destination_silo)
+
+    destination_rocket_silo_data.circuit_network_data = source_rocket_silo_data.circuit_network_data
+    destination_rocket_silo_data.circuit_network_data.entity = data.destination_silo
+    destination_rocket_silo_data.circuit_network_data.unit_number = data.destination_silo.unit_number
+    destination_rocket_silo_data.circuit_network_data.surface = data.destination_silo.surface
+    destination_rocket_silo_data.circuit_network_data.surface_index = data.destination_silo.surface.index
+    destination_rocket_silo_data.circuit_network_data.surface_name = data.destination_silo.surface.name
+    destination_rocket_silo_data.circuit_network_data.updated = game.tick
+
+    Circuit_Network_Validations.validate({
+        circuit_network_data = destination_rocket_silo_data.circuit_network_data,
+        reinitialize = true,
+    })
+
+    -- Rocket_Silo_Utils.add_rocket_silo(data.destination_silo)
     Log.debug("Cloned a rocket silo")
     Log.info(data.destination_silo)
 end
@@ -144,6 +163,12 @@ function rocket_silo_service.launch_rocket(event)
     Log.debug("rocket_silo_service.launch_rocket")
     Log.info(event)
     Rocket_Silo_Utils.launch_rocket(event)
+end
+
+function rocket_silo_service.on_space_platform_mined_entity(event)
+    Log.error("rocket_silo_service.on_space_platform_mined_entity")
+    Log.warn(event)
+    Rocket_Silo_Utils.mine_rocket_silo(event)
 end
 
 rocket_silo_service.configurable_nukes = true

@@ -44,5 +44,7 @@ data:extend({
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES,
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS,
 
+    Runtime_Global_Settings_Constants.settings.ALLOW_LAUNCH_WHEN_NO_SURFACE_SELECTED,
+
     Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK,
 })

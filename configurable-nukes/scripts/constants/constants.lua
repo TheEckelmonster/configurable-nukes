@@ -42,7 +42,7 @@ local default_mod_data = function (data)
 end
 
 local constants = {
-    mod_name = "Configurable-Nukes",
+    mod_name = "configurable-nukes",
     mod_data = default_mod_data(),
     ["planet"] = {},
     ["space-location"] = {},
@@ -283,23 +283,33 @@ constants.table = {
     end,
 }
 
-function constants.get_mod_data(reindex)
+function constants.get_mod_data(reindex, data)
     Log.debug("constants.get_mod_data")
     Log.info(reindex)
 
-    if (not reindex and storage.constants and storage.constants.mod_data) then
-        constants.mod_data = storage.constants.mod_data
-        return constants.mod_data
-    elseif (not reindex and constants.mod_data and table_size(constants.mod_data) > 0) then
-        if (not storage.constants) then storage.constants = {} end
-        storage.constants.mod_data = constants.mod_data
-        return constants.mod_data
-    end
+    if (type(reindex) ~= "boolean") then return end
+    if (data and type(data) ~= "table") then return end
 
-    Log.debug("Reindexing constants.mod_data")
-    if (not storage.constants) then storage.constants = {} end
-    storage.constants.mod_data = locals.get_mod_data()
-    return storage.constants.mod_data
+    local loading = data and data.on_load or not game or false
+    if (loading and reindex) then reindex = false end
+
+    if (not reindex) then
+        if (storage.constants and storage.constants.mod_data) then
+            constants.mod_data = storage.constants.mod_data
+            return constants.mod_data
+        elseif (constants.mod_data and table_size(constants.mod_data) > 0) then
+            if (not loading) then
+                if (not storage.constants) then storage.constants = {} end
+                storage.constants.mod_data = constants.mod_data
+            end
+            return constants.mod_data
+        end
+    else
+        Log.debug("Reindexing constants.mod_data")
+        if (not storage.constants) then storage.constants = {} end
+        storage.constants.mod_data = locals.get_mod_data()
+        return storage.constants.mod_data
+    end
 end
 
 function constants.get_planets(reindex)
@@ -406,175 +416,206 @@ function constants.get_space_exploration_spaceships(reindex)
     return storage.constants["space-exploration"].spaceships
 end
 
-locals.get_mod_data = function()
+locals.get_mod_data = function(data)
     Log.debug("constants.locals.get_mod_data")
 
-    constants.mod_data = default_mod_data()
+    if (data and type(data) ~= "table") then return end
 
-    constants["planet"] = {}
-    constants["space-location"] = {}
-    constants["space-connection"] = {}
+    local loading = data and data.on_load or not game or false
 
-    local spaceships = constants["space-exploration"].spaceships
-    constants["space-exploration"] = default_space_exploration()
-    if (not constants["space-exploration"].spaceships) then constants["space-exploration"].spaceships = {} end
-    constants["space-exploration"].spaceships = spaceships
+    if (not loading) then
+        constants.mod_data = default_mod_data()
 
-    constants.mod_data_dictionary = {}
-    constants.planets_dictionary = {}
-    constants.space_locations_dictionary = {}
-    constants.space_connections_dictionary = {}
-    constants.space_exploration_dictionary = {}
+        constants["planet"] = {}
+        constants["space-location"] = {}
+        constants["space-connection"] = {}
 
-    if (prototypes) then
-        local mod_data_prototypes = prototypes.mod_data["configurable-nukes-mod-data"]
+        local spaceships = constants["space-exploration"].spaceships
+        constants["space-exploration"] = default_space_exploration()
+        if (not constants["space-exploration"].spaceships) then constants["space-exploration"].spaceships = {} end
+        constants["space-exploration"].spaceships = spaceships
 
-        if (mod_data_prototypes and type(mod_data_prototypes) == "table") then
-            Log.debug("Found mod_data_prototypes")
-        end
-        Log.info(mod_data_prototypes)
+        constants.mod_data_dictionary = {}
+        constants.planets_dictionary = {}
+        constants.space_locations_dictionary = {}
+        constants.space_connections_dictionary = {}
+        constants.space_exploration_dictionary = {}
 
-        --{{ Planets }}
-        for planet_name, planet_data in pairs(mod_data_prototypes.data["planet"]) do
-            if (not String_Utils.find_invalid_substrings(planet_name)
-                    and planet_data and type(planet_data) == "table")
-            then
-                Log.debug("Found valid planet")
-                Log.info(planet_data)
-                if (planet_name and game) then
-                    local planet_surface = game.get_surface(planet_name)
+        if (prototypes) then
+            local mod_data_prototypes = prototypes.mod_data["configurable-nukes-mod-data"]
 
-                    local space_exploration = script and script.active_mods and script.active_mods["space-exploration"]
+            if (mod_data_prototypes and type(mod_data_prototypes) == "table") then
+                Log.debug("Found mod_data_prototypes")
+            end
+            Log.info(mod_data_prototypes)
 
-                    -- Surface can be nil
-                    -- Trying to use on_surface_created event to add them to the appropriate planet after the fact
-                    local new_planet_data = Planet_Data:new({
-                        type = planet_data.type,
-                        name = planet_name,
-                        surface = planet_surface,
-                        surface_index = planet_surface and planet_surface.valid and planet_surface.index or -1,
-                        magnitude = planet_data.magnitude,
+            --{{ Planets }}
+            for planet_name, planet_data in pairs(mod_data_prototypes.data["planet"]) do
+                if (not String_Utils.find_invalid_substrings(planet_name)
+                        and planet_data and type(planet_data) == "table")
+                then
+                    Log.debug("Found valid planet")
+                    Log.info(planet_data)
+                    if (planet_name and game) then
+                        local planet_surface = game.get_surface(planet_name)
 
-                        gravity_pull = planet_data.gravity_pull,
-                        orientation = planet_data.orientation,
-                        star_distance = planet_data.star_distance,
+                        -- Surface can be nil
+                        -- Trying to use on_surface_created event to add them to the appropriate planet after the fact
+                        local new_planet_data = Planet_Data:new({
+                            type = planet_data.type,
+                            name = planet_name,
+                            surface = planet_surface,
+                            surface_index = planet_surface and planet_surface.valid and planet_surface.index or -1,
+                            magnitude = planet_data.magnitude,
 
-                        ["space-connection"] = planet_data["space-connection"],
+                            gravity_pull = planet_data.gravity_pull,
+                            orientation = planet_data.orientation,
+                            star_distance = planet_data.star_distance,
 
-                        x = planet_data.x,
-                        y = planet_data.y,
+                            ["space-connection"] = planet_data["space-connection"],
 
-                        valid = true,
-                    })
+                            x = planet_data.x,
+                            y = planet_data.y,
 
-                    Log.debug("Adding planet")
-                    Log.info(new_planet_data)
-                    if (new_planet_data.surface and new_planet_data.surface.valid) then
-                        table.insert(constants.mod_data["planet"], new_planet_data)
-                        table.insert(constants["planet"], new_planet_data)
+                            valid = true,
+                        })
+
+                        Log.debug("Adding planet")
+                        Log.info(new_planet_data)
+                        if (new_planet_data.surface and new_planet_data.surface.valid) then
+                            table.insert(constants.mod_data["planet"], new_planet_data)
+                            table.insert(constants["planet"], new_planet_data)
+                        end
+                        constants.mod_data_dictionary[planet_name] = new_planet_data
+                        constants.planets_dictionary[planet_name] = new_planet_data
                     end
-                    constants.mod_data_dictionary[planet_name] = new_planet_data
-                    constants.planets_dictionary[planet_name] = new_planet_data
                 end
+            end
+
+            --[[ Space Locations ]]
+            for name, space_location_data in pairs(mod_data_prototypes.data["space-location"]) do
+                if (not String_Utils.find_invalid_substrings(name)
+                    and space_location_data and type(space_location_data) == "table")
+                then
+                    Log.debug("Found valid space-location")
+                    Log.info(space_location_data)
+                    if (name and game) then
+                        local surface = game.get_surface(name)
+
+                        -- Surface can be nil
+                        -- Trying to use on_surface_created event to add them to the appropriate planet after the fact
+                        local new_space_location_data = Space_Location_Data:new({
+                            name = name,
+                            type = space_location_data.type,
+                            surface = surface,
+                            surface_index = surface and surface.valid and surface.index or -1,
+                            magnitude = space_location_data.magnitude,
+
+                            gravity_pull = space_location_data.gravity_pull,
+                            orientation = space_location_data.orientation,
+                            star_distance = space_location_data.star_distance,
+
+                            ["space-connection"] = space_location_data["space-connection"],
+
+                            x = space_location_data.x,
+                            y = space_location_data.y,
+
+                            valid = true,
+                        })
+
+                        Log.debug("Adding planet")
+                        Log.info(new_space_location_data)
+                        table.insert(constants.mod_data["space-location"], new_space_location_data)
+                        table.insert(constants["space-location"], new_space_location_data)
+                        constants.mod_data_dictionary[name] = new_space_location_data
+                        constants.space_locations_dictionary[name] = new_space_location_data
+                    end
+                end
+            end
+
+            --[[ Space Connections ]]
+            for name, space_connection_data in pairs(mod_data_prototypes.data["space-connection"]) do
+                if (not String_Utils.find_invalid_substrings(name)
+                    and space_connection_data and type(space_connection_data) == "table")
+                then
+                    Log.debug("Found valid space-connection")
+                    Log.info(space_connection_data)
+                    if (name and game) then
+                        local surface = game.get_surface(name)
+
+                        -- Surface can be nil
+                        -- Trying to use on_surface_created event to add them to the appropriate planet after the fact
+                        local new_space_connection_data = Space_Connection_Data:new({
+                            name = name,
+                            type = space_connection_data.type,
+
+                            from = space_connection_data.from,
+                            to = space_connection_data.to,
+                            length = space_connection_data.length,
+                            reversed = space_connection_data.reversed,
+
+                            valid = true,
+                        })
+
+                        Log.debug("Adding planet")
+                        Log.info(new_space_connection_data)
+                        table.insert(constants.mod_data["space-connection"], new_space_connection_data)
+                        table.insert(constants["space-connection"], new_space_connection_data)
+                        constants.mod_data_dictionary[name] = new_space_connection_data
+                        constants.space_connections_dictionary[name] = new_space_connection_data
+                    end
+                end
+            end
+
+            if (mods and mods["space-exploration"] or script and script.active_mods and script.active_mods["space-exploration"]) then
+                locals.get_space_exploration_universe()
             end
         end
 
-        --[[ Space Locations ]]
-        for name, space_location_data in pairs(mod_data_prototypes.data["space-location"]) do
-            if (not String_Utils.find_invalid_substrings(name)
-                and space_location_data and type(space_location_data) == "table")
-            then
-                Log.debug("Found valid space-location")
-                Log.info(space_location_data)
-                if (name and game) then
-                    local surface = game.get_surface(name)
-
-                    local space_exploration = script and script.active_mods and script.active_mods["space-exploration"]
-
-                    -- Surface can be nil
-                    -- Trying to use on_surface_created event to add them to the appropriate planet after the fact
-                    local new_space_location_data = Space_Location_Data:new({
-                        name = name,
-                        type = space_location_data.type,
-                        surface = surface,
-                        surface_index = surface and surface.valid and surface.index or -1,
-                        magnitude = space_location_data.magnitude,
-
-                        gravity_pull = space_location_data.gravity_pull,
-                        orientation = space_location_data.orientation,
-                        star_distance = space_location_data.star_distance,
-
-                        ["space-connection"] = space_location_data["space-connection"],
-
-                        x = space_location_data.x,
-                        y = space_location_data.y,
-
-                        valid = true,
-                    })
-
-                    Log.debug("Adding planet")
-                    Log.info(new_space_location_data)
-                    table.insert(constants.mod_data["space-location"], new_space_location_data)
-                    table.insert(constants["space-location"], new_space_location_data)
-                    constants.mod_data_dictionary[name] = new_space_location_data
-                    constants.space_locations_dictionary[name] = new_space_location_data
-                end
-            end
-        end
-
-        --[[ Space Connections ]]
-        for name, space_connection_data in pairs(mod_data_prototypes.data["space-connection"]) do
-            if (not String_Utils.find_invalid_substrings(name)
-                and space_connection_data and type(space_connection_data) == "table")
-            then
-                Log.debug("Found valid space-connection")
-                Log.info(space_connection_data)
-                if (name and game) then
-                    local surface = game.get_surface(name)
-
-                    local space_exploration = script and script.active_mods and script.active_mods["space-exploration"]
-
-                    -- Surface can be nil
-                    -- Trying to use on_surface_created event to add them to the appropriate planet after the fact
-                    local new_space_connection_data = Space_Connection_Data:new({
-                        name = name,
-                        type = space_connection_data.type,
-
-                        from = space_connection_data.from,
-                        to = space_connection_data.to,
-                        length = space_connection_data.length,
-                        reversed = space_connection_data.reversed,
-
-                        valid = true,
-                    })
-
-                    Log.debug("Adding planet")
-                    Log.info(new_space_connection_data)
-                    table.insert(constants.mod_data["space-connection"], new_space_connection_data)
-                    table.insert(constants["space-connection"], new_space_connection_data)
-                    constants.mod_data_dictionary[name] = new_space_connection_data
-                    constants.space_connections_dictionary[name] = new_space_connection_data
-                end
-            end
-        end
+        if (not storage.constants) then storage.constants = {} end
+        storage.constants.mod_data = constants.mod_data
+        storage.constants.mod_data_dictionary = constants.mod_data_dictionary
+        storage.constants.mod_data["planet"] = constants.mod_data["planet"]
+        storage.constants.mod_data["space-connection"] = constants.mod_data["space-connection"]
+        storage.constants.mod_data["space-location"] = constants.mod_data["space-location"]
+        storage.constants.planets_dictionary = constants.planets_dictionary
+        storage.constants.space_locations_dictionary = constants.space_locations_dictionary
+        storage.constants.space_connections_dictionary = constants.space_connections_dictionary
 
         if (mods and mods["space-exploration"] or script and script.active_mods and script.active_mods["space-exploration"]) then
-            locals.get_space_exploration_universe()
+            storage.constants.mod_data["space-exploration"] = constants.mod_data["space-exploration"]
+            storage.constants["space-exploration"] = constants["space-exploration"]
+            storage.constants.space_exploration_dictionary = constants.space_exploration_dictionary
         end
-    end
+    else
+        --[[ Called during the on_load event
+            -> No access to "game" object
+            -> Read-only access to storage
 
-    if (not storage.constants) then storage.constants = {} end
-    storage.constants.mod_data = constants.mod_data
-    storage.constants.mod_data_dictionary = constants.mod_data_dictionary
-    storage.constants.mod_data["space-connection"] = constants.mod_data["space-connection"]
-    storage.constants.mod_data["space-location"] = constants.mod_data["space-location"]
-    storage.constants.space_locations_dictionary = constants.space_locations_dictionary
-    storage.constants.space_connections_dictionary = constants.space_connections_dictionary
+            Trying to reestablish references to existing data in storage.
+            Should hopefully help alleviate some of the lag/lag spikes that
+            occur on load - particularly when loading Space Exploration.
+        ]]
+        if (storage.constants) then
+            constants.mod_data = storage.constants.mod_data
+            constants.mod_data_dictionary = storage.constants.mod_data_dictionary
 
-    if (mods and mods["space-exploration"] or script and script.active_mods and script.active_mods["space-exploration"]) then
-        storage.constants.mod_data["space-exploration"] = constants.mod_data["space-exploration"]
-        storage.constants["space-exploration"] = constants["space-exploration"]
-        storage.constants.space_exploration_dictionary = constants.space_exploration_dictionary
+            constants.planets_dictionary = storage.constants.planets_dictionary
+            constants.space_locations_dictionary = storage.constants.space_locations_dictionary
+            constants.space_connections_dictionary = storage.constants.space_connections_dictionary
+
+            if (not constants.mod_data) then constants.mod_data = {} end
+            constants.mod_data["planet"] = storage.constants.mod_data["planet"]
+            constants.mod_data["space-connection"] = storage.constants.mod_data["space-connection"]
+            constants.mod_data["space-location"] = storage.constants.mod_data["space-location"]
+
+            if (mods and mods["space-exploration"] or script and script.active_mods and script.active_mods["space-exploration"]) then
+                if (not constants.mod_data["space-exploration"]) then constants.mod_data["space-exploration"] = {} end
+                constants.mod_data["space-exploration"] = storage.constants.mod_data["space-exploration"]
+                constants["space-exploration"] = storage.constants["space-exploration"]
+                constants.space_exploration_dictionary = storage.constants.space_exploration_dictionary
+            end
+        end
     end
 
     return constants.mod_data
@@ -829,7 +870,6 @@ locals.get_space_exploration_universe = function(data)
                             -- zone = zone,
                             zone_index = zone.index,
 
-                            -- orbit = all_zones[zone.orbit_index],
                             orbit_index = zone.orbit_index,
 
                             child_indices = zone.child_indexes,
@@ -866,10 +906,8 @@ locals.get_space_exploration_universe = function(data)
                             zone = zone,
                             zone_index = zone.index,
 
-                            -- orbit = all_zones[zone.orbit_index],
                             orbit_index = zone.orbit_index,
 
-                            -- parent = all_zones[zone.parent_index],
                             parent_index = zone.parent_index,
 
                             child_indices = zone.child_indexes,
@@ -904,7 +942,6 @@ locals.get_space_exploration_universe = function(data)
                             planet_gravity_well = zone.planet_gravity_well or 0,
                             star_gravity_well = zone.star_gravity_well or 0,
 
-                            -- parent = all_zones[zone.parent_index],
                             parent_index = zone.parent_index,
 
                             surface = zone_surface,
@@ -930,10 +967,8 @@ locals.get_space_exploration_universe = function(data)
                             zone = zone,
                             zone_index = zone.index,
 
-                            -- orbit = all_zones[zone.orbit_index],
                             orbit_index = zone.orbit_index,
 
-                            -- parent = all_zones[zone.parent_index],
                             parent_index = zone.parent_index,
 
                             children = zone.child_indexes,
@@ -968,7 +1003,6 @@ locals.get_space_exploration_universe = function(data)
                             zone = zone,
                             zone_index = zone.index,
 
-                            -- parent = all_zones[zone.parent_index],
                             parent_index = zone.parent_index,
 
                             surface = zone_surface,
@@ -1083,12 +1117,14 @@ locals.get_space_exploration_universe = function(data)
     -- log(serpent.block(constants.mod_data_dictionary))
     -- log(serpent.block(constants["space-exploration"]))
     -- log(serpent.block(constants.space_exploration_dictionary))
+    -- log(serpent.line(constants.space_exploration_dictionary))
 
     if (not storage.constants) then storage.constants = {} end
     if (not storage.constants.mod_data) then storage.constants.mod_data = constants.mod_data end
-    if (not storage.constants.mod_data_dictionary) then storage.constants.mod_data_dictionary = constants.mod_data_dictionary end
+    -- if (not storage.constants.mod_data_dictionary) then storage.constants.mod_data_dictionary = constants.mod_data_dictionary end
+    storage.constants.mod_data_dictionary = constants.mod_data_dictionary
     storage.constants["space-exploration"] = constants["space-exploration"]
-    storage.constants.space_locations_dictionary = constants.space_exploration_dictionary
+    storage.constants.space_exploration_dictionary = constants.space_exploration_dictionary
 
     return constants["space-exploration"]
 end

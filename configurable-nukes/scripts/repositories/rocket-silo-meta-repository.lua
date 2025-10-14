@@ -31,13 +31,19 @@ function rocket_silo_meta_repository.save_rocket_silo_meta_data(space_location_n
             end
         end
     else
-        if (not space_location_name:find("spaceship-", 1, true) and not Constants.space_exploration_dictionary) then Constants.get_space_exploration_universe(true) end
-        if (not space_location_name:find("spaceship-", 1, true) and not Constants.space_exploration_dictionary[space_location_name:lower()]) then return return_val end
+        if (not space_location_name:find("spaceship-", 1, true)) then
+            if (not Constants.space_exploration_dictionary[space_location_name:lower()]) then log("reindexing") Constants.get_space_exploration_universe(true) end
+            if (not Constants.space_exploration_dictionary[space_location_name:lower()]) then
+                if (not Constants.space_exploration_dictionary[space_location_name]) then return return_val end
+            end
+        end
     end
 
     optionals = optionals or {
         surface = game.get_surface(space_location_name)
     }
+
+    if (optionals.update_data and not optionals.update_data.space_location_name) then optionals.update_data.space_location_name = space_location_name end
 
     local surface = optionals.surface or game.get_surface(space_location_name)
     if (not surface or not surface.valid) then return return_val end
@@ -76,7 +82,10 @@ function rocket_silo_meta_repository.update_rocket_silo_meta_data(update_data, o
     if (not storage.configurable_nukes.rocket_silo_meta_data) then storage.configurable_nukes.rocket_silo_meta_data = {} end
     if (not storage.configurable_nukes.rocket_silo_meta_data[space_location_name]) then
         -- If it doesn't exist, generate it
-        return rocket_silo_meta_repository.save_rocket_silo_meta_data(space_location_name, { update_data = update_data })
+        local rocket_silo_meta_data = rocket_silo_meta_repository.save_rocket_silo_meta_data(space_location_name, { update_data = update_data })
+        if (not rocket_silo_meta_data or not rocket_silo_meta_data.valid) then
+            return return_val
+        end
     end
 
     local rocket_silo_meta_data = storage.configurable_nukes.rocket_silo_meta_data[space_location_name]
@@ -126,14 +135,21 @@ function rocket_silo_meta_repository.get_rocket_silo_meta_data(space_location_na
     if (not game) then return return_val end
     if (not space_location_name or type(space_location_name) ~= "string") then return return_val end
 
-    optionals = optionals or {}
+    optionals = optionals or {
+        create = true
+    }
 
     if (not storage) then return return_val end
     if (not storage.configurable_nukes) then storage.configurable_nukes = Configurable_Nukes_Data:new() end
     if (not storage.configurable_nukes.rocket_silo_meta_data) then storage.configurable_nukes.rocket_silo_meta_data = {} end
     if (not storage.configurable_nukes.rocket_silo_meta_data[space_location_name]) then
         -- If it doesn't exist, generate it
-        return rocket_silo_meta_repository.save_rocket_silo_meta_data(space_location_name)
+        if (optionals.create) then
+            return rocket_silo_meta_repository.save_rocket_silo_meta_data(space_location_name)
+        else
+            return_val.valid = false
+            return return_val
+        end
     end
 
     return storage.configurable_nukes.rocket_silo_meta_data[space_location_name]
