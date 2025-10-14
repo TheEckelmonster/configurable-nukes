@@ -2187,6 +2187,12 @@ for k, v in pairs(default_technology_ingredients_guidance_systems) do
     end
 end
 
+startup_settings_constants.settings_dictionary  = {}
+
+for k, v in pairs(startup_settings_constants.settings) do
+    startup_settings_constants.settings_dictionary[v.name] = v
+end
+
 startup_settings_constants.configurable_nukes = true
 
 local _startup_settings_constants = startup_settings_constants

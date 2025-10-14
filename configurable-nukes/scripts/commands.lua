@@ -372,7 +372,7 @@ end
 commands.add_command("configurable_nukes.init", "Initialize from scratch. Will erase existing data.", configurable_nukes_commands.init)
 commands.add_command("configurable_nukes.reinit", "Tries to reinitialize, attempting to preserve existing data.", configurable_nukes_commands.reinit)
 commands.add_command("configurable_nukes.print_table", "", configurable_nukes_commands.print_table)
--- commands.add_command("configurable_nukes.print_storage", "Exports to a .json file the underlying storage data.", configurable_nukes_commands.print_storage)
+commands.add_command("configurable_nukes.print_storage", "Exports to a .json file the underlying storage data.", configurable_nukes_commands.print_storage)
 -- commands.add_command("configurable_nukes.print_mod_data", "Exports to a .json file the currently available mod-data.", configurable_nukes_commands.print_mod_data)
 -- commands.add_command("configurable_nukes.print_mod_data_dictionary", "Exports to a .json file the mod-data dictionary.", configurable_nukes_commands.print_mod_data_dictionary)
 -- commands.add_command("configurable_nukes.print_planets", "Exports to a .json file the currently available planet-data.", configurable_nukes_commands.print_planets)

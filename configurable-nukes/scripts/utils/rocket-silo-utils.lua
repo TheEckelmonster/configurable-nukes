@@ -3,6 +3,8 @@ if _rocket_silo_utils and _rocket_silo_utils.configurable_nukes then
     return _rocket_silo_utils
 end
 
+local Util = require("__core__.lualib.util")
+
 local Zone_Static_Data = require("scripts.data.static.zone-static-data")
 
 local Constants = require("scripts.constants.constants")
@@ -11,38 +13,9 @@ local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
+local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
--- ATOMIC_BOMB_ROCKET_LAUNCHABLE
-local get_atomic_bomb_rocket_launchable = function ()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name].value
-    end
-
-    return setting
-end
--- ICBM_ALLOW_MULTISURFACE
-local get_icbm_allow_multisurface = function ()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name].value
-    end
-
-    return setting
-end
--- ATOMIC_WARHEAD_ENABLED
-local get_atomic_warhead_enabled = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name].value
-    end
-
-    return setting
-end
 -- MULTISURFACE_BASE_DISTANCE_MODIFIER
 local get_multisurface_base_distance_modifier = function()
     local setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.default_value
@@ -62,6 +35,16 @@ local get_always_use_closest_silo = function (data)
     end
 
     return setting
+end
+
+local has_power = function (data)
+    if (data and type(type(data) == "table")) then
+        if (data.rocket_silo and data.rocket_silo.valid) then
+            return  data.rocket_silo.is_connected_to_electric_network()
+                and data.rocket_silo.energy > 0
+                and data.rocket_silo.energy >= data.rocket_silo.electric_buffer_size
+        end
+    end
 end
 
 local rocket_silo_utils = {}
@@ -98,18 +81,21 @@ function rocket_silo_utils.launch_rocket(event)
     if (not player and event.player_index == 0) then circuit_launch_initiated = true end
     if (not circuit_launch_initiated and (not player or not player.valid)) then return end
 
-    local has_power = function (data)
-        if (data and type(type(data) == "table")) then
-            if (data.rocket_silo and data.rocket_silo.valid) then
-                return  data.rocket_silo.is_connected_to_electric_network()
-                    and data.rocket_silo.energy > 0
-                    and data.rocket_silo.energy >= data.rocket_silo.electric_buffer_size
-            end
-        end
-    end
-
     local sa_active = storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
     local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
+
+    local multisurface_circuit_launch = false
+    if (event.circuit_launched ~= nil and type(event.circuit_launched) ~= "boolean") then return end
+    if (event.circuit_launched and (not event.rocket_silo or not event.rocket_silo.valid)) then return end
+    if (event.circuit_launched and event.rocket_silo.surface and event.rocket_silo.surface.valid) then
+        local target_surface = surface
+        local source_surface = event.rocket_silo.surface
+
+        if (target_surface ~= source_surface) then
+            multisurface_circuit_launch = true
+        end
+    end
+    if (event.circuit_launched and (not event.rocket_silo_data or not event.rocket_silo_data.valid)) then return end
 
     local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(surface.name)
 
@@ -120,49 +106,13 @@ function rocket_silo_utils.launch_rocket(event)
 
     local rocket_silo_array = {}
 
+    local setting_atomic_bomb_rocket_launchable = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name })
+    local setting_atomic_warhead_enabled = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })
+
     if (not Constants.planets_dictionary[surface.name]) then Constants.get_planets(true) end
     local source_target_planet = Constants.planets_dictionary[surface.name]
     local source_target_system = nil
     Log.debug(source_target_planet)
-
-    --[[ Circuit-network launched ]]
-    local circuit_launch = false
-    if (event.rocket_silo and event.rocket_silo.valid and has_power({ rocket_silo = event.rocket_silo })) then
-        circuit_launch = true
-        local position = event.rocket_silo.position
-        local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
-
-        local launched_from = nil
-        if (event.rocket_silo.surface ~= surface) then
-            launched_from = "interplanetary"
-        elseif (sa_active) then
-            launched_from =     event.rocket_silo.surface.name:lower():find("platform-", 1, true)
-                            and event.rocket_silo.surface.platform
-                            and event.rocket_silo.surface.platform.valid
-                            and "orbit"
-                        or
-                            "surface"
-        elseif(se_active) then
-            launched_from =     event.rocket_silo.surface.name:lower():find(" orbit", 1, true)
-                            and "orbit"
-                        or
-                            "surface"
-        else
-            launched_from = "surface"
-        end
-        local launched_from_space = launched_from == "orbit"
-
-        table.insert(rocket_silo_array,
-            {
-                entity = event.rocket_silo,
-                distance = distance,
-                source_surface = event.rocket_silo.surface,
-                launched_from = launched_from,
-                launched_from_space = launched_from_space,
-            })
-    end
-
-    Log.warn(rocket_silo_array)
 
     if (se_active) then
         if (not surface.name:find("spaceship-", 1, true) and not Constants.space_exploration_dictionary[surface.name:lower()]) then Constants.get_space_exploration_universe(true) end
@@ -188,7 +138,7 @@ function rocket_silo_utils.launch_rocket(event)
     end
 
     local found_in_orbit = false
-    local icbm_allow_multisurface = get_icbm_allow_multisurface()
+    local icbm_allow_multisurface = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
     local ipbm_researched = false
     if (sa_active or se_active) then
         if (player and player.valid) then
@@ -197,6 +147,86 @@ function rocket_silo_utils.launch_rocket(event)
             ipbm_researched = event.rocket_silo.force.technologies["ipbms"].researched
         end
     end
+
+    --[[ Circuit-network launched ]]
+    local circuit_launch = event.circuit_launched or false
+    if (circuit_launch and event.rocket_silo and event.rocket_silo.valid and has_power({ rocket_silo = event.rocket_silo })) then
+        circuit_launch = true
+        local position = event.rocket_silo.position
+        local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
+
+        local launched_from = nil
+        local do_calc_distance = false
+        if (multisurface_circuit_launch) then
+            launched_from = "interplanetary"
+            do_calc_distance = true
+        end
+        if (sa_active) then
+            --[[ Is this scenario even possible presently? ]]
+            launched_from =     event.rocket_silo.surface.name:lower():find("platform-", 1, true)
+                            and event.rocket_silo.surface.platform
+                            and event.rocket_silo.surface.platform.valid
+                            and "orbit"
+                        or
+                            "surface"
+        elseif (se_active) then
+            launched_from =     event.rocket_silo.surface.name:lower():find(" orbit", 1, true)
+                            and "orbit"
+                        or
+                            "surface"
+        else
+            launched_from = "surface"
+        end
+
+        local launched_from_space = launched_from == "orbit"
+
+        local rocket_silo_data = {}
+        if (do_calc_distance) then
+            if (event.rocket_silo_data and event.circuit_launched_space_location_name) then
+                rocket_silo_data = rocket_silo_utils.calculate_multifsurface_distance({
+                    rocket_silo_data = event.rocket_silo_data,
+                    space_location_name = event.circuit_launched_space_location_name,
+                    target_position = target_position,
+                    source_target_planet = source_target_planet,
+                    source_target_system = source_target_system,
+                    setting_atomic_bomb_rocket_launchable = setting_atomic_bomb_rocket_launchable,
+                    setting_atomic_warhead_enabled = setting_atomic_warhead_enabled,
+                    launched_from = launched_from,
+                    orbit_to_surface = event.orbit_to_surface,
+                })
+            end
+            if (type(rocket_silo_data) ~= "table") then
+                if (type(rocket_silo_data) == "number") then
+                    if (rocket_silo_data == -1) then
+                        Log.warn("Invalid data provided to calculate multisurface distance")
+                    elseif (rocket_silo_data == -2) then
+                        Log.warn("Valid data provided, but silo not available for launch")
+                    else
+                        Log.error("How is this possible? 1")
+                    end
+                else
+                    Log.error("How is this possible? 2")
+                end
+
+                return -1
+            end
+        else
+            rocket_silo_data =
+            {
+                entity = event.rocket_silo,
+                distance = distance,
+                source_surface = event.rocket_silo.surface,
+                launched_from = launched_from,
+                launched_from_space = launched_from_space,
+            }
+        end
+
+        if (type(rocket_silo_data) == "table") then
+            table.insert(rocket_silo_array, rocket_silo_data)
+        end
+    end
+
+    Log.warn(rocket_silo_array)
 
     --[[ Check for silos in orbit first ]]
     Log.warn("circuit_launch = " .. tostring(circuit_launch))
@@ -235,9 +265,9 @@ function rocket_silo_utils.launch_rocket(event)
                                     local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                                     if (inventory and inventory.valid) then
                                         for _, item in ipairs(inventory.get_contents()) do
-                                            if (    (item.name == "atomic-bomb" and get_atomic_bomb_rocket_launchable())
+                                            if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
                                                 or
-                                                    (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
+                                                    (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
                                             then
                                                 found_in_orbit = true
                                                 local position = v.entity.position
@@ -301,9 +331,9 @@ function rocket_silo_utils.launch_rocket(event)
                                 local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                                 if (inventory and inventory.valid) then
                                     for _, item in ipairs(inventory.get_contents()) do
-                                        if (    (item.name == "atomic-bomb" and get_atomic_bomb_rocket_launchable())
+                                        if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
                                             or
-                                                (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
+                                                (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
                                         then
                                             found_in_orbit = true
                                             local position = v.entity.position
@@ -363,9 +393,9 @@ function rocket_silo_utils.launch_rocket(event)
                 local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                 if (inventory and inventory.valid) then
                     for _, item in ipairs(inventory.get_contents()) do
-                        if (    (item.name == "atomic-bomb" and get_atomic_bomb_rocket_launchable())
+                        if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
                             or
-                                (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
+                                (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
                         then
                             found_on_surface = true
                             local position = v.entity.position
@@ -426,9 +456,9 @@ function rocket_silo_utils.launch_rocket(event)
                                         local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                                         if (inventory and inventory.valid) then
                                             for _, item in ipairs(inventory.get_contents()) do
-                                                if (    (item.name == "atomic-bomb" and get_atomic_bomb_rocket_launchable())
+                                                if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
                                                     or
-                                                        (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
+                                                        (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
                                                 then
                                                     found_in_orbit = true
                                                     local position = v.entity.position
@@ -486,9 +516,9 @@ function rocket_silo_utils.launch_rocket(event)
                                     local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                                     if (inventory and inventory.valid) then
                                         for _, item in ipairs(inventory.get_contents()) do
-                                            if (    (item.name == "atomic-bomb" and get_atomic_bomb_rocket_launchable())
+                                            if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
                                                 or
-                                                    (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
+                                                    (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
                                             then
                                                 found_in_orbit = true
                                                 local position = v.entity.position
@@ -552,9 +582,9 @@ function rocket_silo_utils.launch_rocket(event)
                 local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                 if (inventory and inventory.valid) then
                     for _, item in ipairs(inventory.get_contents()) do
-                        if (    (item.name == "atomic-bomb" and get_atomic_bomb_rocket_launchable())
+                        if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
                             or
-                                (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
+                                (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
                         then
                             found_on_surface = true
                             local position = v.entity.position
@@ -598,440 +628,73 @@ function rocket_silo_utils.launch_rocket(event)
             if (se_active and space_location_name:lower():find("spaceship-", 1, true)) then
                 goto continue
             end
+            local calculated = false
+            local returned_rocket_silo_data = nil
             for k, v in pairs(rocket_silo_meta_data.rocket_silos) do
-                if (    v.entity
-                    and v.entity.valid
-                    and v.entity.type == "rocket-silo"
-                    and has_power({ rocket_silo = v.entity })
-                    and v.entity.position
-                    and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
-                    and (
-                            icbm_allow_multisurface
-                            and v.entity.name == "rocket-silo"
-                        or
-                            v.entity.name == "ipbm-rocket-silo"))
-                then
+                if (v.entity and v.entity.valid and v.entity.surface and v.entity.surface.valid) then
 
-                    local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
-                    if (inventory and inventory.valid) then
-                        for _, item in ipairs(inventory.get_contents()) do
-                            if (    (item.name == "atomic-bomb" and get_atomic_bomb_rocket_launchable())
-                                or
-                                    (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
-                            then
+                    local payload_found = false
 
-                                local is_travelling = false
-                                local space_connection_distance = nil
-                                local space_connection_distance_travelled = nil
-                                local space_connection = nil
-                                local reversed = false
-                                local space_connection_contains_destination = false
+                    if (    v.entity
+                        and v.entity.valid
+                        and v.entity.type == "rocket-silo"
+                        and has_power({ rocket_silo = v.entity })
+                        and v.entity.position
+                        and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+                        and (
+                                Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
+                                and v.entity.name == "rocket-silo"
+                            or
+                                v.entity.name == "ipbm-rocket-silo"))
+                    then
 
-                                local is_ipbm = v.entity.name == "ipbm-rocket-silo"
-
-                                local base_target_distance = 0
-
-                                if (not se_active and not Constants.planets_dictionary[v.entity.surface.name]) then Constants.get_planets(true) end
-                                local origin_space_location = not se_active and Constants.planets_dictionary[v.entity.surface.name]
-                                if (not origin_space_location) then
-                                    if (se_active) then
-                                        if (v.entity.surface.name:find("spaceship-", 1, true)) then
-                                            --[[ TODO: Reach out about the bug caused when launching a rocket while a spaceship takes off
-                                                -> No error on this side; rather, is coming from SE:
-
-                                                    The mod Space Exploration (0.7.34) caused a non-recoverable error.
-                                                    Please report this error to the mod author.
-
-                                                    Error while running event space-exploration::on_rocket_launched (ID 14)
-                                                    __space-exploration__/control.lua:1551: attempt to index field 'attached_cargo_pod' (a nil value)
-                                                    stack traceback:
-                                                        __space-exploration__/control.lua:1551: in function 'callback'
-                                                        __space-exploration__/scripts/event.lua:20: in function <__space-exploration__/scripts/event.lua:18>
-
-                                                -> [Missing a '.valid' check when a cargo-pod finishes ascending]
-                                            ]]
-
-                                            origin_space_location = Constants["space-exploration"].spaceships[v.entity.surface.name]
-                                        else
-                                            if (not Constants.space_exploration_dictionary[string.lower(v.entity.surface.name)]) then Constants.get_space_exploration_universe(true) end
-                                            origin_space_location = Constants.space_exploration_dictionary[string.lower(v.entity.surface.name)]
-
-                                            if (not origin_space_location) then
-                                                if (not Constants.mod_data_dictionary["se-" .. string.lower(v.entity.surface.name)]) then Constants.get_mod_data(true) end
-                                                origin_space_location = Constants.mod_data_dictionary["se-" .. string.lower(v.entity.surface.name)]
-                                                Log.warn(origin_space_location and origin_space_location.name)
-                                                Log.info(origin_space_location)
-                                            end
-                                        end
-                                    else
-                                        if (string.find(v.entity.surface.name, "platform-", 1, true) and v.entity.surface.platform and v.entity.surface.platform.valid) then
-                                            local space_location = v.entity.surface.platform.space_location
-                                            space_connection = v.entity.surface.platform.space_connection
-
-                                            if ((not space_location or not space_location.valid) and space_connection and space_connection.valid) then
-                                                local from = v.entity.surface.platform.last_visited_space_location
-                                                if (from ~= space_connection.from) then
-                                                    reversed = true
-                                                end
-                                                if (from and from.valid and not Constants.planets_dictionary[from.name]) then Constants.get_planets(true) end
-                                                origin_space_location = from and from.valid and Constants.planets_dictionary[from.name]
-                                                is_travelling = origin_space_location and true
-
-                                                if (is_travelling) then
-                                                    space_connection_distance = space_connection.length
-
-                                                    --[[ Calculate the actual distance between from and to, rather than using the space-connection distance ]]
-                                                    local from = space_connection.from
-                                                    local to = space_connection.to
-                                                    if (not Constants.planets_dictionary[from.name] or not Constants.planets_dictionary[to.name]) then Constants.get_planets(true) end
-                                                    local planet_from = Constants.planets_dictionary[from.name]
-                                                    local planet_to = Constants.planets_dictionary[to.name]
-
-                                                    space_connection_distance = (((planet_from.x - planet_to.x) ^ 2 + (planet_from.y - planet_to.y) ^ 2) ^ 0.5)
-                                                    space_connection_distance = space_connection_distance * get_multisurface_base_distance_modifier()
-
-                                                    if (reversed) then
-                                                        space_connection_distance_travelled = space_connection_distance * (1 - v.entity.surface.platform.distance)
-                                                    else
-                                                        space_connection_distance_travelled = space_connection_distance * v.entity.surface.platform.distance
-                                                    end
-                                                end
-
-                                            elseif (space_location and space_location.valid) then
-                                                if (not Constants.planets_dictionary[space_location.name]) then Constants.get_planets(true) end
-                                                origin_space_location = Constants.planets_dictionary[space_location.name]
-                                            end
-                                        end
-                                        local planet = v.entity.surface.planet or origin_space_location and origin_space_location.surface and origin_space_location.surface.valid and origin_space_location.surface.planet
-
-                                        if (planet and planet.valid) then
-                                            if (not Constants.planets_dictionary[planet.name]) then Constants.get_planets(true) end
-                                            origin_space_location = Constants.planets_dictionary[planet.name]
-                                        end
-                                        if (not origin_space_location) then
-                                            origin_space_location = { magnitude = 1, orientation = 0.1, star_distance = 100, }
-                                        end
-                                    end
+                        local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+                        if (inventory and inventory.valid) then
+                            for _, item in ipairs(inventory.get_contents()) do
+                                if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
+                                    or
+                                        (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
+                                then
+                                    payload_found = true
+                                    break
                                 end
-                                if (not origin_space_location) then
-                                    origin_space_location = { magnitude = 1, orientation = 0.1, star_distance = 100, }
-                                end
+                            end
+                        end
+                    end
 
-                                local target_planet = source_target_planet
-                                                    or
-                                                    {
-                                                        name = "",
-                                                        magnitude = 1,
-                                                        orientation = origin_space_location.orientation,
-                                                        star_distance = (origin_space_location.star_distance and origin_space_location.star_distance or 0) + origin_space_location.magnitude,
-                                                    }
+                    if (payload_found) then
+                        if (not calculated) then
+                            returned_rocket_silo_data = rocket_silo_utils.calculate_multifsurface_distance({
+                                rocket_silo_data = v,
+                                space_location_name = space_location_name,
+                                target_position = target_position,
+                                rocket_silo_array = rocket_silo_array,
+                                source_target_planet = source_target_planet,
+                                source_target_system = source_target_system,
+                                setting_atomic_bomb_rocket_launchable = setting_atomic_bomb_rocket_launchable,
+                                setting_atomic_warhead_enabled = setting_atomic_warhead_enabled,
+                            })
+                            if (type(returned_rocket_silo_data) == "table") then
+                                calculated = true
+                            end
+                        elseif (calculated and returned_rocket_silo_data) then
+                            local return_val_copy = Util.table.deepcopy(returned_rocket_silo_data)
+                            return_val_copy.entity = v.entity
+                            return_val_copy.is_ipbm = v.entity and v.entity.valid and v.entity.name == "ipbm-rocket-silo"
+                            return_val_copy.source_surface = v.entity.surface
 
-                                local origin_pos = nil
-
-                                local origin_system = nil
-
-                                if (se_active) then
-                                    --[[ Find the parent star, if it exists, of the current space-location ]]
-                                    Log.warn(origin_space_location and origin_space_location.name)
-                                    local origin_system_name = nil
-                                    if (origin_space_location.type) then
-                                        Log.warn(origin_space_location and origin_space_location.previous_space_location and origin_space_location.previous_space_location.name)
-                                        origin_system_name = origin_space_location.type == "spaceship" and origin_space_location.previous_space_location:get_stellar_system() or origin_space_location:get_stellar_system()
-
-                                        if (not origin_space_location.type == "spaceship" and not Constants.space_exploration_dictionary[origin_system_name]) then Constants.get_space_exploration_universe(true) end
-                                        origin_system = Constants.space_exploration_dictionary[origin_system_name]
-                                    else
-                                        --[[ TODO: what exactly? ]]
-                                    end
-                                    if (not Constants.space_exploration_dictionary[origin_system_name]) then log(origin_system_name); Constants.get_space_exploration_universe(true) end
-                                    local origin_system = Constants.space_exploration_dictionary[origin_system_name]
-
-                                    if (origin_system) then
-                                        origin_pos = {
-                                            x = origin_system.x,
-                                            y = origin_system.y,
-                                        }
-                                    end
-                                end
-
-                                origin_pos =    not se_active and { x = origin_space_location.x, y = origin_space_location.y, }
-                                            or  origin_pos
-                                            or  { x = 0, y = 0 }
-
-                                Log.warn(origin_space_location and origin_space_location.name)
-                                Log.warn(origin_pos)
-
-                                local launched_from_space = space_location_name:find("platform-", 1, true) == 1
-                                if (se_active) then
-                                    --[[ Check for SE space launches ]]
-                                    Log.warn(origin_space_location.name)
-                                    launched_from_space = not origin_space_location:is_solid()
-                                end
-
-                                base_target_distance = ((target_position.x ^ 2) + (target_position.y ^ 2)) ^ 0.5
-
-                                local modifier = 0.5
-                                if (not se_active and is_travelling and space_connection and space_connection.valid) then
-                                    modifier = space_connection_distance_travelled / space_connection_distance
-
-                                    local reversed = origin_space_location.surface_name ~= space_connection.from.name
-
-                                    if (not reversed) then modifier = 1 - modifier end
-
-                                    local to = not reversed and space_connection.to or space_connection.from
-                                    if (not Constants.planets_dictionary[to.name]) then Constants.get_planets(true) end
-                                    local to_planet = Constants.planets_dictionary[to.name]
-
-                                    local fellback = false
-                                    if (origin_pos.x == to_planet.x and origin_pos.y == to_planet.y) then
-                                        fellback = true
-                                        reversed = not reversed
-                                        to = not reversed and space_connection.to or space_connection.from
-                                        if (not Constants.planets_dictionary[to.name]) then Constants.get_planets(true) end
-                                        to_planet = Constants.planets_dictionary[to.name]
-                                    end
-
-                                    local delta_x = (origin_pos.x - to_planet.x) ^ 2
-                                    delta_x = delta_x ^ 0.5
-                                    delta_x = delta_x * modifier
-                                    local delta_y = (origin_pos.y - to_planet.y) ^ 2
-                                    delta_y = delta_y ^ 0.5
-                                    delta_y = delta_y * modifier
-
-                                    if (fellback) then delta_y = delta_y * -1 end
-                                    if (target_planet.name == space_connection.from.name or target_planet.name == space_connection.to.name) then space_connection_contains_destination = true end
-
-                                    if (reversed) then
-                                        delta_x = delta_x * -1
-                                        delta_y = delta_y * -1
-                                    end
-                                    origin_pos.x = origin_space_location.orientation < 0.5 and origin_space_location.orientation ~= 1 and (origin_pos.x + delta_x) or (origin_pos.x - delta_x)
-                                    origin_pos.y = (origin_space_location.orientation < 0.25 or origin_space_location.orientation >= 0.75) and (origin_pos.y + delta_y) or (origin_pos.y - delta_y)
-                                end
-                                Log.debug(origin_space_location and origin_space_location.name)
-                                Log.debug(target_planet and target_planet.name)
-                                Log.debug(source_target_planet and source_target_planet.name)
-                                Log.debug(origin_pos)
-
-                                local target_distance =  1
-                                if (se_active) then
-                                    Log.info(origin_system)
-                                    Log.warn(origin_system and origin_system.name)
-                                    Log.info(source_target_system)
-                                    Log.warn(source_target_system and source_target_system.name)
-                                    Log.info(source_target_planet)
-                                    Log.warn(source_target_planet and source_target_planet.name)
-                                    if (origin_system and (source_target_system or source_target_planet)) then
-                                        if (not source_target_system) then source_target_system = source_target_planet end
-
-                                        local origin_space_distortion = origin_space_location.type == "anomaly" and origin_space_location.space_distortion or 0
-                                        local destination_space_distortion = source_target_planet.type == "anomaly" and origin_space_location.space_distortion or 0
-
-                                        local distance_calculcated = false
-
-                                        --[[ Haven't actually tested this yet; that being firing at/from the anomaly ]]
-                                        if (origin_space_distortion > 0 and destination_space_distortion > 0) then
-                                            --[[ Patrially distorted ]]
-                                            target_distance = Zone_Static_Data.travel_cost.interstellar * math.abs(origin_space_distortion - destination_space_distortion)
-                                            distance_calculcated = true
-                                        elseif (origin_space_distortion > 0) then
-                                            --[[ Origin distortion ]]
-                                            target_distance = Zone_Static_Data.travel_cost.anomaly
-                                                                + Zone_Static_Data.travel_cost.star_gravity * origin_space_location.star_gravity_well
-                                                                + Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well
-
-                                            distance_calculcated = true
-                                        elseif (destination_space_distortion > 0) then
-                                            --[[ Destination distortion]]
-                                            target_distance = Zone_Static_Data.travel_cost.anomaly
-                                                                + Zone_Static_Data.travel_cost.star_gravity * source_target_planet.star_gravity_well
-                                                                + Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well
-
-                                            distance_calculcated = true
-                                        end
-
-                                        Log.warn(origin_system.name)
-                                        Log.debug(origin_system.planet_gravity_well)
-                                        Log.debug(origin_system.star_gravity_well)
-
-                                        Log.warn(origin_space_location.name)
-                                        Log.debug(origin_space_location.planet_gravity_well)
-                                        Log.debug(origin_space_location.star_gravity_well)
-
-                                        Log.warn(source_target_system.name)
-                                        Log.debug(source_target_system.planet_gravity_well)
-                                        Log.debug(source_target_system.star_gravity_well)
-
-                                        Log.warn(source_target_planet.name)
-                                        Log.debug(source_target_planet.planet_gravity_well)
-                                        Log.debug(source_target_planet.star_gravity_well)
-
-                                        Log.debug(Zone_Static_Data.travel_cost.planet_gravity)
-
-                                        if (not distance_calculcated) then
-                                            Log.debug("distance not yet calculated - no distortion")
-                                            if (origin_system.x == source_target_system.x and origin_system.y == source_target_system.y) then
-                                                --[[ Same solar system ]]
-                                                Log.debug("same solar system")
-                                                local origin_star_gravity_well = origin_space_location.star_gravity_well
-                                                Log.debug(origin_star_gravity_well)
-                                                if (origin_space_location.type == "orbit") then
-                                                    origin_star_gravity_well = origin_space_location.parent and origin_space_location.parent.star_gravity_well or 0
-                                                end
-                                                Log.debug(origin_star_gravity_well)
-
-                                                if (origin_star_gravity_well == source_target_planet.star_gravity_well) then
-                                                    --[[ Same planetary system ]]
-                                                    Log.debug("same planetary system")
-                                                    Log.info(origin_space_location)
-                                                    Log.debug(math.abs(origin_space_location.planet_gravity_well - source_target_planet.planet_gravity_well))
-
-                                                    local origin_planet_gravity_well = origin_space_location.star_gravity_well
-                                                    Log.debug(origin_planet_gravity_well)
-                                                    if (origin_space_location.type == "orbit") then
-                                                        origin_planet_gravity_well = origin_space_location.parent and origin_space_location.parent.star_gravity_well or 0
-                                                    end
-                                                    Log.debug(origin_planet_gravity_well)
-
-                                                    target_distance = Zone_Static_Data.travel_cost.planet_gravity * math.abs(origin_planet_gravity_well - source_target_planet.planet_gravity_well)
-                                                else
-                                                    --[[ Different planetary system ]]
-                                                    Log.debug("different planetary system")
-                                                    target_distance = Zone_Static_Data.travel_cost.star_gravity * math.abs(origin_star_gravity_well - source_target_planet.star_gravity_well)
-                                                        + Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well
-                                                        + Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well
-                                                end
-                                            else
-                                                --[[ Different solar systems ]]
-                                                Log.debug("different solar system")
-                                                local target = source_target_system or source_target_planet
-                                                local base_interstellar_distance = (((origin_pos.x - target.x) ^ 2 + (origin_pos.y - target.y) ^ 2) ^ 0.5)
-                                                Log.debug(base_interstellar_distance)
-                                                Log.debug(Zone_Static_Data.travel_cost.interstellar * base_interstellar_distance)
-                                                Log.debug(Zone_Static_Data.travel_cost.star_gravity * origin_space_location.star_gravity_well)
-                                                Log.debug(Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well)
-                                                Log.debug(Zone_Static_Data.travel_cost.star_gravity * source_target_planet.star_gravity_well)
-                                                Log.debug(Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well)
-
-                                                target_distance = Zone_Static_Data.travel_cost.interstellar * base_interstellar_distance
-                                                    + Zone_Static_Data.travel_cost.star_gravity * origin_space_location.star_gravity_well
-                                                    + Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well
-                                                    + Zone_Static_Data.travel_cost.star_gravity * source_target_planet.star_gravity_well
-                                                    + Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well
-                                            end
-                                        end
-                                    end
-                                elseif (origin_system) then
-                                    --[[ Origin system, but no target
-                                        -> How?
-                                    ]]
-                                    log(serpent.block(origin_system))
-                                    log(serpent.block(source_target_planet))
-                                    log(serpent.block(source_target_system))
-                                    Log.error(origin_system)
-                                    Log.error(source_target_planet)
-                                    Log.error(source_target_system)
-                                    -- error("Found an origin system, but no target system")
-                                    target_distance = (((origin_pos.x - target_planet.x) ^ 2 + (origin_pos.y - target_planet.y) ^ 2) ^ 0.5)
-                                elseif (source_target_system) then
-                                    --[[ Target system, but no origin
-                                        -> How?
-                                    ]]
-                                    log(serpent.block(source_target_system))
-                                    log(serpent.block(origin_system))
-                                    log(serpent.block(origin_space_location))
-                                    Log.error(source_target_system)
-                                    Log.error(origin_system)
-                                    Log.error(origin_space_location)
-                                    -- error("Found an origin system, but no target system")
-                                    target_distance = (((origin_pos.x - target_planet.x) ^ 2 + (origin_pos.y - target_planet.y) ^ 2) ^ 0.5)
-                                else
-                                    target_distance = (((origin_pos.x - target_planet.x) ^ 2 + (origin_pos.y - target_planet.y) ^ 2) ^ 0.5)
-                                end
-                                Log.warn(serpent.block(target_distance))
-
-                                Log.warn("pre-multiplication, target_distance = " .. target_distance)
-                                if (not se_active) then
-                                    target_distance = target_distance * get_multisurface_base_distance_modifier()
-                                end
-                                Log.warn("post-multiplication, target_distance = " .. target_distance)
-                                if (not se_active) then
-                                    if (space_location_name:find("platform-", 1, true)) then
-                                        --[[ base_target_distance shouldn't contribute as much if launched from space/a platform -> it is already in space/orbit ]]
-                                        target_distance = target_distance + math.log(1 + base_target_distance, (math.exp(1) * 2) / (target_planet.magnitude) ^ math.exp(1))
-                                        Log.warn(target_distance)
-                                    else
-                                        target_distance = target_distance + base_target_distance
-                                        Log.debug(target_distance)
-                                    end
-                                else
-                                    --[[ TODO: anything? ]]
-                                end
-
-                                Log.warn("is_travelling = " .. tostring(is_travelling))
-
-                                local rocket_silo_data =
-                                {
-                                    entity = v.entity,
-                                    distance = is_travelling and distance_to_target or target_distance,
-                                    source_surface = v.entity.surface,
-                                    launched_from = "interplanetary",
-                                    launched_from_space = launched_from_space,
-                                    base_target_distance = base_target_distance,
-                                    is_travelling = is_travelling,
-                                    space_origin_pos = origin_pos,
-                                    -- origin_system = origin_system,
-                                    -- source_target_system = source_target_system,
-                                }
-
-                                if (#rocket_silo_array == 0) then
-                                    table.insert(rocket_silo_array, rocket_silo_data)
-                                else
-                                    local found = false
-                                    for i, j in ipairs(rocket_silo_array) do
-                                        if (
-                                                    (distance_to_target
-                                                and
-                                                    (distance_to_target < j.distance
-                                                    or
-                                                        space_location_name:find("platform-", 1, true)
-                                                        and distance_to_target <= j.distance
-                                                        and j.entity.name == "rocket-silo"
-                                                    or
-                                                        is_ipbm
-                                                        and distance_to_target <= j.distance
-                                                    )
-                                                )
-                                            or
-                                                (not distance_to_target
-                                                and
-                                                    (target_distance < j.distance
-                                                    or
-                                                            space_location_name:find("platform-", 1, true)
-                                                        and target_distance <= j.distance
-                                                        and j.entity.name == "rocket-silo"
-                                                    or
-                                                        is_ipbm
-                                                        and target_distance <= j.distance
-                                                )
-                                            )
-                                        )
-                                        then
-                                            table.insert(rocket_silo_array, i, rocket_silo_data)
-                                            found = true
+                            if (rocket_silo_array) then
+                                local index = #rocket_silo_array
+                                for i = 1, #rocket_silo_array, 1 do
+                                    if (return_val_copy.is_ipbm) then
+                                        if (not rocket_silo_array[i].is_ipbm) then
+                                            index = i
                                             break
                                         end
                                     end
-
-                                    if (not found) then
-                                        table.insert(rocket_silo_array, rocket_silo_data)
-                                    end
-                                    Log.debug(space_location_name)
-                                    Log.debug(v.entity.surface.name)
-                                    Log.debug(v.entity.surface.platform)
-                                    Log.debug(space_connection_contains_destination)
-                                    Log.debug(reversed)
                                 end
+
+                                table.insert(rocket_silo_array, index, return_val_copy)
                             end
                         end
                     end
@@ -1057,9 +720,9 @@ function rocket_silo_utils.launch_rocket(event)
             if (inventory and inventory.valid) then
                 for _, item in ipairs(inventory.get_contents()) do
 
-                    if (    (item.name == "atomic-bomb" and get_atomic_bomb_rocket_launchable())
+                    if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
                         or
-                            (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
+                            (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
                     then
                         local rocket = rocket_silo.rocket
 
@@ -1125,6 +788,480 @@ function rocket_silo_utils.launch_rocket(event)
 
         if (launched) then return end
     end
+end
+
+function rocket_silo_utils.calculate_multifsurface_distance(data)
+    Log.debug("rocket_silo_utils.calculate_multifsurface_distance")
+    Log.info(data)
+
+    if (data == nil or type(data) ~= "table") then return -1 end
+
+    local passed_rocket_silo_data = data.rocket_silo_data
+    local space_location_name = data.space_location_name
+    local target_position = data.target_position
+    local rocket_silo_array = data.rocket_silo_array
+    local source_target_planet = data.source_target_planet
+    local source_target_system = data.source_target_system
+    local setting_atomic_bomb_rocket_launchable = data.setting_atomic_bomb_rocket_launchable
+    local setting_atomic_warhead_enabled = data.setting_atomic_warhead_enabled
+    local launched_from = data.launched_from
+    local orbit_to_surface = data.orbit_to_surface
+
+    local sa_active = storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
+    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
+
+    if (    passed_rocket_silo_data.entity
+        and passed_rocket_silo_data.entity.valid
+        and passed_rocket_silo_data.entity.type == "rocket-silo"
+        and has_power({ rocket_silo = passed_rocket_silo_data.entity })
+        and passed_rocket_silo_data.entity.position
+        and passed_rocket_silo_data.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+        and (
+                (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
+                or orbit_to_surface)
+                and passed_rocket_silo_data.entity.name == "rocket-silo"
+            or
+                passed_rocket_silo_data.entity.name == "ipbm-rocket-silo"))
+    then
+
+        local inventory = passed_rocket_silo_data.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+        if (inventory and inventory.valid) then
+            for _, item in ipairs(inventory.get_contents()) do
+                if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
+                    or
+                        (item.name == "atomic-warhead" and setting_atomic_warhead_enabled))
+                then
+
+                    local is_travelling = false
+                    local space_connection_distance = nil
+                    local space_connection_distance_travelled = nil
+                    local space_connection = nil
+                    local reversed = false
+                    local space_connection_contains_destination = false
+
+                    local is_ipbm = passed_rocket_silo_data.entity.name == "ipbm-rocket-silo"
+
+                    local base_target_distance = 0
+
+                    if (not se_active and not Constants.planets_dictionary[passed_rocket_silo_data.entity.surface.name]) then Constants.get_planets(true) end
+                    local origin_space_location = not se_active and Constants.planets_dictionary[passed_rocket_silo_data.entity.surface.name]
+                    if (not origin_space_location) then
+                        if (se_active) then
+                            if (passed_rocket_silo_data.entity.surface.name:find("spaceship-", 1, true)) then
+                                --[[ TODO: Reach out about the bug caused when launching a rocket while a spaceship takes off
+                                    -> No error on this side; rather, is coming from SE:
+
+                                        The mod Space Exploration (0.7.34) caused a non-recoverable error.
+                                        Please report this error to the mod author.
+
+                                        Error while running event space-exploration::on_rocket_launched (ID 14)
+                                        __space-exploration__/control.lua:1551: attempt to index field 'attached_cargo_pod' (a nil value)
+                                        stack traceback:
+                                            __space-exploration__/control.lua:1551: in function 'callback'
+                                            __space-exploration__/scripts/event.lua:20: in function <__space-exploration__/scripts/event.lua:18>
+
+                                    -> [Missing a '.valid' check when a cargo-pod finishes ascending]
+                                ]]
+
+                                origin_space_location = Constants["space-exploration"].spaceships[passed_rocket_silo_data.entity.surface.name]
+                            else
+                                if (not Constants.space_exploration_dictionary[string.lower(passed_rocket_silo_data.entity.surface.name)]) then Constants.get_space_exploration_universe(true) end
+                                origin_space_location = Constants.space_exploration_dictionary[string.lower(passed_rocket_silo_data.entity.surface.name)]
+
+                                if (not origin_space_location) then
+                                    if (not Constants.mod_data_dictionary["se-" .. string.lower(passed_rocket_silo_data.entity.surface.name)]) then Constants.get_mod_data(true) end
+                                    origin_space_location = Constants.mod_data_dictionary["se-" .. string.lower(passed_rocket_silo_data.entity.surface.name)]
+                                    Log.warn(origin_space_location and origin_space_location.name)
+                                    Log.info(origin_space_location)
+                                end
+                            end
+                        else
+                            if (string.find(passed_rocket_silo_data.entity.surface.name, "platform-", 1, true) and passed_rocket_silo_data.entity.surface.platform and passed_rocket_silo_data.entity.surface.platform.valid) then
+                                local space_location = passed_rocket_silo_data.entity.surface.platform.space_location
+                                space_connection = passed_rocket_silo_data.entity.surface.platform.space_connection
+
+                                if ((not space_location or not space_location.valid) and space_connection and space_connection.valid) then
+                                    local from = passed_rocket_silo_data.entity.surface.platform.last_visited_space_location
+                                    if (from ~= space_connection.from) then
+                                        reversed = true
+                                    end
+                                    if (from and from.valid and not Constants.planets_dictionary[from.name]) then Constants.get_planets(true) end
+                                    origin_space_location = from and from.valid and Constants.planets_dictionary[from.name]
+                                    is_travelling = origin_space_location and true
+
+                                    if (is_travelling) then
+                                        space_connection_distance = space_connection.length
+
+                                        --[[ Calculate the actual distance between from and to, rather than using the space-connection distance ]]
+                                        local from = space_connection.from
+                                        local to = space_connection.to
+                                        if (not Constants.planets_dictionary[from.name] or not Constants.planets_dictionary[to.name]) then Constants.get_planets(true) end
+                                        local planet_from = Constants.planets_dictionary[from.name]
+                                        local planet_to = Constants.planets_dictionary[to.name]
+
+                                        space_connection_distance = (((planet_from.x - planet_to.x) ^ 2 + (planet_from.y - planet_to.y) ^ 2) ^ 0.5)
+                                        space_connection_distance = space_connection_distance * get_multisurface_base_distance_modifier()
+
+                                        if (reversed) then
+                                            space_connection_distance_travelled = space_connection_distance * (1 - passed_rocket_silo_data.entity.surface.platform.distance)
+                                        else
+                                            space_connection_distance_travelled = space_connection_distance * passed_rocket_silo_data.entity.surface.platform.distance
+                                        end
+                                    end
+
+                                elseif (space_location and space_location.valid) then
+                                    if (not Constants.planets_dictionary[space_location.name]) then Constants.get_planets(true) end
+                                    origin_space_location = Constants.planets_dictionary[space_location.name]
+                                end
+                            end
+                            local planet = passed_rocket_silo_data.entity.surface.planet or origin_space_location and origin_space_location.surface and origin_space_location.surface.valid and origin_space_location.surface.planet
+
+                            if (planet and planet.valid) then
+                                if (not Constants.planets_dictionary[planet.name]) then Constants.get_planets(true) end
+                                origin_space_location = Constants.planets_dictionary[planet.name]
+                            end
+                            if (not origin_space_location) then
+                                origin_space_location = { magnitude = 1, orientation = 0.1, star_distance = 100, }
+                            end
+                        end
+                    end
+                    if (not origin_space_location) then
+                        origin_space_location = { magnitude = 1, orientation = 0.1, star_distance = 100, }
+                    end
+
+                    local target_planet = source_target_planet
+                                        or
+                                        {
+                                            name = "",
+                                            magnitude = 1,
+                                            orientation = origin_space_location.orientation,
+                                            star_distance = (origin_space_location.star_distance and origin_space_location.star_distance or 0) + origin_space_location.magnitude,
+                                        }
+
+                    local origin_pos = nil
+
+                    local origin_system = nil
+
+                    if (se_active) then
+                        --[[ Find the parent star, if it exists, of the current space-location ]]
+                        Log.warn(origin_space_location and origin_space_location.name)
+                        local origin_system_name = nil
+                        if (origin_space_location.type) then
+                            Log.warn(origin_space_location and origin_space_location.previous_space_location and origin_space_location.previous_space_location.name)
+                            origin_system_name = origin_space_location.type == "spaceship" and origin_space_location.previous_space_location:get_stellar_system() or origin_space_location:get_stellar_system()
+
+                            if (not origin_space_location.type == "spaceship" and not Constants.space_exploration_dictionary[origin_system_name]) then Constants.get_space_exploration_universe(true) end
+                            origin_system = Constants.space_exploration_dictionary[origin_system_name]
+                        else
+                            --[[ TODO: what exactly? ]]
+                        end
+                        if (not Constants.space_exploration_dictionary[origin_system_name]) then Log.warn(origin_system_name); Constants.get_space_exploration_universe(true) end
+                        local origin_system = Constants.space_exploration_dictionary[origin_system_name]
+
+                        if (origin_system) then
+                            origin_pos = {
+                                x = origin_system.x,
+                                y = origin_system.y,
+                            }
+                        end
+                    end
+
+                    origin_pos =    not se_active and { x = origin_space_location.x, y = origin_space_location.y, }
+                                or  origin_pos
+                                or  { x = 0, y = 0 }
+
+                    Log.warn(origin_space_location and origin_space_location.name)
+                    Log.warn(origin_pos)
+
+                    local launched_from_space = space_location_name:find("platform-", 1, true) == 1
+                    if (se_active) then
+                        --[[ Check for SE space launches ]]
+                        Log.warn(origin_space_location.name)
+                        launched_from_space = not origin_space_location:is_solid()
+                    end
+
+                    base_target_distance = ((target_position.x ^ 2) + (target_position.y ^ 2)) ^ 0.5
+
+                    local modifier = 0.5
+                    if (not se_active and is_travelling and space_connection and space_connection.valid) then
+                        modifier = space_connection_distance_travelled / space_connection_distance
+
+                        local reversed = origin_space_location.surface_name ~= space_connection.from.name
+
+                        if (not reversed) then modifier = 1 - modifier end
+
+                        local to = not reversed and space_connection.to or space_connection.from
+                        if (not Constants.planets_dictionary[to.name]) then Constants.get_planets(true) end
+                        local to_planet = Constants.planets_dictionary[to.name]
+
+                        local fellback = false
+                        if (origin_pos.x == to_planet.x and origin_pos.y == to_planet.y) then
+                            fellback = true
+                            reversed = not reversed
+                            to = not reversed and space_connection.to or space_connection.from
+                            if (not Constants.planets_dictionary[to.name]) then Constants.get_planets(true) end
+                            to_planet = Constants.planets_dictionary[to.name]
+                        end
+
+                        local delta_x = (origin_pos.x - to_planet.x) ^ 2
+                        delta_x = delta_x ^ 0.5
+                        delta_x = delta_x * modifier
+                        local delta_y = (origin_pos.y - to_planet.y) ^ 2
+                        delta_y = delta_y ^ 0.5
+                        delta_y = delta_y * modifier
+
+                        if (fellback) then delta_y = delta_y * -1 end
+                        if (target_planet.name == space_connection.from.name or target_planet.name == space_connection.to.name) then space_connection_contains_destination = true end
+
+                        if (reversed) then
+                            delta_x = delta_x * -1
+                            delta_y = delta_y * -1
+                        end
+                        origin_pos.x = origin_space_location.orientation < 0.5 and origin_space_location.orientation ~= 1 and (origin_pos.x + delta_x) or (origin_pos.x - delta_x)
+                        origin_pos.y = (origin_space_location.orientation < 0.25 or origin_space_location.orientation >= 0.75) and (origin_pos.y + delta_y) or (origin_pos.y - delta_y)
+                    end
+                    Log.debug(origin_space_location and origin_space_location.name)
+                    Log.debug(target_planet and target_planet.name)
+                    Log.debug(source_target_planet and source_target_planet.name)
+                    Log.debug(origin_pos)
+
+                    local target_distance =  1
+                    if (se_active) then
+                        Log.info(origin_system)
+                        Log.warn(origin_system and origin_system.name)
+                        Log.info(source_target_system)
+                        Log.warn(source_target_system and source_target_system.name)
+                        Log.info(source_target_planet)
+                        Log.warn(source_target_planet and source_target_planet.name)
+                        if (origin_system and (source_target_system or source_target_planet)) then
+                            if (not source_target_system) then source_target_system = source_target_planet end
+
+                            local origin_space_distortion = origin_space_location.type == "anomaly" and origin_space_location.space_distortion or 0
+                            local destination_space_distortion = source_target_planet.type == "anomaly" and origin_space_location.space_distortion or 0
+
+                            local distance_calculcated = false
+
+                            --[[ Haven't actually tested this yet; that being firing at/from the anomaly ]]
+                            if (origin_space_distortion > 0 and destination_space_distortion > 0) then
+                                --[[ Patrially distorted ]]
+                                target_distance = Zone_Static_Data.travel_cost.interstellar * math.abs(origin_space_distortion - destination_space_distortion)
+                                distance_calculcated = true
+                            elseif (origin_space_distortion > 0) then
+                                --[[ Origin distortion ]]
+                                target_distance = Zone_Static_Data.travel_cost.anomaly
+                                                    + Zone_Static_Data.travel_cost.star_gravity * origin_space_location.star_gravity_well
+                                                    + Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well
+
+                                distance_calculcated = true
+                            elseif (destination_space_distortion > 0) then
+                                --[[ Destination distortion]]
+                                target_distance = Zone_Static_Data.travel_cost.anomaly
+                                                    + Zone_Static_Data.travel_cost.star_gravity * source_target_planet.star_gravity_well
+                                                    + Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well
+
+                                distance_calculcated = true
+                            end
+
+                            Log.warn(origin_system.name)
+                            Log.debug(origin_system.planet_gravity_well)
+                            Log.debug(origin_system.star_gravity_well)
+
+                            Log.warn(origin_space_location.name)
+                            Log.debug(origin_space_location.planet_gravity_well)
+                            Log.debug(origin_space_location.star_gravity_well)
+
+                            Log.warn(source_target_system.name)
+                            Log.debug(source_target_system.planet_gravity_well)
+                            Log.debug(source_target_system.star_gravity_well)
+
+                            Log.warn(source_target_planet.name)
+                            Log.debug(source_target_planet.planet_gravity_well)
+                            Log.debug(source_target_planet.star_gravity_well)
+
+                            Log.debug(Zone_Static_Data.travel_cost.planet_gravity)
+
+                            if (not distance_calculcated) then
+                                Log.debug("distance not yet calculated - no distortion")
+                                if (origin_system.x == source_target_system.x and origin_system.y == source_target_system.y) then
+                                    --[[ Same solar system ]]
+                                    Log.debug("same solar system")
+                                    local origin_star_gravity_well = origin_space_location.star_gravity_well
+                                    Log.debug(origin_star_gravity_well)
+                                    if (origin_space_location.type == "orbit") then
+                                        origin_star_gravity_well = origin_space_location.parent and origin_space_location.parent.star_gravity_well or 0
+                                    end
+                                    Log.debug(origin_star_gravity_well)
+
+                                    if (origin_star_gravity_well == source_target_planet.star_gravity_well) then
+                                        --[[ Same planetary system ]]
+                                        Log.debug("same planetary system")
+                                        Log.info(origin_space_location)
+                                        Log.debug(math.abs(origin_space_location.planet_gravity_well - source_target_planet.planet_gravity_well))
+
+                                        local origin_planet_gravity_well = origin_space_location.star_gravity_well
+                                        Log.debug(origin_planet_gravity_well)
+                                        if (origin_space_location.type == "orbit") then
+                                            origin_planet_gravity_well = origin_space_location.parent and origin_space_location.parent.star_gravity_well or 0
+                                        end
+                                        Log.debug(origin_planet_gravity_well)
+
+                                        target_distance = Zone_Static_Data.travel_cost.planet_gravity * math.abs(origin_planet_gravity_well - source_target_planet.planet_gravity_well)
+                                    else
+                                        --[[ Different planetary system ]]
+                                        Log.debug("different planetary system")
+                                        target_distance = Zone_Static_Data.travel_cost.star_gravity * math.abs(origin_star_gravity_well - source_target_planet.star_gravity_well)
+                                            + Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well
+                                            + Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well
+                                    end
+                                else
+                                    --[[ Different solar systems ]]
+                                    Log.debug("different solar system")
+                                    local target = source_target_system or source_target_planet
+                                    local base_interstellar_distance = (((origin_pos.x - target.x) ^ 2 + (origin_pos.y - target.y) ^ 2) ^ 0.5)
+                                    Log.debug(base_interstellar_distance)
+                                    Log.debug(Zone_Static_Data.travel_cost.interstellar * base_interstellar_distance)
+                                    Log.debug(Zone_Static_Data.travel_cost.star_gravity * origin_space_location.star_gravity_well)
+                                    Log.debug(Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well)
+                                    Log.debug(Zone_Static_Data.travel_cost.star_gravity * source_target_planet.star_gravity_well)
+                                    Log.debug(Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well)
+
+                                    target_distance = Zone_Static_Data.travel_cost.interstellar * base_interstellar_distance
+                                        + Zone_Static_Data.travel_cost.star_gravity * origin_space_location.star_gravity_well
+                                        + Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well
+                                        + Zone_Static_Data.travel_cost.star_gravity * source_target_planet.star_gravity_well
+                                        + Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well
+                                end
+                            end
+                        end
+                    elseif (origin_system) then
+                        --[[ Origin system, but no target
+                            -> How?
+                        ]]
+                        log(serpent.block(origin_system))
+                        log(serpent.block(source_target_planet))
+                        log(serpent.block(source_target_system))
+                        Log.error(origin_system)
+                        Log.error(source_target_planet)
+                        Log.error(source_target_system)
+                        -- error("Found an origin system, but no target system")
+                        target_distance = (((origin_pos.x - target_planet.x) ^ 2 + (origin_pos.y - target_planet.y) ^ 2) ^ 0.5)
+                    elseif (source_target_system) then
+                        --[[ Target system, but no origin
+                            -> How?
+                        ]]
+                        log(serpent.block(source_target_system))
+                        log(serpent.block(origin_system))
+                        log(serpent.block(origin_space_location))
+                        Log.error(source_target_system)
+                        Log.error(origin_system)
+                        Log.error(origin_space_location)
+                        -- error("Found an origin system, but no target system")
+                        target_distance = (((origin_pos.x - target_planet.x) ^ 2 + (origin_pos.y - target_planet.y) ^ 2) ^ 0.5)
+                    else
+                        target_distance = (((origin_pos.x - target_planet.x) ^ 2 + (origin_pos.y - target_planet.y) ^ 2) ^ 0.5)
+                    end
+                    Log.warn(serpent.block(target_distance))
+
+                    Log.warn("pre-multiplication, target_distance = " .. target_distance)
+                    if (not se_active) then
+                        target_distance = target_distance * get_multisurface_base_distance_modifier()
+                    end
+                    Log.warn("post-multiplication, target_distance = " .. target_distance)
+                    if (not se_active) then
+                        if (space_location_name:find("platform-", 1, true)) then
+                            --[[ base_target_distance shouldn't contribute as much if launched from space/a platform -> it is already in space/orbit ]]
+                            target_distance = target_distance + math.log(1 + base_target_distance, (math.exp(1) * 2) / (target_planet.magnitude) ^ math.exp(1))
+                            Log.warn(target_distance)
+                        else
+                            target_distance = target_distance + base_target_distance
+                            Log.debug(target_distance)
+                        end
+                    else
+                        --[[ TODO: anything? ]]
+                    end
+
+                    Log.warn("is_travelling = " .. tostring(is_travelling))
+
+                    local local_rocket_silo_data =
+                    {
+                        entity = passed_rocket_silo_data.entity,
+                        -- distance = is_travelling and distance_to_target or target_distance,
+                        distance = target_distance or -1,
+                        source_surface = passed_rocket_silo_data.entity.surface,
+                        launched_from = "interplanetary",
+                        launched_from_space = launched_from_space,
+                        base_target_distance = base_target_distance,
+                        is_travelling = is_travelling,
+                        space_origin_pos = origin_pos,
+                        -- origin_system = origin_system,
+                        -- source_target_system = source_target_system,
+                        is_ipbm = is_ipbm,
+                    }
+
+                    Log.warn(serpent.block(local_rocket_silo_data))
+                    Log.warn(serpent.block(target_distance))
+
+                    if (rocket_silo_array) then
+                        if (#rocket_silo_array == 0) then
+                            table.insert(rocket_silo_array, local_rocket_silo_data)
+                        else
+                            local found = false
+                            for i, j in ipairs(rocket_silo_array) do
+                                if (
+                                            (distance_to_target
+                                        and
+                                            (distance_to_target < j.distance
+                                            or
+                                                space_location_name:find("platform-", 1, true)
+                                                and distance_to_target <= j.distance
+                                                and j.entity.name == "rocket-silo"
+                                            or
+                                                is_ipbm
+                                                and distance_to_target <= j.distance
+                                            )
+                                        )
+                                    or
+                                        (not distance_to_target
+                                        and
+                                            (target_distance < j.distance
+                                            or
+                                                    space_location_name:find("platform-", 1, true)
+                                                and target_distance <= j.distance
+                                                and j.entity.name == "rocket-silo"
+                                            or
+                                                is_ipbm
+                                                and target_distance <= j.distance
+                                        )
+                                    )
+                                )
+                                then
+                                    table.insert(rocket_silo_array, i, local_rocket_silo_data)
+                                    found = true
+                                    break
+                                end
+                            end
+
+                            if (not found) then
+                                table.insert(rocket_silo_array, local_rocket_silo_data)
+                            end
+                        end
+                        Log.debug(rocket_silo_array)
+                    end
+
+                    Log.debug(space_location_name)
+                    Log.debug(local_rocket_silo_data.entity.surface.name)
+                    Log.debug(local_rocket_silo_data.entity.surface.platform)
+                    Log.debug(space_connection_contains_destination)
+                    Log.debug(reversed)
+
+                    --[[ Return the calculated rocket_silo_data; and secondarily return the rocket_silo_array if it was provided ]]
+                    return local_rocket_silo_data, rocket_silo_array
+                end
+            end
+        end
+    end
+
+    return -2
 end
 
 rocket_silo_utils.configurable_nukes = true

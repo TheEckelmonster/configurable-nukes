@@ -346,7 +346,7 @@ function icbm_utils.cargo_pod_finished_ascending(data)
     local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     --[[ Check if there is a platform attached to the given surface; and if the potential platform has a schedule with a valid destination ]]
-    if (not se_active and icbm_data.source_silo.surface.valid and icbm_data.source_silo.surface.platform and icbm_data.source_silo.surface.platform.valid) then
+    if (not se_active and icbm_data.source_silo and icbm_data.source_silo.valid and icbm_data.source_silo.surface.valid and icbm_data.source_silo.surface.platform and icbm_data.source_silo.surface.platform.valid) then
         local schedule = icbm_data.source_silo.surface.platform.schedule
         Log.warn(schedule)
 
@@ -533,7 +533,7 @@ function icbm_utils.cargo_pod_finished_ascending(data)
         local proportion = math.pi / 4
 
         if (icbm_data.launched_from == "interplanetary" and icbm_data.launched_from_space and (icbm_data.speed > 0 or starting_speed_bonus > 0)) then
-            local platform = icbm_data.source_silo.surface and icbm_data.source_silo.surface.valid and icbm_data.source_silo.surface.platform
+            local platform = icbm_data.source_silo and icbm_data.source_silo.valid and icbm_data.source_silo.surface and icbm_data.source_silo.surface.valid and icbm_data.source_silo.surface.platform
 
             Log.debug("calculating starting speed bonus")
             if (not icbm_data.is_travelling) then
@@ -1121,10 +1121,14 @@ function icbm_utils.launch_initiated(data)
 
     icbm_data = ICBM_Repository.save_icbm_data(icbm_data)
 
+    if (not icbm_data or not icbm_data.valid) then return -1 end
+
     local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(data.surface.name)
     icbm_meta_data.item_numbers[icbm_data.item_number] = icbm_data
 
     Log.warn(icbm_data)
+
+    if (icbm_data.force_index < 0 and icbm_data.force_index > 255) then return -1 end
 
     if (game.forces[icbm_data.force_index] and game.forces[icbm_data.force_index].valid) then
         if (get_do_ICBMs_reveal_target()) then
@@ -1212,6 +1216,8 @@ function icbm_utils.payload_arrived(data)
         --[[ TODO: Make configurable? ]]
         payload_spawn_position.y = payload_spawn_position.y - 2 ^ 7 + 2 ^ 5
 
+        Log.warn(icbm)
+
         icbm.target_surface.create_entity({
             name = icbm.type .. "-" .. icbm.item.quality,
             position = payload_spawn_position,
@@ -1220,7 +1226,8 @@ function icbm_utils.payload_arrived(data)
             target = icbm.target_position,
             source = icbm.source_position,
             --[[ TODO: Make configurable ]]
-            cause = icbm.same_surface and icbm.source_silo or "player",
+            -- cause = icbm.same_surface and icbm.source_silo or "player",
+            cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or "player",
             speed = 0.1 * math.exp(1),
             base_damage_modifiers = {
                 damage_modifier = icbm.type == "atomic-rocket" and get_atomic_bomb_base_damage_modifier() or icbm.type == "atomic-warhead" and get_atomic_warhead_base_damage_modifier() or 1,
