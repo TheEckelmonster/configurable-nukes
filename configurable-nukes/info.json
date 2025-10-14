@@ -1,10 +1,10 @@
 {
 	"name": "configurable-nukes",
-	"version": "0.5.4",
+	"version": "0.6.0",
 	"factorio_version": "2.0",
 	"title": "Configurable Nukes & ICBMs",
 	"author": "TheEckelmonster",
-	"description": "Makes most/many aspects of the atomic bomb configurable, and affected by quality; as well as introduces an atomic warhead, ICBMs (Intercontinental Ballistic Missiles), IPBMs (Interplanetary Ballistic Missiles), and ISBMs (Interstellar Ballistic Missiles): why shouldn't rocket-silo rockets be used offensively?",
+	"description": "Makes most/many aspects of the atomic bomb configurable, and affected by quality, as well as allows for the weaponization of rocket-silos: introduces an atomic warhead, ICBMs (Intercontinental Ballistic Missiles), IPBMs (Interplanetary Ballistic Missiles), and ISBMs (Interstellar Ballistic Missiles): why shouldn't rocket-silo rockets be used offensively?",
 	"dependencies": [
 		"base >= 2.0.69",
 		"? space-age >= 2.0.69",

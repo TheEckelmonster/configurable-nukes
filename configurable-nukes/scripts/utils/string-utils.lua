@@ -18,6 +18,7 @@ function string_utils.find_invalid_substrings(string)
         or string:find("EE_", 1, true)
         or string:find("TEST", 1, true)
         or string:find("test", 1, true)
+        or string:find("aai-signals", 1, true)
         )
         or (se_active
             and (string:find("starmap-", 1, true)))

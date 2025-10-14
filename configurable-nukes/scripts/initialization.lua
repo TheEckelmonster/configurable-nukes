@@ -3,15 +3,17 @@ if _initialization and _initialization.configurable_nukes then
     return _initialization
 end
 
-local Util = require("__core__.lualib.util")
-
+local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
+local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Log = require("libs.log.log")
 local Planet_Controller = require("scripts.controllers.planet-controller")
+local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
+local Rocket_Silo_Meta_Data = require("scripts.data.rocket-silo-meta-data")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local String_Utils = require("scripts.utils.string-utils")
@@ -30,7 +32,7 @@ function initialization.init(data)
 
     if (not data or type(data) ~= "table") then data = { maintain_data = false} end
 
-    if (data and data.maintain_data) then data.maintain_data = true
+    if (data and data.maintain_data) then data.maintain_data = true -- Expllicitly set maintain_data to be a boolean value of true
     else data.maintain_data = false
     end
 
@@ -44,7 +46,7 @@ function initialization.reinit(data)
 
     if (not data or type(data) ~= "table") then data = { maintain_data = false} end
 
-    if (data and data.maintain_data) then data.maintain_data = true
+    if (data and data.maintain_data) then data.maintain_data = true -- Expllicitly set maintain_data to be a boolean value of true
     else data.maintain_data = false
     end
 
@@ -88,6 +90,14 @@ function locals.initialize(from_scratch, maintain_data)
         end
     end
 
+    local sa_active = scripts and scripts.active_mods and scripts.active_mods["space-age"]
+    local se_active = scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
+
+    if (se_active) then
+        locals.process_space_exploration_universe()
+        script.on_event(remote.call("space-exploration", "get_on_zone_surface_created_event"), Planet_Controller.on_surface_created)
+    end
+
     -- Configurable Nukes
     if (from_scratch) then
         log({ "initialization.initialization-anew", Constants.mod_name })
@@ -112,72 +122,51 @@ function locals.initialize(from_scratch, maintain_data)
             storage.configurable_nukes = Configurable_Nukes_Data:new()
             configurable_nukes_data = storage.configurable_nukes
         end
-        if (not configurable_nukes_data.icbm_meta_data) then configurable_nukes_data.icbm_meta_data = {} end
-        if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = {} end
+        if (not configurable_nukes_data.icbm_meta_data) then configurable_nukes_data.icbm_meta_data = ICBM_Meta_Data:new() end
+        if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = Rocket_Silo_Meta_Data:new() end
     end
 
-    -- Planet/rocket-silo data
-    local planets = Constants.get_planets(true)
-    for k, planet in pairs(planets) do
-        -- Search for planets
-        if (planet and not String_Utils.find_invalid_substrings(planet.name)) then
-            if (from_scratch or not configurable_nukes_data.rocket_silo_meta_data[planet.name]) then
-                if (not maintain_data) then
-                    Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(planet.name)
-                else
-                    Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(planet.name)
+    storage.sa_active = storage.sa_active
+    storage.se_active = storage.se_active
+
+    if (game) then
+        for name, surface in pairs(game.surfaces) do
+            Log.warn(name)
+            Log.warn(surface)
+            Log.warn(surface.name)
+            Log.warn(surface.valid)
+            -- Search through all available surfaces for rocket-silos
+            if (surface and surface.valid and not String_Utils.find_invalid_substrings(surface.name)) then
+                local surface_name = surface.name
+                local rocket_silo_meta_data = {}
+                if (from_scratch or not configurable_nukes_data.rocket_silo_meta_data[surface_name]) then
+                    if (not maintain_data) then
+                        rocket_silo_meta_data = Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(surface_name)
+                    else
+                        rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(surface_name)
+                    end
                 end
-            end
+                Log.debug(rocket_silo_meta_data)
 
-            local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(planet.name)
+                if (not rocket_silo_meta_data.surface_name) then rocket_silo_meta_data.surface_name = surface_name end
 
-            if (not rocket_silo_meta_data.planet_name) then rocket_silo_meta_data.planet_name = planet.name end
-
-            if (planet.surface) then
-                local rocket_silos = planet.surface.find_entities_filtered({ type = "rocket-silo" })
+                local rocket_silos = surface.find_entities_filtered(Rocket_Silo_Constants.entity_filter)
+                Log.debug(serpent.block(rocket_silos))
                 for i = 1, #rocket_silos do
                     local rocket_silo = rocket_silos[i]
-                    if (rocket_silo and rocket_silo.valid and rocket_silo.surface) then
+                    Log.debug(serpent.block(rocket_silo))
+                    if (rocket_silo and rocket_silo.valid and rocket_silo.surface and (rocket_silo.name == "rocket-silo" or rocket_silo.name == "ipbm-rocket-silo")) then
                         locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
+                    end
+                end
+
+                if (rocket_silo_meta_data.valid and rocket_silo_meta_data.rocket_silos) then
+                    if (not next(rocket_silo_meta_data.rocket_silos, nil)) then
+                        Rocket_Silo_Meta_Repository.delete_rocket_silo_meta_data(surface_name)
                     end
                 end
             end
         end
-    end
-
-    for name, surface in pairs(game.surfaces) do
-        Log.warn(name)
-        Log.debug(surface)
-        Log.debug(surface.name)
-        Log.debug(surface.valid)
-        -- Search through all available surfaces for rocket-silos
-        if (surface and not String_Utils.find_invalid_substrings(surface.name)) then
-            local surface_name = surface.name:lower()
-            if (from_scratch or not configurable_nukes_data.rocket_silo_meta_data[surface_name]) then
-                if (not maintain_data) then
-                    Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(surface_name)
-                else
-                    Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(surface_name)
-                end
-            end
-
-            local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(surface_name)
-            Log.debug(rocket_silo_meta_data)
-            if (not rocket_silo_meta_data.surface_name) then rocket_silo_meta_data.surface_name = surface_name end
-
-            local rocket_silos = surface.find_entities_filtered({ type = "rocket-silo" })
-            for i = 1, #rocket_silos do
-                local rocket_silo = rocket_silos[i]
-                if (rocket_silo and rocket_silo.valid and rocket_silo.surface and (rocket_silo.name == "rocket-silo" or rocket_silo.name == "ipbm-rocket-silo")) then
-                    locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
-                end
-            end
-        end
-    end
-
-    if (script and script.active_mods["space-exploration"]) then
-        locals.process_space_exploration_universe()
-        script.on_event(remote.call("space-exploration", "get_on_zone_surface_created_event"), Planet_Controller.on_surface_created)
     end
 
     if (storage and storage.configurable_nukes) then
@@ -198,13 +187,36 @@ function locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
     Log.info(rocket_silo_meta_data)
     Log.info(rocket_silo)
 
-    if (not rocket_silo or not rocket_silo.valid or not rocket_silo.surface) then
-        Log.warn("Call to add_rocket_silo with invalid input")
+    if (not rocket_silo or not rocket_silo.valid or not rocket_silo.surface or not rocket_silo.surface.valid) then
+        Log.warn("Call to add_rocket_silo with an invalid rocket-silo")
         Log.debug(rocket_silo)
         return
     end
 
-    Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+    if (not rocket_silo_meta_data or not rocket_silo_meta_data.valid or not rocket_silo_meta_data.rocket_silos) then
+        Log.warn("Call to add_rocket_silo with invalid meta data")
+        Log.debug(rocket_silo_meta_data)
+        return
+    end
+
+    if (rocket_silo_meta_data.rocket_silos[rocket_silo.unit_number]) then
+
+        Log.debug("updating rocket silo")
+        local update_data =
+        {
+            type = Rocket_Silo_Data.type,
+            unit_number = rocket_silo.unit_number,
+            entity = rocket_silo.valid and rocket_silo or nil,
+            surface = rocket_silo.valid and rocket_silo.surface and rocket_silo.surface.valid and rocket_silo.surface or nil,
+            surface_name = rocket_silo.valid and rocket_silo.surface and rocket_silo.surface.valid and rocket_silo.surface.name or nil,
+            surface_index = rocket_silo.valid and rocket_silo.surface and rocket_silo.surface.valid and rocket_silo.surface.index or -1,
+        }
+
+        Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo, update_data, { reinitialize_soft = true } )
+    else
+        Log.debug("saving rocket silo")
+        Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+    end
 end
 
 function locals.migrate(data)
@@ -239,21 +251,50 @@ function locals.migrate(data)
         if (storage_old.configurable_nukes.version_data) then
             local prev_version_data = storage_old.configurable_nukes.version_data
             local new_version_data = data.new_version_data
-            if (prev_version_data.major.value <= 0 and prev_version_data.minor.value <= 4) then
-                --[[ Version 0.5.0 changed from using "planet_name" to using "space_location_name" ]]
-                if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 5) then
-                    if (storage_old.configurable_nukes.rocket_silo_meta_data) then
-                        local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
-                        for k, v in pairs(all_rocket_silo_meta_data) do
-                            if (v.planet_name) then
-                                v.space_location_name = v.planet_name
-                                --[[
-                                    I think, by not setting the previous value of v.planet_name to nil,
-                                    that ?should? maintain backwards compatability if someone were to
-                                    downgrade, rather than only upgrade
-                                    Really not sure on this; need to test, but not highest priority.
-                                    TODO: See above
-                                ]]
+            if (prev_version_data.major.value == 0) then
+                if (prev_version_data.minor.value <= 4) then
+                    --[[ Version 0.5.0 changed from using "planet_name" to using "space_location_name" ]]
+                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 5) then
+                        if (storage_old.configurable_nukes.rocket_silo_meta_data) then
+                            local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
+                            for k, v in pairs(all_rocket_silo_meta_data) do
+                                if (v.planet_name) then
+                                    v.space_location_name = v.planet_name
+                                    --[[
+                                        I think, by not setting the previous value of v.planet_name to nil,
+                                        that ?should? maintain backwards compatability if someone were to
+                                        downgrade, rather than only upgrade
+                                        Really not sure on this; need to test, but not highest priority.
+                                        TODO: See above
+                                    ]]
+                                end
+                            end
+                        end
+                    end
+                end
+
+                if (prev_version_data.minor.value <= 5) then
+                    Log.warn(prev_version_data.minor.value)
+                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 6) then
+                        Log.warn(new_version_data.major.value)
+                        Log.warn(new_version_data.minor.value)
+                        --[[ Version 0.6.0 switched to encapsulating the gui/circuit_network_data into its own object ]]
+                        if (storage_old.configurable_nukes.rocket_silo_meta_data) then
+                            local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
+                            for k, v in pairs(all_rocket_silo_meta_data) do
+                                for k_2, v_2 in pairs(v.rocket_silos) do
+                                    if (v_2.signals) then
+                                        v_2.circuit_network_data = Circuit_Network_Rocket_Silo_Data:new({
+                                            entity = v_2.entity,
+                                            unit_number = v_2.entity and v_2.entity.valid and v_2.entity.unit_number,
+                                            surface = v_2.entity and v_2.entity.valid and v_2.entity.surface and v_2.entity.surface.valid and v_2.entity.surface,
+                                            surface_name = v_2.entity and v_2.entity.valid and v_2.entity.surface and v_2.entity.surface.valid and v_2.entity.surface.name,
+                                            signals = v_2.signals,
+                                        })
+
+                                        Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
+                                    end
+                                end
                             end
                         end
                     end
@@ -280,17 +321,8 @@ function locals.migrate(data)
 
         if (storage_old.configurable_nukes.rocket_silo_meta_data) then
             for k, v in pairs(storage_old.configurable_nukes.rocket_silo_meta_data) do
-                if (dictionary[k]) then
-                    if (not v.signals) then v.signals = {} end
-
-                    v.signals.launch = Util.table.deepcopy(Rocket_Silo_Data.signals.launch)
-                    v.signals.x = Util.table.deepcopy(Rocket_Silo_Data.signals.x)
-                    v.signals.y = Util.table.deepcopy(Rocket_Silo_Data.signals.y)
-                    v.signals.origin_override = Util.table.deepcopy(Rocket_Silo_Data.signals.origin_override)
-
-                    Rocket_Silo_Meta_Repository.update_rocket_silo_meta_data(v)
-
-                    storage_old.configurable_nukes.rocket_silo_meta_data[k] = nil
+                for k_2, v_2 in pairs(v.rocket_silos) do
+                    Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
                 end
             end
         end

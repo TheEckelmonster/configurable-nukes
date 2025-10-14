@@ -69,6 +69,7 @@ if (mods and (mods["space-age"] or mods["space-exploration"])) then
 elseif (mods and not mods["space-age"]) then
     rocket_silo.circuit_connector = circuit_connector_definitions["rocket-silo"]
     rocket_silo.circuit_wire_max_distance = default_circuit_wire_max_distance
+    -- rocket_silo.allow_copy_paste = true
 
     data:extend({rocket_silo})
 end
