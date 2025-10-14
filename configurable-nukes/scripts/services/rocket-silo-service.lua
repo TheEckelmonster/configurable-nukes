@@ -142,7 +142,6 @@ function rocket_silo_service.rocket_silo_cloned(data)
         reinitialize = true,
     })
 
-    -- Rocket_Silo_Utils.add_rocket_silo(data.destination_silo)
     Log.debug("Cloned a rocket silo")
     Log.info(data.destination_silo)
 end

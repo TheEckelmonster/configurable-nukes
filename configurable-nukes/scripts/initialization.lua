@@ -282,7 +282,6 @@ function locals.migrate(data)
                         if (storage_old.configurable_nukes.rocket_silo_meta_data) then
                             local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
                             for k, v in pairs(all_rocket_silo_meta_data) do
-                                -- if ((new_version_data.minor.value == 5 and new_version_data.bug_fix.value >= 2) or new_version_data.minor.value >= 6) then
                                 for k_2, v_2 in pairs(v.rocket_silos) do
                                     if (v_2.signals) then
                                         v_2.circuit_network_data = Circuit_Network_Rocket_Silo_Data:new({

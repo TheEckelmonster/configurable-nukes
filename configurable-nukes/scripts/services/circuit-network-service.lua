@@ -230,11 +230,9 @@ function circuit_network_service.attempt_launch_silos(data)
                                                 end
                                             end
                                         else--[[ A surface is/was previously selected ]]
-                                            --[[ and if explicit space_location not required for this rocket-silo]]
                                             target_surface = game.get_surface(target_surface_name)
                                         end
                                     else
-                                        -- log("1.10")
                                         --[[ Standard rocket-silo, can fire at:
                                             -> Same surface
                                             -> From orbit
