@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.6.0
-Date: 2025-10-13
+Date: 2025-10-14
   Minor Features:
     - Added support for launching rocket silos via circuit-network against another surface
       - Allowed if it is a ballistic rocket silo, or if it is a rocket silo and the setting to allow ICBMs multisurface targetting is enabled
