@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.6.1
+Date: 2025-10-15
+  Bug Fixes:
+    - Fixed damage, aoe, and repeat settings, but namely quality not applying as intended to atomic-bombs and atomic-warheads
+      - Overall result is that they are more destructive, especially at higher qualities, i.e. more dakka, bigger boom
+    - Fixed error preventing the game from starting if Krastorio2-spaced-out was present
+  Misc:
+    - Added custom-tooltips for atomic-bombs and atomic-warheads to show the effects of quality/how the numbers scale
+    - Increased the minimum base quality base multiplier to 1
+      - Weird, unintuitive behavior occurs when below 1
+    - Added basic support for the above Krastorio2-spaced-out by Polka_37
+      - Working on more complete support, namely:
+        - Support for nuclear-turret-rockets
+        - Revisiting/balancing ballistic-rocket-part alternative recipes in light of nuclear-fuel being removed
+---------------------------------------------------------------------------------------------------
 Version: 0.6.0
 Date: 2025-10-14
   Minor Features:
