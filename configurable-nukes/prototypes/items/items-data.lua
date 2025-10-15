@@ -1,8 +1,12 @@
 local Util = require("__core__.lualib.util")
 -- local Item_Sounds = require("__base__.prototypes.item_sounds")
 
+-- local Data_Utils = require("data-utils")
+
+local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
+
 local name_prefix = se_active and "se-" or ""
 
 local function item_sound(filename, volume)
@@ -33,12 +37,12 @@ local get_range_modifier = function ()
 
     return setting
 end
--- COOLDOWN_MODIFIER
+-- ATOMIC_BOMB_COOLDOWN_MODIFIER
 local get_cooldown_modifier = function ()
-    local setting = 1
+    local setting = Startup_Settings_Constants.settings.ATOMIC_BOMB_COOLDOWN_MODIFIER.default_value
 
-    if (settings and settings.startup and settings.startup["configurable-nukes-cooldown-modifier"]) then
-        setting = settings.startup["configurable-nukes-cooldown-modifier"].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_BOMB_COOLDOWN_MODIFIER.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_BOMB_COOLDOWN_MODIFIER.name].value
     end
 
     return setting
@@ -208,7 +212,7 @@ if (mods and mods["quality"]) then
                     type = "create-entity",
                     entity_name = "explosion-hit"
                 }
-            }
+            },
         }
     }
 end
@@ -371,26 +375,28 @@ local atomic_warhead_item =
 data:extend({atomic_warhead_item})
 
 if (get_nuclear_ammo_category()) then
-    local rocket_launcher = data.raw["gun"]["rocket-launcher"]
-    rocket_launcher.attack_parameters.ammo_categories = { rocket_launcher.attack_parameters.ammo_category, "nuclear" }
-    rocket_launcher.attack_parameters.ammo_category = nil
+    if (not k2so_active) then
+        local rocket_launcher = data.raw["gun"]["rocket-launcher"]
+        rocket_launcher.attack_parameters.ammo_categories = { rocket_launcher.attack_parameters.ammo_category, "nuclear" }
+        rocket_launcher.attack_parameters.ammo_category = nil
 
-    data:extend({rocket_launcher})
+        data:extend({rocket_launcher})
 
-    local spidertron_rocket_launcher_1 = data.raw["gun"]["spidertron-rocket-launcher-1"]
-    local spidertron_rocket_launcher_2 = data.raw["gun"]["spidertron-rocket-launcher-2"]
-    local spidertron_rocket_launcher_3 = data.raw["gun"]["spidertron-rocket-launcher-3"]
-    local spidertron_rocket_launcher_4 = data.raw["gun"]["spidertron-rocket-launcher-4"]
-    spidertron_rocket_launcher_1.attack_parameters.ammo_categories = { spidertron_rocket_launcher_1.attack_parameters.ammo_category, "nuclear" }
-    spidertron_rocket_launcher_1.attack_parameters.ammo_category = nil
-    spidertron_rocket_launcher_2.attack_parameters.ammo_categories = { spidertron_rocket_launcher_2.attack_parameters.ammo_category, "nuclear" }
-    spidertron_rocket_launcher_2.attack_parameters.ammo_category = nil
-    spidertron_rocket_launcher_3.attack_parameters.ammo_categories = { spidertron_rocket_launcher_3.attack_parameters.ammo_category, "nuclear" }
-    spidertron_rocket_launcher_3.attack_parameters.ammo_category = nil
-    spidertron_rocket_launcher_4.attack_parameters.ammo_categories = { spidertron_rocket_launcher_4.attack_parameters.ammo_category, "nuclear" }
-    spidertron_rocket_launcher_4.attack_parameters.ammo_category = nil
+        local spidertron_rocket_launcher_1 = data.raw["gun"]["spidertron-rocket-launcher-1"]
+        local spidertron_rocket_launcher_2 = data.raw["gun"]["spidertron-rocket-launcher-2"]
+        local spidertron_rocket_launcher_3 = data.raw["gun"]["spidertron-rocket-launcher-3"]
+        local spidertron_rocket_launcher_4 = data.raw["gun"]["spidertron-rocket-launcher-4"]
+        spidertron_rocket_launcher_1.attack_parameters.ammo_categories = { spidertron_rocket_launcher_1.attack_parameters.ammo_category, "nuclear" }
+        spidertron_rocket_launcher_1.attack_parameters.ammo_category = nil
+        spidertron_rocket_launcher_2.attack_parameters.ammo_categories = { spidertron_rocket_launcher_2.attack_parameters.ammo_category, "nuclear" }
+        spidertron_rocket_launcher_2.attack_parameters.ammo_category = nil
+        spidertron_rocket_launcher_3.attack_parameters.ammo_categories = { spidertron_rocket_launcher_3.attack_parameters.ammo_category, "nuclear" }
+        spidertron_rocket_launcher_3.attack_parameters.ammo_category = nil
+        spidertron_rocket_launcher_4.attack_parameters.ammo_categories = { spidertron_rocket_launcher_4.attack_parameters.ammo_category, "nuclear" }
+        spidertron_rocket_launcher_4.attack_parameters.ammo_category = nil
 
-    data:extend({spidertron_rocket_launcher_1, spidertron_rocket_launcher_2, spidertron_rocket_launcher_3, spidertron_rocket_launcher_4})
+        data:extend({spidertron_rocket_launcher_1, spidertron_rocket_launcher_2, spidertron_rocket_launcher_3, spidertron_rocket_launcher_4})
+    end
 
     if (mods and mods["space-age"]) then
         local rocket_turret = data.raw["ammo-turret"]["rocket-turret"]

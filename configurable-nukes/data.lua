@@ -1,12 +1,14 @@
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
+require("prototypes.sprites")
+
 require("prototypes.categories.ammo-category")
 -- require("prototypes.entities.cargo-pod")
 -- require("prototypes.custom-input.custom-input")
-require("prototypes.entities.rocket-silo")
+require("prototypes.entities.rocket-silo.rocket-silo-data")
 require("prototypes.entities.rocket-silo-rocket")
-require("prototypes.items")
+require("prototypes.items.items-data")
 require("prototypes.recipes.rocket-control-unit")
 
 if (sa_active or se_active) then
@@ -31,8 +33,3 @@ if (not se_active) then
         require("prototypes.technologies.rocket-part-productivity")
     end
 end
-
--- for k, v in pairs(defines.cargo_destination) do
---     log(serpent.block(k))
---     log(serpent.block(v))
--- end

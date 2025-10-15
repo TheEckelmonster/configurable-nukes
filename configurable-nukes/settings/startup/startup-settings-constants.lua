@@ -5,6 +5,7 @@ end
 
 local Util = require("__core__.lualib.util")
 
+local k2so_active = mods and mods["Krastorio2-spaced-out"] and true or scripts and scripts.active_mods and scripts.active_mods["Krastorio2-spaced-out"]
 local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
 local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
 
@@ -358,6 +359,16 @@ if (se_active) then
     }
 end
 
+if (k2so_active) then
+    local index = nil
+    for k, v in pairs(recipe_ballistic_rocket_part_intermediate.ingredients) do
+        if (v.name == "nuclear-fuel") then index = k end
+    end
+    if (index) then
+        table.remove(recipe_ballistic_rocket_part_intermediate.ingredients, index)
+    end
+end
+
 local quantum_processor_prefix = se_active and "se-" or ""
 local recipe_ballistic_rocket_part_advanced = {
     ingredients =
@@ -387,6 +398,16 @@ if (se_active) then
         { type = "item", name = "se-heat-shielding",     amount = math.ceil(40 * (se_multiplier * 1.5)) / 1 },
         { type = "item", name = "se-aeroframe-bulkhead", amount = math.floor(25 * (se_multiplier * 1.5)) / 1 },
     }
+end
+
+if (k2so_active) then
+    local index = nil
+    for k, v in pairs(recipe_ballistic_rocket_part_advanced.ingredients) do
+        if (v.name == "nuclear-fuel") then index = k end
+    end
+    if (index) then
+        table.remove(recipe_ballistic_rocket_part_advanced.ingredients, index)
+    end
 end
 
 local recipe_ballistic_rocket_part_beyond = {
@@ -444,6 +465,23 @@ if (se_active) then
         { type = "item", name = "se-heat-shielding",        amount = math.ceil((60) / 1), },
     }
     recipe_ballistic_rocket_part_beyond_2.ingredients = nil
+end
+
+if (k2so_active) then
+    local index = nil
+    for k, v in pairs(recipe_ballistic_rocket_part_beyond.ingredients) do
+        if (v.name == "nuclear-fuel") then index = k end
+    end
+    if (index) then
+        table.remove(recipe_ballistic_rocket_part_beyond.ingredients, index)
+    end
+    index = nil
+    for k, v in pairs(recipe_ballistic_rocket_part_beyond_2.ingredients) do
+        if (v.name == "nuclear-fuel") then index = k end
+    end
+    if (index) then
+        table.remove(recipe_ballistic_rocket_part_beyond_2.ingredients, index)
+    end
 end
 
 local default_technology_prerequisites_nuclear_weapons = {
@@ -524,7 +562,7 @@ startup_settings_constants.settings = {
         order = "aab",
         default_value = 1.3,
         maximum_value = 11,
-        minimum_value = 1 / 2 ^ 11,
+        minimum_value = 1,
     },
     --[[ Bomb ]]
     AREA_MULTIPLIER = {
@@ -1087,7 +1125,8 @@ startup_settings_constants.settings = {
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
-        ingredients = recipe_ballistic_rocket_part_basic.ingredients
+        ingredients = recipe_ballistic_rocket_part_basic.ingredients,
+        recipe_name = "ipbm-rocket-part-basic",
     },
     BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE = {
         type = "bool-setting",
@@ -1159,7 +1198,8 @@ startup_settings_constants.settings = {
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
-        ingredients = recipe_ballistic_rocket_part_intermediate.ingredients
+        ingredients = recipe_ballistic_rocket_part_intermediate.ingredients,
+        recipe_name = "ipbm-rocket-part-intermediate",
     },
     INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE = {
         type = "bool-setting",
@@ -1233,6 +1273,7 @@ startup_settings_constants.settings = {
         allow_blank = true,
         auto_trim = true,
         ingredients = recipe_ballistic_rocket_part_advanced.ingredients,
+        recipe_name = "ipbm-rocket-part-advanced",
     },
     ADVANCED_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE = {
         type = "bool-setting",
@@ -1305,7 +1346,8 @@ startup_settings_constants.settings = {
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
-        ingredients = recipe_ballistic_rocket_part_beyond.ingredients
+        ingredients = recipe_ballistic_rocket_part_beyond.ingredients,
+        recipe_name = "ipbm-rocket-part-beyond",
     },
     BEYOND_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE = {
         type = "bool-setting",
@@ -1378,7 +1420,8 @@ startup_settings_constants.settings = {
         default_value = nil,
         allow_blank = true,
         auto_trim = true,
-        ingredients = recipe_ballistic_rocket_part_beyond_2.ingredients
+        ingredients = recipe_ballistic_rocket_part_beyond_2.ingredients,
+        recipe_name = "ipbm-rocket-part-beyond-2",
     },
     BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE = {
         type = "bool-setting",
