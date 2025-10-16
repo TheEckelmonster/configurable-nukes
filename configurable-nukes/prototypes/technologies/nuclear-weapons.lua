@@ -156,7 +156,7 @@ local get_nuclear_weapons_research_ingredients = function ()
 end
 
 --[[ Nuclear Ammo Type Bonuses ]]
-local nuclear_artillery_research_bonus_visible = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY.name }) ~= "nuclear-artillery"
+local nuclear_artillery_research_bonus_visible = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY.name }) == "nuclear-artillery"
 
 data:extend({
     {
@@ -175,8 +175,8 @@ data:extend({
                 type = "ammo-damage",
                 ammo_category = "nuclear-artillery",
                 modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER_ARTILLERY.name }),
-                hidden = nuclear_artillery_research_bonus_visible,
-                hidden_in_factoriopedia = nuclear_artillery_research_bonus_visible,
+                hidden = not nuclear_artillery_research_bonus_visible,
+                hidden_in_factoriopedia = not nuclear_artillery_research_bonus_visible,
             },
         },
         prerequisites = get_nuclear_weapons_research_prerequisites(),

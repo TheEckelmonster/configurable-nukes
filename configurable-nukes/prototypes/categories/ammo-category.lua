@@ -1,6 +1,8 @@
 local Data_Utils = require("data-utils")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local nuclear_artillery_research_bonus_visible = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY.name }) == "nuclear-artillery"
+
 data:extend({
     {
         type = "ammo-category",
@@ -13,7 +15,6 @@ data:extend({
     {
         type = "ammo-category",
         name = "nuclear-artillery",
-        -- icon = "__base__/graphics/icons/signal/signal-radioactivity.png",
         icons =
         {
             {
@@ -24,10 +25,8 @@ data:extend({
             },
         },
         subgroup = "ammo-category",
-        -- hidden = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
-        -- hidden_in_factoriopedia = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
-        hidden = true,
-        hidden_in_factoriopedia = true,
+        hidden = not nuclear_artillery_research_bonus_visible,
+        hidden_in_factoriopedia = not nuclear_artillery_research_bonus_visible,
     },
 })
 
