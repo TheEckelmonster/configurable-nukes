@@ -8,6 +8,8 @@ Date: 2025-10-16
         - Both have AoE, Damage, Radius, and Fire Wave startup settings
         - As well as, base modifier, base addition, bonus modifier, and bonus addition runtime damage settings
       - Added custom-tooltips for both to show the effects of quality/how the numbers scale
+      - Added additional ammo-category/configurable setting to allow nuclear artillery shells to have their damge scaled by nuclear-weapons research
+        - Toggleable by setting the startup setting for nuclear artillery ammo category to either "artillery-shell" (default), or "nuclear-artillery"
     - Increased the minimum base and bonus modifier runtime damage settings to 1
       - Changed to reflect the fact that even if set to 0, some damage would still be dealt
 ---------------------------------------------------------------------------------------------------
