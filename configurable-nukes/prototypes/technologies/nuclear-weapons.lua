@@ -1,25 +1,8 @@
 local Util = require("__core__.lualib.util")
 
+local Data_Utils = require("data-utils")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
-local get_nuclear_weapons_research_damage_modifier = function ()
-    local setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER.name].value
-    end
-
-    return setting
-end
-local get_nuclear_weapons_research_formula = function ()
-    local setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_FORMULA.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_FORMULA.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_FORMULA.name].value
-    end
-
-    return setting
-end
 local get_nuclear_weapons_research_prerequisites = function ()
     local setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES.default_value
 
@@ -171,27 +154,10 @@ local get_nuclear_weapons_research_ingredients = function ()
 
     return ingredients
 end
-local get_nuclear_weapons_research_time = function ()
-    local setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_TIME.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_TIME.name].value
-    end
-
-    return setting
-end
--- NUCLEAR_AMMO_CATEGORY
-local get_ammo_category = function ()
-    local setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name].value
-    end
-
-    return setting
-end
 
 --[[ Nuclear Ammo Type Bonuses ]]
+local nuclear_artillery_research_bonus_visible = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY.name }) ~= "nuclear-artillery"
+
 data:extend({
     {
         type = "technology",
@@ -203,20 +169,27 @@ data:extend({
             {
                 type = "ammo-damage",
                 ammo_category = "nuclear",
-                modifier = get_nuclear_weapons_research_damage_modifier(),
+                modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER.name }),
+            },
+            {
+                type = "ammo-damage",
+                ammo_category = "nuclear-artillery",
+                modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER_ARTILLERY.name }),
+                hidden = nuclear_artillery_research_bonus_visible,
+                hidden_in_factoriopedia = nuclear_artillery_research_bonus_visible,
             },
         },
         prerequisites = get_nuclear_weapons_research_prerequisites(),
         unit =
         {
-            count_formula = get_nuclear_weapons_research_formula(),
+            count_formula = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_FORMULA.name }),
             ingredients = get_nuclear_weapons_research_ingredients(),
-            time = get_nuclear_weapons_research_time(),
+            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_TIME.name }),
         },
         max_level = "infinite",
         upgrade = true,
-        hidden = not get_ammo_category(),
-        hidden_in_factoriopedia = not get_ammo_category(),
-        enabled = get_ammo_category(),
+        hidden = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
+        hidden_in_factoriopedia = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
+        enabled = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
     },
 })

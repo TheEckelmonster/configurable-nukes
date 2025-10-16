@@ -400,7 +400,11 @@ if (get_nuclear_ammo_category()) then
 
     if (mods and mods["space-age"]) then
         local rocket_turret = data.raw["ammo-turret"]["rocket-turret"]
-        rocket_turret.attack_parameters.ammo_categories = {rocket_turret.attack_parameters.ammo_category, "nuclear" }
+        if (not rocket_turret.attack_parameters.ammo_categories) then rocket_turret.attack_parameters.ammo_categories = {} end
+        if (rocket_turret.attack_parameters.ammo_category) then
+            table.insert(rocket_turret.attack_parameters.ammo_categories, rocket_turret.attack_parameters.ammo_category)
+        end
+        table.insert(rocket_turret.attack_parameters.ammo_categories, "nuclear")
         rocket_turret.attack_parameters.ammo_category = nil
     end
 end

@@ -1,5 +1,7 @@
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
+local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
+
 data:extend({
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE,
 
@@ -48,3 +50,20 @@ data:extend({
 
     Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK,
 })
+
+if (k2so_active) then
+    data:extend({
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_POLLUTION,
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_POLLUTION,
+        --[[ kr-nuclear-turret-rocket ]]
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_BASE_DAMAGE_MODIFIER,
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_BASE_DAMAGE_ADDITION,
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_BONUS_DAMAGE_MODIFIER,
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_BONUS_DAMAGE_ADDITION,
+        --[[ kr-nuclear-artillery-shell ]]
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_MODIFIER,
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_ADDITION,
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_MODIFIER,
+        Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_ADDITION,
+    })
+end

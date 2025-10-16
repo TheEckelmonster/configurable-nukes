@@ -641,6 +641,94 @@ startup_settings_constants.settings = {
         order = "bbe",
         default_value = true,
     },
+    --[[ Krastorio2-spaced-out: kr-nuclear-turret-rocket ]]
+    K2_SO_NUCLEAR_TURRET_ROCKET_AREA_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-turret-rocket-area-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+        hidden = not k2so_active,
+    },
+    K2_SO_NUCLEAR_TURRET_ROCKET_DAMAGE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-turret-rocket-damage-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 1,
+        hidden = not k2so_active,
+    },
+    K2_SO_NUCLEAR_TURRET_ROCKET_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-turret-rocket-repeat-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+        hidden = not k2so_active,
+    },
+    K2_SO_NUCLEAR_TURRET_ROCKET_FIRE_WAVE = {
+        type = "bool-setting",
+        name = prefix .. "kr-nuclear-turret-rocket-fire-wave",
+        setting_type = "startup",
+        order = "",
+        default_value = false,
+        hidden = not k2so_active,
+    },
+    --[[ Krastorio2-spaced-out: kr-nuclear-artillery-shell ]]
+    K2_SO_NUCLEAR_ARTILLERY_SHELL_AREA_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-artillery-shell-area-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+        hidden = not k2so_active,
+    },
+    K2_SO_NUCLEAR_ARTILLERY_SHELL_DAMAGE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-artillery-shell-damage-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 1,
+        hidden = not k2so_active,
+    },
+    K2_SO_NUCLEAR_ARTILLERY_SHELL_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-artillery-shell-repeat-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+        hidden = not k2so_active,
+    },
+    K2_SO_NUCLEAR_ARTILLERY_SHELL_FIRE_WAVE = {
+        type = "bool-setting",
+        name = prefix .. "kr-nuclear-artillery-shell-fire-wave",
+        setting_type = "startup",
+        order = "",
+        default_value = false,
+        hidden = not k2so_active,
+    },
+    --[[ Krastorio2-spaced-out: kr-nuclear-artillery-shell ]]
+    K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY = {
+        type = "string-setting",
+        name = prefix .. "kr-nuclear-artillery-shell-ammo-category",
+        setting_type = "startup",
+        order = "",
+        allowed_values = { "artillery-shell", "nuclear-artillery" },
+        default_value = "artillery-shell",
+        hidden = not k2so_active,
+    },
     --[[ Item Settings ]]
     --[[ Bomb ]]
     ATOMIC_BOMB_RANGE_MODIFIER = {
@@ -1621,6 +1709,15 @@ startup_settings_constants.settings = {
         minimum_value = (1 / 11) ^ 11,
         maximum_value = 2 ^ 11,
     },
+    NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER_ARTILLERY = {
+        type = "double-setting",
+        name = prefix .. "nuclear-weapons-research-damage-modifier-artillery",
+        setting_type = "startup",
+        order = "dia",
+        default_value = 0.15,
+        minimum_value = (1 / 11) ^ 11,
+        maximum_value = 2 ^ 11,
+    },
     NUCLEAR_WEAPONS_RESEARCH_FORMULA = {
         type = "string-setting",
         name = prefix .. "nuclear-weapons-research-formula",
@@ -1744,6 +1841,7 @@ for k, v in pairs(settings_array) do
 
     local order = order_struct.order_array[order_3] .. order_struct.order_array[order_2] .. order_struct.order_array[order_1]
     v.order = order
+    v.order_num = k
 end
 
 -- Atomic Bomb

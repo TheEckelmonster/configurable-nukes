@@ -4,6 +4,7 @@ local se_active = mods and mods["space-exploration"] and true
 
 if (k2so_active) then
     require("prototypes.compatibility.Krastorio2-spaced-out.ballistic-rocket-parts-data-final-fixes")
+    require("prototypes.compatibility.Krastorio2-spaced-out.items-data-final-fixes")
 end
 
 require("prototypes.mod-data")

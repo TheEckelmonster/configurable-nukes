@@ -725,6 +725,37 @@ local create_quality_atomic_bomb = function (params)
         if (quality_atomic_bomb ~= nil) then
             if (k_0 == "normal") then
                 atomic_bomb = Util.table.deepcopy(quality_atomic_bomb)
+
+                local atomic_bomb_ammo_item = data.raw["ammo"]["atomic-bomb"]
+
+                if (atomic_bomb_ammo_item.icon) then
+                    atomic_bomb.icon = Util.table.deepcopy(atomic_bomb_ammo_item.icon)
+                else
+                    atomic_bomb.icons = Util.table.deepcopy(atomic_bomb_ammo_item.icons)
+                end
+
+                if (not atomic_bomb.icon and not atomic_bomb.icons) then
+                    if (k2so_active) then
+                        atomic_bomb.icon = "__Krastorio2Assets__/icons/ammo/atomic-bomb.png"
+                    else
+                        atomic_bomb.icons =
+                        {
+                            {
+                                size = 64,
+                                filename = "__base__/graphics/icons/atomic-bomb.png",
+                                scale = 0.5,
+                                mipmap_count = 4
+                            },
+                            {
+                                draw_as_light = true,
+                                size = 64,
+                                filename = "__base__/graphics/icons/atomic-bomb-light.png",
+                                scale = 0.5
+                            }
+                        }
+                    end
+                end
+
                 data:extend({atomic_bomb})
             end
 
