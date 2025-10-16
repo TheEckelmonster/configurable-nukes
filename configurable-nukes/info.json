@@ -1,6 +1,6 @@
 {
 	"name": "configurable-nukes",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"factorio_version": "2.0",
 	"title": "Configurable Nukes & ICBMs",
 	"author": "TheEckelmonster",
@@ -12,6 +12,7 @@
 		"? atan-nuclear-science >= 0.3.3",
 		"? mushroom-cloud >= 1.0.2",
 		"? Temporary_nuclear_scorchmark >= 0.0.2",
-		"? space-exploration >= 0.7.34"
+		"? space-exploration >= 0.7.34",
+		"(?) Krastorio2-spaced-out >= 1.4.28"
 	]
 }

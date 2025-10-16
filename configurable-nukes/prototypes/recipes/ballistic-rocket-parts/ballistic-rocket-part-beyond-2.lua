@@ -228,7 +228,8 @@ local name_prefix = se_active and "se-" or ""
 local rocket_part_recipe = data.raw["recipe"]["rocket-part"]
 local ipbm_rocket_part_beyond_2 = Util.table.deepcopy(rocket_part_recipe)
 
-ipbm_rocket_part_beyond_2.name = "ipbm-rocket-part-beyond-2"
+-- ipbm_rocket_part_beyond_2.name = "ipbm-rocket-part-beyond-2"
+ipbm_rocket_part_beyond_2.name = Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE.recipe_name
 ipbm_rocket_part_beyond_2.energy_required = get_crafting_time()
 ipbm_rocket_part_beyond_2.ingredients = ingredients
 ipbm_rocket_part_beyond_2.category = get_ballistic_rocket_part_crafting_machine()
