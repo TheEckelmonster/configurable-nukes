@@ -3,8 +3,46 @@ if _runtime_global_settings_constants and _runtime_global_settings_constants.con
     return _runtime_global_settings_constants
 end
 
+local k2so_active = mods and mods["Krastorio2-spaced-out"] and true or scripts and scripts.active_mods and scripts.active_mods["Krastorio2-spaced-out"]
 local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
 local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
+
+local order_struct = {
+    order_array = {
+        -- "a", "b", "c", "d", "e",  "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+        [0] = "a",
+        [1] = "b",
+        [2] = "c",
+        [3] = "d",
+        [4] = "e",
+        [5] = "f",
+        [6] = "g",
+        [7] = "h",
+        [8] = "i",
+        [9] = "j",
+        [10] = "k",
+        [11] = "l",
+        [12] = "m",
+        [13] = "n",
+        [14] = "o",
+        [15] = "p",
+        [16] = "q",
+        [17] = "r",
+        [18] = "s",
+        [19] = "t",
+        [20] = "u",
+        [21] = "v",
+        [22] = "w",
+        [23] = "x",
+        [24] = "y",
+        [25] = "z",
+    },
+    order_dictionary = {},
+}
+
+for k, v in pairs(order_struct.order_array) do
+    order_struct.order_dictionary[v] = k
+end
 
 local prefix = "configurable-nukes-"
 
@@ -35,6 +73,26 @@ runtime_global_settings_constants.settings = {
         default_value = 0.542,
         maximum_value = 11,
         minimum_value = 0,
+    },
+    K2_SO_NUCLEAR_TURRET_ROCKET_POLLUTION = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-turret-rocket-pollution",
+        setting_type = "runtime-global",
+        order = "cbe",
+        default_value = 0.166,
+        maximum_value = 11,
+        minimum_value = 0,
+        hidden = not k2so_active,
+    },
+    K2_SO_NUCLEAR_ARTILLERY_POLLUTION = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-artillery-pollution",
+        setting_type = "runtime-global",
+        order = "cbf",
+        default_value = 0.166,
+        maximum_value = 11,
+        minimum_value = 0,
+        hidden = not k2so_active,
     },
     PIN_TARGETS = {
         type = "bool-setting",
@@ -71,7 +129,7 @@ runtime_global_settings_constants.settings = {
         setting_type = "runtime-global",
         order = "cce",
         default_value = 1,
-        minimum_value = 0,
+        minimum_value = 1,
         maximum_value = 11,
     },
     ATOMIC_BOMB_BASE_DAMAGE_ADDITION = {
@@ -83,22 +141,13 @@ runtime_global_settings_constants.settings = {
         minimum_value = 0,
         maximum_value = 2 ^ 42,
     },
-    -- ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER = {
-    --     type = "double-setting",
-    --     name = prefix .. "atomic-bomb-base-damage-radius-modifier",
-    --     setting_type = "runtime-global",
-    --     order = "ccf",
-    --     default_value = 1,
-    --     minimum_value = 0,
-    --     maximum_value = 11,
-    -- },
     ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER = {
         type = "double-setting",
         name = prefix .. "atomic-bomb-bonus-damage-modifier",
         setting_type = "runtime-global",
         order = "cdd",
         default_value = 1,
-        minimum_value = 0,
+        minimum_value = 1,
         maximum_value = 11,
     },
     ATOMIC_BOMB_BONUS_DAMAGE_ADDITION = {
@@ -110,22 +159,13 @@ runtime_global_settings_constants.settings = {
         minimum_value = 0,
         maximum_value = 2 ^ 42,
     },
-    -- ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER = {
-    --     type = "double-setting",
-    --     name = prefix .. "atomic-bomb-bonus-damage-radius-modifier",
-    --     setting_type = "runtime-global",
-    --     order = "cdf",
-    --     default_value = 1,
-    --     minimum_value = 0,
-    --     maximum_value = 11,
-    -- },
     ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER = {
         type = "double-setting",
         name = prefix .. "atomic-warhead-base-damage-modifier",
         setting_type = "runtime-global",
         order = "ced",
         default_value = 1,
-        minimum_value = 0,
+        minimum_value = 1,
         maximum_value = 11,
     },
     ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION = {
@@ -137,22 +177,13 @@ runtime_global_settings_constants.settings = {
         minimum_value = 0,
         maximum_value = 2 ^ 42,
     },
-    -- ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER = {
-    --     type = "double-setting",
-    --     name = prefix .. "atomic-warhead-base-damage-radius-modifier",
-    --     setting_type = "runtime-global",
-    --     order = "cef",
-    --     default_value = 1,
-    --     minimum_value = 0,
-    --     maximum_value = 11,
-    -- },
     ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER = {
         type = "double-setting",
         name = prefix .. "atomic-warhead-bonus-damage-modifier",
         setting_type = "runtime-global",
         order = "cfd",
         default_value = 1,
-        minimum_value = 0,
+        minimum_value = 1,
         maximum_value = 11,
     },
     ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION = {
@@ -164,15 +195,78 @@ runtime_global_settings_constants.settings = {
         minimum_value = 0,
         maximum_value = 2 ^ 42,
     },
-    -- ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER = {
-    --     type = "double-setting",
-    --     name = prefix .. "atomic-warhead-bonus-damage-radius-modifier",
-    --     setting_type = "runtime-global",
-    --     order = "cff",
-    --     default_value = 1,
-    --     minimum_value = 0,
-    --     maximum_value = 11,
-    -- },
+    K2_SO_NUCLEAR_TURRET_ROCKET_BASE_DAMAGE_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-rocket-turret-base-damage-modifier",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 1,
+        minimum_value = 1,
+        maximum_value = 11,
+    },
+    K2_SO_NUCLEAR_TURRET_ROCKET_BASE_DAMAGE_ADDITION = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-rocket-turret-base-damage-addition",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 0,
+        minimum_value = 0,
+        maximum_value = 2 ^ 42,
+    },
+    K2_SO_NUCLEAR_TURRET_ROCKET_BONUS_DAMAGE_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-rocket-turret-bonus-damage-modifier",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 1,
+        minimum_value = 1,
+        maximum_value = 11,
+    },
+    K2_SO_NUCLEAR_TURRET_ROCKET_BONUS_DAMAGE_ADDITION = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-rocket-turret-bonus-damage-addition",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 0,
+        minimum_value = 0,
+        maximum_value = 2 ^ 42,
+    },
+    K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-artillery-base-damage-modifier",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 1,
+        minimum_value = 1,
+        maximum_value = 11,
+    },
+    K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_ADDITION = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-artillery-base-damage-addition",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 0,
+        minimum_value = 0,
+        maximum_value = 2 ^ 42,
+    },
+    K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-artillery-bonus-damage-modifier",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 1,
+        minimum_value = 1,
+        maximum_value = 11,
+    },
+    K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_ADDITION = {
+        type = "double-setting",
+        name = prefix .. "kr-nuclear-artillery-bonus-damage-addition",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 0,
+        minimum_value = 0,
+        maximum_value = 2 ^ 42,
+    },
     ICBM_ALLOW_MULTISURFACE = {
         type = "bool-setting",
         name = prefix .. "icbms-allow-multisurface",
@@ -318,9 +412,14 @@ runtime_global_settings_constants.settings = {
 }
 
 runtime_global_settings_constants.settings_dictionary  = {}
+runtime_global_settings_constants.settings_array = {}
 
+local i = 1
 for k, v in pairs(runtime_global_settings_constants.settings) do
+    table.insert(runtime_global_settings_constants.settings_array, v)
     runtime_global_settings_constants.settings_dictionary[v.name] = v
+    v.order_num = i
+    i = i + 1
 end
 
 runtime_global_settings_constants.configurable_nukes = true

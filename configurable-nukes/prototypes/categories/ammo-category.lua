@@ -1,15 +1,5 @@
+local Data_Utils = require("data-utils")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
-
--- NUCLEAR_AMMO_CATEGORY
-local get_nuclear_ammo_category = function ()
-    local setting = false
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name].value
-    end
-
-    return setting
-end
 
 data:extend({
     {
@@ -17,8 +7,27 @@ data:extend({
         name = "nuclear",
         icon = "__base__/graphics/icons/signal/signal-radioactivity.png",
         subgroup = "ammo-category",
-        hidden = not get_nuclear_ammo_category(),
-        hidden_in_factoriopedia = not get_nuclear_ammo_category(),
+        hidden = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
+        hidden_in_factoriopedia = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
+    },
+    {
+        type = "ammo-category",
+        name = "nuclear-artillery",
+        -- icon = "__base__/graphics/icons/signal/signal-radioactivity.png",
+        icons =
+        {
+            {
+                icon = "__base__/graphics/icons/signal/signal-radioactivity.png",
+            },
+            {
+                icon = "__base__/graphics/icons/ammo-category/artillery-shell.png",
+            },
+        },
+        subgroup = "ammo-category",
+        -- hidden = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
+        -- hidden_in_factoriopedia = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
+        hidden = true,
+        hidden_in_factoriopedia = true,
     },
 })
 

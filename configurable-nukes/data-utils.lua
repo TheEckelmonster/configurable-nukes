@@ -115,6 +115,7 @@ local data_utils = {
                 elseif (target_effects[i].type == "nested-result") then
                     if (target_effects[i].action.type == "area") then
                         if (target_effects[i].action.action_delivery.type == "projectile") then
+                            -- log(serpent.block(target_effects[i].action.action_delivery.projectile))
                             if (target_effects[i].action.action_delivery.projectile:find(entity_name .. "-ground-zero-projectile-" .. object_entities.dictionary[quality_object.entity.name].quality, 1, true)) then
                                 local ground_zero_projectile_effects = data.raw["projectile"][entity_name .. "-ground-zero-projectile-" .. object_entities.dictionary[quality_object.entity.name].quality]
                                 ground_zero_projectile_effects = ground_zero_projectile_effects.action
@@ -180,6 +181,7 @@ local data_utils = {
 
             target_effects_dictionary[object_entities.dictionary[quality_object.entity.name].quality] = array
         end
+        -- log(serpent.block(target_effects_dictionary))
 
         local order = 1
 
@@ -384,6 +386,7 @@ local data_utils = {
 
             quality_level = qualities[quality_level].next
         end
+        -- log(serpent.block(quality_values))
 
         local new_custom_tooltip = function (data)
             return
