@@ -1,5 +1,6 @@
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
@@ -87,6 +88,25 @@ data:extend({
     Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_COUNT,
 })
 
+if (k2so_active) then
+    --[[ kr-nuclear-turret-rocket ]]
+    data:extend({
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_AREA_MULTIPLIER,
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_DAMAGE_MULTIPLIER,
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_REPEAT_MULTIPLIER,
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_FIRE_WAVE,
+    })
+
+    --[[ kr-nuclear-artillery-shell ]]
+    data:extend({
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AREA_MULTIPLIER,
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_DAMAGE_MULTIPLIER,
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_REPEAT_MULTIPLIER,
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_FIRE_WAVE,
+        Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY,
+    })
+end
+
 if (sa_active or se_active) then
     data:extend({
         Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME,
@@ -164,6 +184,7 @@ end
 data:extend({
     --[[ nuclear-weapons research ]]
     Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER,
+    Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER_ARTILLERY,
     Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_FORMULA,
     Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES,
     Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS,

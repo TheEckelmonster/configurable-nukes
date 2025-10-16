@@ -1,15 +1,7 @@
+local Data_Utils = require("data-utils")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
--- NUCLEAR_AMMO_CATEGORY
-local get_nuclear_ammo_category = function ()
-    local setting = false
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name].value
-    end
-
-    return setting
-end
+local nuclear_artillery_research_bonus_visible = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY.name }) == "nuclear-artillery"
 
 data:extend({
     {
@@ -17,8 +9,24 @@ data:extend({
         name = "nuclear",
         icon = "__base__/graphics/icons/signal/signal-radioactivity.png",
         subgroup = "ammo-category",
-        hidden = not get_nuclear_ammo_category(),
-        hidden_in_factoriopedia = not get_nuclear_ammo_category(),
+        hidden = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
+        hidden_in_factoriopedia = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }),
+    },
+    {
+        type = "ammo-category",
+        name = "nuclear-artillery",
+        icons =
+        {
+            {
+                icon = "__base__/graphics/icons/signal/signal-radioactivity.png",
+            },
+            {
+                icon = "__base__/graphics/icons/ammo-category/artillery-shell.png",
+            },
+        },
+        subgroup = "ammo-category",
+        hidden = not nuclear_artillery_research_bonus_visible,
+        hidden_in_factoriopedia = not nuclear_artillery_research_bonus_visible,
     },
 })
 
