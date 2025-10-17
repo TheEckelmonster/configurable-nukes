@@ -1,7 +1,8 @@
 local Util = require("__core__.lualib.util")
 -- local Item_Sounds = require("__base__.prototypes.item_sounds")
 
--- local Data_Utils = require("data-utils")
+local Data_Utils = require("data-utils")
+local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local sa_active = mods and mods["space-age"] and true
@@ -25,108 +26,6 @@ local Item_Sounds = {
     planner_inventory_pickup = item_sound("planner-inventory-pickup.ogg", 0.7),
 }
 
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
-
--- RANGE_MODIFIER
-local get_range_modifier = function ()
-    local setting = 1
-
-    if (settings and settings.startup and settings.startup["configurable-nukes-range-modifier"]) then
-        setting = settings.startup["configurable-nukes-range-modifier"].value
-    end
-
-    return setting
-end
--- ATOMIC_BOMB_COOLDOWN_MODIFIER
-local get_cooldown_modifier = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_BOMB_COOLDOWN_MODIFIER.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_BOMB_COOLDOWN_MODIFIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_BOMB_COOLDOWN_MODIFIER.name].value
-    end
-
-    return setting
-end
--- STACK_SIZE
-local get_stack_size = function ()
-    local setting = 10
-
-    if (settings and settings.startup and settings.startup["configurable-nukes-atomic-bomb-stack-size"]) then
-        setting = settings.startup["configurable-nukes-atomic-bomb-stack-size"].value
-    end
-
-    return setting
-end
--- WEIGHT_MODIFIER
-local get_weight_modifier = function ()
-    local setting = 1.5
-
-    if (settings and settings.startup and settings.startup["configurable-nukes-atomic-bomb-weight-modifier"]) then
-        setting = settings.startup["configurable-nukes-atomic-bomb-weight-modifier"].value
-    end
-
-    return setting
-end
--- WARHEAD_STACK_SIZE
-local get_warhead_stack_size = function ()
-    local setting = 1
-
-    if (settings and settings.startup and settings.startup["configurable-nukes-atomic-warhead-stack-size"]) then
-        setting = settings.startup["configurable-nukes-atomic-warhead-stack-size"].value
-    end
-
-    return setting
-end
--- WARHEAD_WEIGHT_MODIFIER
-local get_warhead_weight_modifier = function ()
-    local setting = 1
-
-    if (settings and settings.startup and settings.startup["configurable-nukes-atomic-warhead-weight-modifier"]) then
-        setting = settings.startup["configurable-nukes-atomic-warhead-weight-modifier"].value
-    end
-
-    return setting
-end
--- ROCKET_CONTROL_UNIT_STACK_SIZE
-local get_rocket_control_unit_stack_size = function ()
-    local setting = 1
-
-    if (settings and settings.startup and settings.startup["configurable-nukes-rocket-control-unit-stack-size"]) then
-        setting = settings.startup["configurable-nukes-rocket-control-unit-stack-size"].value
-    end
-
-    return setting
-end
--- ROCKET_CONTROL_UNIT_WEIGHT_MODIFIER
-local get_rocket_control_unit_weight_modifier = function ()
-    local setting = 0.0025
-
-    if (settings and settings.startup and settings.startup["configurable-nukes-rocket-control-unit-weight-modifier"]) then
-        setting = settings.startup["configurable-nukes-rocket-control-unit-weight-modifier"].value
-    end
-
-    return setting
-end
--- ATOMIC_WARHEAD_ENABLED
-local get_atomic_warhead_enabled = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name].value
-    end
-
-    return setting
-end
--- NUCLEAR_AMMO_CATEGORY
-local get_nuclear_ammo_category = function ()
-    local setting = false
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name].value
-    end
-
-    return setting
-end
 -- BALLISTIC_ROCKET_PART_STACK_SIZE
 local get_ballistic_rocket_part_stack_size = function ()
     local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_STACK_SIZE.default_value
@@ -240,11 +139,11 @@ local atomic_bomb_item =
             }
         }
     },
-    ammo_category = get_nuclear_ammo_category() and "nuclear" or "rocket",
+    ammo_category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }) and "nuclear" or "rocket",
     ammo_type =
     {
-        range_modifier = 1.5 * get_range_modifier(),
-        cooldown_modifier = 10 * get_cooldown_modifier(),
+        range_modifier = 1.5 * Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_BOMB_RANGE_MODIFIER.name }),
+        cooldown_modifier = 10 * Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_BOMB_COOLDOWN_MODIFIER.name }),
         target_type = "position",
         action = action,
     },
@@ -253,8 +152,8 @@ local atomic_bomb_item =
     inventory_move_sound = Item_Sounds.atomic_bomb_inventory_move,
     pick_sound = Item_Sounds.atomic_bomb_inventory_pickup,
     drop_sound = Item_Sounds.atomic_bomb_inventory_move,
-    stack_size = get_stack_size(),
-    weight = get_weight_modifier() * tons,
+    stack_size = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_BOMB_STACK_SIZE.name }),
+    weight = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_BOMB_WEIGHT_MODIFIER.name }) * tons,
     send_to_orbit_mode = "manual",
 }
 
@@ -303,18 +202,18 @@ data:extend({
         --     mode = { "nothing" },
         --     cursor_box_type = "copy",
         -- },
-        -- reverse_select =
-        -- {
-        --     border_color = { 255 - 71, 255 - 255, 255 - 73 },
-        --     mode = { "nothing" },
-        --     cursor_box_type = "copy",
-        -- },
-        -- alt_reverse_select =
-        -- {
-        --     border_color = { 255 - 239, 255 - 153, 255 - 34 },
-        --     mode = { "nothing" },
-        --     cursor_box_type = "copy",
-        -- },
+        reverse_select =
+        {
+            border_color = { 255 - 71, 255 - 255, 255 - 73 },
+            mode = { "nothing" },
+            cursor_box_type = "copy",
+        },
+        alt_reverse_select =
+        {
+            border_color = { 255 - 239, 255 - 153, 255 - 34 },
+            mode = { "nothing" },
+            cursor_box_type = "copy",
+        },
         open_sound = "__base__/sound/item-open.ogg",
         close_sound = "__base__/sound/item-close.ogg"
     },
@@ -337,7 +236,7 @@ local atomic_warhead_item =
             },
         }
     },
-    ammo_category = get_nuclear_ammo_category() and "nuclear" or "rocket",
+    ammo_category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }) and "nuclear" or "rocket",
     ammo_type =
     {
         range_modifier = -1,
@@ -365,16 +264,16 @@ local atomic_warhead_item =
     inventory_move_sound = Item_Sounds.atomic_bomb_inventory_move,
     pick_sound = Item_Sounds.atomic_bomb_inventory_pickup,
     drop_sound = Item_Sounds.atomic_bomb_inventory_move,
-    stack_size = 1 * get_warhead_stack_size(),
-    weight = tons * get_warhead_weight_modifier(),
-    hidden = not get_atomic_warhead_enabled(),
-    hidden_in_factoriopedia = not get_atomic_warhead_enabled(),
+    stack_size = 1 * Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_STACK_SIZE.name }),
+    weight = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_WEIGHT_MODIFIER.name }) * tons,
+    hidden = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }),
+    hidden_in_factoriopedia = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }),
     send_to_orbit_mode = "manual",
 }
 
 data:extend({atomic_warhead_item})
 
-if (get_nuclear_ammo_category()) then
+if (Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name })) then
     if (not k2so_active) then
         local rocket_launcher = data.raw["gun"]["rocket-launcher"]
         rocket_launcher.attack_parameters.ammo_categories = { rocket_launcher.attack_parameters.ammo_category, "nuclear" }
@@ -418,10 +317,10 @@ local rocket_control_unit =
     icon_size = 64, icon_mipmaps = 4,
     subgroup = "intermediate-product",
     order = "n[rocket-control-unit]",
-    stack_size = get_rocket_control_unit_stack_size(),
-    weight = get_rocket_control_unit_weight_modifier() * tons,
-    hidden = not get_atomic_warhead_enabled() and not se_active,
-    hidden_in_factoriopedia = not get_atomic_warhead_enabled() and not se_active,
+    stack_size = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_STACK_SIZE.name }),
+    weight = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_WEIGHT_MODIFIER.name }) * tons,
+    hidden = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }) and not se_active,
+    hidden_in_factoriopedia = not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }) and not se_active,
 }
 
 data:extend({rocket_control_unit})

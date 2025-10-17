@@ -3,9 +3,11 @@ local Anomaly_Data = require("scripts.data.space.celestial-objects.anomaly-data"
 local Asteroid_Belt_Data = require("scripts.data.space.celestial-objects.asteroid-belt-data")
 local Asteroid_Field_Data = require("scripts.data.space.celestial-objects.asteroid-field-data")
 local Data = require("scripts.data.data")
+local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local Moon_Data = require("scripts.data.space.celestial-objects.moon-data")
 local Orbit_Data = require("scripts.data.space.celestial-objects.orbit-data")
 local Planet_Data = require("scripts.data.space.celestial-objects.planet-data")
+local Queue_Data = require("scripts.data.structures.queue-data")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Spaceship_Data = require("scripts.data.space.spaceship-data")
 local Space_Location_Data = require("scripts.data.space.space-location-data")
@@ -15,9 +17,11 @@ script.register_metatable("Anomaly_Data", Anomaly_Data)
 script.register_metatable("Asteroid_Belt_Data", Asteroid_Belt_Data)
 script.register_metatable("Asteroid_Field_Data", Asteroid_Field_Data)
 script.register_metatable("Data", Data)
+script.register_metatable("ICBM_Meta_Data", ICBM_Meta_Data)
 script.register_metatable("Moon_Data", Moon_Data)
 script.register_metatable("Orbit_Data", Orbit_Data)
 script.register_metatable("Planet_Data", Planet_Data)
+script.register_metatable("Queue_Data", Queue_Data)
 script.register_metatable("Rocket_Silo_Data", Rocket_Silo_Data)
 script.register_metatable("Spaceship_Data", Spaceship_Data)
 script.register_metatable("Space_Location_Data", Space_Location_Data)
@@ -27,7 +31,7 @@ script.register_metatable("Star_Data", Star_Data)
 
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Constants = require("scripts.constants.constants")
--- local Custom_Input = require("prototypes.custom-input.custom-input")
+local Custom_Input = require("prototypes.custom-input.custom-input")
 local Gui_Controller = require("scripts.controllers.gui-controller")
 local Log = require("libs.log.log")
 local Planet_Controller = require("scripts.controllers.planet-controller")
@@ -198,7 +202,11 @@ script.on_event(defines.events.on_surface_created, Planet_Controller.on_surface_
 script.on_event(defines.events.on_pre_surface_deleted, Planet_Controller.on_pre_surface_deleted)
 
 script.on_event(defines.events.on_player_selected_area, Rocket_Silo_Controller.launch_rocket)
--- script.on_event(defines.events.on_player_reverse_selected_area, Rocket_Silo_Controller.on_player_reverse_selected_area)
+
+script.on_event(defines.events.on_player_alt_selected_area, Rocket_Silo_Controller.on_player_alt_selected_area)
+script.on_event(defines.events.on_player_alt_reverse_selected_area, Rocket_Silo_Controller.on_player_alt_reverse_selected_area)
+script.on_event(defines.events.on_player_reverse_selected_area, Rocket_Silo_Controller.on_player_reverse_selected_area)
+
 script.on_event(defines.events.on_cargo_pod_finished_ascending, Rocket_Silo_Controller.cargo_pod_finished_ascending)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, Settings_Controller.on_runtime_mod_setting_changed)
@@ -206,6 +214,9 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, Settings_Controll
 --[[ custom-inputs-events ]]
 
 -- script.on_event(Custom_Input.LAUNCH_IPBM.name, Rocket_Silo_Controller.launch_ipbm)
+script.on_event(Custom_Input.SCRUB_NEWEST_LAUNCH.name, Rocket_Silo_Controller.scrub_newest_launch)
+script.on_event(Custom_Input.SCRUB_OLDEST_LAUNCH.name, Rocket_Silo_Controller.scrub_oldest_launch)
+script.on_event(Custom_Input.SCRUB_ALL_LAUNCHES.name, Rocket_Silo_Controller.scrub_all_launches)
 
 --[[ GUI ]]
 

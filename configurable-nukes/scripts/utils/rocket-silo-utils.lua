@@ -7,35 +7,17 @@ local Util = require("__core__.lualib.util")
 
 local Zone_Static_Data = require("scripts.data.static.zone-static-data")
 
+local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
+local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local Log = require("libs.log.log")
+local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
-
--- MULTISURFACE_BASE_DISTANCE_MODIFIER
-local get_multisurface_base_distance_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- ALWAYS_USE_CLOSEST_SILO
-local get_always_use_closest_silo = function (data)
-    local setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name].value
-    end
-
-    return setting
-end
 
 local has_power = function (data)
     if (data and type(type(data) == "table")) then
@@ -64,6 +46,62 @@ function rocket_silo_utils.add_rocket_silo(rocket_silo)
     Log.info(rocket_silo)
 
     Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+end
+
+function rocket_silo_utils.scrub_launch(data)
+    Log.debug("rocket_silo_utils.scrub_launch")
+    Log.info(data)
+
+    if (not data) then return end
+    if (not data.tick) then return end
+    if (not data.tick_event) then return end
+    if (not data.player_index) then return end
+    if (not data.player) then return end
+    if (not data.order or type(data.order) ~= "string") then return end
+    if (not data.space_launches_initiated or not type(data.space_launches_initiated) == "table") then return end
+    if (data.print_message == nil or type(data.print_message) ~= "boolean") then data.print_message = true end
+
+    local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(data.player.force.index)
+    Log.warn(force_launch_data)
+    serpent.block(force_launch_data)
+
+    if (force_launch_data.launch_action_queue.count > 0) then
+        local launch_to_scrub = force_launch_data.launch_action_queue:dequeue({ order = data.order, maintain = false})
+        log(serpent.block(launch_to_scrub))
+        Log.warn(launch_to_scrub)
+
+        local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
+        local icbm_meta_data_source = configurable_nukes_data.icbm_meta_data[launch_to_scrub.icbm_data.surface_name]
+        local icbm_meta_data_target = nil
+
+        if (not launch_to_scrub.icbm_data.same_surface) then
+            icbm_meta_data_target = configurable_nukes_data.icbm_meta_data[launch_to_scrub.icbm_data.target_surface_name]
+        end
+
+        if (icbm_meta_data_source) then
+            icbm_meta_data_source:remove_data({
+                icbm_data = launch_to_scrub.icbm_data,
+            })
+        end
+
+        if (icbm_meta_data_target) then
+            icbm_meta_data_target:remove_data({
+                icbm_data = launch_to_scrub.icbm_data,
+            })
+        end
+
+        local item_numbers = ICBM_Data:get_item_numbers()
+        if (item_numbers.get(launch_to_scrub.icbm_data.item_number)) then item_numbers.remove(launch_to_scrub.icbm_data.item_number) end
+
+        if (data.space_launches_initiated[launch_to_scrub.icbm_data]) then log("got it"); data.space_launches_initiated[launch_to_scrub.icbm_data] = nil end
+
+        if (    data.print_message
+            and launch_to_scrub.icbm_data.force
+            and launch_to_scrub.icbm_data.force.valid
+        ) then
+            launch_to_scrub.icbm_data.force.print({ "rocket-silo-utils.scrub-launch", launch_to_scrub.icbm_data.item_number })
+        end
+    end
 end
 
 function rocket_silo_utils.launch_rocket(event)
@@ -258,7 +296,7 @@ function rocket_silo_utils.launch_rocket(event)
                                     and (
                                             v.entity.name == "rocket-silo"
                                         or
-                                            get_always_use_closest_silo()
+                                            Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
                                         and v.entity.name == "ipbm-rocket-silo"
                                     ))
                                 then
@@ -324,7 +362,7 @@ function rocket_silo_utils.launch_rocket(event)
                                 and (
                                         v.entity.name == "rocket-silo"
                                     or
-                                        get_always_use_closest_silo()
+                                        Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
                                     and v.entity.name == "ipbm-rocket-silo"
                                 ))
                             then
@@ -386,7 +424,7 @@ function rocket_silo_utils.launch_rocket(event)
                 and (
                         v.entity.name == "rocket-silo"
                     or
-                        get_always_use_closest_silo()
+                        Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
                     and v.entity.name == "ipbm-rocket-silo"
                 ))
             then
@@ -900,7 +938,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                                         local planet_to = Constants.planets_dictionary[to.name]
 
                                         space_connection_distance = (((planet_from.x - planet_to.x) ^ 2 + (planet_from.y - planet_to.y) ^ 2) ^ 0.5)
-                                        space_connection_distance = space_connection_distance * get_multisurface_base_distance_modifier()
+                                        space_connection_distance = space_connection_distance * Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name })
 
                                         if (reversed) then
                                             space_connection_distance_travelled = space_connection_distance * (1 - passed_rocket_silo_data.entity.surface.platform.distance)
@@ -1164,7 +1202,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
 
                     Log.warn("pre-multiplication, target_distance = " .. target_distance)
                     if (not se_active) then
-                        target_distance = target_distance * get_multisurface_base_distance_modifier()
+                        target_distance = target_distance * Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name })
                     end
                     Log.warn("post-multiplication, target_distance = " .. target_distance)
                     if (not se_active) then

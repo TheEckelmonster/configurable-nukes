@@ -5,7 +5,7 @@ require("prototypes.sprites")
 
 require("prototypes.categories.ammo-category")
 -- require("prototypes.entities.cargo-pod")
--- require("prototypes.custom-input.custom-input")
+require("prototypes.custom-input.custom-input")
 require("prototypes.entities.rocket-silo.rocket-silo-data")
 require("prototypes.entities.rocket-silo-rocket")
 require("prototypes.items.items-data")

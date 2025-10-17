@@ -4,32 +4,15 @@ if _rocket_silo_service and _rocket_silo_service.configurable_nukes then
 end
 
 local Circuit_Network_Validations = require("scripts.validations.circuit-network-data.rocket-silo-validations")
+local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local Log = require("libs.log.log")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
+local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
-
-local get_atomic_bomb_rocket_launchable = function ()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name].value
-    end
-
-    return setting
-end
-local get_atomic_warhead_enabled = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name].value
-    end
-
-    return setting
-end
 
 local rocket_silo_service = {}
 
@@ -47,13 +30,13 @@ function rocket_silo_service.cargo_pod_finished_ascending(event)
             if (not event.cargo_pod.surface or not event.cargo_pod.surface.valid) then return end
             local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(event.cargo_pod.surface.name)
 
-            local k, icbm_data = next(icbm_meta_data.item_numbers, nil)
+            local k, icbm_data = next(icbm_meta_data.icbms, nil)
             while k or (not k and icbm_data) do
                 if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == event.cargo_pod.unit_number) then
                     break
                 end
 
-                if (k) then k, icbm_data = next(icbm_meta_data.item_numbers, k) end
+                if (k) then k, icbm_data = next(icbm_meta_data.icbms, k) end
             end
 
             if (icbm_data == nil) then
@@ -80,9 +63,9 @@ function rocket_silo_service.cargo_pod_finished_ascending(event)
 
         if (inventory) then
             for _, item in ipairs(inventory.get_contents()) do
-                if (    (string.find(item.name, "atomic-bomb", 1, true) and get_atomic_bomb_rocket_launchable())
+                if (    (string.find(item.name, "atomic-bomb", 1, true) and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }))
                     or
-                        (item.name == "atomic-warhead" and get_atomic_warhead_enabled()))
+                        (item.name == "atomic-warhead" and Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })))
                 then
                     local return_val = ICBM_Utils.cargo_pod_finished_ascending({
                         surface = cargo_pod.surface,
@@ -165,9 +148,67 @@ function rocket_silo_service.launch_rocket(event)
 end
 
 function rocket_silo_service.on_space_platform_mined_entity(event)
-    Log.error("rocket_silo_service.on_space_platform_mined_entity")
-    Log.warn(event)
+    Log.debug("rocket_silo_service.on_space_platform_mined_entity")
+    Log.info(event)
     Rocket_Silo_Utils.mine_rocket_silo(event)
+end
+
+function rocket_silo_service.scrub_newest_launch(data)
+    Log.debug("rocket_silo_service.scrub_newest_launch")
+    Log.info(event)
+
+    if (not data) then return end
+    if (not data.tick) then return end
+    if (not data.tick_event) then return end
+    if (not data.player_index) then return end
+    if (not data.player) then return end
+
+    data.order = "last"
+    data.space_launches_initiated = ICBM_Utils.get_space_launches_initiatied()
+
+    Rocket_Silo_Utils.scrub_launch(data)
+end
+
+function rocket_silo_service.scrub_oldest_launch(data)
+    Log.debug("rocket_silo_service.scrub_oldest_launch")
+    Log.info(event)
+
+
+    if (not data) then return end
+    if (not data.tick) then return end
+    if (not data.tick_event) then return end
+    if (not data.player_index) then return end
+    if (not data.player) then return end
+
+    data.order = "first"
+    data.space_launches_initiated = ICBM_Utils.get_space_launches_initiatied()
+
+    Rocket_Silo_Utils.scrub_launch(data)
+end
+
+function rocket_silo_service.scrub_all_launches(data)
+    Log.debug("rocket_silo_service.scrub_all_launches")
+    Log.info(event)
+
+    data.order = "last"
+    data.print_message = false
+    data.space_launches_initiated = ICBM_Utils.get_space_launches_initiatied()
+
+    local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(data.player.force.index)
+
+    local i = 0
+    while force_launch_data.launch_action_queue.count > 0 do
+        if (i > force_launch_data.launch_action_queue.limit * 1.5) then
+            Log.error("rocket_silo_service.scrub_all_launches loop continued beyond it's size limit")
+            return
+        end
+        Rocket_Silo_Utils.scrub_launch(data)
+        i = i + 1
+    end
+
+    if (i > 0 and force_launch_data.force and force_launch_data.force.valid) then
+        force_launch_data.force.print({ "rocket-silo-service.scrub-all-launches" })
+    end
 end
 
 rocket_silo_service.configurable_nukes = true

@@ -178,6 +178,9 @@ function icbm_repository.update_icbm_data(update_data, optionals)
 
     icbms[update_data.item_number] = return_val
 
+    local item_numbers = ICBM_Data:get_item_numbers()
+    if (not item_numbers.get(return_val.item_number)) then item_numbers.set(return_val.item_number) end
+
     return return_val
 end
 
@@ -208,6 +211,9 @@ function icbm_repository.delete_icbm_data_by_item_number(planet_name, item_numbe
 
     return_val = icbms[item_number]
     icbms[item_number] = nil
+
+    local item_numbers = ICBM_Data:get_item_numbers()
+    item_numbers.remove(item_number)
 
     return return_val
 end

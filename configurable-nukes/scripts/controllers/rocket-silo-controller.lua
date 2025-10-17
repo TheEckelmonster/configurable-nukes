@@ -3,6 +3,7 @@ if _rocket_silo_controller and _rocket_silo_controller.configurable_nukes then
   return _rocket_silo_controller
 end
 
+local Custom_Input = require("prototypes.custom-input.custom-input")
 local Log = require("libs.log.log")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
@@ -110,8 +111,80 @@ function rocket_silo_controller.rocket_silo_mined_script(event)
     Rocket_Silo_Service.rocket_silo_mined(event)
 end
 
-function rocket_silo_controller.launch_ipbm(event)
-    Log.error("rocket_silo_controller.launch_ipbm")
+-- function rocket_silo_controller.launch_ipbm(event)
+--     Log.error("rocket_silo_controller.launch_ipbm")
+--     Log.warn(event)
+
+-- end
+
+function rocket_silo_controller.scrub_newest_launch(event)
+    Log.error("rocket_silo_controller.scrub_newest_launch")
+    Log.warn(event)
+
+    if (not event) then return end
+    if (not event.input_name or event.input_name ~= Custom_Input.SCRUB_NEWEST_LAUNCH.name) then return end
+    if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
+
+    local player = game.get_player(event.player_index)
+    if (not player or not player.valid) then return end
+    log(serpent.block(player))
+
+    Rocket_Silo_Service.scrub_newest_launch({
+        tick = game.tick,
+        tick_event = event.tick,
+        player_index = event.player_index,
+        player = player,
+    })
+end
+
+function rocket_silo_controller.scrub_oldest_launch(event)
+    Log.error("rocket_silo_controller.scrub_oldest_launch")
+    Log.warn(event)
+
+    if (not event) then return end
+    if (not event.input_name or event.input_name ~= Custom_Input.SCRUB_OLDEST_LAUNCH.name) then return end
+    if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
+
+    local player = game.get_player(event.player_index)
+    if (not player or not player.valid) then return end
+    log(serpent.block(player))
+
+    Rocket_Silo_Service.scrub_oldest_launch({
+        tick = game.tick,
+        tick_event = event.tick,
+        player_index = event.player_index,
+        player = player,
+    })
+end
+
+function rocket_silo_controller.scrub_all_launches(event)
+    Log.error("rocket_silo_controller.scrub_all_launches")
+    Log.warn(event)
+
+    if (not event) then return end
+    if (not event.input_name or event.input_name ~= Custom_Input.SCRUB_ALL_LAUNCHES.name) then return end
+    if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
+
+    local player = game.get_player(event.player_index)
+    if (not player or not player.valid) then return end
+    log(serpent.block(player))
+
+    Rocket_Silo_Service.scrub_all_launches({
+        tick = game.tick,
+        tick_event = event.tick,
+        player_index = event.player_index,
+        player = player,
+    })
+end
+
+function rocket_silo_controller.on_player_alt_selected_area(event)
+    Log.error("rocket_silo_controller.on_player_alt_selected_area")
+    Log.warn(event)
+
+end
+
+function rocket_silo_controller.on_player_alt_reverse_selected_area(event)
+    Log.error("rocket_silo_controller.on_player_alt_reverse_selected_area")
     Log.warn(event)
 
 end

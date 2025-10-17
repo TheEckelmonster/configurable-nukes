@@ -54,6 +54,39 @@ icbm_data.item_number = {
         return return_val
     end,
 }
+icbm_data.item_numbers = {
+    get = function (item_number)
+        if (item_number == nil or type(item_number) ~= "number" or item_number < 1) then return end
+
+        if (storage and storage.icbm_data and storage.icbm_data.item_numbers) then return storage.icbm_data.item_numbers[item_number] end
+    end,
+    set = function (item_number)
+        if (item_number == nil or type(item_number) ~= "number" or item_number < 1) then return end
+
+        if (storage) then
+            if (not storage.icbm_data) then storage.icbm_data = {} end
+            if (not storage.icbm_data.item_numbers) then storage.icbm_data.item_numbers = {} end
+
+            storage.icbm_data.item_numbers[item_number] = {}
+        end
+    end,
+    remove = function (item_number)
+        if (item_number == nil or type(item_number) ~= "number" or item_number < 1) then return end
+
+        if (storage and storage.icbm_data and storage.icbm_data.item_numbers and storage.icbm_data.item_numbers[item_number]) then storage.icbm_data.item_numbers[item_number] = nil end
+    end,
+    -- get_all = function ()
+    --     local return_val = nil
+
+    --     if (storage and storage.icbm_data and storage.icbm_data.item_numbers) then return_val = storage.icbm_data.item_numbers end
+
+    --     return return_val
+    -- end,
+    remove_all = function ()
+        if (storage and storage.icbm_data) then storage.icbm_data.item_numbers = {} end
+    end,
+}
+
 icbm_data.item = nil
 icbm_data.cargo_pod = nil
 icbm_data.cargo_pod_unit_number = -1
@@ -88,6 +121,10 @@ icbm_data.base_target_distance = 0
 icbm_data.speed = 0
 icbm_data.is_travelling = false
 icbm_data.space_origin_pos = nil
+--[[ For knowing where in the forces launch-action-queue the given icbm-data is located
+    -> Trying to avoid iterating through the queue each time a payload arrives
+]]
+icbm_data.enqueued_data = nil
 
 function icbm_data:new(o)
     Log.debug("icbm_data:new")
@@ -128,6 +165,7 @@ function icbm_data:new(o)
         speed = self.speed,
         is_travelling = self.is_travelling,
         space_origin_pos = nil,
+        enqueued_data = nil,
     }
 
     local obj = o or defaults
@@ -139,7 +177,10 @@ function icbm_data:new(o)
     setmetatable(obj, self)
     self.__index = self
 
-    if (obj.item_number >= 0) then icbm_data.item_number.increment() end
+    if (obj.item_number >= 0) then
+        icbm_data.item_numbers.set(obj.item_number)
+        icbm_data.item_number.increment()
+    end
 
     return obj
 end
@@ -148,7 +189,23 @@ setmetatable(icbm_data, Data)
 local ICBM_Data = icbm_data:new(ICBM_Data)
 
 function ICBM_Data:next_item_number()
+    Log.debug("ICBM_Data:next_item_number")
+
     return icbm_data.item_number.get()
+end
+
+function ICBM_Data:get_item_numbers()
+    Log.debug("ICBM_Data:item_number_exists")
+    Log.info(item_number)
+
+    return
+    {
+        get = icbm_data.item_numbers.get,
+        set = icbm_data.item_numbers.set,
+        remove = icbm_data.item_numbers.remove,
+        -- get_all = icbm_data.item_numbers.get_all,
+        remove_all = icbm_data.item_numbers.remove_all,
+    }
 end
 
 return ICBM_Data

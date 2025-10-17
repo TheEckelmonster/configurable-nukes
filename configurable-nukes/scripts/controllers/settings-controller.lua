@@ -21,6 +21,8 @@ function settings_controller.on_runtime_mod_setting_changed(event)
     if (not event.setting or type(event.setting) ~= "string") then return end
     if (not event.setting_type or type(event.setting_type) ~= "string") then return end
 
+    if (not (event.setting:find("configurable-nukes-", 1, true) == 1)) then return end
+
     if (not storage.settings or type(storage.settings) ~= "table") then storage.settings = {} end
     if (event.setting_type == "runtime-global") then
         Settings_Service.get_runtime_global_setting({  reindex = true, setting = event.setting })

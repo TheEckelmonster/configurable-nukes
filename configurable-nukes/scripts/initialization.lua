@@ -299,6 +299,27 @@ function locals.migrate(data)
                         end
                     end
                 end
+
+                if (prev_version_data.minor.value <= 6) then
+                    Log.warn(prev_version_data.minor.value)
+                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 7) then
+                        Log.warn(new_version_data.major.value)
+                        Log.warn(new_version_data.minor.value)
+                        --[[ Version 0.7.0:
+                            -> removed item_numbers from icbm_meta_data
+                            -> changed/enforced icbm_meta_data.surface_name instead of icbm_meta_data.planet_name
+                        ]]
+                        if (storage_old.configurable_nukes.icbm_meta_data) then
+                            local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
+                            for k, v in pairs(all_icbm_meta_data) do
+                                v.item_numbers = nil
+                                v.surface_name = v.planet_name
+                                v.planet_name = nil
+                                ICBM_Meta_Repository.update_icbm_meta_data(v)
+                            end
+                        end
+                    end
+                end
             end
         end
 
