@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.6.3
+Date: 2025-10-17
+  Bug Fixes:
+    - Fixed a bug that would prevent the game from loading if additional hidden quality prototypes were present
+      - Thanks to SimbaBay for the report and taking the time to figure out which mod they had that was causing this issue to surface
+---------------------------------------------------------------------------------------------------
 Version: 0.6.2
 Date: 2025-10-16
   Misc:

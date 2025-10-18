@@ -508,8 +508,8 @@ if (mods and mods["quality"]) then
     end
 else
     atomic_warhead = create_quality_atomic_warhead({ quality_level = "normal", quality = { level = 0 } })
-end
 
-if (atomic_warhead) then
-    data:extend({atomic_warhead})
+    if (atomic_warhead) then
+        data:extend({atomic_warhead})
+    end
 end
