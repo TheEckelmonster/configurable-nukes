@@ -773,13 +773,13 @@ if (mods and mods["quality"]) then
     end
 else
     atomic_bomb = create_quality_atomic_bomb({ quality_level = "normal", quality = { level = 0 } })
+
+    if (atomic_bomb) then
+        data:extend({atomic_bomb})
+    end
 end
 
-if (atomic_bomb) then
-    data:extend({atomic_bomb})
-end
-
-local atomic_bomb_placeholder = Util.table.deepcopy(atomic_bomb)
+local atomic_bomb_placeholder = Util.table.deepcopy(original_atomic_bomb)
 atomic_bomb_placeholder.name = "atomic-rocket-placeholder"
 
 atomic_bomb_placeholder.animation = nil
@@ -798,7 +798,6 @@ atomic_bomb_placeholder.action =
                 type = "destroy-cliffs",
                 radius = 9 * area_multiplier,
                 explosion_at_trigger = "explosion"
-
                 -- show_in_tooltip = mods and mods["quality"] ~= nil,
             },
             {
@@ -821,7 +820,6 @@ atomic_bomb_placeholder.action =
                         starting_speed = 0.6 * 0.8 * area_multiplier,
                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation
                     },
-
                     -- show_in_tooltip = mods and mods["quality"] ~= nil,
                 }
             },
@@ -841,7 +839,6 @@ atomic_bomb_placeholder.action =
                         starting_speed = 0.5 * 0.7 * area_multiplier,
                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation
                     },
-
                     -- show_in_tooltip = mods and mods["quality"] ~= nil,
                 }
             },
