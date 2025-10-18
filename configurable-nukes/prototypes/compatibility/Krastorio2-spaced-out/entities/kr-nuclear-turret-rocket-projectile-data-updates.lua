@@ -457,15 +457,15 @@ if (mods and mods["quality"]) then
     end
 else
     nuclear_turret_rocket = create_quality_nuclear_turret_rocket({ quality_level = "normal", quality = { level = 0 } })
-end
 
-if (nuclear_turret_rocket) then
-    data:extend({nuclear_turret_rocket})
+    if (nuclear_turret_rocket) then
+        data:extend({nuclear_turret_rocket})
+    end
 end
 
 nuclear_turret_rocket = data.raw["projectile"]["kr-nuclear-turret-rocket-projectile"]
 
-local nuclear_turret_rocket_placeholder = Util.table.deepcopy(nuclear_turret_rocket)
+local nuclear_turret_rocket_placeholder = Util.table.deepcopy(original_nuclear_turret_rocket)
 nuclear_turret_rocket_placeholder.name = "kr-nuclear-turret-rocket-projectile-placeholder"
 
 nuclear_turret_rocket_placeholder.animation = nil
