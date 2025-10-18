@@ -456,15 +456,15 @@ if (mods and mods["quality"]) then
     end
 else
     nuclear_artillery_shell = create_quality_nuclear_artillery_shell({ quality_level = "normal", quality = { level = 0 } })
-end
 
-if (nuclear_artillery_shell) then
-    data:extend({nuclear_artillery_shell})
+    if (nuclear_artillery_shell) then
+        data:extend({nuclear_artillery_shell})
+    end
 end
 
 nuclear_artillery_shell = data.raw["artillery-projectile"]["kr-atomic-artillery-projectile"]
 
-local nuclear_artillery_shell_placeholder = Util.table.deepcopy(nuclear_artillery_shell)
+local nuclear_artillery_shell_placeholder = Util.table.deepcopy(original_nuclear_artillery_shell)
 nuclear_artillery_shell_placeholder.name = "kr-atomic-artillery-projectile-placeholder"
 
 nuclear_artillery_shell_placeholder.animation = nil
