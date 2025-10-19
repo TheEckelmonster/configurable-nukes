@@ -5,6 +5,7 @@ end
 
 local Circuit_Network_Service = require("scripts.services.circuit-network-service")
 local Constants = require("scripts.constants.constants")
+local Event_Handler = require("scripts.event-handler")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Initialization = require("scripts.initialization")
@@ -30,8 +31,8 @@ configurable_nukes_controller.reinitialized = false
 
 configurable_nukes_controller.checked_research = false
 
-function configurable_nukes_controller.do_tick(event)
-    -- Log.debug("configurable_nukes_controller.do_tick")
+function configurable_nukes_controller.on_tick(event)
+    -- Log.debug("configurable_nukes_controller.on_tick")
     -- Log.info(event)
 
     local tick = event.tick
@@ -470,6 +471,11 @@ function configurable_nukes_controller.do_tick(event)
         reinitialized_tick = configurable_nukes_controller.reinit_tick,
     }
 end
+Event_Handler:register_event({
+    event_name = "on_tick",
+    source_name = "configurable_nukes_controller.on_tick",
+    func = configurable_nukes_controller.on_tick,
+})
 
 function configurable_nukes_controller.on_configuration_changed(event)
     Log.debug("configurable_nukes_controller.on_configuration_changed")
@@ -496,7 +502,7 @@ function configurable_nukes_controller.on_configuration_changed(event)
             cn_controller_data.initialized = true
             cn_controller_data.init_tick = game.tick
 
-            Constants.get_mod_data(true)
+            -- Constants.get_mod_data(true)
 
             storage.configurable_nukes_controller = {
                 planet_index = cn_controller_data.planet_index,
@@ -512,11 +518,22 @@ function configurable_nukes_controller.on_configuration_changed(event)
         end
     end
 end
+Event_Handler:register_event({
+    event_name = "on_configuration_changed",
+    source_name = "configurable_nukes_controller",
+    func = configurable_nukes_controller.on_configuration_changed,
+})
 
 function configurable_nukes_controller.on_load(event)
     Log.debug("configurable_nukes_controller.on_load")
-    Constants.get_mod_data(false, { on_load = true })
+
+    Constants.get_mod_data(true, { on_load = true })
 end
+Event_Handler:register_event({
+    event_name = "on_load",
+    source_name = "configurable_nukes_controller",
+    func = configurable_nukes_controller.on_load,
+})
 
 configurable_nukes_controller.configurable_nukes = true
 

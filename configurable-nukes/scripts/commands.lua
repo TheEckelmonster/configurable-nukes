@@ -4,6 +4,7 @@ if _configurable_nukes_commands and _configurable_nukes_commands.configurable_nu
 end
 
 local Constants = require("scripts.constants.constants")
+local Event_Handler = require("scripts.event-handler")
 local Initialization = require("scripts.initialization")
 local Log = require("libs.log.log")
 
@@ -351,6 +352,21 @@ if (mods and mods["space-exploration"] or script and script.active_mods and scri
     end
 end
 
+
+function configurable_nukes_commands.print_event_handlers(command)
+    Log.debug("configurable_nukes_commands.print_event_handlers")
+    locals.validate_command(command, function (player)
+        Log.info("commands.print_event_handlers")
+
+        log(serpent.block(Event_Handler.events_names))
+        log(serpent.block(Event_Handler.events))
+
+        -- local file_name = "Constants.space_connections_" .. game.tick
+        -- Constants.table.traverse_print(Constants.get_space_connections(), file_name, _, { full = true  })
+        -- player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
+    end)
+end
+
 locals.validate_command = function (command, fun)
     Log.debug("validate_command")
     Log.info(command)
@@ -372,6 +388,7 @@ end
 commands.add_command("configurable_nukes.init", "Initialize from scratch. Will erase existing data.", configurable_nukes_commands.init)
 commands.add_command("configurable_nukes.reinit", "Tries to reinitialize, attempting to preserve existing data.", configurable_nukes_commands.reinit)
 commands.add_command("configurable_nukes.print_table", "", configurable_nukes_commands.print_table)
+commands.add_command("configurable_nukes.print_event_handlers", "", configurable_nukes_commands.print_event_handlers)
 commands.add_command("configurable_nukes.print_storage", "Exports to a .json file the underlying storage data.", configurable_nukes_commands.print_storage)
 -- commands.add_command("configurable_nukes.print_mod_data", "Exports to a .json file the currently available mod-data.", configurable_nukes_commands.print_mod_data)
 -- commands.add_command("configurable_nukes.print_mod_data_dictionary", "Exports to a .json file the mod-data dictionary.", configurable_nukes_commands.print_mod_data_dictionary)

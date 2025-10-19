@@ -17,8 +17,8 @@ local icbm_utils = {
     space_launches_initiated = {}
 }
 
-function icbm_utils.cargo_pod_finished_ascending(data)
-    Log.debug("icbm_utils.cargo_pod_finished_ascending")
+function icbm_utils.on_cargo_pod_finished_ascending(data)
+    Log.debug("icbm_utils.on_cargo_pod_finished_ascending")
     Log.info(data)
 
     if (data == nil) then return -1 end

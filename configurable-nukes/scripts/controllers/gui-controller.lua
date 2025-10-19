@@ -5,11 +5,27 @@ end
 
 local Util = require("__core__.lualib.util")
 
+local Event_Handler = require("scripts.event-handler")
 local Gui_Service = require("scripts.services.gui-service")
 local Log = require("libs.log.log")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 
 local gui_controller = {}
+
+function gui_controller.on_gui_click(event)
+    Log.debug("gui_controller.on_gui_clicked")
+    Log.info(event)
+
+    if (not event or type(event) ~= "table") then return end
+    if (not event.element) then return end
+    if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
+
+end
+Event_Handler:register_event({
+    event_name = "on_gui_click",
+    source_name = "gui_controller.on_gui_click",
+    func = gui_controller.on_gui_click,
+})
 
 function gui_controller.on_gui_opened(event)
     Log.debug("gui_controller.on_gui_opened")
@@ -42,6 +58,11 @@ function gui_controller.on_gui_opened(event)
         })
     end
 end
+Event_Handler:register_event({
+    event_name = "on_gui_opened",
+    source_name = "gui_controller.on_gui_opened",
+    func = gui_controller.on_gui_opened,
+})
 
 function gui_controller.on_gui_closed(event)
     Log.debug("gui_controller.on_gui_closed")
@@ -56,8 +77,12 @@ function gui_controller.on_gui_closed(event)
     local player = game.get_player(event.player_index)
     local gui = player.gui.relative.cn_frame_outer_circuit_launchable
     if (gui) then gui.destroy() end
-
 end
+Event_Handler:register_event({
+    event_name = "on_gui_closed",
+    source_name = "gui_controller.on_gui_closed",
+    func = gui_controller.on_gui_closed,
+})
 
 function gui_controller.on_gui_checked_state_changed(event)
     Log.debug("gui_controller.on_gui_checked_state_changed")
@@ -83,6 +108,11 @@ function gui_controller.on_gui_checked_state_changed(event)
         end
     end
 end
+Event_Handler:register_event({
+    event_name = "on_gui_checked_state_changed",
+    source_name = "gui_controller.on_gui_checked_state_changed",
+    func = gui_controller.on_gui_checked_state_changed,
+})
 
 function gui_controller.on_gui_elem_changed(event)
     Log.debug("gui_controller.on_gui_elem_changed")
@@ -112,6 +142,11 @@ function gui_controller.on_gui_elem_changed(event)
         end
     end
 end
+Event_Handler:register_event({
+    event_name = "on_gui_elem_changed",
+    source_name = "gui_controller.on_gui_elem_changed",
+    func = gui_controller.on_gui_elem_changed,
+})
 
 function gui_controller.on_gui_selection_state_changed(event)
     Log.debug("gui_controller.on_gui_selection_state_changed")
@@ -156,6 +191,11 @@ function gui_controller.on_gui_selection_state_changed(event)
         end
     end
 end
+Event_Handler:register_event({
+    event_name = "on_gui_selection_state_changed",
+    source_name = "gui_controller.on_gui_selection_state_changed",
+    func = gui_controller.on_gui_selection_state_changed,
+})
 
 function gui_controller.on_entity_settings_pasted(event)
     Log.debug("gui_controller.on_entity_settings_pasted")
@@ -202,6 +242,21 @@ function gui_controller.on_entity_settings_pasted(event)
 
     Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo_data_destination.entity, rocket_silo_data_destination)
 end
+Event_Handler:register_event({
+    event_name = "on_entity_settings_pasted",
+    source_name = "gui_controller.on_entity_settings_pasted",
+    func = gui_controller.on_entity_settings_pasted,
+})
+
+-- function gui_controller.on_tick(event)
+--     -- Log.debug("gui_controller.on_tick")
+
+-- end
+-- Event_Handler:register_event({
+--     event_name = "on_tick",
+--     source_name = "gui_controller.on_tick",
+--     func = gui_controller.on_tick,
+-- })
 
 gui_controller.configurable_nukes = true
 

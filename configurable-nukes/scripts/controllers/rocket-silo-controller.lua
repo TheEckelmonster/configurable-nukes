@@ -1,9 +1,10 @@
 -- If already defined, return
 if _rocket_silo_controller and _rocket_silo_controller.configurable_nukes then
-  return _rocket_silo_controller
+    return _rocket_silo_controller
 end
 
 local Custom_Input = require("prototypes.custom-input.custom-input")
+local Event_Handler = require("scripts.event-handler")
 local Log = require("libs.log.log")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
@@ -37,6 +38,32 @@ function rocket_silo_controller.rocket_silo_built(event)
 
     Rocket_Silo_Service.rocket_silo_built(rocket_silo)
 end
+Event_Handler:register_events({
+    {
+        event_name = "on_built_entity",
+        source_name = "rocket_silo_controller.rocket_silo_built",
+        func = rocket_silo_controller.rocket_silo_built,
+        filter = rocket_silo_controller.filter,
+    },
+    {
+        event_name = "on_robot_built_entity",
+        source_name = "rocket_silo_controller.rocket_silo_built",
+        func = rocket_silo_controller.rocket_silo_built,
+        filter = rocket_silo_controller.filter,
+    },
+    {
+        event_name = "script_raised_built",
+        source_name = "rocket_silo_controller.rocket_silo_built",
+        func = rocket_silo_controller.rocket_silo_built,
+        filter = rocket_silo_controller.filter,
+    },
+    {
+        event_name = "script_raised_revive",
+        source_name = "rocket_silo_controller.rocket_silo_built",
+        func = rocket_silo_controller.rocket_silo_built,
+        filter = rocket_silo_controller.filter,
+    },
+})
 
 function rocket_silo_controller.rocket_silo_cloned(event)
     Log.debug("rocket_silo_controller.rocket_silo_cloned")
@@ -78,6 +105,12 @@ function rocket_silo_controller.rocket_silo_cloned(event)
         destination_silo = destination_silo,
     })
 end
+Event_Handler:register_event({
+    event_name = "on_entity_cloned",
+    source_name = "rocket_silo_controller.rocket_silo_cloned",
+    func = rocket_silo_controller.rocket_silo_cloned,
+    filter = rocket_silo_controller.filter,
+})
 
 function rocket_silo_controller.rocket_silo_mined(event)
     Log.debug("rocket_silo_controller.rocket_silo_mined")
@@ -94,6 +127,26 @@ function rocket_silo_controller.rocket_silo_mined(event)
 
     Rocket_Silo_Service.rocket_silo_mined(event)
 end
+Event_Handler:register_events({
+    {
+        event_name = "on_entity_died",
+        source_name = "rocket_silo_controller.rocket_silo_mined",
+        func = rocket_silo_controller.rocket_silo_mined,
+        filter = rocket_silo_controller.filter,
+    },
+    {
+        event_name = "on_player_mined_entity",
+        source_name = "rocket_silo_controller.rocket_silo_mined",
+        func = rocket_silo_controller.rocket_silo_mined,
+        filter = rocket_silo_controller.filter,
+    },
+    {
+        event_name = "on_robot_mined_entity",
+        source_name = "rocket_silo_controller.rocket_silo_mined",
+        func = rocket_silo_controller.rocket_silo_mined,
+        filter = rocket_silo_controller.filter,
+    },
+})
 
 function rocket_silo_controller.rocket_silo_mined_script(event)
     Log.debug("rocket_silo_controller.rocket_silo_mined_script")
@@ -110,12 +163,12 @@ function rocket_silo_controller.rocket_silo_mined_script(event)
 
     Rocket_Silo_Service.rocket_silo_mined(event)
 end
-
--- function rocket_silo_controller.launch_ipbm(event)
---     Log.error("rocket_silo_controller.launch_ipbm")
---     Log.warn(event)
-
--- end
+Event_Handler:register_event({
+    event_name = "script_raised_destroy",
+    source_name = "rocket_silo_controller.rocket_silo_mined_script",
+    func = rocket_silo_controller.rocket_silo_mined_script,
+    filter = rocket_silo_controller.filter,
+})
 
 function rocket_silo_controller.scrub_newest_launch(event)
     Log.error("rocket_silo_controller.scrub_newest_launch")
@@ -127,7 +180,6 @@ function rocket_silo_controller.scrub_newest_launch(event)
 
     local player = game.get_player(event.player_index)
     if (not player or not player.valid) then return end
-    log(serpent.block(player))
 
     Rocket_Silo_Service.scrub_newest_launch({
         tick = game.tick,
@@ -136,6 +188,11 @@ function rocket_silo_controller.scrub_newest_launch(event)
         player = player,
     })
 end
+Event_Handler:register_event({
+    event_name = Custom_Input.SCRUB_NEWEST_LAUNCH.name,
+    source_name = "rocket_silo_controller.scrub_newest_launch",
+    func = rocket_silo_controller.scrub_newest_launch,
+})
 
 function rocket_silo_controller.scrub_oldest_launch(event)
     Log.error("rocket_silo_controller.scrub_oldest_launch")
@@ -147,7 +204,6 @@ function rocket_silo_controller.scrub_oldest_launch(event)
 
     local player = game.get_player(event.player_index)
     if (not player or not player.valid) then return end
-    log(serpent.block(player))
 
     Rocket_Silo_Service.scrub_oldest_launch({
         tick = game.tick,
@@ -156,6 +212,11 @@ function rocket_silo_controller.scrub_oldest_launch(event)
         player = player,
     })
 end
+Event_Handler:register_event({
+    event_name = Custom_Input.SCRUB_OLDEST_LAUNCH.name,
+    source_name = "rocket_silo_controller.scrub_oldest_launch",
+    func = rocket_silo_controller.scrub_oldest_launch,
+})
 
 function rocket_silo_controller.scrub_all_launches(event)
     Log.error("rocket_silo_controller.scrub_all_launches")
@@ -167,7 +228,6 @@ function rocket_silo_controller.scrub_all_launches(event)
 
     local player = game.get_player(event.player_index)
     if (not player or not player.valid) then return end
-    log(serpent.block(player))
 
     Rocket_Silo_Service.scrub_all_launches({
         tick = game.tick,
@@ -176,24 +236,44 @@ function rocket_silo_controller.scrub_all_launches(event)
         player = player,
     })
 end
+Event_Handler:register_event( {
+    event_name = Custom_Input.SCRUB_ALL_LAUNCHES.name,
+    source_name = "rocket_silo_controller.scrub_all_launches",
+    func = rocket_silo_controller.scrub_all_launches,
+})
 
 function rocket_silo_controller.on_player_alt_selected_area(event)
     Log.error("rocket_silo_controller.on_player_alt_selected_area")
     Log.warn(event)
 
 end
+Event_Handler:register_event({
+    event_name = "on_player_alt_selected_area",
+    source_name = "rocket_silo_controller.on_player_alt_selected_area",
+    func = rocket_silo_controller.on_player_alt_selected_area,
+})
 
 function rocket_silo_controller.on_player_alt_reverse_selected_area(event)
     Log.error("rocket_silo_controller.on_player_alt_reverse_selected_area")
     Log.warn(event)
 
 end
+Event_Handler:register_event({
+    event_name = "on_player_alt_reverse_selected_area",
+    source_name = "rocket_silo_controller.on_player_alt_reverse_selected_area",
+    func = rocket_silo_controller.on_player_alt_reverse_selected_area,
+})
 
 function rocket_silo_controller.on_player_reverse_selected_area(event)
     Log.error("rocket_silo_controller.on_player_reverse_selected_area")
     Log.warn(event)
 
 end
+Event_Handler:register_event({
+    event_name = "on_player_reverse_selected_area",
+    source_name = "rocket_silo_controller.on_player_reverse_selected_area",
+    func = rocket_silo_controller.on_player_reverse_selected_area,
+})
 
 function rocket_silo_controller.launch_rocket(event)
     Log.debug("rocket_silo_controller.launch_rocket")
@@ -212,9 +292,14 @@ function rocket_silo_controller.launch_rocket(event)
 
     Rocket_Silo_Service.launch_rocket(event)
 end
+Event_Handler:register_event({
+    event_name = "on_player_selected_area",
+    source_name = "rocket_silo_controller.launch_rocket",
+    func = rocket_silo_controller.launch_rocket,
+})
 
-function rocket_silo_controller.cargo_pod_finished_ascending(event)
-    Log.debug("rocket_silo_controller.cargo_pod_finished_ascending")
+function rocket_silo_controller.on_cargo_pod_finished_ascending(event)
+    Log.debug("rocket_silo_controller.on_cargo_pod_finished_ascending")
     Log.info(event)
 
     if (not event) then return end
@@ -227,8 +312,13 @@ function rocket_silo_controller.cargo_pod_finished_ascending(event)
     ]]
     -- if (not Rocket_Silo_Validations.is_targetable_surface({ surface = event.cargo_pod.surface, })) then return end
 
-    Rocket_Silo_Service.cargo_pod_finished_ascending(event)
+    Rocket_Silo_Service.on_cargo_pod_finished_ascending(event)
 end
+Event_Handler:register_event({
+    event_name = "on_cargo_pod_finished_ascending",
+    source_name = "rocket_silo_controller.on_cargo_pod_finished_ascending",
+    func = rocket_silo_controller.on_cargo_pod_finished_ascending,
+})
 
 function rocket_silo_controller.on_space_platform_built_entity(event)
     Log.debug("rocket_silo_controller.on_space_platform_built_entity")
@@ -245,6 +335,12 @@ function rocket_silo_controller.on_space_platform_built_entity(event)
 
     Rocket_Silo_Service.rocket_silo_built(rocket_silo)
 end
+Event_Handler:register_event({
+    event_name = "on_space_platform_built_entity",
+    source_name = "rocket_silo_controller.on_space_platform_built_entity",
+    func = rocket_silo_controller.on_space_platform_built_entity,
+    filter = rocket_silo_controller.filter,
+})
 
 function rocket_silo_controller.on_space_platform_mined_entity(event)
     Log.debug("rocket_silo_controller.on_space_platform_mined_entity")
@@ -261,6 +357,12 @@ function rocket_silo_controller.on_space_platform_mined_entity(event)
 
     Rocket_Silo_Service.on_space_platform_mined_entity(event)
 end
+Event_Handler:register_event({
+    event_name = "on_space_platform_mined_entity",
+    source_name = "rocket_silo_controller.on_space_platform_mined_entity",
+    func = rocket_silo_controller.on_space_platform_mined_entity,
+    filter = rocket_silo_controller.filter,
+})
 
 rocket_silo_controller.configurable_nukes = true
 

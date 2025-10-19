@@ -16,8 +16,8 @@ local Startup_Settings_Constants = require("settings.startup.startup-settings-co
 
 local rocket_silo_service = {}
 
-function rocket_silo_service.cargo_pod_finished_ascending(event)
-    Log.debug("rocket_silo_service.cargo_pod_finished_ascending")
+function rocket_silo_service.on_cargo_pod_finished_ascending(event)
+    Log.debug("rocket_silo_service.on_cargo_pod_finished_ascending")
     Log.info(event)
 
     if (not event) then return end
@@ -67,7 +67,7 @@ function rocket_silo_service.cargo_pod_finished_ascending(event)
                     or
                         (item.name == "atomic-warhead" and Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })))
                 then
-                    local return_val = ICBM_Utils.cargo_pod_finished_ascending({
+                    local return_val = ICBM_Utils.on_cargo_pod_finished_ascending({
                         surface = cargo_pod.surface,
                         item = item,
                         tick = event.tick,

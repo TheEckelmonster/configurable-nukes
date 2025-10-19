@@ -7,6 +7,7 @@ local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.r
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
+local Event_Handler = require("scripts.event-handler")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Log = require("libs.log.log")
@@ -90,12 +91,27 @@ function locals.initialize(from_scratch, maintain_data)
         end
     end
 
-    local sa_active = scripts and scripts.active_mods and scripts.active_mods["space-age"]
-    local se_active = scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
+    local sa_active = script and script.active_mods and script.active_mods["space-age"]
+    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
     if (se_active) then
-        locals.process_space_exploration_universe()
-        script.on_event(remote.call("space-exploration", "get_on_zone_surface_created_event"), Planet_Controller.on_surface_created)
+        local event_num = remote.call("space-exploration", "get_on_zone_surface_created_event")
+
+        if (event_num ~= nil and type(event_num) == "number") then
+            local event_position = Event_Handler:get_event_position({
+                event_name = event_num,
+                source_name = "Planet_Controller.on_surface_created",
+            })
+
+            if (event_position == nil) then
+                Event_Handler:register_event({
+                    event_num = event_num,
+                    fallback_event_name = "on_zone_surface_created",
+                    source_name = "Planet_Controller.on_surface_created",
+                    func = Planet_Controller.on_surface_created
+                })
+            end
+        end
     end
 
     -- Configurable Nukes
@@ -126,8 +142,10 @@ function locals.initialize(from_scratch, maintain_data)
         if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = Rocket_Silo_Meta_Data:new() end
     end
 
-    storage.sa_active = storage.sa_active
-    storage.se_active = storage.se_active
+    storage.sa_active = sa_active ~= nil and sa_active or storage.sa_active
+    storage.se_active = se_active ~= nil and se_active or storage.se_active
+
+    locals.reindex_and_save_mod_data()
 
     if (game) then
         for name, surface in pairs(game.surfaces) do
@@ -240,7 +258,7 @@ function locals.migrate(data)
     if (storage_old.configurable_nukes) then
         local migration_start_message_printed = false
         if (storage_old.configurable_nukes.version_data and storage_old.configurable_nukes.version_data.created) then
-            if (storage_old.configurable_nukes.version_data.created > 0) then
+            if (storage_old.configurable_nukes.version_data.created >= 0) then
                 Log.debug(storage_old.configurable_nukes.version_data)
                 Log.debug(Constants.mod_name .. ": Migrating existing data")
                 game.print({ "initialization.migrate-start", Constants.mod_name})
@@ -360,8 +378,8 @@ function locals.migrate(data)
     end
 end
 
-function locals.process_space_exploration_universe(data)
-    Log.debug("locals.process_space_exploration_universe")
+function locals.reindex_and_save_mod_data(data)
+    Log.debug("locals.reindex_and_save_mod_data")
     Log.info(data)
 
     if (not storage.constants) then storage.constants = {} end

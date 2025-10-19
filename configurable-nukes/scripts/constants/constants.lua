@@ -291,7 +291,6 @@ function constants.get_mod_data(reindex, data)
     if (data and type(data) ~= "table") then return end
 
     local loading = data and data.on_load or not game or false
-    if (loading and reindex) then reindex = false end
 
     if (not reindex) then
         if (storage.constants and storage.constants.mod_data) then
@@ -306,9 +305,14 @@ function constants.get_mod_data(reindex, data)
         end
     else
         Log.debug("Reindexing constants.mod_data")
-        if (not storage.constants) then storage.constants = {} end
-        storage.constants.mod_data = locals.get_mod_data()
-        return storage.constants.mod_data
+        local mod_data = locals.get_mod_data()
+
+        if (not loading) then
+            if (not storage.constants) then storage.constants = {} end
+            storage.constants.mod_data = mod_data
+        end
+
+        return mod_data
     end
 end
 

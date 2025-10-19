@@ -63,11 +63,9 @@ function rocket_silo_utils.scrub_launch(data)
 
     local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(data.player.force.index)
     Log.warn(force_launch_data)
-    serpent.block(force_launch_data)
 
     if (force_launch_data.launch_action_queue.count > 0) then
         local launch_to_scrub = force_launch_data.launch_action_queue:dequeue({ order = data.order, maintain = false})
-        log(serpent.block(launch_to_scrub))
         Log.warn(launch_to_scrub)
 
         local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
@@ -816,7 +814,9 @@ function rocket_silo_utils.launch_rocket(event)
                             break
                         else
                             Log.error("Failed to launch rocket_silo: ")
-                            Log.warn(launch_initiated_params)
+                            Log.warn(rocket)
+                            Log.warn(cargo_pod)
+                            Log.warn(rocket_silo_data)
                             Log.warn(rocket_silo)
                         end
                     end
