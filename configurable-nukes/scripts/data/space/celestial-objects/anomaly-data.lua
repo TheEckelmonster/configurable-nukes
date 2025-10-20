@@ -3,7 +3,7 @@ local Log = require("libs.log.log")
 
 local anomaly_data = {}
 
-anomaly_data.type = "anomaly"
+anomaly_data.type = "anomaly-data"
 
 function anomaly_data:new(o)
     Log.debug("anomaly_data:new")
@@ -33,7 +33,9 @@ function anomaly_data:is_solid(data)
 end
 
 setmetatable(anomaly_data, Space_Location_Data)
-local Anomaly_Data = anomaly_data:new(Anomaly_Data)
-Anomaly_Data.mt = anomaly_data
+anomaly_data.__index = anomaly_data
+return anomaly_data
+-- local Anomaly_Data = anomaly_data:new(Anomaly_Data)
+-- -- Anomaly_Data.mt = anomaly_data
 
-return Anomaly_Data
+-- return Anomaly_Data

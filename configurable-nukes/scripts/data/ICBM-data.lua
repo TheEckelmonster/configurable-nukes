@@ -6,7 +6,7 @@ local se_active = mods and mods["space-exploration"] and true or scripts and scr
 
 local icbm_data = {}
 
-icbm_data.type = nil
+icbm_data.type = "icbm-data"
 
 icbm_data.sa_active = sa_active
 icbm_data.se_active = se_active
@@ -131,7 +131,7 @@ function icbm_data:new(o)
     Log.info(o)
 
     local defaults = {
-        type = nil,
+        type = self.type,
         -- sa_active = self.sa_active,
         -- se_active = self.se_active,
         surface = nil,
@@ -185,17 +185,14 @@ function icbm_data:new(o)
     return obj
 end
 
-setmetatable(icbm_data, Data)
-local ICBM_Data = icbm_data:new(ICBM_Data)
-
-function ICBM_Data:next_item_number()
-    Log.debug("ICBM_Data:next_item_number")
+function icbm_data:next_item_number()
+    Log.debug("icbm_data:next_item_number")
 
     return icbm_data.item_number.get()
 end
 
-function ICBM_Data:get_item_numbers()
-    Log.debug("ICBM_Data:item_number_exists")
+function icbm_data:get_item_numbers()
+    Log.debug("icbm_data:get_item_numbers")
     Log.info(item_number)
 
     return
@@ -208,4 +205,29 @@ function ICBM_Data:get_item_numbers()
     }
 end
 
-return ICBM_Data
+setmetatable(icbm_data, Data)
+icbm_data.__index = icbm_data
+return icbm_data
+-- local ICBM_Data = icbm_data:new(ICBM_Data)
+
+-- function ICBM_Data:next_item_number()
+--     Log.debug("ICBM_Data:next_item_number")
+
+--     return icbm_data.item_number.get()
+-- end
+
+-- function ICBM_Data:get_item_numbers()
+--     Log.debug("ICBM_Data:get_item_numbers")
+--     Log.info(item_number)
+
+--     return
+--     {
+--         get = icbm_data.item_numbers.get,
+--         set = icbm_data.item_numbers.set,
+--         remove = icbm_data.item_numbers.remove,
+--         -- get_all = icbm_data.item_numbers.get_all,
+--         remove_all = icbm_data.item_numbers.remove_all,
+--     }
+-- end
+
+-- return ICBM_Data

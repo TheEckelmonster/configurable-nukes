@@ -3,11 +3,11 @@ if _settings_controller and _settings_controller.configurable_nukes then
     return _settings_controller
 end
 
-local Event_Handler = require("scripts.event-handler")
 local Log = require("libs.log.log")
 local Settings_Service = require("scripts.services.settings-service")
 
 local settings_controller = {}
+settings_controller.name = "settings_controller"
 
 function settings_controller.on_runtime_mod_setting_changed(event)
     Log.debug("settings_controller.on_runtime_mod_setting_changed")
@@ -35,6 +35,7 @@ end
 Event_Handler:register_event({
     event_name = "on_runtime_mod_setting_changed",
     source_name = "settings_controller.on_runtime_mod_setting_changed",
+    func_name = "settings_controller.on_runtime_mod_setting_changed",
     func = settings_controller.on_runtime_mod_setting_changed,
 })
 

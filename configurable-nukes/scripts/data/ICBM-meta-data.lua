@@ -3,6 +3,8 @@ local Log = require("libs.log.log")
 
 local icbm_meta_data = {}
 
+icbm_meta_data.type = "icbm-meta-data"
+
 icbm_meta_data.surface = nil
 icbm_meta_data.surface_name = nil
 icbm_meta_data.items = {}
@@ -14,6 +16,7 @@ function icbm_meta_data:new(o)
     Log.info(o)
 
     local defaults = {
+        type = self.type,
         surface = nil,
         surface_name = nil,
         items = {},
@@ -48,6 +51,8 @@ function icbm_meta_data:remove_data(data)
 end
 
 setmetatable(icbm_meta_data, Data)
-local ICBM_Meta_Data = icbm_meta_data:new(ICBM_Meta_Data)
+icbm_meta_data.__index = icbm_meta_data
+return icbm_meta_data
+-- local ICBM_Meta_Data = icbm_meta_data:new(ICBM_Meta_Data)
 
-return ICBM_Meta_Data
+-- return ICBM_Meta_Data

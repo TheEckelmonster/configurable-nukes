@@ -1,28 +1,22 @@
 --[[ Data types and metatables ]]
-local Anomaly_Data = require("scripts.data.space.celestial-objects.anomaly-data")
-local Asteroid_Belt_Data = require("scripts.data.space.celestial-objects.asteroid-belt-data")
-local Asteroid_Field_Data = require("scripts.data.space.celestial-objects.asteroid-field-data")
-local Data = require("scripts.data.data")
-local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
-local Moon_Data = require("scripts.data.space.celestial-objects.moon-data")
-local Orbit_Data = require("scripts.data.space.celestial-objects.orbit-data")
-local Planet_Data = require("scripts.data.space.celestial-objects.planet-data")
-local Queue_Data = require("scripts.data.structures.queue-data")
-local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
-local Spaceship_Data = require("scripts.data.space.spaceship-data")
-local Space_Location_Data = require("scripts.data.space.space-location-data")
-local Star_Data = require("scripts.data.space.celestial-objects.star-data")
-
-script.register_metatable("Anomaly_Data", Anomaly_Data)
-script.register_metatable("Asteroid_Belt_Data", Asteroid_Belt_Data)
-script.register_metatable("Asteroid_Field_Data", Asteroid_Field_Data)
-script.register_metatable("Data", Data)
-script.register_metatable("ICBM_Meta_Data", ICBM_Meta_Data)
-script.register_metatable("Moon_Data", Moon_Data)
-script.register_metatable("Orbit_Data", Orbit_Data)
-script.register_metatable("Planet_Data", Planet_Data)
-script.register_metatable("Queue_Data", Queue_Data)
-script.register_metatable("Rocket_Silo_Data", Rocket_Silo_Data)
-script.register_metatable("Spaceship_Data", Spaceship_Data)
-script.register_metatable("Space_Location_Data", Space_Location_Data)
-script.register_metatable("Star_Data", Star_Data)
+return
+{
+    ["anomaly-data"] = require("scripts.data.space.celestial-objects.anomaly-data"),
+    ["asteroid-belt-data"] = require("scripts.data.space.celestial-objects.asteroid-belt-data"),
+    ["asteroid-field-data"] = require("scripts.data.space.celestial-objects.asteroid-field-data"),
+    ["configurable-nukes-data"] = require("scripts.data.configurable-nukes-data"),
+    ["data"] = require("scripts.data.data"),
+    ["force-launch-data"] = require("scripts.data.force-launch-data"),
+    ["icbm-data"] = require("scripts.data.ICBM-data"),
+    ["icbm-meta-data"] = require("scripts.data.ICBM-meta-data"),
+    ["moon-data"] = require("scripts.data.space.celestial-objects.moon-data"),
+    ["orbit-data"] = require("scripts.data.space.celestial-objects.orbit-data"),
+    ["planet-data"] = require("scripts.data.space.celestial-objects.planet-data"),
+    ["queue-data"] = require("scripts.data.structures.queue-data"),
+    ["rocket-silo-data"] = require("scripts.data.rocket-silo-data"),
+    ["rocket-silo-meta-data"] = require("scripts.data.rocket-silo-meta-data"),
+    ["spaceship-data"] = require("scripts.data.space.spaceship-data"),
+    ["space-location-data"] = require("scripts.data.space.space-location-data"),
+    ["star-data"] = require("scripts.data.space.celestial-objects.star-data"),
+    ["version-data"] = require("scripts.data.version-data"),
+}

@@ -3,7 +3,8 @@ local Log = require("libs.log.log")
 
 local space_location_data = {}
 
-space_location_data.type = "space-location"
+space_location_data.type = "space-location-data"
+
 space_location_data.name = nil
 space_location_data.surface = nil
 space_location_data.surface_index = -1
@@ -71,8 +72,12 @@ function space_location_data:new(o)
 
     obj = Data:new(obj)
 
+    -- log(serpent.block(getmetatable(obj)))
+
     setmetatable(obj, self)
     self.__index = self
+
+    -- log(serpent.block(getmetatable(obj)))
 
     return obj
 end
@@ -90,10 +95,14 @@ function space_location_data:get_stellar_system(data)
     if (data.count > 2 ^ 3) then return end
     if (not self.type) then return end
     if (not self.parent) then
-        if (self.type == "anomaly" or self.type == "star" or self.type == "asteroid-field") then
+        if (self.type == "anomaly-data" or self.type == "star-data" or self.type == "asteroid-field-data") then
             return self.name:lower()
         end
     else
+        log(serpent.block(self.name))
+        log(serpent.block(self.type))
+        log(serpent.block(self.parent.name))
+        log(serpent.block(self.parent.type))
         return self.parent:get_stellar_system({ count = data.count + 1})
     end
 end
@@ -106,7 +115,9 @@ function space_location_data:is_solid(data)
 end
 
 setmetatable(space_location_data, Data)
-local Space_location_data = space_location_data:new(Space_location_data)
-Space_location_data.mt = space_location_data
+space_location_data.__index = space_location_data
+return space_location_data
+-- local Space_location_data = space_location_data:new(Space_location_data)
+-- -- Space_location_data.mt = space_location_data
 
-return Space_location_data
+-- return Space_location_data

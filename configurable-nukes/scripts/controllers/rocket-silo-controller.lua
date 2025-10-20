@@ -4,7 +4,6 @@ if _rocket_silo_controller and _rocket_silo_controller.configurable_nukes then
 end
 
 local Custom_Input = require("prototypes.custom-input.custom-input")
-local Event_Handler = require("scripts.event-handler")
 local Log = require("libs.log.log")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
@@ -14,6 +13,7 @@ local Spaceship_Service = require("scripts.services.spaceship-service")
 local String_Utils = require("scripts.utils.string-utils")
 
 local rocket_silo_controller = {}
+rocket_silo_controller.name = "rocket_silo_controller"
 
 rocket_silo_controller.filter = Rocket_Silo_Constants.event_filter
 -- {
@@ -42,24 +42,28 @@ Event_Handler:register_events({
     {
         event_name = "on_built_entity",
         source_name = "rocket_silo_controller.rocket_silo_built",
+        func_name = "rocket_silo_controller.rocket_silo_built",
         func = rocket_silo_controller.rocket_silo_built,
         filter = rocket_silo_controller.filter,
     },
     {
         event_name = "on_robot_built_entity",
         source_name = "rocket_silo_controller.rocket_silo_built",
+        func_name = "rocket_silo_controller.rocket_silo_built",
         func = rocket_silo_controller.rocket_silo_built,
         filter = rocket_silo_controller.filter,
     },
     {
         event_name = "script_raised_built",
         source_name = "rocket_silo_controller.rocket_silo_built",
+        func_name = "rocket_silo_controller.rocket_silo_built",
         func = rocket_silo_controller.rocket_silo_built,
         filter = rocket_silo_controller.filter,
     },
     {
         event_name = "script_raised_revive",
         source_name = "rocket_silo_controller.rocket_silo_built",
+        func_name = "rocket_silo_controller.rocket_silo_built",
         func = rocket_silo_controller.rocket_silo_built,
         filter = rocket_silo_controller.filter,
     },
@@ -108,6 +112,7 @@ end
 Event_Handler:register_event({
     event_name = "on_entity_cloned",
     source_name = "rocket_silo_controller.rocket_silo_cloned",
+    func_name = "rocket_silo_controller.rocket_silo_cloned",
     func = rocket_silo_controller.rocket_silo_cloned,
     filter = rocket_silo_controller.filter,
 })
@@ -131,18 +136,21 @@ Event_Handler:register_events({
     {
         event_name = "on_entity_died",
         source_name = "rocket_silo_controller.rocket_silo_mined",
+        func_name = "rocket_silo_controller.rocket_silo_mined",
         func = rocket_silo_controller.rocket_silo_mined,
         filter = rocket_silo_controller.filter,
     },
     {
         event_name = "on_player_mined_entity",
         source_name = "rocket_silo_controller.rocket_silo_mined",
+        func_name = "rocket_silo_controller.rocket_silo_mined",
         func = rocket_silo_controller.rocket_silo_mined,
         filter = rocket_silo_controller.filter,
     },
     {
         event_name = "on_robot_mined_entity",
         source_name = "rocket_silo_controller.rocket_silo_mined",
+        func_name = "rocket_silo_controller.rocket_silo_mined",
         func = rocket_silo_controller.rocket_silo_mined,
         filter = rocket_silo_controller.filter,
     },
@@ -166,6 +174,7 @@ end
 Event_Handler:register_event({
     event_name = "script_raised_destroy",
     source_name = "rocket_silo_controller.rocket_silo_mined_script",
+    func_name = "rocket_silo_controller.rocket_silo_mined_script",
     func = rocket_silo_controller.rocket_silo_mined_script,
     filter = rocket_silo_controller.filter,
 })
@@ -191,6 +200,7 @@ end
 Event_Handler:register_event({
     event_name = Custom_Input.SCRUB_NEWEST_LAUNCH.name,
     source_name = "rocket_silo_controller.scrub_newest_launch",
+    func_name = "rocket_silo_controller.scrub_newest_launch",
     func = rocket_silo_controller.scrub_newest_launch,
 })
 
@@ -215,6 +225,7 @@ end
 Event_Handler:register_event({
     event_name = Custom_Input.SCRUB_OLDEST_LAUNCH.name,
     source_name = "rocket_silo_controller.scrub_oldest_launch",
+    func_name = "rocket_silo_controller.scrub_oldest_launch",
     func = rocket_silo_controller.scrub_oldest_launch,
 })
 
@@ -239,6 +250,7 @@ end
 Event_Handler:register_event( {
     event_name = Custom_Input.SCRUB_ALL_LAUNCHES.name,
     source_name = "rocket_silo_controller.scrub_all_launches",
+    func_name = "rocket_silo_controller.scrub_all_launches",
     func = rocket_silo_controller.scrub_all_launches,
 })
 
@@ -250,6 +262,7 @@ end
 Event_Handler:register_event({
     event_name = "on_player_alt_selected_area",
     source_name = "rocket_silo_controller.on_player_alt_selected_area",
+    func_name = "rocket_silo_controller.on_player_alt_selected_area",
     func = rocket_silo_controller.on_player_alt_selected_area,
 })
 
@@ -261,6 +274,7 @@ end
 Event_Handler:register_event({
     event_name = "on_player_alt_reverse_selected_area",
     source_name = "rocket_silo_controller.on_player_alt_reverse_selected_area",
+    func_name = "rocket_silo_controller.on_player_alt_reverse_selected_area",
     func = rocket_silo_controller.on_player_alt_reverse_selected_area,
 })
 
@@ -272,6 +286,7 @@ end
 Event_Handler:register_event({
     event_name = "on_player_reverse_selected_area",
     source_name = "rocket_silo_controller.on_player_reverse_selected_area",
+    func_name = "rocket_silo_controller.on_player_reverse_selected_area",
     func = rocket_silo_controller.on_player_reverse_selected_area,
 })
 
@@ -295,6 +310,7 @@ end
 Event_Handler:register_event({
     event_name = "on_player_selected_area",
     source_name = "rocket_silo_controller.launch_rocket",
+    func_name = "rocket_silo_controller.launch_rocket",
     func = rocket_silo_controller.launch_rocket,
 })
 
@@ -317,6 +333,7 @@ end
 Event_Handler:register_event({
     event_name = "on_cargo_pod_finished_ascending",
     source_name = "rocket_silo_controller.on_cargo_pod_finished_ascending",
+    func_name = "rocket_silo_controller.on_cargo_pod_finished_ascending",
     func = rocket_silo_controller.on_cargo_pod_finished_ascending,
 })
 
@@ -338,6 +355,7 @@ end
 Event_Handler:register_event({
     event_name = "on_space_platform_built_entity",
     source_name = "rocket_silo_controller.on_space_platform_built_entity",
+    func_name = "rocket_silo_controller.on_space_platform_built_entity",
     func = rocket_silo_controller.on_space_platform_built_entity,
     filter = rocket_silo_controller.filter,
 })
@@ -360,6 +378,7 @@ end
 Event_Handler:register_event({
     event_name = "on_space_platform_mined_entity",
     source_name = "rocket_silo_controller.on_space_platform_mined_entity",
+    func_name = "rocket_silo_controller.on_space_platform_mined_entity",
     func = rocket_silo_controller.on_space_platform_mined_entity,
     filter = rocket_silo_controller.filter,
 })

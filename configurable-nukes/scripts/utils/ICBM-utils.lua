@@ -16,6 +16,25 @@ local Startup_Settings_Constants = require("settings.startup.startup-settings-co
 local icbm_utils = {
     space_launches_initiated = {}
 }
+icbm_utils.name = "icbm_utils"
+
+local time_to_target_message = function (params)
+    local print_message = function (param_1, param_2)
+        if (param_1 and param_1.force and param_1.force.valid) then
+            param_1.force.print({ "configurable-nukes-controller.seconds-to-target", param_2 })
+        end
+    end
+
+    if (params.icbm_data.player_launched_index == 0) then
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+            print_message(params.icbm_data, params.seconds_to_target)
+        end
+    else
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+            print_message(params.icbm_data, params.seconds_to_target)
+        end
+    end
+end
 
 function icbm_utils.on_cargo_pod_finished_ascending(data)
     Log.debug("icbm_utils.on_cargo_pod_finished_ascending")
@@ -45,6 +64,8 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     end
 
     Log.warn(icbm_data)
+
+    if (icbm_data.scrubbed) then return 0 end
 
     local guidance_systems_modifier = icbm_data.force.get_ammo_damage_modifier("icbm-guidance") or 0
     local top_speed_modifier = icbm_data.force.get_ammo_damage_modifier("icbm-top-speed") or 1
@@ -687,30 +708,32 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
 
     Log.warn(serpent.block(icbm_data))
 
-    if (not icbm_data.same_surface) then
-        Log.warn("different surface")
-        local target_icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(icbm_data.target_surface_name)
-        Log.debug(target_icbm_meta_data)
+    -- if (not icbm_data.same_surface) then
+    --     Log.warn("different surface")
+    --     local target_icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(icbm_data.target_surface_name)
+    --     Log.debug(target_icbm_meta_data)
 
-        target_icbm_meta_data.in_transit[icbm_data] = {
-            tick_to_target = icbm_data.tick_to_target,
-            item_number = icbm_data.item_number,
-            surface = icbm_data.surface,
-            surface_name = icbm_data.surface_name,
-            target_surface = icbm_data.target_surface,
-            target_surface_name = icbm_data.target_surface_name,
-        }
-    else
-        Log.warn("same surface")
-        icbm_meta_data.in_transit[icbm_data] = {
-            tick_to_target = icbm_data.tick_to_target,
-            item_number = icbm_data.item_number,
-            surface = icbm_data.surface,
-            surface_name = icbm_data.surface_name,
-            target_surface = icbm_data.surface,
-            target_surface_name = icbm_data.surface_name,
-        }
-    end
+    --     target_icbm_meta_data.in_transit[icbm_data] = {
+    --         tick_to_target = icbm_data.tick_to_target,
+    --         item_number = icbm_data.item_number,
+    --         surface = icbm_data.surface,
+    --         surface_name = icbm_data.surface_name,
+    --         target_surface = icbm_data.target_surface,
+    --         target_surface_name = icbm_data.target_surface_name,
+    --     }
+    -- else
+    --     Log.warn("same surface")
+    --     icbm_meta_data.in_transit[icbm_data] = {
+    --         tick_to_target = icbm_data.tick_to_target,
+    --         item_number = icbm_data.item_number,
+    --         surface = icbm_data.surface,
+    --         surface_name = icbm_data.surface_name,
+    --         target_surface = icbm_data.surface,
+    --         target_surface_name = icbm_data.surface_name,
+    --     }
+    -- end
+
+    icbm_utils.register_delivery_data({ icbm_data = icbm_data })
 
     if (se_active or not icbm_data.launched_from_space) then
         if (math.floor(time_to_target / 60) >= 1) then
@@ -727,6 +750,242 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     end
 
     return 1
+end
+
+function icbm_utils.register_delivery_data(data)
+    Log.debug("icbm_utils.register_delivery_data")
+    Log.info(data)
+
+    if (not data or type(data) ~= "table") then return end
+    if (not data.icbm_data or type(data.icbm_data) ~= "table") then return end
+
+    -- local tick = storage and storage.tick or 0
+    local tick = storage and storage.tick or math.huge
+
+    local icbm_data = data.icbm_data
+
+    local source_name =    "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                    .. icbm_data.tick_to_target
+                    .. ".item_number."
+                    .. icbm_data.item_number
+
+    local time_to_target_5_nth_tick = icbm_data.tick_to_target - 5 * 60
+    local time_to_target_3_nth_tick = icbm_data.tick_to_target - 3 * 60
+    local time_to_target_2_nth_tick = icbm_data.tick_to_target - 2 * 60
+    local time_to_target_1_nth_tick = icbm_data.tick_to_target - 1 * 60
+
+    local time_to_target_5_source_name =  "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                                        .. time_to_target_5_nth_tick
+                                        .. ".item_number."
+                                        .. icbm_data.item_number
+    local time_to_target_3_source_name =  "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                                        .. time_to_target_3_nth_tick
+                                        .. ".item_number."
+                                        .. icbm_data.item_number
+    local time_to_target_2_source_name =  "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                                        .. time_to_target_2_nth_tick
+                                        .. ".item_number."
+                                        .. icbm_data.item_number
+    local time_to_target_1_source_name =  "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                                        .. time_to_target_1_nth_tick
+                                        .. ".item_number."
+                                        .. icbm_data.item_number
+
+    if (tick <= time_to_target_5_nth_tick) then
+        Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = time_to_target_5_nth_tick,
+            source_name = time_to_target_5_source_name,
+            restore_on_load = true,
+            func = icbm_utils.time_to_target_5_event,
+            func_name = "icbm_utils.time_to_target_5_event",
+            func_data =
+            {
+                nth_tick = time_to_target_5_nth_tick,
+                source_name = time_to_target_5_source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+    end
+
+    if (tick <= time_to_target_3_nth_tick) then
+        Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = time_to_target_3_nth_tick,
+            source_name = time_to_target_3_source_name,
+            restore_on_load = true,
+            func = icbm_utils.time_to_target_3_event,
+            func_name = "icbm_utils.time_to_target_3_event",
+            func_data =
+            {
+                nth_tick = time_to_target_3_nth_tick,
+                source_name = time_to_target_3_source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+    end
+
+    if (tick <= time_to_target_2_nth_tick) then
+        Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = time_to_target_2_nth_tick,
+            source_name = time_to_target_2_source_name,
+            restore_on_load = true,
+            func = icbm_utils.time_to_target_2_event,
+            func_name = "icbm_utils.time_to_target_2_event",
+            func_data =
+            {
+                nth_tick = time_to_target_2_nth_tick,
+                source_name = time_to_target_2_source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+    end
+
+    if (tick <= time_to_target_1_nth_tick) then
+        Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = time_to_target_1_nth_tick,
+            source_name = time_to_target_1_source_name,
+            restore_on_load = true,
+            func = icbm_utils.time_to_target_1_event,
+            func_name = "icbm_utils.time_to_target_1_event",
+            func_data =
+            {
+                nth_tick = time_to_target_1_nth_tick,
+                source_name = time_to_target_1_source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+    end
+
+    if (tick <= icbm_data.tick_to_target) then
+        Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = icbm_data.tick_to_target,
+            restore_on_load = true,
+            source_name = source_name,
+            func = icbm_utils.payload_arrive_event,
+            func_name = "icbm_utils.payload_arrive_event",
+            func_data =
+            {
+                nth_tick = icbm_data.tick_to_target,
+                source_name = source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+    end
+end
+
+function icbm_utils.time_to_target_5_event(event, event_data)
+    Log.debug("icbm_utils.time_to_target_5_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.event_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    local print_message = function (param)
+        if (param and param.force and param.force.valid) then
+            param.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, param.target_position.x, param.target_position.y, param.target_surface_name })
+        end
+    end
+
+    if (event_data.icbm_data.player_launched_index == 0) then
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+            print_message(event_data.icbm_data)
+        end
+    else
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+            print_message(event_data.icbm_data)
+        end
+    end
+end
+
+function icbm_utils.time_to_target_3_event(event, event_data)
+    Log.debug("icbm_utils.time_to_target_3_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    if (not game or game.tick > event_data.nth_tick) then return end
+    time_to_target_message({ icbm_data = event_data.icbm_data, seconds_to_target = 3 })
+
+end
+
+function icbm_utils.time_to_target_2_event(event, event_data)
+    Log.debug("icbm_utils.time_to_target_2_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    if (not game or game.tick > event_data.nth_tick) then return end
+    time_to_target_message({ icbm_data = event_data.icbm_data, seconds_to_target = 2 })
+end
+
+function icbm_utils.time_to_target_1_event(event, event_data)
+    Log.debug("icbm_utils.time_to_target_1_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    if (not game or game.tick > event_data.nth_tick) then return end
+    time_to_target_message({ icbm_data = event_data.icbm_data, seconds_to_target = 1 })
+end
+
+function icbm_utils.payload_arrive_event(event, event_data)
+    Log.debug("icbm_utils.payload_arrive_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        -- nth_tick = icbm_data.tick_to_target,
+        -- nth_tick = game.tick,
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    if (icbm_utils.payload_arrived({ icbm = event_data.icbm_data, surface = event_data.icbm_data.surface, target_surface = event_data.icbm_data.target_surface })) then
+        -- Success
+        log("payload arrived successfully")
+    else
+        log("payload failed to arrive successfully")
+        error("payload failed to arrive successfully")
+    end
 end
 
 function icbm_utils.launch_initiated(data)

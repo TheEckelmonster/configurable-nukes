@@ -3,7 +3,7 @@ local Log = require("libs.log.log")
 
 local asteroid_belt_data = {}
 
-asteroid_belt_data.type = "asteroid-belt"
+asteroid_belt_data.type = "asteroid-belt-data"
 
 function asteroid_belt_data:new(o)
     Log.debug("asteroid_belt_data:new")
@@ -33,7 +33,9 @@ function asteroid_belt_data:is_solid(data)
 end
 
 setmetatable(asteroid_belt_data, Space_Location_Data)
-local Asteroid_Belt_Data = asteroid_belt_data:new(Asteroid_Belt_Data)
-Asteroid_Belt_Data.mt = asteroid_belt_data
+asteroid_belt_data.__index = asteroid_belt_data
+return asteroid_belt_data
+-- local Asteroid_Belt_Data = asteroid_belt_data:new(Asteroid_Belt_Data)
+-- -- Asteroid_Belt_Data.mt = asteroid_belt_data
 
-return Asteroid_Belt_Data
+-- return Asteroid_Belt_Data

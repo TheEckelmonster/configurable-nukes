@@ -23,6 +23,7 @@ function force_launch_data:new(o)
     Log.info(o)
 
     local defaults = {
+        type = self.type,
         force = nil,
         force_index = -1,
         force_name = nil,
@@ -42,6 +43,8 @@ function force_launch_data:new(o)
 end
 
 setmetatable(force_launch_data, Data)
-local Force_Launch_Data = force_launch_data:new(Force_Launch_Data)
+force_launch_data.__index = force_launch_data
+return force_launch_data
+-- local Force_Launch_Data = force_launch_data:new(Force_Launch_Data)
 
-return Force_Launch_Data
+-- return Force_Launch_Data

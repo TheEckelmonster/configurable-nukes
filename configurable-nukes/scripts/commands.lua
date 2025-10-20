@@ -4,7 +4,6 @@ if _configurable_nukes_commands and _configurable_nukes_commands.configurable_nu
 end
 
 local Constants = require("scripts.constants.constants")
-local Event_Handler = require("scripts.event-handler")
 local Initialization = require("scripts.initialization")
 local Log = require("libs.log.log")
 
@@ -358,7 +357,7 @@ function configurable_nukes_commands.print_event_handlers(command)
     locals.validate_command(command, function (player)
         Log.info("commands.print_event_handlers")
 
-        log(serpent.block(Event_Handler.events_names))
+        log(serpent.block(Event_Handler.event_names))
         log(serpent.block(Event_Handler.events))
 
         -- local file_name = "Constants.space_connections_" .. game.tick

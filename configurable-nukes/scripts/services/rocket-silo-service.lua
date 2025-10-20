@@ -78,7 +78,11 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
                         log(serpent.block(return_val))
                     end
                     if (return_val and return_val ~= 1) then
-                        Log.error("cargo_pod_finished_ascending failed to process successfully")
+                        if (return_val == 0) then
+                            Log.warn("on_cargo_pod_finished_ascending launch was scrubbed")
+                        else
+                            Log.error("on_cargo_pod_finished_ascending failed to process successfully")
+                        end
                     end
                     Log.info("destroying cargo pod")
                     if (cargo_pod.destroy({ raise_destroy = true })) then

@@ -9,8 +9,9 @@ locals = {
         local index = game and game.tick or 0
 
         return {
+            type = "data",
             name = data and data.name,
-            type = data and data.type,
+            -- type = data and data.type,
             created = index,
             updated = index,
         }

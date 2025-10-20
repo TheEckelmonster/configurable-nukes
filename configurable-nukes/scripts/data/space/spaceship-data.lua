@@ -3,7 +3,8 @@ local Log = require("libs.log.log")
 
 local spaceship_data = {}
 
-spaceship_data.type = "spaceship"
+spaceship_data.type = "spaceship-data"
+
 spaceship_data.previous_space_location = nil
 spaceship_data.previous_surface = nil
 spaceship_data.previous_surface_index = -1
@@ -41,7 +42,9 @@ function spaceship_data:is_solid(data)
 end
 
 setmetatable(spaceship_data, Space_Location_Data)
-local Spacehip_Data = spaceship_data:new(Spacehip_Data)
-Spacehip_Data.mt = spaceship_data
+spaceship_data.__index = spaceship_data
+return spaceship_data
+-- local Spacehip_Data = spaceship_data:new(Spacehip_Data)
+-- -- Spacehip_Data.mt = spaceship_data
 
-return Spacehip_Data
+-- return Spacehip_Data

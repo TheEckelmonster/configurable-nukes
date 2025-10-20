@@ -27,6 +27,8 @@ function bug_fix_data:new(o)
 end
 
 setmetatable(bug_fix_data, Data)
-local Bug_Fix_Data = bug_fix_data:new(Bug_Fix_Data)
+bug_fix_data.__index = bug_fix_data
+return bug_fix_data
+-- local Bug_Fix_Data = bug_fix_data:new(Bug_Fix_Data)
 
-return Bug_Fix_Data
+-- return Bug_Fix_Data

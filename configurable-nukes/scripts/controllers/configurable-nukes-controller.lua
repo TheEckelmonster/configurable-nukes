@@ -5,7 +5,6 @@ end
 
 local Circuit_Network_Service = require("scripts.services.circuit-network-service")
 local Constants = require("scripts.constants.constants")
-local Event_Handler = require("scripts.event-handler")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Initialization = require("scripts.initialization")
@@ -17,6 +16,7 @@ local String_Utils = require("scripts.utils.string-utils")
 local Version_Validations = require("scripts.validations.version-validations")
 
 local configurable_nukes_controller = {}
+configurable_nukes_controller.name = "configurable_nukes_controller"
 
 configurable_nukes_controller.planet_index = nil
 configurable_nukes_controller.planet = nil
@@ -474,6 +474,7 @@ end
 Event_Handler:register_event({
     event_name = "on_tick",
     source_name = "configurable_nukes_controller.on_tick",
+    func_name = "configurable_nukes_controller.on_tick",
     func = configurable_nukes_controller.on_tick,
 })
 
@@ -521,18 +522,8 @@ end
 Event_Handler:register_event({
     event_name = "on_configuration_changed",
     source_name = "configurable_nukes_controller",
+    func_name = "configurable_nukes_controller.on_configuration_changed",
     func = configurable_nukes_controller.on_configuration_changed,
-})
-
-function configurable_nukes_controller.on_load(event)
-    Log.debug("configurable_nukes_controller.on_load")
-
-    Constants.get_mod_data(true, { on_load = true })
-end
-Event_Handler:register_event({
-    event_name = "on_load",
-    source_name = "configurable_nukes_controller",
-    func = configurable_nukes_controller.on_load,
 })
 
 configurable_nukes_controller.configurable_nukes = true

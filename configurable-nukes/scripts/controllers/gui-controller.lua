@@ -5,12 +5,12 @@ end
 
 local Util = require("__core__.lualib.util")
 
-local Event_Handler = require("scripts.event-handler")
 local Gui_Service = require("scripts.services.gui-service")
 local Log = require("libs.log.log")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 
 local gui_controller = {}
+gui_controller.name = "gui_controller"
 
 function gui_controller.on_gui_click(event)
     Log.debug("gui_controller.on_gui_clicked")
@@ -24,6 +24,7 @@ end
 Event_Handler:register_event({
     event_name = "on_gui_click",
     source_name = "gui_controller.on_gui_click",
+    func_name = "gui_controller.on_gui_click",
     func = gui_controller.on_gui_click,
 })
 
@@ -61,6 +62,7 @@ end
 Event_Handler:register_event({
     event_name = "on_gui_opened",
     source_name = "gui_controller.on_gui_opened",
+    func_name = "gui_controller.on_gui_opened",
     func = gui_controller.on_gui_opened,
 })
 
@@ -81,6 +83,7 @@ end
 Event_Handler:register_event({
     event_name = "on_gui_closed",
     source_name = "gui_controller.on_gui_closed",
+    func_name = "gui_controller.on_gui_closed",
     func = gui_controller.on_gui_closed,
 })
 
@@ -111,6 +114,7 @@ end
 Event_Handler:register_event({
     event_name = "on_gui_checked_state_changed",
     source_name = "gui_controller.on_gui_checked_state_changed",
+    func_name = "gui_controller.on_gui_checked_state_changed",
     func = gui_controller.on_gui_checked_state_changed,
 })
 
@@ -145,6 +149,7 @@ end
 Event_Handler:register_event({
     event_name = "on_gui_elem_changed",
     source_name = "gui_controller.on_gui_elem_changed",
+    func_name = "gui_controller.on_gui_elem_changed",
     func = gui_controller.on_gui_elem_changed,
 })
 
@@ -194,6 +199,7 @@ end
 Event_Handler:register_event({
     event_name = "on_gui_selection_state_changed",
     source_name = "gui_controller.on_gui_selection_state_changed",
+    func_name = "gui_controller.on_gui_selection_state_changed",
     func = gui_controller.on_gui_selection_state_changed,
 })
 
@@ -245,6 +251,7 @@ end
 Event_Handler:register_event({
     event_name = "on_entity_settings_pasted",
     source_name = "gui_controller.on_entity_settings_pasted",
+    func_name = "gui_controller.on_entity_settings_pasted",
     func = gui_controller.on_entity_settings_pasted,
 })
 

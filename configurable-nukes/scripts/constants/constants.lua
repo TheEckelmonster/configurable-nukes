@@ -20,14 +20,14 @@ local locals = {}
 local default_space_exploration = function (data)
     return
     {
-        ["star"]            = {},
-        ["planet"]          = {},
-        ["orbit"]           = {},
-        ["moon"]            = {},
-        ["asteroid-belt"]   = {},
-        ["asteroid-field"]  = {},
-        ["anomaly"]         = {},
-        ["surfaces"]        = {},
+        ["star-data"]            = {},
+        ["planet-data"]          = {},
+        ["orbit-data"]           = {},
+        ["moon-data"]            = {},
+        ["asteroid-belt-data"]   = {},
+        ["asteroid-field-data"]  = {},
+        ["anomaly-data"]         = {},
+        ["surfaces"]             = {},
     }
 end
 
@@ -1062,11 +1062,11 @@ locals.get_space_exploration_universe = function(data)
                         Log.error("Found a spaceship zone")
                         log(serpent.block(zone))
                         log(serpent.block(storage))
-                        error("Got your attention: spaceship zone found")
+                        -- error("Got your attention: spaceship zone found")
                     else
                         log(serpent.block(zone))
                         log(serpent.block(storage))
-                        error("Type does not exist in Constants.mod_data for type = " .. zone.type)
+                        -- error("Type does not exist in Constants.mod_data for type = " .. zone.type)
                     end
 
                     if (space_location.valid) then

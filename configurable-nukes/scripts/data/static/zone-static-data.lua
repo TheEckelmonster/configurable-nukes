@@ -22,7 +22,7 @@ local travel_cost_multiplier = 1
 local travel_cost_interstellar = 600 --400
 
 local zone_static_data = Data:new({
-    type = "zone-static",
+    type = "zone-static-data",
     travel_cost = Data:new({
         interstellar = travel_cost_interstellar * travel_cost_multiplier,
         star_gravity = 500 * travel_cost_multiplier,

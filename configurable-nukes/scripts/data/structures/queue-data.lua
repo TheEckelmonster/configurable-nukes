@@ -3,6 +3,8 @@ local Log = require("libs.log.log")
 
 local queue_data = {}
 
+queue_data.type = "queue-data"
+
 function queue_data:new(o, data)
     Log.debug("queue_data:new")
     Log.info(o)
@@ -11,7 +13,7 @@ function queue_data:new(o, data)
     local index = data and (data.index or data.tick) or 1
 
     local defaults = {
-        type = data and data.type or "queue_data",
+        type = self.type,
         name = data and data.name or "queue_data",
         count = 0,
         data_array = {},
@@ -292,6 +294,8 @@ function queue_data:dequeue(data)
 end
 
 setmetatable(queue_data, Data)
-local Queue_Data = queue_data:new(Queue_Data)
+queue_data.__index = queue_data
+return queue_data
+-- local Queue_Data = queue_data:new(Queue_Data)
 
-return Queue_Data
+-- return Queue_Data

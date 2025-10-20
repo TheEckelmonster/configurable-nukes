@@ -3,11 +3,11 @@ if _planet_controller and _planet_controller.configurable_nukes then
     return _planet_controller
 end
 
-local Event_Handler = require("scripts.event-handler")
 local Log = require("libs.log.log")
 local Planet_Service = require("scripts.services.planet-service")
 
 local planet_controller = {}
+planet_controller.name = "planet_controller"
 
 function planet_controller.on_surface_created(event)
     Log.debug("planet_controller.on_surface_created")
@@ -17,6 +17,7 @@ end
 Event_Handler:register_event({
     event_name = "on_surface_created",
     source_name = "planet_controller.on_surface_created",
+    func_name = "planet_controller.on_surface_created",
     func = planet_controller.on_surface_created,
 })
 
@@ -28,6 +29,7 @@ end
 Event_Handler:register_event({
     event_name = "on_surface_deleted",
     source_name = "planet_controller.on_surface_deleted",
+    func_name = "planet_controller.on_surface_deleted",
     func = planet_controller.on_surface_deleted,
 })
 
@@ -39,6 +41,7 @@ end
 Event_Handler:register_event({
     event_name = "on_pre_surface_deleted",
     source_name = "planet_controller.on_pre_surface_deleted",
+    func_name = "planet_controller.on_pre_surface_deleted",
     func = planet_controller.on_pre_surface_deleted,
 })
 

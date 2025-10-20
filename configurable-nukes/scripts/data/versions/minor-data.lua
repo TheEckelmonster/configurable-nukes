@@ -27,6 +27,8 @@ function minor_data:new(o)
 end
 
 setmetatable(minor_data, Data)
-local Minor_Data = minor_data:new(Minor_Data)
+minor_data.__index = minor_data
+return minor_data
+-- local Minor_Data = minor_data:new(Minor_Data)
 
-return Minor_Data
+-- return Minor_Data

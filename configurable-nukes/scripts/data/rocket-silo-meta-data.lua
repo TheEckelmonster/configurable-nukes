@@ -3,6 +3,8 @@ local Log = require("libs.log.log")
 
 local rocket_silo_meta_data = Data:new()
 
+rocket_silo_meta_data.type = "rocket-silo-meta-data"
+
 rocket_silo_meta_data.planet_name = nil
 rocket_silo_meta_data.surface_name = nil
 rocket_silo_meta_data.space_location_name = nil
@@ -15,6 +17,7 @@ function rocket_silo_meta_data:new(o)
     Log.info(o)
 
     local defaults = {
+        type = self.type,
         planet_name = self.planet_name,
         surface_name = self.surface_name,
         space_location_name = self.space_location_name,
@@ -36,6 +39,8 @@ function rocket_silo_meta_data:new(o)
 end
 
 setmetatable(rocket_silo_meta_data, Data)
-local Rocket_Silo_Meta_Data = rocket_silo_meta_data:new(Rocket_Silo_Meta_Data)
+rocket_silo_meta_data.__index = rocket_silo_meta_data
+return rocket_silo_meta_data
+-- local Rocket_Silo_Meta_Data = rocket_silo_meta_data:new(Rocket_Silo_Meta_Data)
 
-return Rocket_Silo_Meta_Data
+-- return Rocket_Silo_Meta_Data

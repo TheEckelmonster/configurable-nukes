@@ -34,4 +34,6 @@ if (mods and not script) then
     })
 end
 
+custom_input.name = "custom_input"
+
 return custom_input

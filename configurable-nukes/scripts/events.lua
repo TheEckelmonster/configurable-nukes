@@ -1,20 +1,13 @@
-require("scripts.controllers.configurable-nukes-controller")
-require("prototypes.custom-input.custom-input")
-require("scripts.controllers.gui-controller")
-require("scripts.controllers.planet-controller")
-require("scripts.controllers.rocket-silo-controller")
-require("scripts.controllers.settings-controller")
-
--- local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
+local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Constants = require("scripts.constants.constants")
--- local Custom_Input = require("prototypes.custom-input.custom-input")
--- local Event_Handler = require("scripts.event-handler")
--- local Gui_Controller = require("scripts.controllers.gui-controller")
+local Custom_Input = require("prototypes.custom-input.custom-input")
+local Gui_Controller = require("scripts.controllers.gui-controller")
+local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Log = require("libs.log.log")
--- local Planet_Controller = require("scripts.controllers.planet-controller")
--- local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
+local Planet_Controller = require("scripts.controllers.planet-controller")
+local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
--- local Settings_Controller = require("scripts.controllers.settings-controller")
+local Settings_Controller = require("scripts.controllers.settings-controller")
 local Settings_Service = require("scripts.services.settings-service")
 
 local valid_event_effect_ids =
@@ -26,6 +19,17 @@ local valid_event_effect_ids =
     ["atomic-bomb-fired"] = true,
     ["kr-nuclear-turret-rocket-projectile-fired"] = true,
     ["kr-atomic-artillery-projectile-fired"] = true,
+}
+
+local events = {
+    [Configurable_Nukes_Controller.name] = Configurable_Nukes_Controller,
+    [Custom_Input.name] = Custom_Input,
+    [Gui_Controller.name] = Gui_Controller,
+    [ICBM_Utils.name] = ICBM_Utils,
+    [Planet_Controller.name] = Planet_Controller,
+    [Rocket_Silo_Controller.name] = Rocket_Silo_Controller,
+    [Settings_Controller.name] = Settings_Controller,
+    [Settings_Controller.name] = Settings_Controller,
 }
 
 --[[ TODO: Move this to its own controller/service/utils ]]
@@ -164,3 +168,103 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
         end
     end
 end)
+
+function events.on_load()
+    Log.debug("events.on_load")
+
+    local sa_active = script and script.active_mods and script.active_mods["space-age"]
+    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+    if (se_active) then
+        local event_num = remote.call("space-exploration", "get_on_zone_surface_created_event")
+
+        if (event_num ~= nil and type(event_num) == "number") then
+            local event_position = Event_Handler:get_event_position({
+                event_name = event_num,
+                source_name = "Planet_Controller.on_surface_created",
+            })
+
+            if (event_position == nil) then
+                Event_Handler:register_event({
+                    event_num = event_num,
+                    fallback_event_name = "on_zone_surface_created",
+                    source_name = "Planet_Controller.on_surface_created",
+                    func_name = "Planet_Controller.on_surface_created",
+                    func = Planet_Controller.on_surface_created,
+                })
+            end
+        end
+    end
+
+    Constants.get_mod_data(true, { on_load = true })
+
+    if (not storage or not storage.event_handlers or type(storage.event_handlers) ~= "table") then return end
+
+    log(serpent.block(storage.event_handlers.restore_on_load))
+    if (storage.event_handlers.restore_on_load) then
+        local events_to_restore = storage.event_handlers.restore_on_load
+
+        local restore_on_load = function (data)
+            Log.debug("restore_on_load")
+            Log.info(data)
+            log(serpent.block(data))
+
+            local i = 1
+            while data.event.order and i <= #data.event.order do
+                local search_pattern = "(%g+)%.(%g+)"
+                local _, _, class, func_name = data.event.order[i].func_name:find(search_pattern, 1)
+                -- log(serpent.block(class))
+                -- log(serpent.block(func_name))
+                local func = events[class][func_name]
+                -- log(serpent.block(func))
+
+                if (type(func) == "function") then
+                    Event_Handler:register_event({
+                        event_name = data.event.order[i].event_name,
+                        source_name = data.event.order[i].source_name,
+                        func_name = data.event.order[i].func_name,
+                        nth_tick = data.nth_tick,
+                        restore_on_load = true,
+                        func = func,
+                        func_data = data.event.order[i].func_data,
+                    })
+                    i = i + 1
+                -- else
+                --     table.remove(data.event.order, i)
+                end
+            end
+
+            i = 1
+            while data.event.order and i <= #data.event.order do
+                Event_Handler:set_event_position({
+                    event_name = data.event.order[i].event_name,
+                    source_name = data.event.order[i].source_name,
+                    new_position = data.event.order[i].index,
+                })
+
+                i = i + 1
+            end
+        end
+
+        for k, v in pairs(events_to_restore) do
+            if (k == "on_nth_tick") then
+                for k_2, v_2 in pairs(v) do
+                    restore_on_load({
+                        event = v_2,
+                        nth_tick = k_2
+                    })
+                end
+            else
+                restore_on_load({
+                    event = v_2,
+                })
+            end
+        end
+    end
+end
+Event_Handler:register_event({
+    event_name = "on_load",
+    source_name = "events.on_load",
+    func_name = "events.on_load",
+    func = events.on_load,
+})

@@ -3,7 +3,7 @@ local Log = require("libs.log.log")
 
 local orbit_data = {}
 
-orbit_data.type = "orbit"
+orbit_data.type = "orbit-data"
 
 function orbit_data:new(o)
     Log.debug("orbit_data:new")
@@ -19,8 +19,12 @@ function orbit_data:new(o)
 
     obj = Space_Location_Data:new(obj)
 
+    -- log(serpent.block(getmetatable(obj)))
+
     setmetatable(obj, self)
     self.__index = self
+
+    -- log(serpent.block(getmetatable(obj)))
 
     return obj
 end
@@ -33,7 +37,9 @@ function orbit_data:is_solid(data)
 end
 
 setmetatable(orbit_data, Space_Location_Data)
-local Orbit_Data = orbit_data:new(Orbit_Data)
-Orbit_Data.mt = orbit_data
+orbit_data.__index = orbit_data
+return orbit_data
+-- local Orbit_Data = orbit_data:new(Orbit_Data)
+-- Orbit_Data.mt = orbit_data
 
-return Orbit_Data
+-- return Orbit_Data
