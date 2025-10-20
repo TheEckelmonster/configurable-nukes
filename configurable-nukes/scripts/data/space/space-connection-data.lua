@@ -35,6 +35,3 @@ end
 setmetatable(space_connection_data, Data)
 space_connection_data.__index = space_connection_data
 return space_connection_data
--- local Space_location_data = space_connection_data:new(Space_location_data)
-
--- return Space_location_data

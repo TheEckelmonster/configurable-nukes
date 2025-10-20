@@ -53,6 +53,3 @@ end
 setmetatable(icbm_meta_data, Data)
 icbm_meta_data.__index = icbm_meta_data
 return icbm_meta_data
--- local ICBM_Meta_Data = icbm_meta_data:new(ICBM_Meta_Data)
-
--- return ICBM_Meta_Data

@@ -35,7 +35,3 @@ end
 setmetatable(moon_data, Space_Location_Data)
 moon_data.__index = moon_data
 return moon_data
--- local Moon_Data = moon_data:new(Moon_Data)
--- -- Moon_Data.mt = moon_data
-
--- return Moon_Data

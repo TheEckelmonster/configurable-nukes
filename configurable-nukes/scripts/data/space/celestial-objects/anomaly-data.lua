@@ -35,7 +35,3 @@ end
 setmetatable(anomaly_data, Space_Location_Data)
 anomaly_data.__index = anomaly_data
 return anomaly_data
--- local Anomaly_Data = anomaly_data:new(Anomaly_Data)
--- -- Anomaly_Data.mt = anomaly_data
-
--- return Anomaly_Data

@@ -35,7 +35,3 @@ end
 setmetatable(asteroid_belt_data, Space_Location_Data)
 asteroid_belt_data.__index = asteroid_belt_data
 return asteroid_belt_data
--- local Asteroid_Belt_Data = asteroid_belt_data:new(Asteroid_Belt_Data)
--- -- Asteroid_Belt_Data.mt = asteroid_belt_data
-
--- return Asteroid_Belt_Data

@@ -62,7 +62,6 @@ local process_event = function (data)
             break
         end
         if (data.event_data.sources[data.event_data.order[i].source_name]) then
-            -- data.event_data.order[i].func(data.event)
             if (data.event_data.order[i].func_data) then
                 data.event_data.order[i].func(data.event, data.event_data.order[i].func_data)
             else
@@ -80,7 +79,6 @@ end
 function event_handlers.on_event(event)
     -- Log.debug("event_handlers.on_event")
     -- Log.info(event)
-    -- log(serpent.block(event))
 
     if (event and event_handlers.event_names[event.name] and event_handlers.events[event_handlers.event_names[event.name]]) then
         local event_data = event_handlers.events[event_handlers.event_names[event.name]]
@@ -123,7 +121,7 @@ end
 function event_handlers:register_event(data)
     Log.debug("event_handlers:register_event")
     Log.info(data)
-    log(serpent.block(data))
+    -- log(serpent.block(data))
 
     if (not data or type(data) ~= "table") then return end
     if (data.event_num ~= nil and (type(data.event_num) ~= "number" or data.event_num < 0)) then return end
@@ -142,7 +140,7 @@ function event_handlers:register_event(data)
 
     if (data.event_num == nil) then
         if (defines.events[data.event_name] == nil and not event_name_black_list[data.event_name]) then
-            log("I happened")
+            -- log("I happened")
             defines.events[data.event_name] = script.generate_event_name()
         end
         if (defines.events[data.event_name] == nil and not event_name_black_list[data.event_name]) then return end
@@ -171,11 +169,11 @@ function event_handlers:register_event(data)
         if (not event_handlers.events["on_nth_tick"]) then event_handlers.events["on_nth_tick"] = {} end
         if (not event_handlers.events["on_nth_tick"][data.nth_tick]) then event_handlers.events["on_nth_tick"][data.nth_tick] = new_event() end
 
-        -- local event_data =
         event_data =
         {
             source_name = data.source_name,
             index = #(event_handlers.events["on_nth_tick"][data.nth_tick].order) + 1,
+            nth_tick = data.nth_tick,
             func_name = data.func_name,
             func = data.func,
             restore_on_load = data.restore_on_load,
@@ -194,7 +192,6 @@ function event_handlers:register_event(data)
     else
         if (not event_handlers.events[data.event_name]) then event_handlers.events[data.event_name] = new_event() end
 
-        -- local event_data =
         event_data =
         {
             source_name = data.source_name,
@@ -220,7 +217,6 @@ function event_handlers:register_event(data)
 
     if (not event_name_black_list[data.event_name]) then
         if (data.filter ~= nil and type(data.filter) ~= "table") then data.filter = nil end
-        -- local event_name = data.event_num ~= nil and data.event_num or data.event_name
         event_name = data.event_num ~= nil and data.event_num or data.event_name
 
         if (data.filter) then
@@ -248,14 +244,9 @@ function event_handlers:register_event(data)
         end
     end
 
-    -- log(serpent.block(event_registered))
     if (event_registered) then
-        -- log(serpent.block(data.restore_on_load))
-        -- log(tostring(storage))
         if (data.restore_on_load and storage) then
-            -- log(serpent.block(event_data))
-            -- log(serpent.block(event_name))
-            log(serpent.block(event))
+            -- log(serpent.block(event))
             if (event_data and event_name and event) then
                 event_data.event_name = event_name
                 -- table.insert(event_handlers.restore_on_load, event)
@@ -269,7 +260,7 @@ function event_handlers:register_event(data)
                 if (data.save_to_storage) then
                     --[[ TODO: Implement specific copying/saving, rather than cloning the entire table every time ]]
                     local cleaned_event_handlers_copy = deepcopy_exclude_functions(event_handlers)
-                    log(serpent.block(cleaned_event_handlers_copy))
+                    -- log(serpent.block(cleaned_event_handlers_copy))
 
                     if (cleaned_event_handlers_copy) then
                         storage.event_handlers = { restore_on_load = cleaned_event_handlers_copy.restore_on_load }
@@ -277,6 +268,15 @@ function event_handlers:register_event(data)
                 end
             end
         end
+
+        return
+        {
+            event_name = event_name,
+            -- event = deepcopy_exclude_functions(event),
+            -- event_data = deepcopy_exclude_functions(event_data),
+            source_name = event_data.source_name,
+            nth_tick = event_data.nth_tick,
+        }
     end
 end
 
@@ -287,9 +287,16 @@ function event_handlers:register_events(data_array)
     if (not data_array or type(data_array) ~= "table") then return end
     if (not next(data_array, nil)) then return end
 
+    local return_vals = {}
+
     for _, v in pairs(data_array) do
-        self:register_event(v)
+        local return_val = self:register_event(v) or { valid = false }
+        if (return_val) then
+            table.insert(return_vals, return_val)
+        end
     end
+
+    return return_vals
 end
 
 function event_handlers:remove_event(data)
@@ -380,9 +387,11 @@ function event_handlers:remove_event(data)
         if (event_removed) then
             --[[ TODO: Implement specific copying/saving, rather than clonging the entire table every time ]]
             local cleaned_event_handlers_copy = deepcopy_exclude_functions(event_handlers)
-            log(serpent.block(cleaned_event_handlers_copy))
+            -- log(serpent.block(cleaned_event_handlers_copy))
 
-            storage.event_handlers = cleaned_event_handlers_copy
+            if (cleaned_event_handlers_copy) then
+                storage.event_handlers = { restore_on_load = cleaned_event_handlers_copy.restore_on_load }
+            end
         end
     end
 end
@@ -466,16 +475,17 @@ function event_handlers:unregister_event(data)
 
         --[[ TODO: Implement specific copying/saving, rather than clonging the entire table every time ]]
         local cleaned_event_handlers_copy = deepcopy_exclude_functions(event_handlers)
-        log(serpent.block(cleaned_event_handlers_copy))
+        -- log(serpent.block(cleaned_event_handlers_copy))
 
-        storage.event_handlers = cleaned_event_handlers_copy
+        if (cleaned_event_handlers_copy) then
+            storage.event_handlers = { restore_on_load = cleaned_event_handlers_copy.restore_on_load }
+        end
     end
 end
 
 function event_handlers:get_event_position(data)
     Log.debug("event_handlers:get_event_position")
     Log.info(data)
-    -- log(serpent.block(data))
 
     if (not data or type(data) ~= "table") then return end
     if (not data.event_name or type(data.event_name) ~= "string") then return end
@@ -509,13 +519,12 @@ function event_handlers:get_event_position(data)
             return event.sources[data.source_name]
         end
     end
-    -- log(serpent.block(event))
 end
 
 function event_handlers:set_event_position(data)
     Log.debug("event_handlers:set_event_position")
     Log.info(data)
-    log(serpent.block(data))
+    -- log(serpent.block(data))
 
     if (not data or type(data) ~= "table") then return end
     if (data.new_position == nil or type(data.new_position) ~= "number") then return end
@@ -540,7 +549,6 @@ function event_handlers:set_event_position(data)
         end
     end
 
-    -- log(serpent.block(event))
     if (    event
         and event.sources
         and event.sources[data.source_name]
@@ -549,7 +557,6 @@ function event_handlers:set_event_position(data)
     ) then
         if (event.order and event.order[event.sources[data.source_name]]) then
             local original_position = event.sources[data.source_name]
-            -- log(serpent.block(original_position))
             if (original_position == data.new_position) then
                 return 0
             else
@@ -583,7 +590,6 @@ function event_handlers:set_event_position(data)
             end
         end
     end
-    -- log(serpent.block(event))
 end
 
 event_handlers.configurable_nukes = true

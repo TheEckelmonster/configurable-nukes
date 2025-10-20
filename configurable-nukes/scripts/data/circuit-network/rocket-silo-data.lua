@@ -83,6 +83,3 @@ end
 setmetatable(circuit_network_rocket_silo_data, Data)
 circuit_network_rocket_silo_data.__index = circuit_network_rocket_silo_data
 return circuit_network_rocket_silo_data
--- local Circuit_Network_Rocket_Silo_Data = circuit_network_rocket_silo_data:new(Circuit_Network_Rocket_Silo_Data)
-
--- return Circuit_Network_Rocket_Silo_Data

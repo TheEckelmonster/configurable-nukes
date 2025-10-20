@@ -296,6 +296,3 @@ end
 setmetatable(queue_data, Data)
 queue_data.__index = queue_data
 return queue_data
--- local Queue_Data = queue_data:new(Queue_Data)
-
--- return Queue_Data

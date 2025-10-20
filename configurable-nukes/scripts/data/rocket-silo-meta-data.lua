@@ -41,6 +41,3 @@ end
 setmetatable(rocket_silo_meta_data, Data)
 rocket_silo_meta_data.__index = rocket_silo_meta_data
 return rocket_silo_meta_data
--- local Rocket_Silo_Meta_Data = rocket_silo_meta_data:new(Rocket_Silo_Meta_Data)
-
--- return Rocket_Silo_Meta_Data

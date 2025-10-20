@@ -125,6 +125,7 @@ icbm_data.space_origin_pos = nil
     -> Trying to avoid iterating through the queue each time a payload arrives
 ]]
 icbm_data.enqueued_data = nil
+icbm_data.event_handlers = {}
 
 function icbm_data:new(o)
     Log.debug("icbm_data:new")
@@ -166,6 +167,7 @@ function icbm_data:new(o)
         is_travelling = self.is_travelling,
         space_origin_pos = nil,
         enqueued_data = nil,
+        event_handlers = {},
     }
 
     local obj = o or defaults

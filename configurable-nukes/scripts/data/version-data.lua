@@ -60,6 +60,3 @@ end
 setmetatable(version_data, Data)
 version_data.__index = version_data
 return version_data
--- local Version_Data = version_data:new(Version_Data)
-
--- return Version_Data

@@ -94,6 +94,15 @@ function rocket_silo_utils.scrub_launch(data)
 
         if (data.space_launches_initiated[launch_to_scrub.icbm_data]) then data.space_launches_initiated[launch_to_scrub.icbm_data] = nil end
 
+        -- Remove any registered event_handlers for the launch
+        for _, event_handler_data in pairs(launch_to_scrub.icbm_data.event_handlers) do
+            Event_Handler:unregister_event({
+                event_name = event_handler_data.event_name,
+                source_name = event_handler_data.source_name,
+                nth_tick = event_handler_data.nth_tick,
+            })
+        end
+
         launch_to_scrub.icbm_data.scrubbed = true
         ICBM_Repository.update_icbm_data(launch_to_scrub.icbm_data)
 
@@ -348,7 +357,6 @@ function rocket_silo_utils.launch_rocket(event)
         if (not Constants.space_exploration_dictionary[surface.name:lower()]) then Constants.get_space_exploration_universe(true) end
         local space_location = Constants.space_exploration_dictionary[surface.name:lower()]
         if (space_location and space_location.type) then
-            -- if (space_location.type == "planet" or space_location.type == "moon") then
             if (space_location.type == "planet-data" or space_location.type == "moon-data") then
                 if (space_location.orbit) then
                     Log.warn(space_location.orbit.name)
@@ -540,7 +548,6 @@ function rocket_silo_utils.launch_rocket(event)
             if (not Constants.space_exploration_dictionary[surface.name:lower()]) then Constants.get_space_exploration_universe(true) end
             local space_location = Constants.space_exploration_dictionary[surface.name:lower()]
             if (space_location and space_location.type) then
-                -- if (space_location.type == "planet" or space_location.type == "moon") then
                 if (space_location.type == "planet-data" or space_location.type == "moon-data") then
                     if (space_location.orbit) then
                         Log.warn(space_location.orbit.name)
@@ -993,10 +1000,8 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                         local origin_system_name = nil
                         if (origin_space_location.type) then
                             Log.warn(origin_space_location and origin_space_location.previous_space_location and origin_space_location.previous_space_location.name)
-                            -- origin_system_name = origin_space_location.type == "spaceship" and origin_space_location.previous_space_location:get_stellar_system() or origin_space_location:get_stellar_system()
                             origin_system_name = origin_space_location.type == "spaceship-data" and origin_space_location.previous_space_location:get_stellar_system() or origin_space_location:get_stellar_system()
 
-                            -- if (not origin_space_location.type == "spaceship" and not Constants.space_exploration_dictionary[origin_system_name]) then Constants.get_space_exploration_universe(true) end
                             if (not origin_space_location.type == "spaceship-data" and not Constants.space_exploration_dictionary[origin_system_name]) then Constants.get_space_exploration_universe(true) end
                             origin_system = Constants.space_exploration_dictionary[origin_system_name]
                         else
@@ -1083,8 +1088,6 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                         if (origin_system and (source_target_system or source_target_planet)) then
                             if (not source_target_system) then source_target_system = source_target_planet end
 
-                            -- local origin_space_distortion = origin_space_location.type == "anomaly" and origin_space_location.space_distortion or 0
-                            -- local destination_space_distortion = source_target_planet.type == "anomaly" and origin_space_location.space_distortion or 0
                             local origin_space_distortion = origin_space_location.type == "anomaly-data" and origin_space_location.space_distortion or 0
                             local destination_space_distortion = source_target_planet.type == "anomaly-data" and origin_space_location.space_distortion or 0
 
@@ -1136,7 +1139,6 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                                     Log.debug("same solar system")
                                     local origin_star_gravity_well = origin_space_location.star_gravity_well
                                     Log.debug(origin_star_gravity_well)
-                                    -- if (origin_space_location.type == "orbit") then
                                     if (origin_space_location.type == "orbit-data") then
                                         origin_star_gravity_well = origin_space_location.parent and origin_space_location.parent.star_gravity_well or 0
                                     end
@@ -1150,7 +1152,6 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
 
                                         local origin_planet_gravity_well = origin_space_location.star_gravity_well
                                         Log.debug(origin_planet_gravity_well)
-                                        -- if (origin_space_location.type == "orbit") then
                                         if (origin_space_location.type == "orbit-data") then
                                             origin_planet_gravity_well = origin_space_location.parent and origin_space_location.parent.star_gravity_well or 0
                                         end

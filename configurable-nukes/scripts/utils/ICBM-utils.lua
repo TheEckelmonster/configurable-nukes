@@ -164,7 +164,6 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
 
     if (data.tick and guidance_systems_modifier ~= nil) then
         --[[ TODO: Make in space top speed configurable? ]]
-        -- local in_space_speed_modifier = 1.66 + (-2.71 * guidance_systems_modifier)
         local in_space_speed_modifier = 1.66 + (2.71 * top_speed_modifier)
 
         if (not Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.name }) or math.abs(guidance_systems_modifier) < 1) then
@@ -708,31 +707,6 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
 
     Log.warn(serpent.block(icbm_data))
 
-    -- if (not icbm_data.same_surface) then
-    --     Log.warn("different surface")
-    --     local target_icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(icbm_data.target_surface_name)
-    --     Log.debug(target_icbm_meta_data)
-
-    --     target_icbm_meta_data.in_transit[icbm_data] = {
-    --         tick_to_target = icbm_data.tick_to_target,
-    --         item_number = icbm_data.item_number,
-    --         surface = icbm_data.surface,
-    --         surface_name = icbm_data.surface_name,
-    --         target_surface = icbm_data.target_surface,
-    --         target_surface_name = icbm_data.target_surface_name,
-    --     }
-    -- else
-    --     Log.warn("same surface")
-    --     icbm_meta_data.in_transit[icbm_data] = {
-    --         tick_to_target = icbm_data.tick_to_target,
-    --         item_number = icbm_data.item_number,
-    --         surface = icbm_data.surface,
-    --         surface_name = icbm_data.surface_name,
-    --         target_surface = icbm_data.surface,
-    --         target_surface_name = icbm_data.surface_name,
-    --     }
-    -- end
-
     icbm_utils.register_delivery_data({ icbm_data = icbm_data })
 
     if (se_active or not icbm_data.launched_from_space) then
@@ -792,7 +766,7 @@ function icbm_utils.register_delivery_data(data)
                                         .. icbm_data.item_number
 
     if (tick <= time_to_target_5_nth_tick) then
-        Event_Handler:register_event({
+        local event_handler_data = Event_Handler:register_event({
             event_name = "on_nth_tick",
             nth_tick = time_to_target_5_nth_tick,
             source_name = time_to_target_5_source_name,
@@ -807,10 +781,14 @@ function icbm_utils.register_delivery_data(data)
             },
             save_to_storage = true,
         })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
     end
 
     if (tick <= time_to_target_3_nth_tick) then
-        Event_Handler:register_event({
+        local event_handler_data = Event_Handler:register_event({
             event_name = "on_nth_tick",
             nth_tick = time_to_target_3_nth_tick,
             source_name = time_to_target_3_source_name,
@@ -825,10 +803,14 @@ function icbm_utils.register_delivery_data(data)
             },
             save_to_storage = true,
         })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
     end
 
     if (tick <= time_to_target_2_nth_tick) then
-        Event_Handler:register_event({
+        local event_handler_data = Event_Handler:register_event({
             event_name = "on_nth_tick",
             nth_tick = time_to_target_2_nth_tick,
             source_name = time_to_target_2_source_name,
@@ -843,10 +825,14 @@ function icbm_utils.register_delivery_data(data)
             },
             save_to_storage = true,
         })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
     end
 
     if (tick <= time_to_target_1_nth_tick) then
-        Event_Handler:register_event({
+        local event_handler_data = Event_Handler:register_event({
             event_name = "on_nth_tick",
             nth_tick = time_to_target_1_nth_tick,
             source_name = time_to_target_1_source_name,
@@ -861,10 +847,14 @@ function icbm_utils.register_delivery_data(data)
             },
             save_to_storage = true,
         })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
     end
 
     if (tick <= icbm_data.tick_to_target) then
-        Event_Handler:register_event({
+        local event_handler_data = Event_Handler:register_event({
             event_name = "on_nth_tick",
             nth_tick = icbm_data.tick_to_target,
             restore_on_load = true,
@@ -879,6 +869,10 @@ function icbm_utils.register_delivery_data(data)
             },
             save_to_storage = true,
         })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
     end
 end
 
@@ -971,8 +965,6 @@ function icbm_utils.payload_arrive_event(event, event_data)
 
     Event_Handler:unregister_event({
         event_name = "on_nth_tick",
-        -- nth_tick = icbm_data.tick_to_target,
-        -- nth_tick = game.tick,
         nth_tick = event_data.nth_tick,
         source_name = event_data.source_name,
     })

@@ -200,23 +200,20 @@ function events.on_load()
 
     if (not storage or not storage.event_handlers or type(storage.event_handlers) ~= "table") then return end
 
-    log(serpent.block(storage.event_handlers.restore_on_load))
+    -- log(serpent.block(storage.event_handlers.restore_on_load))
     if (storage.event_handlers.restore_on_load) then
         local events_to_restore = storage.event_handlers.restore_on_load
 
         local restore_on_load = function (data)
             Log.debug("restore_on_load")
             Log.info(data)
-            log(serpent.block(data))
+            -- log(serpent.block(data))
 
             local i = 1
             while data.event.order and i <= #data.event.order do
                 local search_pattern = "(%g+)%.(%g+)"
                 local _, _, class, func_name = data.event.order[i].func_name:find(search_pattern, 1)
-                -- log(serpent.block(class))
-                -- log(serpent.block(func_name))
-                local func = events[class][func_name]
-                -- log(serpent.block(func))
+                local func = events and events[class] and events[class][func_name] or nil
 
                 if (type(func) == "function") then
                     Event_Handler:register_event({
@@ -229,8 +226,6 @@ function events.on_load()
                         func_data = data.event.order[i].func_data,
                     })
                     i = i + 1
-                -- else
-                --     table.remove(data.event.order, i)
                 end
             end
 

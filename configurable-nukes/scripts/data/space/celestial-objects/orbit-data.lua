@@ -19,12 +19,8 @@ function orbit_data:new(o)
 
     obj = Space_Location_Data:new(obj)
 
-    -- log(serpent.block(getmetatable(obj)))
-
     setmetatable(obj, self)
     self.__index = self
-
-    -- log(serpent.block(getmetatable(obj)))
 
     return obj
 end
@@ -39,7 +35,3 @@ end
 setmetatable(orbit_data, Space_Location_Data)
 orbit_data.__index = orbit_data
 return orbit_data
--- local Orbit_Data = orbit_data:new(Orbit_Data)
--- Orbit_Data.mt = orbit_data
-
--- return Orbit_Data

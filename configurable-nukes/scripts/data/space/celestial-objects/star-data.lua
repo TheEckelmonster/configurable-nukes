@@ -38,7 +38,3 @@ end
 setmetatable(star_data, Space_Location_Data)
 star_data.__index = star_data
 return star_data
--- local Star_Data = star_data:new(Star_Data)
--- -- Star_Data.mt = star_data
-
--- return Star_Data

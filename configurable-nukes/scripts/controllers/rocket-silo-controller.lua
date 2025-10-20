@@ -180,8 +180,8 @@ Event_Handler:register_event({
 })
 
 function rocket_silo_controller.scrub_newest_launch(event)
-    Log.error("rocket_silo_controller.scrub_newest_launch")
-    Log.warn(event)
+    Log.debug("rocket_silo_controller.scrub_newest_launch")
+    Log.info(event)
 
     if (not event) then return end
     if (not event.input_name or event.input_name ~= Custom_Input.SCRUB_NEWEST_LAUNCH.name) then return end
@@ -205,8 +205,8 @@ Event_Handler:register_event({
 })
 
 function rocket_silo_controller.scrub_oldest_launch(event)
-    Log.error("rocket_silo_controller.scrub_oldest_launch")
-    Log.warn(event)
+    Log.debug("rocket_silo_controller.scrub_oldest_launch")
+    Log.info(event)
 
     if (not event) then return end
     if (not event.input_name or event.input_name ~= Custom_Input.SCRUB_OLDEST_LAUNCH.name) then return end
@@ -230,8 +230,8 @@ Event_Handler:register_event({
 })
 
 function rocket_silo_controller.scrub_all_launches(event)
-    Log.error("rocket_silo_controller.scrub_all_launches")
-    Log.warn(event)
+    Log.debug("rocket_silo_controller.scrub_all_launches")
+    Log.info(event)
 
     if (not event) then return end
     if (not event.input_name or event.input_name ~= Custom_Input.SCRUB_ALL_LAUNCHES.name) then return end
@@ -259,36 +259,36 @@ function rocket_silo_controller.on_player_alt_selected_area(event)
     Log.warn(event)
 
 end
-Event_Handler:register_event({
-    event_name = "on_player_alt_selected_area",
-    source_name = "rocket_silo_controller.on_player_alt_selected_area",
-    func_name = "rocket_silo_controller.on_player_alt_selected_area",
-    func = rocket_silo_controller.on_player_alt_selected_area,
-})
+-- Event_Handler:register_event({
+--     event_name = "on_player_alt_selected_area",
+--     source_name = "rocket_silo_controller.on_player_alt_selected_area",
+--     func_name = "rocket_silo_controller.on_player_alt_selected_area",
+--     func = rocket_silo_controller.on_player_alt_selected_area,
+-- })
 
 function rocket_silo_controller.on_player_alt_reverse_selected_area(event)
     Log.error("rocket_silo_controller.on_player_alt_reverse_selected_area")
     Log.warn(event)
 
 end
-Event_Handler:register_event({
-    event_name = "on_player_alt_reverse_selected_area",
-    source_name = "rocket_silo_controller.on_player_alt_reverse_selected_area",
-    func_name = "rocket_silo_controller.on_player_alt_reverse_selected_area",
-    func = rocket_silo_controller.on_player_alt_reverse_selected_area,
-})
+-- Event_Handler:register_event({
+--     event_name = "on_player_alt_reverse_selected_area",
+--     source_name = "rocket_silo_controller.on_player_alt_reverse_selected_area",
+--     func_name = "rocket_silo_controller.on_player_alt_reverse_selected_area",
+--     func = rocket_silo_controller.on_player_alt_reverse_selected_area,
+-- })
 
 function rocket_silo_controller.on_player_reverse_selected_area(event)
     Log.error("rocket_silo_controller.on_player_reverse_selected_area")
     Log.warn(event)
 
 end
-Event_Handler:register_event({
-    event_name = "on_player_reverse_selected_area",
-    source_name = "rocket_silo_controller.on_player_reverse_selected_area",
-    func_name = "rocket_silo_controller.on_player_reverse_selected_area",
-    func = rocket_silo_controller.on_player_reverse_selected_area,
-})
+-- Event_Handler:register_event({
+--     event_name = "on_player_reverse_selected_area",
+--     source_name = "rocket_silo_controller.on_player_reverse_selected_area",
+--     func_name = "rocket_silo_controller.on_player_reverse_selected_area",
+--     func = rocket_silo_controller.on_player_reverse_selected_area,
+-- })
 
 function rocket_silo_controller.launch_rocket(event)
     Log.debug("rocket_silo_controller.launch_rocket")

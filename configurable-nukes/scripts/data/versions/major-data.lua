@@ -29,6 +29,3 @@ end
 setmetatable(major_data, Data)
 major_data.__index = major_data
 return major_data
--- local Major_data  = major_data:new(Major_data)
-
--- return Major_data

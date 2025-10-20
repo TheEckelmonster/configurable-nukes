@@ -151,181 +151,181 @@ function configurable_nukes_controller.on_tick(event)
         end
         i = i + 1
 
-        for k, v in pairs(icbm_meta_data.in_transit) do
-            if (v and v.target_surface and v.target_surface.valid and v.tick_to_target and game.tick >= v.tick_to_target) then
-                if (    k.target_surface
-                    and k.target_surface.valid
-                    and ICBM_Utils.payload_arrived({ icbm = k, surface = space_location.surface, target_surface = k.target_surface }))
-                then
-                    icbm_meta_data.in_transit[k] = nil
-                else
-                    -- log(serpent.block(storage))
-                    -- error("Payload failed to arrive successfully")
-                end
-            elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 1 and not v.one) then
-                local print_message = function (k, v)
-                    if (k and k.force and k.force.valid) then
-                        k.force.print({ "configurable-nukes-controller.seconds-to-target", 1 })
-                    end
-                end
+        -- for k, v in pairs(icbm_meta_data.in_transit) do
+        --     if (v and v.target_surface and v.target_surface.valid and v.tick_to_target and game.tick >= v.tick_to_target) then
+        --         if (    k.target_surface
+        --             and k.target_surface.valid
+        --             and ICBM_Utils.payload_arrived({ icbm = k, surface = space_location.surface, target_surface = k.target_surface }))
+        --         then
+        --             icbm_meta_data.in_transit[k] = nil
+        --         else
+        --             -- log(serpent.block(storage))
+        --             -- error("Payload failed to arrive successfully")
+        --         end
+        --     elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 1 and not v.one) then
+        --         local print_message = function (k, v)
+        --             if (k and k.force and k.force.valid) then
+        --                 k.force.print({ "configurable-nukes-controller.seconds-to-target", 1 })
+        --             end
+        --         end
 
-                if (k.player_launched_index == 0) then
-                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                        print_message(k, v)
-                    end
-                else
-                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                        print_message(k, v)
-                    end
-                end
-                v.one, v.two, v.three, v.five = true, true, true, true
-            elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 2 and not v.two) then
-                local print_message = function (k, v)
-                    if (k and k.force and k.force.valid) then
-                        k.force.print({ "configurable-nukes-controller.seconds-to-target", 2 })
-                    end
-                end
+        --         if (k.player_launched_index == 0) then
+        --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+        --                 print_message(k, v)
+        --             end
+        --         else
+        --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+        --                 print_message(k, v)
+        --             end
+        --         end
+        --         v.one, v.two, v.three, v.five = true, true, true, true
+        --     elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 2 and not v.two) then
+        --         local print_message = function (k, v)
+        --             if (k and k.force and k.force.valid) then
+        --                 k.force.print({ "configurable-nukes-controller.seconds-to-target", 2 })
+        --             end
+        --         end
 
-                if (k.player_launched_index == 0) then
-                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                        print_message(k, v)
-                    end
-                else
-                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                        print_message(k, v)
-                    end
-                end
-                v.two, v.three, v.five = true, true, true
-            elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 3 and not v.three) then
-                local print_message = function (k, v)
-                    if (k and k.force and k.force.valid) then
-                        k.force.print({ "configurable-nukes-controller.seconds-to-target", 3 })
-                    end
-                end
+        --         if (k.player_launched_index == 0) then
+        --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+        --                 print_message(k, v)
+        --             end
+        --         else
+        --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+        --                 print_message(k, v)
+        --             end
+        --         end
+        --         v.two, v.three, v.five = true, true, true
+        --     elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 3 and not v.three) then
+        --         local print_message = function (k, v)
+        --             if (k and k.force and k.force.valid) then
+        --                 k.force.print({ "configurable-nukes-controller.seconds-to-target", 3 })
+        --             end
+        --         end
 
-                if (k.player_launched_index == 0) then
-                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                        print_message(k, v)
-                    end
-                else
-                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                        print_message(k, v)
-                    end
-                end
-                v.three, v.five = true, true
-            elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 5 and not v.five) then
-                local print_message = function (k, v)
-                    if (k and k.force and k.force.valid and v.target_surface_name) then
-                        k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, v.target_surface_name })
-                        v.five = true
-                    end
-                end
+        --         if (k.player_launched_index == 0) then
+        --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+        --                 print_message(k, v)
+        --             end
+        --         else
+        --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+        --                 print_message(k, v)
+        --             end
+        --         end
+        --         v.three, v.five = true, true
+        --     elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 5 and not v.five) then
+        --         local print_message = function (k, v)
+        --             if (k and k.force and k.force.valid and v.target_surface_name) then
+        --                 k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, v.target_surface_name })
+        --                 v.five = true
+        --             end
+        --         end
 
-                if (k.player_launched_index == 0) then
-                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                        print_message(k, v)
-                    end
-                else
-                    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                        print_message(k, v)
-                    end
-                end
-                -- v.five = true
-            end
-        end
+        --         if (k.player_launched_index == 0) then
+        --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+        --                 print_message(k, v)
+        --             end
+        --         else
+        --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+        --                 print_message(k, v)
+        --             end
+        --         end
+        --         -- v.five = true
+        --     end
+        -- end
 
-        if (space_location.surface.planet and sa_active) then
-            for _, space_platform in pairs(space_location.surface.planet.get_space_platforms("player")) do
-                if (not space_platform.surface or not space_platform.surface.valid) then goto continue end
-                local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(space_platform.surface.name)
-                if (not icbm_meta_data or not icbm_meta_data.valid) then goto continue end
+        -- if (space_location.surface.planet and sa_active) then
+        --     for _, space_platform in pairs(space_location.surface.planet.get_space_platforms("player")) do
+        --         if (not space_platform.surface or not space_platform.surface.valid) then goto continue end
+        --         local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(space_platform.surface.name)
+        --         if (not icbm_meta_data or not icbm_meta_data.valid) then goto continue end
 
-                for k, v in pairs(icbm_meta_data.in_transit) do
-                    if (v and v.target_surface and v.target_surface.valid and v.tick_to_target and game.tick >= v.tick_to_target) then
-                        if (    k.target_surface
-                            and k.target_surface.valid
-                            and ICBM_Utils.payload_arrived({ icbm = k, surface = space_location.surface, target_surface = k.target_surface }))
-                        then
-                            icbm_meta_data.in_transit[k] = nil
-                        else
-                            -- log(serpent.block(storage))
-                            -- error("Payload failed to arrive successfully")
-                        end
-                    elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 and not v.one) then
-                        local print_message = function (k, v)
-                            if (k and k.force and k.force.valid) then
-                                k.force.print({ "configurable-nukes-controller.seconds-to-target", 1 })
-                            end
-                        end
+        --         for k, v in pairs(icbm_meta_data.in_transit) do
+        --             if (v and v.target_surface and v.target_surface.valid and v.tick_to_target and game.tick >= v.tick_to_target) then
+        --                 if (    k.target_surface
+        --                     and k.target_surface.valid
+        --                     and ICBM_Utils.payload_arrived({ icbm = k, surface = space_location.surface, target_surface = k.target_surface }))
+        --                 then
+        --                     icbm_meta_data.in_transit[k] = nil
+        --                 else
+        --                     -- log(serpent.block(storage))
+        --                     -- error("Payload failed to arrive successfully")
+        --                 end
+        --             elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 and not v.one) then
+        --                 local print_message = function (k, v)
+        --                     if (k and k.force and k.force.valid) then
+        --                         k.force.print({ "configurable-nukes-controller.seconds-to-target", 1 })
+        --                     end
+        --                 end
 
-                        if (k.player_launched_index == 0) then
-                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                                print_message(k, v)
-                            end
-                        else
-                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                                print_message(k, v)
-                            end
-                        end
-                        v.one, v.two, v.three, v.five = true, true, true, true
-                    elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 120 and not v.two) then
-                        local print_message = function (k, v)
-                            if (k and k.force and k.force.valid) then
-                                k.force.print({ "configurable-nukes-controller.seconds-to-target", 2 })
-                            end
-                        end
+        --                 if (k.player_launched_index == 0) then
+        --                     if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+        --                         print_message(k, v)
+        --                     end
+        --                 else
+        --                     if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+        --                         print_message(k, v)
+        --                     end
+        --                 end
+        --                 v.one, v.two, v.three, v.five = true, true, true, true
+        --             elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 120 and not v.two) then
+        --                 local print_message = function (k, v)
+        --                     if (k and k.force and k.force.valid) then
+        --                         k.force.print({ "configurable-nukes-controller.seconds-to-target", 2 })
+        --                     end
+        --                 end
 
-                        if (k.player_launched_index == 0) then
-                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                                print_message(k, v)
-                            end
-                        else
-                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                                print_message(k, v)
-                            end
-                        end
-                        v.two, v.three, v.five = true, true, true
-                    elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 180 and not v.three) then
-                        local print_message = function (k, v)
-                            if (k and k.force and k.force.valid) then
-                                k.force.print({ "configurable-nukes-controller.seconds-to-target", 3 })
-                            end
-                        end
+        --                 if (k.player_launched_index == 0) then
+        --                     if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+        --                         print_message(k, v)
+        --                     end
+        --                 else
+        --                     if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+        --                         print_message(k, v)
+        --                     end
+        --                 end
+        --                 v.two, v.three, v.five = true, true, true
+        --             elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 180 and not v.three) then
+        --                 local print_message = function (k, v)
+        --                     if (k and k.force and k.force.valid) then
+        --                         k.force.print({ "configurable-nukes-controller.seconds-to-target", 3 })
+        --                     end
+        --                 end
 
-                        if (k.player_launched_index == 0) then
-                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                                print_message(k, v)
-                            end
-                        else
-                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                                print_message(k, v)
-                            end
-                        end
-                        v.three, v.five = true, true
-                    elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 300 and not v.five) then
-                        local print_message = function (k, v)
-                            if (k and k.force and k.force.valid and v.target_surface_name) then
-                                k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, v.target_surface_name })
-                                v.five = true
-                            end
-                        end
+        --                 if (k.player_launched_index == 0) then
+        --                     if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+        --                         print_message(k, v)
+        --                     end
+        --                 else
+        --                     if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+        --                         print_message(k, v)
+        --                     end
+        --                 end
+        --                 v.three, v.five = true, true
+        --             elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 300 and not v.five) then
+        --                 local print_message = function (k, v)
+        --                     if (k and k.force and k.force.valid and v.target_surface_name) then
+        --                         k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, v.target_surface_name })
+        --                         v.five = true
+        --                     end
+        --                 end
 
-                        if (k.player_launched_index == 0) then
-                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                                print_message(k, v)
-                            end
-                        else
-                            if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                                print_message(k, v)
-                            end
-                        end
-                        -- v.five = true
-                    end
-                end
+        --                 if (k.player_launched_index == 0) then
+        --                     if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+        --                         print_message(k, v)
+        --                     end
+        --                 else
+        --                     if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+        --                         print_message(k, v)
+        --                     end
+        --                 end
+        --                 -- v.five = true
+        --             end
+        --         end
 
-                ::continue::
-            end
-        end
+        --         ::continue::
+        --     end
+        -- end
 
         local circuit_connected_silos_on_platforms = {}
 
@@ -357,88 +357,88 @@ function configurable_nukes_controller.on_tick(event)
                     local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(space_platform.surface.name)
                     if (not icbm_meta_data or not icbm_meta_data.valid) then goto continue end
 
-                    for k, v in pairs(icbm_meta_data.in_transit) do
-                        if (v and v.target_surface and v.target_surface.valid and v.tick_to_target and game.tick >= v.tick_to_target) then
-                            if (    k.target_surface
-                                and k.target_surface.valid
-                                and ICBM_Utils.payload_arrived({ icbm = k, surface = space_location.surface, target_surface = k.target_surface }))
-                            then
-                                icbm_meta_data.in_transit[k] = nil
-                            else
-                                -- log(serpent.block(storage))
-                                -- error("Payload failed to arrive successfully")
-                            end
-                        elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 1 and not v.one) then
-                            local print_message = function (k, v)
-                                if (k and k.force and k.force.valid) then
-                                    k.force.print({ "configurable-nukes-controller.seconds-to-target", 1 })
-                                end
-                            end
+                    -- for k, v in pairs(icbm_meta_data.in_transit) do
+                    --     if (v and v.target_surface and v.target_surface.valid and v.tick_to_target and game.tick >= v.tick_to_target) then
+                    --         if (    k.target_surface
+                    --             and k.target_surface.valid
+                    --             and ICBM_Utils.payload_arrived({ icbm = k, surface = space_location.surface, target_surface = k.target_surface }))
+                    --         then
+                    --             icbm_meta_data.in_transit[k] = nil
+                    --         else
+                    --             -- log(serpent.block(storage))
+                    --             -- error("Payload failed to arrive successfully")
+                    --         end
+                    --     elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 1 and not v.one) then
+                    --         local print_message = function (k, v)
+                    --             if (k and k.force and k.force.valid) then
+                    --                 k.force.print({ "configurable-nukes-controller.seconds-to-target", 1 })
+                    --             end
+                    --         end
 
-                            if (k.player_launched_index == 0) then
-                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                                    print_message(k, v)
-                                end
-                            else
-                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                                    print_message(k, v)
-                                end
-                            end
-                            v.one, v.two, v.three, v.five = true, true, true, true
-                        elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 2 and not v.two) then
-                            local print_message = function (k, v)
-                                if (k and k.force and k.force.valid) then
-                                    k.force.print({ "configurable-nukes-controller.seconds-to-target", 2 })
-                                end
-                            end
+                    --         if (k.player_launched_index == 0) then
+                    --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+                    --                 print_message(k, v)
+                    --             end
+                    --         else
+                    --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+                    --                 print_message(k, v)
+                    --             end
+                    --         end
+                    --         v.one, v.two, v.three, v.five = true, true, true, true
+                    --     elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 2 and not v.two) then
+                    --         local print_message = function (k, v)
+                    --             if (k and k.force and k.force.valid) then
+                    --                 k.force.print({ "configurable-nukes-controller.seconds-to-target", 2 })
+                    --             end
+                    --         end
 
-                            if (k.player_launched_index == 0) then
-                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                                    print_message(k, v)
-                                end
-                            else
-                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                                    print_message(k, v)
-                                end
-                            end
-                            v.two, v.three, v.five = true, true, true
-                        elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 3 and not v.three) then
-                            local print_message = function (k, v)
-                                if (k and k.force and k.force.valid) then
-                                    k.force.print({ "configurable-nukes-controller.seconds-to-target", 3 })
-                                end
-                            end
+                    --         if (k.player_launched_index == 0) then
+                    --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+                    --                 print_message(k, v)
+                    --             end
+                    --         else
+                    --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+                    --                 print_message(k, v)
+                    --             end
+                    --         end
+                    --         v.two, v.three, v.five = true, true, true
+                    --     elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 3 and not v.three) then
+                    --         local print_message = function (k, v)
+                    --             if (k and k.force and k.force.valid) then
+                    --                 k.force.print({ "configurable-nukes-controller.seconds-to-target", 3 })
+                    --             end
+                    --         end
 
-                            if (k.player_launched_index == 0) then
-                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                                    print_message(k, v)
-                                end
-                            else
-                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                                    print_message(k, v)
-                                end
-                            end
-                            v.three, v.five = true, true
-                        elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 5 and not v.five) then
-                            local print_message = function (k, v)
-                                if (k and k.force and k.force.valid and v.target_surface_name) then
-                                    k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, v.target_surface_name })
-                                    v.five = true
-                                end
-                            end
+                    --         if (k.player_launched_index == 0) then
+                    --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+                    --                 print_message(k, v)
+                    --             end
+                    --         else
+                    --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+                    --                 print_message(k, v)
+                    --             end
+                    --         end
+                    --         v.three, v.five = true, true
+                    --     elseif (v and v.tick_to_target and game.tick >= v.tick_to_target - 60 * 5 and not v.five) then
+                    --         local print_message = function (k, v)
+                    --             if (k and k.force and k.force.valid and v.target_surface_name) then
+                    --                 k.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, k.target_position.x, k.target_position.y, v.target_surface_name })
+                    --                 v.five = true
+                    --             end
+                    --         end
 
-                            if (k.player_launched_index == 0) then
-                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
-                                    print_message(k, v)
-                                end
-                            else
-                                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
-                                    print_message(k, v)
-                                end
-                            end
-                            -- v.five = true
-                        end
-                    end
+                    --         if (k.player_launched_index == 0) then
+                    --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+                    --                 print_message(k, v)
+                    --             end
+                    --         else
+                    --             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+                    --                 print_message(k, v)
+                    --             end
+                    --         end
+                    --         -- v.five = true
+                    --     end
+                    -- end
 
                     ::continue::
                 end

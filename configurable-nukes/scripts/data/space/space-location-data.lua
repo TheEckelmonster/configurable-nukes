@@ -117,7 +117,3 @@ end
 setmetatable(space_location_data, Data)
 space_location_data.__index = space_location_data
 return space_location_data
--- local Space_location_data = space_location_data:new(Space_location_data)
--- -- Space_location_data.mt = space_location_data
-
--- return Space_location_data

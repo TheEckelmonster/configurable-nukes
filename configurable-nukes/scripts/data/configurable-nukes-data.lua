@@ -42,6 +42,3 @@ end
 setmetatable(configurable_nukes_data, Data)
 configurable_nukes_data.__index = configurable_nukes_data
 return configurable_nukes_data
--- local Configurable_Nukes_Data = configurable_nukes_data:new(Configurable_Nukes_Data)
-
--- return Configurable_Nukes_Data

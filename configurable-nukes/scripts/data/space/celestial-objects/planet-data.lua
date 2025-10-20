@@ -22,12 +22,8 @@ function planet_data:new(o)
 
     obj = Space_Location_Data:new(obj)
 
-    -- log(serpent.block(getmetatable(obj)))
-
     setmetatable(obj, self)
     self.__index = self
-
-    -- log(serpent.block(getmetatable(obj)))
 
     return obj
 end
@@ -39,19 +35,6 @@ function planet_data:is_solid(data)
     return true
 end
 
-function planet_data:restore_metatable(data)
-    Log.debug("planet_data:restore_metatable")
-    Log.info(data)
-
-    -- setmetatable(self, planet_data)
-    self.__index = self
-    -- setmetatable(planet_data, Space_Location_Data)
-end
-
 setmetatable(planet_data, Space_Location_Data)
 planet_data.__index = planet_data
 return planet_data
--- local Planet_Data = planet_data:new(Planet_Data)
--- Planet_Data.mt = planet_data
-
--- return Planet_Data

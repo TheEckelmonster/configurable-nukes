@@ -44,7 +44,3 @@ end
 setmetatable(spaceship_data, Space_Location_Data)
 spaceship_data.__index = spaceship_data
 return spaceship_data
--- local Spacehip_Data = spaceship_data:new(Spacehip_Data)
--- -- Spacehip_Data.mt = spaceship_data
-
--- return Spacehip_Data
