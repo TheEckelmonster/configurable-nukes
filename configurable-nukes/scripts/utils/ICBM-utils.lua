@@ -734,7 +734,8 @@ function icbm_utils.register_delivery_data(data)
     if (not data.icbm_data or type(data.icbm_data) ~= "table") then return end
 
     -- local tick = storage and storage.tick or 0
-    local tick = storage and storage.tick or math.huge
+    local tick = game and game.tick or storage and storage.tick or math.huge
+    Log.warn(tick)
 
     local icbm_data = data.icbm_data
 
@@ -884,7 +885,7 @@ function icbm_utils.time_to_target_5_event(event, event_data)
     Event_Handler:unregister_event({
         event_name = "on_nth_tick",
         nth_tick = event_data.nth_tick,
-        source_name = event_data.event_name,
+        source_name = event_data.source_name,
     })
 
     if (event_data.icbm_data.scrubbed) then return end
@@ -921,7 +922,6 @@ function icbm_utils.time_to_target_3_event(event, event_data)
 
     if (not game or game.tick > event_data.nth_tick) then return end
     time_to_target_message({ icbm_data = event_data.icbm_data, seconds_to_target = 3 })
-
 end
 
 function icbm_utils.time_to_target_2_event(event, event_data)

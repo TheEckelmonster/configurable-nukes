@@ -521,7 +521,7 @@ function configurable_nukes_controller.on_configuration_changed(event)
 end
 Event_Handler:register_event({
     event_name = "on_configuration_changed",
-    source_name = "configurable_nukes_controller",
+    source_name = "configurable_nukes_controller.on_configuration_changed",
     func_name = "configurable_nukes_controller.on_configuration_changed",
     func = configurable_nukes_controller.on_configuration_changed,
 })

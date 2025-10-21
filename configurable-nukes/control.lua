@@ -91,3 +91,18 @@ Event_Handler:set_event_position({
     source_name = "control.on_tick",
     new_position = 1,
 })
+
+Event_Handler:register_event({
+    event_name = "on_configuration_changed",
+    source_name = "control.on_configuration_changed",
+    func_name = "control.on_configuration_changed",
+    func = function (event)
+        if (storage and game and game.tick) then storage.tick = game.tick end
+    end,
+})
+
+Event_Handler:set_event_position({
+    event_name = "on_configuration_changed",
+    source_name = "control.on_configuration_changed",
+    new_position = 1,
+})

@@ -311,19 +311,22 @@ function event_handlers:remove_event(data)
 
     local all_nth_tick_events = false
     local event = nil
+    local event_name = nil
     if (data.event_name == "on_nth_tick" and event_handlers.events["on_nth_tick"]) then
         if (data.nth_tick ~= nil) then
             if (type(data.nth_tick) == "number" and data.nth_tick >= 0) then
                 event = event_handlers.events["on_nth_tick"][data.nth_tick]
                 event_handlers.events["on_nth_tick"][data.nth_tick] = nil
+                event_name = "on_nth_tick"
             elseif (type(data.nth_tick) == "number" and data.nth_tick < 0) then
                 event = event_handlers.events["on_nth_tick"]
                 event_handlers.events["on_nth_tick"] = nil
+                event_name = "on_nth_tick"
                 all_nth_tick_events = true
             end
         end
     else
-        local event_name = event_handlers.event_names[defines.events[data.event_name]] or event_handlers.event_names[data.event_name]
+        event_name = event_handlers.event_names[defines.events[data.event_name]] or event_handlers.event_names[data.event_name]
         if (event_name) then
             event = event_handlers.events[event_name]
             event_handlers.events[event_name] = nil
@@ -385,6 +388,23 @@ function event_handlers:remove_event(data)
         end
 
         if (event_removed) then
+            if (event_name and event) then
+                if (event_name == "on_nth_tick") then
+                    if (event_handlers.restore_on_load[event_name]) then
+                        if (all_nth_tick_events) then
+                            event_handlers.restore_on_load[event_name] = nil
+                        else
+                            event_handlers.restore_on_load[event_name][data.nth_tick] = nil
+                            if (not next(event_handlers.restore_on_load[event_name], nil)) then
+                                event_handlers.restore_on_load[event_name] = nil
+                            end
+                        end
+                    end
+                else
+                    event_handlers.restore_on_load[event_name] = nil
+                end
+            end
+
             --[[ TODO: Implement specific copying/saving, rather than clonging the entire table every time ]]
             local cleaned_event_handlers_copy = deepcopy_exclude_functions(event_handlers)
             -- log(serpent.block(cleaned_event_handlers_copy))
@@ -409,14 +429,16 @@ function event_handlers:unregister_event(data)
     if (defines.events[data.event_name] == nil and not event_name_black_list[data.event_name]) then return end
 
     local event = nil
+    local event_name = nil
     if (data.event_name == "on_nth_tick" and event_handlers.events["on_nth_tick"]) then
         if (data.nth_tick ~= nil) then
             if (type(data.nth_tick) == "number" and data.nth_tick >= 0) then
+                event_name = "on_nth_tick"
                 event = event_handlers.events["on_nth_tick"][data.nth_tick]
             end
         end
     else
-        local event_name = event_handlers.event_names[defines.events[data.event_name]] or event_handlers.event_names[data.event_name]
+        event_name = event_handlers.event_names[defines.events[data.event_name]] or event_handlers.event_names[data.event_name]
         if (event_name) then
             event = event_handlers.events[event_name]
         end
@@ -471,11 +493,23 @@ function event_handlers:unregister_event(data)
                     event_handlers.event["on_configuration_changed"] = nil
                 end
             end
+
+            if (event_name and event) then
+                if (event_name == "on_nth_tick") then
+                    if (event_handlers.restore_on_load[event_name]) then
+                        event_handlers.restore_on_load[event_name][data.nth_tick] = nil
+                        if (not next(event_handlers.restore_on_load[event_name], nil)) then
+                            event_handlers.restore_on_load[event_name] = nil
+                        end
+                    end
+                else
+                    event_handlers.restore_on_load[event_name] = nil
+                end
+            end
         end
 
         --[[ TODO: Implement specific copying/saving, rather than clonging the entire table every time ]]
         local cleaned_event_handlers_copy = deepcopy_exclude_functions(event_handlers)
-        -- log(serpent.block(cleaned_event_handlers_copy))
 
         if (cleaned_event_handlers_copy) then
             storage.event_handlers = { restore_on_load = cleaned_event_handlers_copy.restore_on_load }
