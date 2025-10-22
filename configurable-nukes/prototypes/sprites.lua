@@ -10,6 +10,7 @@ local list_dot = {
         },
     }
 }
+
 local damage_icon = {
     type = "sprite",
     name = "cn-damage-icon",
@@ -23,7 +24,20 @@ local damage_icon = {
     }
 }
 
+local close_icon = {
+    type = "sprite",
+    name = "cn-close-icon",
+    layers =
+    {
+        {
+            filename = "__base__/graphics/icons/signal/signal-deny.png",
+            size = 64,
+        },
+    }
+}
+
 data:extend({
     list_dot,
     damage_icon,
+    close_icon,
 })

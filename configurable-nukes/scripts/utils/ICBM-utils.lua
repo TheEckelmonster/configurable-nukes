@@ -4,6 +4,7 @@ if _icbm_utils and _icbm_utils.configurable_nukes then
 end
 
 local Constants = require("scripts.constants.constants")
+local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local Log = require("libs.log.log")
 local ICBM_Data = require("scripts.data.ICBM-data")
@@ -21,7 +22,7 @@ icbm_utils.name = "icbm_utils"
 local time_to_target_message = function (params)
     local print_message = function (param_1, param_2)
         if (param_1 and param_1.force and param_1.force.valid) then
-            param_1.force.print({ "configurable-nukes-controller.seconds-to-target", param_2 })
+            param_1.force.print({ "icbm-utils.seconds-to-target", param_1.item_number, param_2 })
         end
     end
 
@@ -689,6 +690,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         local launch_duration_ticks = 511 + math.random(-1, 1) * math.random(32)
         time_to_target = time_to_target + launch_duration_ticks
         icbm_utils.space_launches_initiated[icbm_data] = {
+            -- launch_duration_ticks = launch_duration_ticks,
             tick = game.tick + launch_duration_ticks,
             time_to_target = time_to_target - launch_duration_ticks,
         }
@@ -699,8 +701,8 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         time_to_target = time_to_target + math.random(60 * (math.log(target_distance, 2.71) * (magnitude ^ 1.66))) * magnitude
     end
 
-    Log.debug("game.tick = " .. game.tick)
-    Log.debug("time_to_target = " .. time_to_target)
+    Log.warn("game.tick = " .. game.tick)
+    Log.warn("time_to_target = " .. time_to_target)
 
     icbm_data.tick_to_target = data.tick + time_to_target
     ICBM_Repository.update_icbm_data(icbm_data)
@@ -713,16 +715,25 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         if (math.floor(time_to_target / 60) >= 1) then
             if (icbm_data.player_launched_index == 0) then
                 if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name })) then
-                    icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
+                    icbm_data.force.print({ "icbm-utils.seconds-to-target", icbm_data.item_number, math.floor(time_to_target / 60) })
                 end
             else
                 if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name })) then
-                    icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
+                    icbm_data.force.print({ "icbm-utils.seconds-to-target", icbm_data.item_number, math.floor(time_to_target / 60) })
                 end
             end
         end
     end
 
+    icbm_data.cargo_pod = nil
+    -- script.raise_event(
+    --     Custom_Events.cn_on_rocket_launched_successfully.name,
+    --     {
+    --         name = defines.events[Custom_Events.cn_on_rocket_launched_successfully.name],
+    --         tick = game.tick,
+    --         icbm_data = icbm_data,
+    --     }
+    -- )
     return 1
 end
 
@@ -892,7 +903,7 @@ function icbm_utils.time_to_target_5_event(event, event_data)
 
     local print_message = function (param)
         if (param and param.force and param.force.valid) then
-            param.force.print({ "configurable-nukes-controller.seconds-to-target-gps", 5, param.target_position.x, param.target_position.y, param.target_surface_name })
+            param.force.print({ "configurable-nukes-controller.seconds-to-target-gps", event_data.icbm_data.item_number, 5, param.target_position.x, param.target_position.y, param.target_surface_name })
         end
     end
 
@@ -1130,7 +1141,7 @@ function icbm_utils.launch_initiated(data)
         if (not force or not force.valid) then return end
 
         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name })) then
-            force.print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, data.target_surface.name, icbm_data.source_silo.surface.name, })
+            force.print({ "icbm-utils.launch-initiated", icbm_data.item_number, icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, data.target_surface.name, icbm_data.source_silo.surface.name, })
         end
         --[[ TODO: Make this setting per player ]]
         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.name })) then
@@ -1149,7 +1160,7 @@ function icbm_utils.launch_initiated(data)
         end
     else
         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name })) then
-            game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, data.target_surface.name, icbm_data.source_silo.surface.name })
+            game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.item_number, icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, data.target_surface.name, icbm_data.source_silo.surface.name })
         end
 
         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PIN_TARGETS.name })) then
@@ -1165,6 +1176,17 @@ function icbm_utils.launch_initiated(data)
             game.get_player(icbm_data.player_launched_index).add_pin({ label = target_type .. " target-" .. icbm_data.item_number, surface = data.target_surface, position = target_position, preview_distance = 2 ^ 6 })
         end
     end
+
+    -- -- icbm_data.cargo_pod = nil
+    script.raise_event(
+        Custom_Events.cn_on_rocket_launch_initiated_successfully.name,
+        {
+            name = defines.events[Custom_Events.cn_on_rocket_launch_initiated_successfully.name],
+            tick = game.tick,
+            icbm_data = icbm_data,
+        }
+    )
+    return 1
 end
 
 function icbm_utils.payload_arrived(data)
@@ -1228,6 +1250,15 @@ function icbm_utils.payload_arrived(data)
                 radius_modifier = icbm.type == 1,
             },
         })
+
+        script.raise_event(
+            Custom_Events.cn_on_payload_delivered.name,
+            {
+                name = defines.events[Custom_Events.cn_on_payload_delivered.name],
+                tick = game.tick,
+                icbm_data = icbm,
+            }
+        )
     else
         -- log(serpent.block(icbm))
         -- log(serpent.block(storage))
@@ -1250,11 +1281,11 @@ function icbm_utils.print_space_launched_time_to_target_message(data)
                 if (math.floor(v.time_to_target / 60) >= 1) then
                     if (k.player_launched_index == 0) then
                         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name })) then
-                            k.force.print({ "icbm-utils.seconds-to-target", math.floor(v.time_to_target / 60) })
+                            k.force.print({ "icbm-utils.seconds-to-target", k.item_number, math.floor(v.time_to_target / 60) })
                         end
                     else
                         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name })) then
-                            k.force.print({ "icbm-utils.seconds-to-target", math.floor(v.time_to_target / 60) })
+                            k.force.print({ "icbm-utils.seconds-to-target", k.item_number, math.floor(v.time_to_target / 60) })
                         end
                     end
 

@@ -1,7 +1,9 @@
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Constants = require("scripts.constants.constants")
 local Custom_Input = require("prototypes.custom-input.custom-input")
-local Gui_Controller = require("scripts.controllers.gui-controller")
+local Initialization = require("scripts.initialization")
+local Rocket_Silo_Gui_Controller = require("scripts.controllers.guis.rocket-silo-gui-controller")
+local Rocket_Dashboard_Gui_Controller = require("scripts.controllers.guis.rocket-dashboard-gui-controller")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Log = require("libs.log.log")
 local Planet_Controller = require("scripts.controllers.planet-controller")
@@ -24,7 +26,8 @@ local valid_event_effect_ids =
 local events = {
     [Configurable_Nukes_Controller.name] = Configurable_Nukes_Controller,
     [Custom_Input.name] = Custom_Input,
-    [Gui_Controller.name] = Gui_Controller,
+    [Rocket_Silo_Gui_Controller.name] = Rocket_Silo_Gui_Controller,
+    [Rocket_Dashboard_Gui_Controller.name] = Rocket_Dashboard_Gui_Controller,
     [ICBM_Utils.name] = ICBM_Utils,
     [Planet_Controller.name] = Planet_Controller,
     [Rocket_Silo_Controller.name] = Rocket_Silo_Controller,
@@ -262,4 +265,52 @@ Event_Handler:register_event({
     source_name = "events.on_load",
     func_name = "events.on_load",
     func = events.on_load,
+})
+
+function events.on_configuration_changed(event)
+    Log.debug("events.on_configuration_changed")
+    Log.info(event)
+
+    local sa_active = script and script.active_mods and script.active_mods["space-age"]
+    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+    storage.sa_active = sa_active
+    storage.se_active = se_active
+
+    if (event.mod_changes) then
+        --[[ Check if our mod updated ]]
+        if (event.mod_changes["configurable-nukes"]) then
+            game.print({ "configurable-nukes-controller.on-configuration-changed", Constants.mod_name })
+
+            Initialization.init({ maintain_data = true })
+
+            local cn_controller_data = storage and storage.configurable_nukes_controller or {}
+
+            cn_controller_data.reinitialized = true
+            cn_controller_data.reinit_tick = game.tick
+
+            cn_controller_data.initialized = true
+            cn_controller_data.init_tick = game.tick
+
+            -- Constants.get_mod_data(true)
+
+            storage.configurable_nukes_controller = {
+                planet_index = cn_controller_data.planet_index,
+                surface_name = cn_controller_data.surface_name,
+                space_location = cn_controller_data.space_location,
+                tick = game.tick,
+                prev_tick = cn_controller_data.tick,
+                initialized = cn_controller_data.initialized,
+                initialized_tick = cn_controller_data.init_tick,
+                reinitialized = cn_controller_data.reinitialized,
+                reinitialized_tick = cn_controller_data.reinit_tick,
+            }
+        end
+    end
+end
+Event_Handler:register_event({
+    event_name = "on_configuration_changed",
+    source_name = "events.on_configuration_changed",
+    func_name = "events.on_configuration_changed",
+    func = events.on_configuration_changed,
 })

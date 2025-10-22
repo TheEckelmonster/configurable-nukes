@@ -10,10 +10,10 @@ local Log = require("libs.log.log")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Settings_Service = require("scripts.services.settings-service")
 
-local gui_service = {}
+local rocket_silo_gui_service = {}
 
-function gui_service.create_rocket_silo_gui(data)
-    Log.debug("gui_service.on_gui_opened")
+function rocket_silo_gui_service.create_rocket_silo_gui(data)
+    Log.debug("rocket_silo_gui_service.on_gui_opened")
     Log.info(data)
 
     if (not data or type(data) ~= "table") then return end
@@ -248,8 +248,8 @@ function gui_service.create_rocket_silo_gui(data)
 end
 
 
-gui_service.configurable_nukes = true
+rocket_silo_gui_service.configurable_nukes = true
 
-local _gui_service = gui_service
+local _gui_service = rocket_silo_gui_service
 
-return gui_service
+return rocket_silo_gui_service

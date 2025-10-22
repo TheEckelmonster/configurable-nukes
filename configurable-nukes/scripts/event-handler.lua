@@ -14,6 +14,7 @@ local event_handlers =
 
 local event_name_black_list =
 {
+    on_init = "on_init",
     on_load = "on_load",
     on_configuration_changed = "on_configuration_changed",
     on_nth_tick = "on_nth_tick",
@@ -114,6 +115,14 @@ function event_handlers.on_configuration_changed(event)
     Log.info(event)
 
     for _, v in ipairs(event_handlers.events["on_configuration_changed"].order) do
+        v.func(event)
+    end
+end
+
+function event_handlers.on_init()
+    Log.debug("event_handlers.on_init")
+
+    for _, v in ipairs(event_handlers.events["on_init"].order) do
         v.func(event)
     end
 end
@@ -233,6 +242,10 @@ function event_handlers:register_event(data)
                 script.on_nth_tick(data.nth_tick, event_handlers.on_nth_tick)
                 event_registered = true
             end
+        elseif (data.event_name == "on_init") then
+            event_name = "on_init"
+            script.on_init(event_handlers.on_init)
+            event_registered = true
         elseif (data.event_name == "on_load") then
             event_name = "on_load"
             script.on_load(event_handlers.on_load)

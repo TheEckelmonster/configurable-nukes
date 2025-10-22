@@ -9,6 +9,7 @@ local Zone_Static_Data = require("scripts.data.static.zone-static-data")
 
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
+local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local Log = require("libs.log.log")
 local ICBM_Data = require("scripts.data.ICBM-data")
@@ -56,18 +57,36 @@ function rocket_silo_utils.scrub_launch(data)
     if (not data) then return end
     if (not data.tick) then return end
     if (not data.tick_event) then return end
-    if (not data.player_index) then return end
-    if (not data.player) then return end
-    if (not data.order or type(data.order) ~= "string") then return end
-    if (not data.space_launches_initiated or not type(data.space_launches_initiated) == "table") then return end
+    if (not data.player_index or type(data.player_index) ~= "number" or data.player_index < 1) then return end
+    if (not data.player) then
+        data.player = game.get_player(data.player_index)
+        if (not data.player or not data.player.valid) then
+            return
+        end
+    end
+    if (not data.order or type(data.order) ~= "string") then
+        if (not data.remove or not data.enqueued_data or type(data.enqueued_data) ~= "table") then
+            return
+        end
+    end
+    -- if (not data.space_launches_initiated or not type(data.space_launches_initiated) == "table") then return end
+    if (not data.space_launches_initiated or not type(data.space_launches_initiated) == "table") then data.space_launches_initiated = {} end
     if (data.print_message == nil or type(data.print_message) ~= "boolean") then data.print_message = true end
 
     local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(data.player.force.index)
     Log.warn(force_launch_data)
 
     if (force_launch_data.launch_action_queue.count > 0) then
-        local launch_to_scrub = force_launch_data.launch_action_queue:dequeue({ order = data.order, maintain = false})
+        -- local launch_to_scrub = force_launch_data.launch_action_queue:dequeue({ order = data.order, maintain = false})
+        local launch_to_scrub = nil
+        if (data.order) then
+            launch_to_scrub = force_launch_data.launch_action_queue:dequeue({ order = data.order, maintain = false })
+        elseif (data.remove and data.enqueued_data) then
+            launch_to_scrub = force_launch_data.launch_action_queue:remove({ data = data.enqueued_data })
+        end
+
         Log.warn(launch_to_scrub)
+        if (not launch_to_scrub) then return end
 
         local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
         local icbm_meta_data_source = configurable_nukes_data.icbm_meta_data[launch_to_scrub.icbm_data.surface_name]
@@ -105,6 +124,16 @@ function rocket_silo_utils.scrub_launch(data)
 
         launch_to_scrub.icbm_data.scrubbed = true
         ICBM_Repository.update_icbm_data(launch_to_scrub.icbm_data)
+
+        launch_to_scrub.icbm_data.cargo_pod = nil
+        script.raise_event(
+            Custom_Events.cn_on_rocket_launch_scrubbed.name,
+            {
+                name = defines.events[Custom_Events.cn_on_rocket_launch_scrubbed.name],
+                tick = game.tick,
+                icbm_data = launch_to_scrub.icbm_data,
+            }
+        )
 
         if (    data.print_message
             and launch_to_scrub.icbm_data.force
