@@ -984,10 +984,10 @@ function icbm_utils.payload_arrive_event(event, event_data)
 
     if (icbm_utils.payload_arrived({ icbm = event_data.icbm_data, surface = event_data.icbm_data.surface, target_surface = event_data.icbm_data.target_surface })) then
         -- Success
-        log("payload arrived successfully")
+        Log.warn("payload arrived successfully")
     else
         log("payload failed to arrive successfully")
-        error("payload failed to arrive successfully")
+        -- error("payload failed to arrive successfully")
     end
 end
 

@@ -390,7 +390,6 @@ function rocket_silo_utils.launch_rocket(event)
                     Log.info(space_location.orbit)
                     local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(space_location.orbit.surface_name)
                     if (rocket_silo_meta_data) then
-                        log(serpent.block(rocket_silo_meta_data))
                         for k, v in pairs(rocket_silo_meta_data.rocket_silos) do
                             if (    v.entity
                                 and v.entity.valid

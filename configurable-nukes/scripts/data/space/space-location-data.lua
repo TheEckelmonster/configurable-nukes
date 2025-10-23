@@ -72,12 +72,8 @@ function space_location_data:new(o)
 
     obj = Data:new(obj)
 
-    -- log(serpent.block(getmetatable(obj)))
-
     setmetatable(obj, self)
     self.__index = self
-
-    -- log(serpent.block(getmetatable(obj)))
 
     return obj
 end
@@ -99,10 +95,6 @@ function space_location_data:get_stellar_system(data)
             return self.name:lower()
         end
     else
-        log(serpent.block(self.name))
-        log(serpent.block(self.type))
-        log(serpent.block(self.parent.name))
-        log(serpent.block(self.parent.type))
         return self.parent:get_stellar_system({ count = data.count + 1})
     end
 end

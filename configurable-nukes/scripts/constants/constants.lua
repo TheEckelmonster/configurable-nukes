@@ -1118,14 +1118,8 @@ locals.get_space_exploration_universe = function(data)
     --     log(serpent.block(k))
     -- end
 
-    -- log(serpent.block(constants.mod_data_dictionary))
-    -- log(serpent.block(constants["space-exploration"]))
-    -- log(serpent.block(constants.space_exploration_dictionary))
-    -- log(serpent.line(constants.space_exploration_dictionary))
-
     if (not storage.constants) then storage.constants = {} end
     if (not storage.constants.mod_data) then storage.constants.mod_data = constants.mod_data end
-    -- if (not storage.constants.mod_data_dictionary) then storage.constants.mod_data_dictionary = constants.mod_data_dictionary end
     storage.constants.mod_data_dictionary = constants.mod_data_dictionary
     storage.constants["space-exploration"] = constants["space-exploration"]
     storage.constants.space_exploration_dictionary = constants.space_exploration_dictionary

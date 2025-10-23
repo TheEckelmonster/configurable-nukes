@@ -228,7 +228,6 @@ function rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard(data)
             while i <= #icbms_array do
                 local icbm_data = icbms_array[i]
                 if (icbm_data.force_index > 0 and icbm_data.force_index < 64) then
-                    log(serpent.block(icbm_data.item_number))
                     if (icbm_data.cargo_pod and not icbm_data.cargo_pod.valid) then icbm_data.cargo_pod = nil end
 
                     local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
@@ -255,8 +254,6 @@ function rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard(data)
                 i = i + 1
             end
         end
-
-        cn_frame_main.force_auto_center()
     end
 
     return storage_ref[Rocket_Dashboard_Constants.frame_main_name]

@@ -115,7 +115,6 @@ local data_utils = {
                 elseif (target_effects[i].type == "nested-result") then
                     if (target_effects[i].action.type == "area") then
                         if (target_effects[i].action.action_delivery.type == "projectile") then
-                            -- log(serpent.block(target_effects[i].action.action_delivery.projectile))
                             if (target_effects[i].action.action_delivery.projectile:find(entity_name .. "-ground-zero-projectile-" .. object_entities.dictionary[quality_object.entity.name].quality, 1, true)) then
                                 local ground_zero_projectile_effects = data.raw["projectile"][entity_name .. "-ground-zero-projectile-" .. object_entities.dictionary[quality_object.entity.name].quality]
                                 ground_zero_projectile_effects = ground_zero_projectile_effects.action
