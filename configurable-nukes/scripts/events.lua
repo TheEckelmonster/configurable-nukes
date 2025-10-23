@@ -35,7 +35,7 @@ local events = {
     [Settings_Controller.name] = Settings_Controller,
 }
 
---[[ TODO: Move this to its own controller/service/utils ]]
+--[[ TODO: Move this to its own controller/service/utils? ]]
 script.on_event(defines.events.on_script_trigger_effect, function (event)
     Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
     Log.info(event)
@@ -203,14 +203,12 @@ function events.on_load()
 
     if (not storage or not storage.event_handlers or type(storage.event_handlers) ~= "table") then return end
 
-    -- log(serpent.block(storage.event_handlers.restore_on_load))
     if (storage.event_handlers.restore_on_load) then
         local events_to_restore = storage.event_handlers.restore_on_load
 
         local restore_on_load = function (data)
             Log.debug("restore_on_load")
             Log.info(data)
-            -- log(serpent.block(data))
 
             local i = 1
             while data.event.order and i <= #data.event.order do
