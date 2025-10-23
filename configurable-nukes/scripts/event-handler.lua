@@ -175,6 +175,8 @@ function event_handlers:register_event(data)
     local event_data = nil
     local event = nil
     if (data.nth_tick and type(data.nth_tick) == "number" and data.nth_tick >= 0) then
+        data.nth_tick = data.nth_tick - data.nth_tick % 1
+
         if (not event_handlers.events["on_nth_tick"]) then event_handlers.events["on_nth_tick"] = {} end
         if (not event_handlers.events["on_nth_tick"][data.nth_tick]) then event_handlers.events["on_nth_tick"][data.nth_tick] = new_event() end
 
@@ -446,6 +448,7 @@ function event_handlers:unregister_event(data)
     if (data.event_name == "on_nth_tick" and event_handlers.events["on_nth_tick"]) then
         if (data.nth_tick ~= nil) then
             if (type(data.nth_tick) == "number" and data.nth_tick >= 0) then
+                data.nth_tick = data.nth_tick - data.nth_tick % 1
                 event_name = "on_nth_tick"
                 event = event_handlers.events["on_nth_tick"][data.nth_tick]
             end

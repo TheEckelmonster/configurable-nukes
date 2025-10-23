@@ -15,7 +15,7 @@ force_launch_data.force_name = nil
 --[[ indexed by force_index ]]
 force_launch_data.launch_action_queue = nil
 function force_launch_data:new_force_launch_data_queue(data)
-    return Queue_Data:new({ name = "launch_action_queue", limit = 2 ^ 5 })
+    return Queue_Data:new({ name = "launch_action_queue", limit = 2 ^ 10 })
 end
 
 function force_launch_data:new(o)

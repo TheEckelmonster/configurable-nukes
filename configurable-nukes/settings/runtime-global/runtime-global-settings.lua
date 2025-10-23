@@ -49,6 +49,8 @@ data:extend({
     Runtime_Global_Settings_Constants.settings.ALLOW_LAUNCH_WHEN_NO_SURFACE_SELECTED,
 
     Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK,
+
+    Runtime_Global_Settings_Constants.settings.DASHBOARD_REFRESH_RATE,
 })
 
 if (k2so_active) then

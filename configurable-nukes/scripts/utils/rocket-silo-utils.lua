@@ -69,7 +69,6 @@ function rocket_silo_utils.scrub_launch(data)
             return
         end
     end
-    -- if (not data.space_launches_initiated or not type(data.space_launches_initiated) == "table") then return end
     if (not data.space_launches_initiated or not type(data.space_launches_initiated) == "table") then data.space_launches_initiated = {} end
     if (data.print_message == nil or type(data.print_message) ~= "boolean") then data.print_message = true end
 
@@ -77,7 +76,6 @@ function rocket_silo_utils.scrub_launch(data)
     Log.warn(force_launch_data)
 
     if (force_launch_data.launch_action_queue.count > 0) then
-        -- local launch_to_scrub = force_launch_data.launch_action_queue:dequeue({ order = data.order, maintain = false})
         local launch_to_scrub = nil
         if (data.order) then
             launch_to_scrub = force_launch_data.launch_action_queue:dequeue({ order = data.order, maintain = false })

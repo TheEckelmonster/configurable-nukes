@@ -94,27 +94,6 @@ function locals.initialize(from_scratch, maintain_data)
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
-    -- if (se_active) then
-    --     local event_num = remote.call("space-exploration", "get_on_zone_surface_created_event")
-
-    --     if (event_num ~= nil and type(event_num) == "number") then
-    --         local event_position = Event_Handler:get_event_position({
-    --             event_name = event_num,
-    --             source_name = "Planet_Controller.on_surface_created",
-    --         })
-
-    --         if (event_position == nil) then
-    --             Event_Handler:register_event({
-    --                 event_num = event_num,
-    --                 fallback_event_name = "on_zone_surface_created",
-    --                 source_name = "Planet_Controller.on_surface_created",
-    --                 func_name = "Planet_Controller.on_surface_created",
-    --                 func = Planet_Controller.on_surface_created,
-    --             })
-    --         end
-    --     end
-    -- end
-
     -- Configurable Nukes
     if (from_scratch) then
         log({ "initialization.initialization-anew", Constants.mod_name })

@@ -25,8 +25,8 @@ function string_utils.find_invalid_substrings(string_data)
 end
 
 function string_utils.format_surface_name(data)
-    Log.debug("string_utils.format_surface_name")
-    Log.info(data)
+    -- Log.debug("string_utils.format_surface_name")
+    -- Log.info(data)
 
     if (not data or type(data) ~= "table") then return end
     if (not data.string_data or type(data.string_data) ~= "string") then return end
@@ -65,7 +65,6 @@ locals.is_string_valid = function(string_data)
     Log.debug("string_utils, is_string_valid")
     Log.info(string_data)
 
-    -- return string_data and type(string_data) == "string" and #string_data > 0
     return string_data and type(string_data) == "string" and string_data:gsub("%s+", "") ~= ""
 end
 

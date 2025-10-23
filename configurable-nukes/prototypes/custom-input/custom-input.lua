@@ -24,6 +24,14 @@ local custom_input =
         localised_name = { "custom-input.scrub-all-launches", },
         action = "lua",
     },
+    TOGGLE_DASHBOARD = {
+        type = "custom-input",
+        name = "configurable-nukes-toggle-dashboard",
+        key_sequence = "CONTROL + SHIFT + D",
+        consuming = "none",
+        localised_name = { "custom-input.toggle-dashboard", },
+        action = "lua",
+    },
 }
 
 if (mods and not script) then
@@ -31,6 +39,7 @@ if (mods and not script) then
         custom_input.SCRUB_NEWEST_LAUNCH,
         custom_input.SCRUB_OLDEST_LAUNCH,
         custom_input.SCRUB_ALL_LAUNCHES,
+        custom_input.TOGGLE_DASHBOARD,
     })
 end
 

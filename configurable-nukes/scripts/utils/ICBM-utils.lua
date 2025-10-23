@@ -690,7 +690,6 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         local launch_duration_ticks = 511 + math.random(-1, 1) * math.random(32)
         time_to_target = time_to_target + launch_duration_ticks
         icbm_utils.space_launches_initiated[icbm_data] = {
-            -- launch_duration_ticks = launch_duration_ticks,
             tick = game.tick + launch_duration_ticks,
             time_to_target = time_to_target - launch_duration_ticks,
         }
@@ -705,6 +704,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     Log.warn("time_to_target = " .. time_to_target)
 
     icbm_data.tick_to_target = data.tick + time_to_target
+    icbm_data.tick_to_target = icbm_data.tick_to_target - icbm_data.tick_to_target % 1
     ICBM_Repository.update_icbm_data(icbm_data)
 
     Log.warn(serpent.block(icbm_data))

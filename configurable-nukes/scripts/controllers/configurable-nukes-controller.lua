@@ -219,54 +219,6 @@ Event_Handler:register_event({
     func = configurable_nukes_controller.on_tick,
 })
 
--- function configurable_nukes_controller.on_configuration_changed(event)
---     Log.debug("configurable_nukes_controller.on_configuration_changed")
---     Log.info(event)
-
---     local sa_active = script and script.active_mods and script.active_mods["space-age"]
---     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
---     storage.sa_active = sa_active
---     storage.se_active = se_active
-
---     if (event.mod_changes) then
---         --[[ Check if our mod updated ]]
---         if (event.mod_changes["configurable-nukes"]) then
---             game.print({ "configurable-nukes-controller.on-configuration-changed", Constants.mod_name })
-
---             Initialization.init({ maintain_data = true })
-
---             local cn_controller_data = storage and storage.configurable_nukes_controller or configurable_nukes_controller
-
---             cn_controller_data.reinitialized = true
---             cn_controller_data.reinit_tick = game.tick
-
---             cn_controller_data.initialized = true
---             cn_controller_data.init_tick = game.tick
-
---             -- Constants.get_mod_data(true)
-
---             storage.configurable_nukes_controller = {
---                 planet_index = cn_controller_data.planet_index,
---                 surface_name = cn_controller_data.surface_name,
---                 space_location = cn_controller_data.space_location,
---                 tick = game.tick,
---                 prev_tick = cn_controller_data.tick,
---                 initialized = true,
---                 initialized_tick = cn_controller_data.init_tick,
---                 reinitialized = false,
---                 reinitialized_tick = cn_controller_data.reinit_tick,
---             }
---         end
---     end
--- end
--- Event_Handler:register_event({
---     event_name = "on_configuration_changed",
---     source_name = "configurable_nukes_controller.on_configuration_changed",
---     func_name = "configurable_nukes_controller.on_configuration_changed",
---     func = configurable_nukes_controller.on_configuration_changed,
--- })
-
 configurable_nukes_controller.configurable_nukes = true
 
 local _configurable_nukes_controller = configurable_nukes_controller
