@@ -1,34 +1,10 @@
---[[ Data types and metatables ]]
-local Anomaly_Data = require("scripts.data.space.celestial-objects.anomaly-data")
-local Asteroid_Belt_Data = require("scripts.data.space.celestial-objects.asteroid-belt-data")
-local Asteroid_Field_Data = require("scripts.data.space.celestial-objects.asteroid-field-data")
-local Data = require("scripts.data.data")
-local Moon_Data = require("scripts.data.space.celestial-objects.moon-data")
-local Orbit_Data = require("scripts.data.space.celestial-objects.orbit-data")
-local Planet_Data = require("scripts.data.space.celestial-objects.planet-data")
-local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
-local Spaceship_Data = require("scripts.data.space.spaceship-data")
-local Space_Location_Data = require("scripts.data.space.space-location-data")
-local Star_Data = require("scripts.data.space.celestial-objects.star-data")
-
-script.register_metatable("Anomaly_Data", Anomaly_Data)
-script.register_metatable("Asteroid_Belt_Data", Asteroid_Belt_Data)
-script.register_metatable("Asteroid_Field_Data", Asteroid_Field_Data)
-script.register_metatable("Data", Data)
-script.register_metatable("Moon_Data", Moon_Data)
-script.register_metatable("Orbit_Data", Orbit_Data)
-script.register_metatable("Planet_Data", Planet_Data)
-script.register_metatable("Rocket_Silo_Data", Rocket_Silo_Data)
-script.register_metatable("Spaceship_Data", Spaceship_Data)
-script.register_metatable("Space_Location_Data", Space_Location_Data)
-script.register_metatable("Star_Data", Star_Data)
-
----
-
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Constants = require("scripts.constants.constants")
--- local Custom_Input = require("prototypes.custom-input.custom-input")
-local Gui_Controller = require("scripts.controllers.gui-controller")
+local Custom_Input = require("prototypes.custom-input.custom-input")
+local Initialization = require("scripts.initialization")
+local Rocket_Silo_Gui_Controller = require("scripts.controllers.guis.rocket-silo-gui-controller")
+local Rocket_Dashboard_Gui_Controller = require("scripts.controllers.guis.rocket-dashboard-gui-controller")
+local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Log = require("libs.log.log")
 local Planet_Controller = require("scripts.controllers.planet-controller")
 local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
@@ -47,8 +23,19 @@ local valid_event_effect_ids =
     ["kr-atomic-artillery-projectile-fired"] = true,
 }
 
+local events = {
+    [Configurable_Nukes_Controller.name] = Configurable_Nukes_Controller,
+    [Custom_Input.name] = Custom_Input,
+    [Rocket_Silo_Gui_Controller.name] = Rocket_Silo_Gui_Controller,
+    [Rocket_Dashboard_Gui_Controller.name] = Rocket_Dashboard_Gui_Controller,
+    [ICBM_Utils.name] = ICBM_Utils,
+    [Planet_Controller.name] = Planet_Controller,
+    [Rocket_Silo_Controller.name] = Rocket_Silo_Controller,
+    [Settings_Controller.name] = Settings_Controller,
+    [Settings_Controller.name] = Settings_Controller,
+}
 
---[[ TODO: Move this to its own controller/service/utils ]]
+--[[ TODO: Move this to its own controller/service/utils? ]]
 script.on_event(defines.events.on_script_trigger_effect, function (event)
     Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
     Log.info(event)
@@ -185,48 +172,143 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     end
 end)
 
+function events.on_load()
+    Log.debug("events.on_load")
 
-script.on_configuration_changed(Configurable_Nukes_Controller.on_configuration_changed)
-script.on_load(Configurable_Nukes_Controller.on_load)
+    local sa_active = script and script.active_mods and script.active_mods["space-age"]
+    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
-script.on_event(defines.events.on_tick, Configurable_Nukes_Controller.do_tick)
+    if (se_active) then
+        local event_num = remote.call("space-exploration", "get_on_zone_surface_created_event")
 
--- script.on_event(defines.events.on_research_finished, Configurable_Nukes_Controller.research_finished)
+        if (event_num ~= nil and type(event_num) == "number") then
+            local event_position = Event_Handler:get_event_position({
+                event_name = event_num,
+                source_name = "Planet_Controller.on_surface_created",
+            })
 
-script.on_event(defines.events.on_surface_created, Planet_Controller.on_surface_created)
--- script.on_event(defines.events.on_surface_deleted, Planet_Controller.on_surface_deleted)
-script.on_event(defines.events.on_pre_surface_deleted, Planet_Controller.on_pre_surface_deleted)
+            if (event_position == nil) then
+                Event_Handler:register_event({
+                    event_num = event_num,
+                    fallback_event_name = "on_zone_surface_created",
+                    source_name = "Planet_Controller.on_surface_created",
+                    func_name = "Planet_Controller.on_surface_created",
+                    func = Planet_Controller.on_surface_created,
+                })
+            end
+        end
+    end
 
-script.on_event(defines.events.on_player_selected_area, Rocket_Silo_Controller.launch_rocket)
--- script.on_event(defines.events.on_player_reverse_selected_area, Rocket_Silo_Controller.on_player_reverse_selected_area)
-script.on_event(defines.events.on_cargo_pod_finished_ascending, Rocket_Silo_Controller.cargo_pod_finished_ascending)
+    Constants.get_mod_data(true, { on_load = true })
 
-script.on_event(defines.events.on_runtime_mod_setting_changed, Settings_Controller.on_runtime_mod_setting_changed)
+    if (not storage or not storage.event_handlers or type(storage.event_handlers) ~= "table") then return end
 
---[[ custom-inputs-events ]]
+    if (storage.event_handlers.restore_on_load) then
+        local events_to_restore = storage.event_handlers.restore_on_load
 
--- script.on_event(Custom_Input.LAUNCH_IPBM.name, Rocket_Silo_Controller.launch_ipbm)
+        local restore_on_load = function (data)
+            Log.debug("restore_on_load")
+            Log.info(data)
 
---[[ GUI ]]
+            local i = 1
+            while data.event.order and i <= #data.event.order do
+                local search_pattern = "(%g+)%.(%g+)"
+                local _, _, class, func_name = data.event.order[i].func_name:find(search_pattern, 1)
+                local func = events and events[class] and events[class][func_name] or nil
 
-script.on_event(defines.events.on_gui_opened, Gui_Controller.on_gui_opened)
-script.on_event(defines.events.on_gui_closed, Gui_Controller.on_gui_closed)
-script.on_event(defines.events.on_gui_elem_changed, Gui_Controller.on_gui_elem_changed)
-script.on_event(defines.events.on_gui_checked_state_changed, Gui_Controller.on_gui_checked_state_changed)
-script.on_event(defines.events.on_gui_selection_state_changed, Gui_Controller.on_gui_selection_state_changed)
-script.on_event(defines.events.on_entity_settings_pasted, Gui_Controller.on_entity_settings_pasted)
+                if (type(func) == "function") then
+                    Event_Handler:register_event({
+                        event_name = data.event.order[i].event_name,
+                        source_name = data.event.order[i].source_name,
+                        func_name = data.event.order[i].func_name,
+                        nth_tick = data.nth_tick,
+                        restore_on_load = true,
+                        func = func,
+                        func_data = data.event.order[i].func_data,
+                    })
+                    i = i + 1
+                end
+            end
 
---[[ rocket-silo tracking ]]
-script.on_event(defines.events.on_entity_died, Rocket_Silo_Controller.rocket_silo_mined, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.on_built_entity, Rocket_Silo_Controller.rocket_silo_built, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.on_entity_cloned, Rocket_Silo_Controller.rocket_silo_cloned, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.on_robot_built_entity, Rocket_Silo_Controller.rocket_silo_built, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.script_raised_built, Rocket_Silo_Controller.rocket_silo_built, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.script_raised_revive, Rocket_Silo_Controller.rocket_silo_built, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.on_player_mined_entity, Rocket_Silo_Controller.rocket_silo_mined, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.on_robot_mined_entity, Rocket_Silo_Controller.rocket_silo_mined, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.script_raised_destroy, Rocket_Silo_Controller.rocket_silo_mined_script, Rocket_Silo_Controller.filter)
+            i = 1
+            while data.event.order and i <= #data.event.order do
+                Event_Handler:set_event_position({
+                    event_name = data.event.order[i].event_name,
+                    source_name = data.event.order[i].source_name,
+                    new_position = data.event.order[i].index,
+                })
 
--- space-platforms
-script.on_event(defines.events.on_space_platform_built_entity, Rocket_Silo_Controller.on_space_platform_built_entity, Rocket_Silo_Controller.filter)
-script.on_event(defines.events.on_space_platform_mined_entity, Rocket_Silo_Controller.on_space_platform_mined_entity, Rocket_Silo_Controller.filter)
+                i = i + 1
+            end
+        end
+
+        for k, v in pairs(events_to_restore) do
+            if (k == "on_nth_tick") then
+                for k_2, v_2 in pairs(v) do
+                    restore_on_load({
+                        event = v_2,
+                        nth_tick = k_2
+                    })
+                end
+            else
+                restore_on_load({
+                    event = v_2,
+                })
+            end
+        end
+    end
+end
+Event_Handler:register_event({
+    event_name = "on_load",
+    source_name = "events.on_load",
+    func_name = "events.on_load",
+    func = events.on_load,
+})
+
+function events.on_configuration_changed(event)
+    Log.debug("events.on_configuration_changed")
+    Log.info(event)
+
+    local sa_active = script and script.active_mods and script.active_mods["space-age"]
+    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+    storage.sa_active = sa_active
+    storage.se_active = se_active
+
+    if (event.mod_changes) then
+        --[[ Check if our mod updated ]]
+        if (event.mod_changes["configurable-nukes"]) then
+            game.print({ "configurable-nukes-controller.on-configuration-changed", Constants.mod_name })
+
+            Initialization.init({ maintain_data = true })
+
+            local cn_controller_data = storage and storage.configurable_nukes_controller or {}
+
+            cn_controller_data.reinitialized = true
+            cn_controller_data.reinit_tick = game.tick
+
+            cn_controller_data.initialized = true
+            cn_controller_data.init_tick = game.tick
+
+            -- Constants.get_mod_data(true)
+
+            storage.configurable_nukes_controller = {
+                planet_index = cn_controller_data.planet_index,
+                surface_name = cn_controller_data.surface_name,
+                space_location = cn_controller_data.space_location,
+                tick = game.tick,
+                prev_tick = cn_controller_data.tick,
+                initialized = cn_controller_data.initialized,
+                initialized_tick = cn_controller_data.init_tick,
+                reinitialized = cn_controller_data.reinitialized,
+                reinitialized_tick = cn_controller_data.reinit_tick,
+            }
+        end
+    end
+end
+Event_Handler:register_event({
+    event_name = "on_configuration_changed",
+    source_name = "events.on_configuration_changed",
+    func_name = "events.on_configuration_changed",
+    func = events.on_configuration_changed,
+})

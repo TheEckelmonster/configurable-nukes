@@ -3,7 +3,7 @@ local Log = require("libs.log.log")
 
 local moon_data = {}
 
-moon_data.type = "moon"
+moon_data.type = "moon-data"
 
 function moon_data:new(o)
     Log.debug("moon_data:new")
@@ -33,7 +33,5 @@ function moon_data:is_solid(data)
 end
 
 setmetatable(moon_data, Space_Location_Data)
-local Moon_Data = moon_data:new(Moon_Data)
-Moon_Data.mt = moon_data
-
-return Moon_Data
+moon_data.__index = moon_data
+return moon_data

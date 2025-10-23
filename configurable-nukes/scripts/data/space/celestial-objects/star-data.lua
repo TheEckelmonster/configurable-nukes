@@ -3,7 +3,8 @@ local Log = require("libs.log.log")
 
 local star_data = {}
 
-star_data.type = "star"
+star_data.type = "star-data"
+
 star_data.star_gravity_well = nil
 
 function star_data:new(o)
@@ -35,7 +36,5 @@ function star_data:is_solid(data)
 end
 
 setmetatable(star_data, Space_Location_Data)
-local Star_Data = star_data:new(Star_Data)
-Star_Data.mt = star_data
-
-return Star_Data
+star_data.__index = star_data
+return star_data

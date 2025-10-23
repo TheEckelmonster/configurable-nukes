@@ -32,7 +32,7 @@ function rocket_silo_meta_repository.save_rocket_silo_meta_data(space_location_n
         end
     else
         if (not space_location_name:find("spaceship-", 1, true)) then
-            if (not Constants.space_exploration_dictionary[space_location_name:lower()]) then log("reindexing") Constants.get_space_exploration_universe(true) end
+            if (not Constants.space_exploration_dictionary[space_location_name:lower()]) then Constants.get_space_exploration_universe(true) end
             if (not Constants.space_exploration_dictionary[space_location_name:lower()]) then
                 if (not Constants.space_exploration_dictionary[space_location_name]) then return return_val end
             end

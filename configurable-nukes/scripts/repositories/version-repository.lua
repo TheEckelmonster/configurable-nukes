@@ -73,7 +73,7 @@ function version_repository.get_version_data(optionals)
     optionals = optionals or {}
 
     if (not storage) then return return_val end
-    if (not storage.configurable_nukes) then log("creating new configurable_nukes_data 3"); storage.configurable_nukes = Configurable_Nukes_Data:new() end
+    if (not storage.configurable_nukes) then storage.configurable_nukes = Configurable_Nukes_Data:new() end
     if (not storage.configurable_nukes.version_data) then
         -- If it doesn't exist, generate it
         storage.configurable_nukes.version_data = return_val

@@ -1,4 +1,33 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.7.0
+Date: 2025-10-23
+  Minor Features:
+    - Rocket launches are now scrubbable/can be cancelled, all the way up until the actual payload is instantiated on the given target surface
+      - Can be scrubbed/cancelled by:
+        - New custom-inputs (defaults):
+          - Control + Shift + Z -> Scrub the newest launch
+          - Control + Alt + Z -> Scrub the oldest launch
+          - Control + Alt + Shift + Z -> Scrub all launches
+          - Clicking the "Scrub" button on the ICBM Dashboard
+    - New ICBM Dashboard GUI -> displays information on in-flight rocket launches
+      - New "Toggle" button in the top left of the screen will toggle the visibility of the GUI
+        - Control + Shift clicking the button will center the GUI
+      - Can also be toggled via new custom-input (default): Control + Shift + D
+      - Displays the Target-#, Source, Destination, Time remaining, and a scrub/cancel button for each in-flight launch
+        - Clicking either the source or destination will ping the respective coordinates for that launch on the map
+        - Clicking the scrub button for a given launch/row will scrub/cancel that specific launch/row
+      - Can be "pinned" such that the GUI will stay open, even if focus shifts away from it
+      - Configurable runtime setting to change how frequently the dashboard GUI refreshes itself
+  Misc:
+    - Added the "Target-#" to several localised messages
+      - Unfortunate side-effect is that some messages may display improperly after initially updating
+        - Purely cosmetic, functionally everything else is working as intended
+    - Implemented a better means of event handling
+      - Provides greater flexibility and control of event handling
+      - Allows for improving how ICBMs are tracked and delivered
+        - No need to constantly check every few ticks if a given payload has been delivered or not
+        - Now an event will fire exactly when a payload is delivered
+---------------------------------------------------------------------------------------------------
 Version: 0.6.3
 Date: 2025-10-17
   Bug Fixes:

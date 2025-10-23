@@ -1,18 +1,35 @@
 -- If already defined, return
-if _gui_controller and _gui_controller.configurable_nukes then
-  return _gui_controller
+if _rocket_silo_gui_controller and _rocket_silo_gui_controller.configurable_nukes then
+  return _rocket_silo_gui_controller
 end
 
 local Util = require("__core__.lualib.util")
 
-local Gui_Service = require("scripts.services.gui-service")
+local Rocket_Silo_Gui_Service = require("scripts.services.guis.rocket-silo-gui-service")
 local Log = require("libs.log.log")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 
-local gui_controller = {}
+local rocket_silo_gui_controller = {}
+rocket_silo_gui_controller.name = "rocket_silo_gui_controller"
 
-function gui_controller.on_gui_opened(event)
-    Log.debug("gui_controller.on_gui_opened")
+-- function rocket_silo_gui_controller.on_gui_click(event)
+--     Log.debug("rocket_silo_gui_controller.on_gui_clicked")
+--     Log.info(event)
+
+--     if (not event or type(event) ~= "table") then return end
+--     if (not event.element) then return end
+--     if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
+
+-- end
+-- Event_Handler:register_event({
+--     event_name = "on_gui_click",
+--     source_name = "rocket_silo_gui_controller.on_gui_click",
+--     func_name = "rocket_silo_gui_controller.on_gui_click",
+--     func = rocket_silo_gui_controller.on_gui_click,
+-- })
+
+function rocket_silo_gui_controller.on_gui_opened(event)
+    Log.debug("rocket_silo_gui_controller.on_gui_opened")
     Log.info(event)
 
     if (not event or type(event) ~= "table") then return end
@@ -36,15 +53,21 @@ function gui_controller.on_gui_opened(event)
     if (not player or not player.valid) then return end
 
     if (not player.gui.relative.cn_frame_outer_circuit_launchable) then
-        Gui_Service.create_rocket_silo_gui({
+        Rocket_Silo_Gui_Service.create_rocket_silo_gui({
             rocket_silo_data = rocket_silo_data,
             player = player,
         })
     end
 end
+Event_Handler:register_event({
+    event_name = "on_gui_opened",
+    source_name = "rocket_silo_gui_controller.on_gui_opened",
+    func_name = "rocket_silo_gui_controller.on_gui_opened",
+    func = rocket_silo_gui_controller.on_gui_opened,
+})
 
-function gui_controller.on_gui_closed(event)
-    Log.debug("gui_controller.on_gui_closed")
+function rocket_silo_gui_controller.on_gui_closed(event)
+    Log.debug("rocket_silo_gui_controller.on_gui_closed")
     Log.info(event)
 
     if (not event or not type(event) == "table") then return end
@@ -56,11 +79,16 @@ function gui_controller.on_gui_closed(event)
     local player = game.get_player(event.player_index)
     local gui = player.gui.relative.cn_frame_outer_circuit_launchable
     if (gui) then gui.destroy() end
-
 end
+Event_Handler:register_event({
+    event_name = "on_gui_closed",
+    source_name = "rocket_silo_gui_controller.on_gui_closed",
+    func_name = "rocket_silo_gui_controller.on_gui_closed",
+    func = rocket_silo_gui_controller.on_gui_closed,
+})
 
-function gui_controller.on_gui_checked_state_changed(event)
-    Log.debug("gui_controller.on_gui_checked_state_changed")
+function rocket_silo_gui_controller.on_gui_checked_state_changed(event)
+    Log.debug("rocket_silo_gui_controller.on_gui_checked_state_changed")
     Log.info(event)
 
     if (not event or not type(event) == "table") then return end
@@ -83,9 +111,15 @@ function gui_controller.on_gui_checked_state_changed(event)
         end
     end
 end
+Event_Handler:register_event({
+    event_name = "on_gui_checked_state_changed",
+    source_name = "rocket_silo_gui_controller.on_gui_checked_state_changed",
+    func_name = "rocket_silo_gui_controller.on_gui_checked_state_changed",
+    func = rocket_silo_gui_controller.on_gui_checked_state_changed,
+})
 
-function gui_controller.on_gui_elem_changed(event)
-    Log.debug("gui_controller.on_gui_elem_changed")
+function rocket_silo_gui_controller.on_gui_elem_changed(event)
+    Log.debug("rocket_silo_gui_controller.on_gui_elem_changed")
     Log.info(event)
 
     if (not event or not type(event) == "table") then return end
@@ -112,9 +146,15 @@ function gui_controller.on_gui_elem_changed(event)
         end
     end
 end
+Event_Handler:register_event({
+    event_name = "on_gui_elem_changed",
+    source_name = "rocket_silo_gui_controller.on_gui_elem_changed",
+    func_name = "rocket_silo_gui_controller.on_gui_elem_changed",
+    func = rocket_silo_gui_controller.on_gui_elem_changed,
+})
 
-function gui_controller.on_gui_selection_state_changed(event)
-    Log.debug("gui_controller.on_gui_selection_state_changed")
+function rocket_silo_gui_controller.on_gui_selection_state_changed(event)
+    Log.debug("rocket_silo_gui_controller.on_gui_selection_state_changed")
     Log.info(event)
 
     if (not event or not type(event) == "table") then return end
@@ -156,9 +196,15 @@ function gui_controller.on_gui_selection_state_changed(event)
         end
     end
 end
+Event_Handler:register_event({
+    event_name = "on_gui_selection_state_changed",
+    source_name = "rocket_silo_gui_controller.on_gui_selection_state_changed",
+    func_name = "rocket_silo_gui_controller.on_gui_selection_state_changed",
+    func = rocket_silo_gui_controller.on_gui_selection_state_changed,
+})
 
-function gui_controller.on_entity_settings_pasted(event)
-    Log.debug("gui_controller.on_entity_settings_pasted")
+function rocket_silo_gui_controller.on_entity_settings_pasted(event)
+    Log.debug("rocket_silo_gui_controller.on_entity_settings_pasted")
     Log.info(event)
 
     if (not event or not type(event) == "table") then return end
@@ -202,9 +248,15 @@ function gui_controller.on_entity_settings_pasted(event)
 
     Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo_data_destination.entity, rocket_silo_data_destination)
 end
+Event_Handler:register_event({
+    event_name = "on_entity_settings_pasted",
+    source_name = "rocket_silo_gui_controller.on_entity_settings_pasted",
+    func_name = "rocket_silo_gui_controller.on_entity_settings_pasted",
+    func = rocket_silo_gui_controller.on_entity_settings_pasted,
+})
 
-gui_controller.configurable_nukes = true
+rocket_silo_gui_controller.configurable_nukes = true
 
-local _gui_controller = gui_controller
+local _rocket_silo_gui_controller = rocket_silo_gui_controller
 
-return gui_controller
+return rocket_silo_gui_controller

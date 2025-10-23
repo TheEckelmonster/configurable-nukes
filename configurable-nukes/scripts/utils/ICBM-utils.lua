@@ -4,290 +4,41 @@ if _icbm_utils and _icbm_utils.configurable_nukes then
 end
 
 local Constants = require("scripts.constants.constants")
+local Custom_Events = require("prototypes.custom-events.custom-events")
+local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local Log = require("libs.log.log")
 local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
+local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
-
--- PIN_TARGETS
-local get_pin_targets = function()
-    local setting = Runtime_Global_Settings_Constants.settings.PIN_TARGETS.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PIN_TARGETS.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.PIN_TARGETS.name].value
-    end
-
-    return setting
-end
--- DO_ICBMS_REVEAL_TARGET
-local get_do_ICBMs_reveal_target = function()
-    local setting = Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET.name].value
-    end
-
-    return setting
-end
--- PRINT_LAUNCH_MESSAGES
-local get_print_launch_messages = function()
-    local setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name].value
-    end
-
-    return setting
-end
--- ICBM_PERFECT_GUIDANCE
-local get_icbms_perfect_guidance = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.name].value
-    end
-
-    return setting
-end
--- ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME
-local get_icbms_planet_magnitude_affects_travel_time = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME.name].value
-    end
-
-    return setting
-end
--- ICBM_PLANET_MAGNITUDE_MODIFIER
-local get_icbms_magnitude_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- ICBM_TRAVEL_MULTIPLIER
-local get_icbms_travel_multiplier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_TRAVEL_MULTIPLIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_TRAVEL_MULTIPLIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_TRAVEL_MULTIPLIER.name].value
-    end
-
-    return setting
-end
--- ICBM_GUIDANCE_DEVIATION_THRESHOLD
-local get_icbm_guidance_deviation_threshold = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.name].value
-    end
-
-    return setting
-end
--- ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES
-local get_icbm_circuit_print_launch_messages = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name].value
-    end
-
-    return setting
-end
--- ICBM_CIRCUIT_PIN_TARGETS
-local get_icbm_circuit_pin_targets = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.name].value
-    end
-
-    return setting
-end
--- ATOMIC_BOMB_BASE_DAMAGE_MODIFIER
-local get_atomic_bomb_base_damage_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- ATOMIC_BOMB_BASE_DAMAGE_ADDITION
-local get_atomic_bomb_base_damage_addition = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name].value
-    end
-
-    return setting
-end
--- -- ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER
--- local get_atomic_bomb_base_damage_radius_modifier = function()
---     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.default_value
-
---     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.name]) then
---         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER.name].value
---     end
-
---     return setting
--- end
--- ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER
-local get_atomic_bomb_bonus_damage_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- ATOMIC_BOMB_BONUS_DAMAGE_ADDITION
-local get_atomic_bomb_bonus_damage_addition = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name].value
-    end
-
-    return setting
-end
--- -- ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER
--- local get_atomic_bomb_bonus_damage_radius_modifier = function()
---     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.default_value
-
---     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.name]) then
---         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER.name].value
---     end
-
---     return setting
--- end
--- ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER
-local get_atomic_warhead_base_damage_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION
-local get_atomic_warhead_base_damage_addition = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name].value
-    end
-
-    return setting
-end
--- -- ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER
--- local get_atomic_warhead_base_damage_radius_modifier = function()
---     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER.default_value
-
---     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER.name]) then
---         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER.name].value
---     end
-
---     return setting
--- end
--- ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER
-local get_atomic_warhead_bonus_damage_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION
-local get_atomic_warhead_bonus_damage_addition = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.name].value
-    end
-
-    return setting
-end
--- -- ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER
--- local get_atomic_warhead_bonus_damage_radius_modifier = function()
---     local setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER.default_value
-
---     if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER.name]) then
---         setting = settings.global[Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER.name].value
---     end
-
---     return setting
--- end
--- ICBM_DEVIATION_SCALING_FACTOR
-local get_icbm_deviation_scaling_factor = function ()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_DEVIATION_SCALING_FACTOR.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_DEVIATION_SCALING_FACTOR.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_DEVIATION_SCALING_FACTOR.name].value
-    end
-
-    return setting
-end
--- ICBM_MULTISURFACE_TRAVEL_TIME_MODIFIER
-local get_icbm_multisurface_travel_time_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.ICBM_MULTISURFACE_TRAVEL_TIME_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ICBM_MULTISURFACE_TRAVEL_TIME_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ICBM_MULTISURFACE_TRAVEL_TIME_MODIFIER.name].value
-    end
-
-    return setting
-end
--- MULTISURFACE_BASE_DISTANCE_MODIFIER
-local get_multisurface_base_distance_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER
-local get_guidance_systems_research_deviation_modifier = function()
-    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name]) then
-        setting = settings.global[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER
-local get_guidance_systems_research_top_speed_modifier = function()
-    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name]) then
-        setting = settings.global[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name].value
-    end
-
-    return setting
-end
 
 local icbm_utils = {
     space_launches_initiated = {}
 }
+icbm_utils.name = "icbm_utils"
 
-function icbm_utils.cargo_pod_finished_ascending(data)
-    Log.debug("icbm_utils.cargo_pod_finished_ascending")
+local time_to_target_message = function (params)
+    local print_message = function (param_1, param_2)
+        if (param_1 and param_1.force and param_1.force.valid) then
+            param_1.force.print({ "icbm-utils.seconds-to-target", param_1.item_number, param_2 })
+        end
+    end
+
+    if (params.icbm_data.player_launched_index == 0) then
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+            print_message(params.icbm_data, params.seconds_to_target)
+        end
+    else
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+            print_message(params.icbm_data, params.seconds_to_target)
+        end
+    end
+end
+
+function icbm_utils.on_cargo_pod_finished_ascending(data)
+    Log.debug("icbm_utils.on_cargo_pod_finished_ascending")
     Log.info(data)
 
     if (data == nil) then return -1 end
@@ -298,36 +49,24 @@ function icbm_utils.cargo_pod_finished_ascending(data)
 
     local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(data.surface.name)
 
-    local k, icbm_data = next(icbm_meta_data.item_numbers, nil)
+    local k, icbm_data = next(icbm_meta_data.icbms, nil)
     while k or (not k and icbm_data) do
         if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == data.cargo_pod.unit_number) then
             break
         end
 
-        if (k) then k, icbm_data = next(icbm_meta_data.item_numbers, k) end
+        if (k) then k, icbm_data = next(icbm_meta_data.icbms, k) end
     end
 
     if (icbm_data == nil) then
         Log.warn("icbm_data not found by cargo_pod unit_number")
-        Log.warn("defaulting to the most recently created icbm_data")
-        k, icbm_data = next(icbm_meta_data.item_numbers, nil)
-        while k or (not k and icbm_data) do
-            local k, icbm_data = next(icbm_meta_data.item_numbers, nil)
-            if (icbm_data and icbm_data.created <= game.tick) then
-                icbm_meta_data.item_numbers[icbm_data.item_number] = nil
-                break
-            end
-
-            if (k) then k, icbm_data = next(icbm_meta_data.item_numbers, k) end
-        end
-
-        if (icbm_data == nil) then
-            Log.error("no icbm_data found")
-            return -1
-        end
+        Log.warn("no icbm_data found")
+        return -1
     end
 
     Log.warn(icbm_data)
+
+    if (icbm_data.scrubbed) then return 0 end
 
     local guidance_systems_modifier = icbm_data.force.get_ammo_damage_modifier("icbm-guidance") or 0
     local top_speed_modifier = icbm_data.force.get_ammo_damage_modifier("icbm-top-speed") or 1
@@ -405,7 +144,7 @@ function icbm_utils.cargo_pod_finished_ascending(data)
                 space_connection = Constants.space_connections_dictionary[platform.space_connection.name]
             end
             remaining_distance = target_planet and ((icbm_data.space_origin_pos.x - target_planet.x) ^ 2 + (icbm_data.space_origin_pos.y - target_planet.y) ^ 2) ^ 0.5 or 0
-            remaining_distance = get_multisurface_base_distance_modifier() * remaining_distance
+            remaining_distance = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name }) * remaining_distance
         end
 
         target_distance = icbm_data.launched_from == "orbit" and ((math.log(1 + target_distance, 10 * (4 - 3 * (1 + guidance_systems_modifier)))) * magnitude) or target_distance
@@ -426,10 +165,9 @@ function icbm_utils.cargo_pod_finished_ascending(data)
 
     if (data.tick and guidance_systems_modifier ~= nil) then
         --[[ TODO: Make in space top speed configurable? ]]
-        -- local in_space_speed_modifier = 1.66 + (-2.71 * guidance_systems_modifier)
         local in_space_speed_modifier = 1.66 + (2.71 * top_speed_modifier)
 
-        if (not get_icbms_perfect_guidance() or math.abs(guidance_systems_modifier) < 1) then
+        if (not Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.name }) or math.abs(guidance_systems_modifier) < 1) then
             local distance_divisor = (32 / magnitude)
 
             if (icbm_data.launched_from) then
@@ -452,12 +190,12 @@ function icbm_utils.cargo_pod_finished_ascending(data)
                 end
             end
 
-            local icbm_deviation_scaling_factor = get_icbm_deviation_scaling_factor()
-            local guidance_systems_deviation_base_modifier = get_guidance_systems_research_deviation_modifier()
+            local icbm_deviation_scaling_factor = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_DEVIATION_SCALING_FACTOR.name })
+            local guidance_systems_deviation_base_modifier = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name })
             local guidance_systems_deviation_max = 10 * math.abs(guidance_systems_deviation_base_modifier)
             local deviation_proportion = 1 - math.abs(guidance_systems_modifier) / guidance_systems_deviation_max
 
-            local deviation_threshold = get_icbm_guidance_deviation_threshold()
+            local deviation_threshold = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.name })
             local threshold = -(1 - deviation_threshold) * guidance_systems_modifier + deviation_threshold
             if (threshold - 1 < 0) then
                 for i = 1, math.floor(target_distance / distance_divisor), 1 do
@@ -864,7 +602,7 @@ function icbm_utils.cargo_pod_finished_ascending(data)
         local update_proportion_modifier = icbm_data.launched_from_space and 13/9 or 2/3
         local surface_to_orbit_complete = icbm_data.launched_from == "interplanetary" or icbm_data.launched_from == "orbit"
 
-        local top_speed_modifier_max = get_guidance_systems_research_top_speed_modifier()
+        local top_speed_modifier_max = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name })
         top_speed_modifier_max =
                 top_speed_modifier_max * 10
             +   top_speed_modifier_max * 6
@@ -942,10 +680,10 @@ function icbm_utils.cargo_pod_finished_ascending(data)
     end
 
     Log.warn("calculated base seconds to target = " .. time_to_target)
-    time_to_target = 1 + 60 * 5 + 60 * time_to_target * get_icbms_travel_multiplier()
+    time_to_target = 1 + 60 * 5 + 60 * time_to_target * Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_TRAVEL_MULTIPLIER.name })
 
     if (not icbm_data.same_surface) then
-        time_to_target = time_to_target * get_icbm_multisurface_travel_time_modifier()
+        time_to_target = time_to_target * Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_MULTISURFACE_TRAVEL_TIME_MODIFIER.name })
     end
 
     if (not se_active and icbm_data.launched_from_space) then
@@ -962,54 +700,295 @@ function icbm_utils.cargo_pod_finished_ascending(data)
         time_to_target = time_to_target + math.random(60 * (math.log(target_distance, 2.71) * (magnitude ^ 1.66))) * magnitude
     end
 
-    Log.debug("game.tick = " .. game.tick)
-    Log.debug("time_to_target = " .. time_to_target)
+    Log.warn("game.tick = " .. game.tick)
+    Log.warn("time_to_target = " .. time_to_target)
 
     icbm_data.tick_to_target = data.tick + time_to_target
+    icbm_data.tick_to_target = icbm_data.tick_to_target - icbm_data.tick_to_target % 1
     ICBM_Repository.update_icbm_data(icbm_data)
 
     Log.warn(serpent.block(icbm_data))
 
-    if (not icbm_data.same_surface) then
-        Log.warn("different surface")
-        local target_icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(icbm_data.target_surface_name)
-        Log.debug(target_icbm_meta_data)
-
-        target_icbm_meta_data.in_transit[icbm_data] = {
-            tick_to_target = icbm_data.tick_to_target,
-            item_number = icbm_data.item_number,
-            surface = icbm_data.surface,
-            surface_name = icbm_data.surface_name,
-            target_surface = icbm_data.target_surface,
-            target_surface_name = icbm_data.target_surface_name,
-        }
-    else
-        Log.warn("same surface")
-        icbm_meta_data.in_transit[icbm_data] = {
-            tick_to_target = icbm_data.tick_to_target,
-            item_number = icbm_data.item_number,
-            surface = icbm_data.surface,
-            surface_name = icbm_data.surface_name,
-            target_surface = icbm_data.surface,
-            target_surface_name = icbm_data.surface_name,
-        }
-    end
+    icbm_utils.register_delivery_data({ icbm_data = icbm_data })
 
     if (se_active or not icbm_data.launched_from_space) then
         if (math.floor(time_to_target / 60) >= 1) then
             if (icbm_data.player_launched_index == 0) then
-                if (get_icbm_circuit_print_launch_messages()) then
-                    icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
+                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name })) then
+                    icbm_data.force.print({ "icbm-utils.seconds-to-target", icbm_data.item_number, math.floor(time_to_target / 60) })
                 end
             else
-                if (get_print_launch_messages()) then
-                    icbm_data.force.print({ "icbm-utils.seconds-to-target", math.floor(time_to_target / 60) })
+                if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name })) then
+                    icbm_data.force.print({ "icbm-utils.seconds-to-target", icbm_data.item_number, math.floor(time_to_target / 60) })
                 end
             end
         end
     end
 
+    icbm_data.cargo_pod = nil
+    -- script.raise_event(
+    --     Custom_Events.cn_on_rocket_launched_successfully.name,
+    --     {
+    --         name = defines.events[Custom_Events.cn_on_rocket_launched_successfully.name],
+    --         tick = game.tick,
+    --         icbm_data = icbm_data,
+    --     }
+    -- )
     return 1
+end
+
+function icbm_utils.register_delivery_data(data)
+    Log.debug("icbm_utils.register_delivery_data")
+    Log.info(data)
+
+    if (not data or type(data) ~= "table") then return end
+    if (not data.icbm_data or type(data.icbm_data) ~= "table") then return end
+
+    -- local tick = storage and storage.tick or 0
+    local tick = game and game.tick or storage and storage.tick or math.huge
+    Log.warn(tick)
+
+    local icbm_data = data.icbm_data
+
+    local source_name =    "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                    .. icbm_data.tick_to_target
+                    .. ".item_number."
+                    .. icbm_data.item_number
+
+    local time_to_target_5_nth_tick = icbm_data.tick_to_target - 5 * 60
+    local time_to_target_3_nth_tick = icbm_data.tick_to_target - 3 * 60
+    local time_to_target_2_nth_tick = icbm_data.tick_to_target - 2 * 60
+    local time_to_target_1_nth_tick = icbm_data.tick_to_target - 1 * 60
+
+    local time_to_target_5_source_name =  "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                                        .. time_to_target_5_nth_tick
+                                        .. ".item_number."
+                                        .. icbm_data.item_number
+    local time_to_target_3_source_name =  "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                                        .. time_to_target_3_nth_tick
+                                        .. ".item_number."
+                                        .. icbm_data.item_number
+    local time_to_target_2_source_name =  "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                                        .. time_to_target_2_nth_tick
+                                        .. ".item_number."
+                                        .. icbm_data.item_number
+    local time_to_target_1_source_name =  "icbm-utils.on_cargo_pod_finished_ascending.on_nth_tick.tick_to_target."
+                                        .. time_to_target_1_nth_tick
+                                        .. ".item_number."
+                                        .. icbm_data.item_number
+
+    if (tick <= time_to_target_5_nth_tick) then
+        local event_handler_data = Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = time_to_target_5_nth_tick,
+            source_name = time_to_target_5_source_name,
+            restore_on_load = true,
+            func = icbm_utils.time_to_target_5_event,
+            func_name = "icbm_utils.time_to_target_5_event",
+            func_data =
+            {
+                nth_tick = time_to_target_5_nth_tick,
+                source_name = time_to_target_5_source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
+    end
+
+    if (tick <= time_to_target_3_nth_tick) then
+        local event_handler_data = Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = time_to_target_3_nth_tick,
+            source_name = time_to_target_3_source_name,
+            restore_on_load = true,
+            func = icbm_utils.time_to_target_3_event,
+            func_name = "icbm_utils.time_to_target_3_event",
+            func_data =
+            {
+                nth_tick = time_to_target_3_nth_tick,
+                source_name = time_to_target_3_source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
+    end
+
+    if (tick <= time_to_target_2_nth_tick) then
+        local event_handler_data = Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = time_to_target_2_nth_tick,
+            source_name = time_to_target_2_source_name,
+            restore_on_load = true,
+            func = icbm_utils.time_to_target_2_event,
+            func_name = "icbm_utils.time_to_target_2_event",
+            func_data =
+            {
+                nth_tick = time_to_target_2_nth_tick,
+                source_name = time_to_target_2_source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
+    end
+
+    if (tick <= time_to_target_1_nth_tick) then
+        local event_handler_data = Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = time_to_target_1_nth_tick,
+            source_name = time_to_target_1_source_name,
+            restore_on_load = true,
+            func = icbm_utils.time_to_target_1_event,
+            func_name = "icbm_utils.time_to_target_1_event",
+            func_data =
+            {
+                nth_tick = time_to_target_1_nth_tick,
+                source_name = time_to_target_1_source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
+    end
+
+    if (tick <= icbm_data.tick_to_target) then
+        local event_handler_data = Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = icbm_data.tick_to_target,
+            restore_on_load = true,
+            source_name = source_name,
+            func = icbm_utils.payload_arrive_event,
+            func_name = "icbm_utils.payload_arrive_event",
+            func_data =
+            {
+                nth_tick = icbm_data.tick_to_target,
+                source_name = source_name,
+                icbm_data = icbm_data,
+            },
+            save_to_storage = true,
+        })
+
+        if (event_handler_data) then
+            icbm_data.event_handlers[event_handler_data.source_name] = event_handler_data
+        end
+    end
+end
+
+function icbm_utils.time_to_target_5_event(event, event_data)
+    Log.debug("icbm_utils.time_to_target_5_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    local print_message = function (param)
+        if (param and param.force and param.force.valid) then
+            param.force.print({ "configurable-nukes-controller.seconds-to-target-gps", event_data.icbm_data.item_number, 5, param.target_position.x, param.target_position.y, param.target_surface_name })
+        end
+    end
+
+    if (event_data.icbm_data.player_launched_index == 0) then
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_DELIVERY_MESSAGES.name, })) then
+            print_message(event_data.icbm_data)
+        end
+    else
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_DELIVERY_MESSAGES.name, })) then
+            print_message(event_data.icbm_data)
+        end
+    end
+end
+
+function icbm_utils.time_to_target_3_event(event, event_data)
+    Log.debug("icbm_utils.time_to_target_3_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    if (not game or game.tick > event_data.nth_tick) then return end
+    time_to_target_message({ icbm_data = event_data.icbm_data, seconds_to_target = 3 })
+end
+
+function icbm_utils.time_to_target_2_event(event, event_data)
+    Log.debug("icbm_utils.time_to_target_2_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    if (not game or game.tick > event_data.nth_tick) then return end
+    time_to_target_message({ icbm_data = event_data.icbm_data, seconds_to_target = 2 })
+end
+
+function icbm_utils.time_to_target_1_event(event, event_data)
+    Log.debug("icbm_utils.time_to_target_1_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    if (not game or game.tick > event_data.nth_tick) then return end
+    time_to_target_message({ icbm_data = event_data.icbm_data, seconds_to_target = 1 })
+end
+
+function icbm_utils.payload_arrive_event(event, event_data)
+    Log.debug("icbm_utils.payload_arrive_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    if (event_data.icbm_data.scrubbed) then return end
+
+    if (icbm_utils.payload_arrived({ icbm = event_data.icbm_data, surface = event_data.icbm_data.surface, target_surface = event_data.icbm_data.target_surface })) then
+        -- Success
+        Log.warn("payload arrived successfully")
+    else
+        log("payload failed to arrive successfully")
+        -- error("payload failed to arrive successfully")
+    end
 end
 
 function icbm_utils.launch_initiated(data)
@@ -1097,7 +1076,7 @@ function icbm_utils.launch_initiated(data)
 
     Log.warn(icbm_data)
 
-    if (get_icbms_planet_magnitude_affects_travel_time()) then
+    if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_AFFECTS_TRAVEL_TIME.name })) then
         if (not se_active) then
             if (not Constants.planets_dictionary[icbm_data.surface_name:lower()]) then Constants.get_planets(true) end
             local planet = Constants.planets_dictionary[icbm_data.surface_name:lower()]
@@ -1106,7 +1085,7 @@ function icbm_utils.launch_initiated(data)
                 planet = Constants.planets_dictionary[icbm_data.target_surface_name:lower()]
             end
             local planet_magnitude = planet and planet.mangitude or 1
-            icbm_data.target_distance = icbm_data.target_distance * planet_magnitude * get_icbms_magnitude_modifier()
+            icbm_data.target_distance = icbm_data.target_distance * planet_magnitude * Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_MODIFIER.name })
         else
             if (not Constants.space_exploration_dictionary[icbm_data.surface_name:lower()]) then Constants.get_space_exploration_universe(true) end
             local space_location = Constants.space_exploration_dictionary[icbm_data.surface_name:lower()]
@@ -1115,23 +1094,36 @@ function icbm_utils.launch_initiated(data)
                 space_location = Constants.space_exploration_dictionary[icbm_data.target_surface_name:lower()]
             end
             local space_location_magnitude = space_location and space_location.mangitude or 1
-            icbm_data.target_distance = icbm_data.target_distance * space_location_magnitude * get_icbms_magnitude_modifier()
+            icbm_data.target_distance = icbm_data.target_distance * space_location_magnitude * Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_PLANET_MAGNITUDE_MODIFIER.name })
         end
     end
 
-    icbm_data = ICBM_Repository.save_icbm_data(icbm_data)
+    Log.warn(icbm_data)
 
+    icbm_data = ICBM_Repository.save_icbm_data(icbm_data)
     if (not icbm_data or not icbm_data.valid) then return -1 end
 
-    local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(data.surface.name)
-    icbm_meta_data.item_numbers[icbm_data.item_number] = icbm_data
+    if (icbm_data.force_index < 0 and icbm_data.force_index > 63) then return -1 end
+
+    local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
+    local enqueued_data = force_launch_data.launch_action_queue:enqueue({
+        data =
+        {
+            tick = game.tick,
+            icbm_data = icbm_data,
+        }
+    })
+    icbm_data.enqueued_data = enqueued_data
 
     Log.warn(icbm_data)
 
-    if (icbm_data.force_index < 0 and icbm_data.force_index > 255) then return -1 end
+    icbm_data = ICBM_Repository.update_icbm_data(icbm_data)
+    if (not icbm_data or not icbm_data.valid) then return -1 end
+
+    Log.warn(enqueued_data)
 
     if (game.forces[icbm_data.force_index] and game.forces[icbm_data.force_index].valid) then
-        if (get_do_ICBMs_reveal_target()) then
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET.name })) then
             game.forces[data.cargo_pod.force.index].chart(
                 data.target_surface,
                 {
@@ -1148,11 +1140,11 @@ function icbm_utils.launch_initiated(data)
         local force = game.forces[icbm_data.force_index]
         if (not force or not force.valid) then return end
 
-        if (get_icbm_circuit_print_launch_messages()) then
-            force.print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, data.target_surface.name, icbm_data.source_silo.surface.name, })
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name })) then
+            force.print({ "icbm-utils.launch-initiated", icbm_data.item_number, icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, data.target_surface.name, icbm_data.source_silo.surface.name, })
         end
         --[[ TODO: Make this setting per player ]]
-        if (get_icbm_circuit_pin_targets()) then
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS.name })) then
             for k, v in pairs(force.connected_players) do
                 local target_type = "ICBM"
 
@@ -1167,11 +1159,11 @@ function icbm_utils.launch_initiated(data)
             end
         end
     else
-        if (get_print_launch_messages()) then
-            game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, data.target_surface.name, icbm_data.source_silo.surface.name })
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name })) then
+            game.get_player(icbm_data.player_launched_index).print({ "icbm-utils.launch-initiated", icbm_data.item_number, icbm_data.target_position.x, icbm_data.target_position.y, icbm_data.source_silo.position.x, icbm_data.source_silo.position.y, data.target_surface.name, icbm_data.source_silo.surface.name })
         end
 
-        if (get_pin_targets()) then
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PIN_TARGETS.name })) then
             local target_type = "ICBM"
 
             if (icbm_data.silo_type == "ipbm-rocket-silo") then
@@ -1184,6 +1176,17 @@ function icbm_utils.launch_initiated(data)
             game.get_player(icbm_data.player_launched_index).add_pin({ label = target_type .. " target-" .. icbm_data.item_number, surface = data.target_surface, position = target_position, preview_distance = 2 ^ 6 })
         end
     end
+
+    -- -- icbm_data.cargo_pod = nil
+    script.raise_event(
+        Custom_Events.cn_on_rocket_launch_initiated_successfully.name,
+        {
+            name = defines.events[Custom_Events.cn_on_rocket_launch_initiated_successfully.name],
+            tick = game.tick,
+            icbm_data = icbm_data,
+        }
+    )
+    return 1
 end
 
 function icbm_utils.payload_arrived(data)
@@ -1198,7 +1201,14 @@ function icbm_utils.payload_arrived(data)
     local icbm = data.icbm
 
     if (icbm and icbm.valid) then
-        if (get_do_ICBMs_reveal_target()) then
+        if (game.forces[icbm.force_index] and game.forces[icbm.force_index].valid) then
+            local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm.force_index)
+            if (force_launch_data.valid) then
+                force_launch_data.launch_action_queue:remove({ data = icbm.enqueued_data })
+            end
+        end
+
+        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET.name })) then
             if (game.forces[icbm.force_index] and game.forces[icbm.force_index].valid) then
                 game.forces[icbm.force.index].chart(
                     data.target_surface,
@@ -1230,30 +1240,35 @@ function icbm_utils.payload_arrived(data)
             cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or "player",
             speed = 0.1 * math.exp(1),
             base_damage_modifiers = {
-                damage_modifier = icbm.type == "atomic-rocket" and get_atomic_bomb_base_damage_modifier() or icbm.type == "atomic-warhead" and get_atomic_warhead_base_damage_modifier() or 1,
-                damage_addition = icbm.type == "atomic-rocket" and get_atomic_bomb_base_damage_addition() or icbm.type == "atomic-warhead" and get_atomic_warhead_base_damage_addition() or 1,
+                damage_modifier = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
+                damage_addition = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
                 radius_modifier = 1,
             },
             bonus_damage_modifiers = {
-                damage_modifier = icbm.type == "atomic-rocket" and get_atomic_bomb_bonus_damage_modifier() or icbm.type == "atomic-warhead" and get_atomic_warhead_bonus_damage_modifier() or 1,
-                damage_addition = icbm.type == "atomic-rocket" and get_atomic_bomb_bonus_damage_addition() or icbm.type == "atomic-warhead" and get_atomic_warhead_bonus_damage_addition() or 1,
+                damage_modifier = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.name }) or 1,
+                damage_addition = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.name }) or 1,
                 radius_modifier = icbm.type == 1,
             },
         })
+
+        script.raise_event(
+            Custom_Events.cn_on_payload_delivered.name,
+            {
+                name = defines.events[Custom_Events.cn_on_payload_delivered.name],
+                tick = game.tick,
+                icbm_data = icbm,
+            }
+        )
     else
         -- log(serpent.block(icbm))
         -- log(serpent.block(storage))
         -- error("launch failed")
     end
 
-    local deleted = ICBM_Repository.delete_icbm_data_by_item_number(data.surface.name, icbm.item_number)
-    if (not deleted) then
-        deleted = ICBM_Repository.delete_icbm_data_by_item_number(icbm.target_surface_name, icbm.item_number)
-    end
-    if (not deleted) then
-        deleted = ICBM_Repository.delete_icbm_data_by_item_number(icbm.surface_name, icbm.item_number)
-    end
-    return deleted
+    local deleted_1 = ICBM_Repository.delete_icbm_data_by_item_number(data.surface.name, icbm.item_number)
+    local deleted_2 = ICBM_Repository.delete_icbm_data_by_item_number(icbm.target_surface_name, icbm.item_number)
+    local deleted_3 = ICBM_Repository.delete_icbm_data_by_item_number(icbm.surface_name, icbm.item_number)
+    return deleted_1 or deleted_2 or deleted_3, deleted_1, deleted_2, deleted_3
 end
 
 function icbm_utils.print_space_launched_time_to_target_message(data)
@@ -1265,12 +1280,12 @@ function icbm_utils.print_space_launched_time_to_target_message(data)
             if (game.tick >= v.tick) then
                 if (math.floor(v.time_to_target / 60) >= 1) then
                     if (k.player_launched_index == 0) then
-                        if (get_icbm_circuit_print_launch_messages()) then
-                            k.force.print({ "icbm-utils.seconds-to-target", math.floor(v.time_to_target / 60) })
+                        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name })) then
+                            k.force.print({ "icbm-utils.seconds-to-target", k.item_number, math.floor(v.time_to_target / 60) })
                         end
                     else
-                        if (get_print_launch_messages()) then
-                            k.force.print({ "icbm-utils.seconds-to-target", math.floor(v.time_to_target / 60) })
+                        if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name })) then
+                            k.force.print({ "icbm-utils.seconds-to-target", k.item_number, math.floor(v.time_to_target / 60) })
                         end
                     end
 
@@ -1280,6 +1295,16 @@ function icbm_utils.print_space_launched_time_to_target_message(data)
             end
         end
     end
+end
+
+function icbm_utils.get_space_launches_initiatied(data)
+    Log.debug("icbm_utils.get_space_launches_initiatied")
+    Log.info(data)
+
+    if (not storage.icbm_utils) then storage.icbm_utils = {} end
+    if (not storage.icbm_utils.space_launches_initiated) then storage.icbm_utils.space_launches_initiated = {} end
+
+    return storage.icbm_utils.space_launches_initiated
 end
 
 function icbm_utils.rocket_silo_cloned(data)

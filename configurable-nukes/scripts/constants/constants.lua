@@ -20,14 +20,14 @@ local locals = {}
 local default_space_exploration = function (data)
     return
     {
-        ["star"]            = {},
-        ["planet"]          = {},
-        ["orbit"]           = {},
-        ["moon"]            = {},
-        ["asteroid-belt"]   = {},
-        ["asteroid-field"]  = {},
-        ["anomaly"]         = {},
-        ["surfaces"]        = {},
+        ["star-data"]            = {},
+        ["planet-data"]          = {},
+        ["orbit-data"]           = {},
+        ["moon-data"]            = {},
+        ["asteroid-belt-data"]   = {},
+        ["asteroid-field-data"]  = {},
+        ["anomaly-data"]         = {},
+        ["surfaces"]             = {},
     }
 end
 
@@ -291,7 +291,6 @@ function constants.get_mod_data(reindex, data)
     if (data and type(data) ~= "table") then return end
 
     local loading = data and data.on_load or not game or false
-    if (loading and reindex) then reindex = false end
 
     if (not reindex) then
         if (storage.constants and storage.constants.mod_data) then
@@ -306,9 +305,14 @@ function constants.get_mod_data(reindex, data)
         end
     else
         Log.debug("Reindexing constants.mod_data")
-        if (not storage.constants) then storage.constants = {} end
-        storage.constants.mod_data = locals.get_mod_data()
-        return storage.constants.mod_data
+        local mod_data = locals.get_mod_data()
+
+        if (not loading) then
+            if (not storage.constants) then storage.constants = {} end
+            storage.constants.mod_data = mod_data
+        end
+
+        return mod_data
     end
 end
 
@@ -1058,11 +1062,11 @@ locals.get_space_exploration_universe = function(data)
                         Log.error("Found a spaceship zone")
                         log(serpent.block(zone))
                         log(serpent.block(storage))
-                        error("Got your attention: spaceship zone found")
+                        -- error("Got your attention: spaceship zone found")
                     else
                         log(serpent.block(zone))
                         log(serpent.block(storage))
-                        error("Type does not exist in Constants.mod_data for type = " .. zone.type)
+                        -- error("Type does not exist in Constants.mod_data for type = " .. zone.type)
                     end
 
                     if (space_location.valid) then
@@ -1114,14 +1118,8 @@ locals.get_space_exploration_universe = function(data)
     --     log(serpent.block(k))
     -- end
 
-    -- log(serpent.block(constants.mod_data_dictionary))
-    -- log(serpent.block(constants["space-exploration"]))
-    -- log(serpent.block(constants.space_exploration_dictionary))
-    -- log(serpent.line(constants.space_exploration_dictionary))
-
     if (not storage.constants) then storage.constants = {} end
     if (not storage.constants.mod_data) then storage.constants.mod_data = constants.mod_data end
-    -- if (not storage.constants.mod_data_dictionary) then storage.constants.mod_data_dictionary = constants.mod_data_dictionary end
     storage.constants.mod_data_dictionary = constants.mod_data_dictionary
     storage.constants["space-exploration"] = constants["space-exploration"]
     storage.constants.space_exploration_dictionary = constants.space_exploration_dictionary

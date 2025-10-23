@@ -3,7 +3,7 @@ local Log = require("libs.log.log")
 
 local orbit_data = {}
 
-orbit_data.type = "orbit"
+orbit_data.type = "orbit-data"
 
 function orbit_data:new(o)
     Log.debug("orbit_data:new")
@@ -33,7 +33,5 @@ function orbit_data:is_solid(data)
 end
 
 setmetatable(orbit_data, Space_Location_Data)
-local Orbit_Data = orbit_data:new(Orbit_Data)
-Orbit_Data.mt = orbit_data
-
-return Orbit_Data
+orbit_data.__index = orbit_data
+return orbit_data

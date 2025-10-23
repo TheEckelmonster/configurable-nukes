@@ -1,11 +1,13 @@
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
+require("prototypes.custom-events.custom-events")
 require("prototypes.sprites")
+require("prototypes.style")
 
 require("prototypes.categories.ammo-category")
 -- require("prototypes.entities.cargo-pod")
--- require("prototypes.custom-input.custom-input")
+require("prototypes.custom-input.custom-input")
 require("prototypes.entities.rocket-silo.rocket-silo-data")
 require("prototypes.entities.rocket-silo-rocket")
 require("prototypes.items.items-data")

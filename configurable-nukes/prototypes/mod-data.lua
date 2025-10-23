@@ -156,8 +156,6 @@ if (data.raw["space-connection"]) then
     end
 end
 
--- log(serpent.block(mod_data))
-
 data:extend({ mod_data })
 
 --[[ In the event that someone wants to import this for their mod ]]

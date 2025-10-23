@@ -4,7 +4,7 @@ if _rocket_silo_repository and _rocket_silo_repository.configurable_nukes then
 end
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
-local Circuit_Network_Data = require("scripts.data.circuit-network.rocket-silo-data")
+local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
 local Log = require("libs.log.log")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
@@ -99,7 +99,7 @@ function rocket_silo_repository.update_rocket_silo_data(source_silo, update_data
     if (not return_val) then return_val = Rocket_Silo_Data:new()
     elseif (return_val and optionals.reinitialize_soft) then
         return_val = Rocket_Silo_Data:new(return_val)
-        return_val.circuit_network_data = Circuit_Network_Data:new(return_val.circuit_network_data)
+        return_val.circuit_network_data = Circuit_Network_Rocket_Silo_Data:new(return_val.circuit_network_data)
     elseif (return_val and optionals.reinitialize_hard) then
         return_val = Rocket_Silo_Data:new()
     end

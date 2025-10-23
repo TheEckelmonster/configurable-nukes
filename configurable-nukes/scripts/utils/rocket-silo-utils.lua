@@ -7,35 +7,19 @@ local Util = require("__core__.lualib.util")
 
 local Zone_Static_Data = require("scripts.data.static.zone-static-data")
 
+local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
+local Custom_Events = require("prototypes.custom-events.custom-events")
+local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local Log = require("libs.log.log")
+local ICBM_Data = require("scripts.data.ICBM-data")
+local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
-
--- MULTISURFACE_BASE_DISTANCE_MODIFIER
-local get_multisurface_base_distance_modifier = function()
-    local setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name].value
-    end
-
-    return setting
-end
--- ALWAYS_USE_CLOSEST_SILO
-local get_always_use_closest_silo = function (data)
-    local setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.default_value
-
-    if (settings and settings.global and settings.global[Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name]) then
-        setting = settings.global[Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name].value
-    end
-
-    return setting
-end
 
 local has_power = function (data)
     if (data and type(type(data) == "table")) then
@@ -64,6 +48,98 @@ function rocket_silo_utils.add_rocket_silo(rocket_silo)
     Log.info(rocket_silo)
 
     Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+end
+
+function rocket_silo_utils.scrub_launch(data)
+    Log.debug("rocket_silo_utils.scrub_launch")
+    Log.info(data)
+
+    if (not data) then return end
+    if (not data.tick) then return end
+    if (not data.tick_event) then return end
+    if (not data.player_index or type(data.player_index) ~= "number" or data.player_index < 1) then return end
+    if (not data.player) then
+        data.player = game.get_player(data.player_index)
+        if (not data.player or not data.player.valid) then
+            return
+        end
+    end
+    if (not data.order or type(data.order) ~= "string") then
+        if (not data.remove or not data.enqueued_data or type(data.enqueued_data) ~= "table") then
+            return
+        end
+    end
+    if (not data.space_launches_initiated or not type(data.space_launches_initiated) == "table") then data.space_launches_initiated = {} end
+    if (data.print_message == nil or type(data.print_message) ~= "boolean") then data.print_message = true end
+
+    local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(data.player.force.index)
+    Log.warn(force_launch_data)
+
+    if (force_launch_data.launch_action_queue.count > 0) then
+        local launch_to_scrub = nil
+        if (data.order) then
+            launch_to_scrub = force_launch_data.launch_action_queue:dequeue({ order = data.order, maintain = false })
+        elseif (data.remove and data.enqueued_data) then
+            launch_to_scrub = force_launch_data.launch_action_queue:remove({ data = data.enqueued_data })
+        end
+
+        Log.warn(launch_to_scrub)
+        if (not launch_to_scrub) then return end
+
+        local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
+        local icbm_meta_data_source = configurable_nukes_data.icbm_meta_data[launch_to_scrub.icbm_data.surface_name]
+        local icbm_meta_data_target = nil
+
+        if (not launch_to_scrub.icbm_data.same_surface) then
+            icbm_meta_data_target = configurable_nukes_data.icbm_meta_data[launch_to_scrub.icbm_data.target_surface_name]
+        end
+
+        if (icbm_meta_data_source) then
+            icbm_meta_data_source:remove_data({
+                icbm_data = launch_to_scrub.icbm_data,
+            })
+        end
+
+        if (icbm_meta_data_target) then
+            icbm_meta_data_target:remove_data({
+                icbm_data = launch_to_scrub.icbm_data,
+            })
+        end
+
+        local item_numbers = ICBM_Data:get_item_numbers()
+        if (item_numbers.get(launch_to_scrub.icbm_data.item_number)) then item_numbers.remove(launch_to_scrub.icbm_data.item_number) end
+
+        if (data.space_launches_initiated[launch_to_scrub.icbm_data]) then data.space_launches_initiated[launch_to_scrub.icbm_data] = nil end
+
+        -- Remove any registered event_handlers for the launch
+        for _, event_handler_data in pairs(launch_to_scrub.icbm_data.event_handlers) do
+            Event_Handler:unregister_event({
+                event_name = event_handler_data.event_name,
+                source_name = event_handler_data.source_name,
+                nth_tick = event_handler_data.nth_tick,
+            })
+        end
+
+        launch_to_scrub.icbm_data.scrubbed = true
+        ICBM_Repository.update_icbm_data(launch_to_scrub.icbm_data)
+
+        launch_to_scrub.icbm_data.cargo_pod = nil
+        script.raise_event(
+            Custom_Events.cn_on_rocket_launch_scrubbed.name,
+            {
+                name = defines.events[Custom_Events.cn_on_rocket_launch_scrubbed.name],
+                tick = game.tick,
+                icbm_data = launch_to_scrub.icbm_data,
+            }
+        )
+
+        if (    data.print_message
+            and launch_to_scrub.icbm_data.force
+            and launch_to_scrub.icbm_data.force.valid
+        ) then
+            launch_to_scrub.icbm_data.force.print({ "rocket-silo-utils.scrub-launch", launch_to_scrub.icbm_data.item_number })
+        end
+    end
 end
 
 function rocket_silo_utils.launch_rocket(event)
@@ -130,9 +206,10 @@ function rocket_silo_utils.launch_rocket(event)
             --[[ Find the parent star, if it exists, of the target space-location ]]
             Log.warn(source_target_planet.name)
             Log.info(source_target_planet)
-            local source_target_system_name = source_target_planet.type == "spaceship" and source_target_planet.previous_space_location:get_stellar_system() or source_target_planet:get_stellar_system()
+
+            local source_target_system_name = source_target_planet.type == "spaceship-data" and source_target_planet.previous_space_location:get_stellar_system() or source_target_planet:get_stellar_system()
             if (source_target_system_name) then source_target_system_name = source_target_system_name:lower() end
-            if (not Constants.space_exploration_dictionary[source_target_system_name]) then log(source_target_system_name); Constants.get_space_exploration_universe(true) end
+            if (not Constants.space_exploration_dictionary[source_target_system_name]) then Constants.get_space_exploration_universe(true) end
             source_target_system = Constants.space_exploration_dictionary[source_target_system_name]
         end
     end
@@ -258,7 +335,7 @@ function rocket_silo_utils.launch_rocket(event)
                                     and (
                                             v.entity.name == "rocket-silo"
                                         or
-                                            get_always_use_closest_silo()
+                                            Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
                                         and v.entity.name == "ipbm-rocket-silo"
                                     ))
                                 then
@@ -307,13 +384,12 @@ function rocket_silo_utils.launch_rocket(event)
         if (not Constants.space_exploration_dictionary[surface.name:lower()]) then Constants.get_space_exploration_universe(true) end
         local space_location = Constants.space_exploration_dictionary[surface.name:lower()]
         if (space_location and space_location.type) then
-            if (space_location.type == "planet" or space_location.type == "moon") then
+            if (space_location.type == "planet-data" or space_location.type == "moon-data") then
                 if (space_location.orbit) then
                     Log.warn(space_location.orbit.name)
                     Log.info(space_location.orbit)
                     local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(space_location.orbit.surface_name)
                     if (rocket_silo_meta_data) then
-                        log(serpent.block(rocket_silo_meta_data))
                         for k, v in pairs(rocket_silo_meta_data.rocket_silos) do
                             if (    v.entity
                                 and v.entity.valid
@@ -324,7 +400,7 @@ function rocket_silo_utils.launch_rocket(event)
                                 and (
                                         v.entity.name == "rocket-silo"
                                     or
-                                        get_always_use_closest_silo()
+                                        Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
                                     and v.entity.name == "ipbm-rocket-silo"
                                 ))
                             then
@@ -386,7 +462,7 @@ function rocket_silo_utils.launch_rocket(event)
                 and (
                         v.entity.name == "rocket-silo"
                     or
-                        get_always_use_closest_silo()
+                        Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
                     and v.entity.name == "ipbm-rocket-silo"
                 ))
             then
@@ -498,7 +574,7 @@ function rocket_silo_utils.launch_rocket(event)
             if (not Constants.space_exploration_dictionary[surface.name:lower()]) then Constants.get_space_exploration_universe(true) end
             local space_location = Constants.space_exploration_dictionary[surface.name:lower()]
             if (space_location and space_location.type) then
-                if (space_location.type == "planet" or space_location.type == "moon") then
+                if (space_location.type == "planet-data" or space_location.type == "moon-data") then
                     if (space_location.orbit) then
                         Log.warn(space_location.orbit.name)
                         Log.info(space_location.orbit)
@@ -778,7 +854,9 @@ function rocket_silo_utils.launch_rocket(event)
                             break
                         else
                             Log.error("Failed to launch rocket_silo: ")
-                            Log.warn(launch_initiated_params)
+                            Log.warn(rocket)
+                            Log.warn(cargo_pod)
+                            Log.warn(rocket_silo_data)
                             Log.warn(rocket_silo)
                         end
                     end
@@ -900,7 +978,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                                         local planet_to = Constants.planets_dictionary[to.name]
 
                                         space_connection_distance = (((planet_from.x - planet_to.x) ^ 2 + (planet_from.y - planet_to.y) ^ 2) ^ 0.5)
-                                        space_connection_distance = space_connection_distance * get_multisurface_base_distance_modifier()
+                                        space_connection_distance = space_connection_distance * Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name })
 
                                         if (reversed) then
                                             space_connection_distance_travelled = space_connection_distance * (1 - passed_rocket_silo_data.entity.surface.platform.distance)
@@ -948,9 +1026,9 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                         local origin_system_name = nil
                         if (origin_space_location.type) then
                             Log.warn(origin_space_location and origin_space_location.previous_space_location and origin_space_location.previous_space_location.name)
-                            origin_system_name = origin_space_location.type == "spaceship" and origin_space_location.previous_space_location:get_stellar_system() or origin_space_location:get_stellar_system()
+                            origin_system_name = origin_space_location.type == "spaceship-data" and origin_space_location.previous_space_location:get_stellar_system() or origin_space_location:get_stellar_system()
 
-                            if (not origin_space_location.type == "spaceship" and not Constants.space_exploration_dictionary[origin_system_name]) then Constants.get_space_exploration_universe(true) end
+                            if (not origin_space_location.type == "spaceship-data" and not Constants.space_exploration_dictionary[origin_system_name]) then Constants.get_space_exploration_universe(true) end
                             origin_system = Constants.space_exploration_dictionary[origin_system_name]
                         else
                             --[[ TODO: what exactly? ]]
@@ -1036,8 +1114,8 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                         if (origin_system and (source_target_system or source_target_planet)) then
                             if (not source_target_system) then source_target_system = source_target_planet end
 
-                            local origin_space_distortion = origin_space_location.type == "anomaly" and origin_space_location.space_distortion or 0
-                            local destination_space_distortion = source_target_planet.type == "anomaly" and origin_space_location.space_distortion or 0
+                            local origin_space_distortion = origin_space_location.type == "anomaly-data" and origin_space_location.space_distortion or 0
+                            local destination_space_distortion = source_target_planet.type == "anomaly-data" and origin_space_location.space_distortion or 0
 
                             local distance_calculcated = false
 
@@ -1087,7 +1165,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                                     Log.debug("same solar system")
                                     local origin_star_gravity_well = origin_space_location.star_gravity_well
                                     Log.debug(origin_star_gravity_well)
-                                    if (origin_space_location.type == "orbit") then
+                                    if (origin_space_location.type == "orbit-data") then
                                         origin_star_gravity_well = origin_space_location.parent and origin_space_location.parent.star_gravity_well or 0
                                     end
                                     Log.debug(origin_star_gravity_well)
@@ -1100,7 +1178,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
 
                                         local origin_planet_gravity_well = origin_space_location.star_gravity_well
                                         Log.debug(origin_planet_gravity_well)
-                                        if (origin_space_location.type == "orbit") then
+                                        if (origin_space_location.type == "orbit-data") then
                                             origin_planet_gravity_well = origin_space_location.parent and origin_space_location.parent.star_gravity_well or 0
                                         end
                                         Log.debug(origin_planet_gravity_well)
@@ -1164,7 +1242,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
 
                     Log.warn("pre-multiplication, target_distance = " .. target_distance)
                     if (not se_active) then
-                        target_distance = target_distance * get_multisurface_base_distance_modifier()
+                        target_distance = target_distance * Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name })
                     end
                     Log.warn("post-multiplication, target_distance = " .. target_distance)
                     if (not se_active) then
