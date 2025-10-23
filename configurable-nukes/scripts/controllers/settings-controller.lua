@@ -7,6 +7,7 @@ local Log = require("libs.log.log")
 local Settings_Service = require("scripts.services.settings-service")
 
 local settings_controller = {}
+settings_controller.name = "settings_controller"
 
 function settings_controller.on_runtime_mod_setting_changed(event)
     Log.debug("settings_controller.on_runtime_mod_setting_changed")
@@ -21,6 +22,8 @@ function settings_controller.on_runtime_mod_setting_changed(event)
     if (not event.setting or type(event.setting) ~= "string") then return end
     if (not event.setting_type or type(event.setting_type) ~= "string") then return end
 
+    if (not (event.setting:find("configurable-nukes-", 1, true) == 1)) then return end
+
     if (not storage.settings or type(storage.settings) ~= "table") then storage.settings = {} end
     if (event.setting_type == "runtime-global") then
         Settings_Service.get_runtime_global_setting({  reindex = true, setting = event.setting })
@@ -29,6 +32,12 @@ function settings_controller.on_runtime_mod_setting_changed(event)
         Settings_Service.get_startup_setting({  reindex = true, setting = event.setting })
     end
 end
+Event_Handler:register_event({
+    event_name = "on_runtime_mod_setting_changed",
+    source_name = "settings_controller.on_runtime_mod_setting_changed",
+    func_name = "settings_controller.on_runtime_mod_setting_changed",
+    func = settings_controller.on_runtime_mod_setting_changed,
+})
 
 settings_controller.configurable_nukes = true
 

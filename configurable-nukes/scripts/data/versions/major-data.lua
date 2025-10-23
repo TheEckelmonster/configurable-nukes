@@ -27,6 +27,5 @@ function major_data:new(o)
 end
 
 setmetatable(major_data, Data)
-local Major_data  = major_data:new(Major_data)
-
-return Major_data
+major_data.__index = major_data
+return major_data

@@ -409,6 +409,15 @@ runtime_global_settings_constants.settings = {
         minimum_value = 1,
         maximum_value = 2 ^ 11
     },
+    DASHBOARD_REFRESH_RATE = {
+        type = "int-setting",
+        name = prefix .. "dashboard-refresh-rate",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 6,
+        minimum_value = 1,
+        maximum_value = 60
+    },
 }
 
 runtime_global_settings_constants.settings_dictionary  = {}

@@ -9,8 +9,9 @@ local Configurable_Nukes_Repository = require("scripts.repositories.configurable
 local Constants = require("scripts.constants.constants")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
+local ICBM_Repository = require("scripts.repositories.ICBM-repository")
+local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Log = require("libs.log.log")
-local Planet_Controller = require("scripts.controllers.planet-controller")
 local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Meta_Data = require("scripts.data.rocket-silo-meta-data")
@@ -90,13 +91,8 @@ function locals.initialize(from_scratch, maintain_data)
         end
     end
 
-    local sa_active = scripts and scripts.active_mods and scripts.active_mods["space-age"]
-    local se_active = scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
-
-    if (se_active) then
-        locals.process_space_exploration_universe()
-        script.on_event(remote.call("space-exploration", "get_on_zone_surface_created_event"), Planet_Controller.on_surface_created)
-    end
+    local sa_active = script and script.active_mods and script.active_mods["space-age"]
+    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
     -- Configurable Nukes
     if (from_scratch) then
@@ -126,8 +122,10 @@ function locals.initialize(from_scratch, maintain_data)
         if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = Rocket_Silo_Meta_Data:new() end
     end
 
-    storage.sa_active = storage.sa_active
-    storage.se_active = storage.se_active
+    storage.sa_active = sa_active ~= nil and sa_active or storage.sa_active
+    storage.se_active = se_active ~= nil and se_active or storage.se_active
+
+    locals.reindex_and_save_mod_data()
 
     if (game) then
         for name, surface in pairs(game.surfaces) do
@@ -240,11 +238,13 @@ function locals.migrate(data)
     if (storage_old.configurable_nukes) then
         local migration_start_message_printed = false
         if (storage_old.configurable_nukes.version_data and storage_old.configurable_nukes.version_data.created) then
-            if (storage_old.configurable_nukes.version_data.created > 0) then
-                Log.debug(storage_old.configurable_nukes.version_data)
-                Log.debug(Constants.mod_name .. ": Migrating existing data")
-                game.print({ "initialization.migrate-start", Constants.mod_name})
-                migration_start_message_printed = true
+            if (storage_old.configurable_nukes.version_data.created >= 0) then
+                if (storage.tick and type(storage.tick) == "number" and storage.tick > 0) then
+                    Log.debug(storage_old.configurable_nukes.version_data)
+                    Log.debug(Constants.mod_name .. ": Migrating existing data")
+                    game.print({ "initialization.migrate-start", Constants.mod_name})
+                    migration_start_message_printed = true
+                end
             end
         end
 
@@ -299,6 +299,47 @@ function locals.migrate(data)
                         end
                     end
                 end
+
+                if (prev_version_data.minor.value <= 6) then
+                    Log.warn(prev_version_data.minor.value)
+                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 7) then
+                        Log.warn(new_version_data.major.value)
+                        Log.warn(new_version_data.minor.value)
+                        --[[ Version 0.7.0:
+                            -> removed item_numbers from icbm_meta_data
+                            -> changed/enforced icbm_meta_data.surface_name instead of icbm_meta_data.planet_name
+
+                            -> Event_Handler system indtroduced
+                              -> Move existing inflight rockets to registered scheduled events
+                              -> icbm_data.event_handlers field introduced
+                        ]]
+                        if (storage_old.configurable_nukes.icbm_meta_data) then
+                            local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
+                            for k, icbm_meta_data in pairs(all_icbm_meta_data) do
+                                icbm_meta_data.item_numbers = nil
+                                icbm_meta_data.surface_name = icbm_meta_data.planet_name
+                                icbm_meta_data.planet_name = nil
+                                ICBM_Meta_Repository.update_icbm_meta_data(icbm_meta_data)
+
+                                if (icbm_meta_data.in_transit) then
+                                    for icbm_data, _  in pairs(icbm_meta_data.in_transit) do
+                                        icbm_data.event_handlers = {}
+                                        ICBM_Utils.register_delivery_data({ icbm_data = icbm_data })
+                                        icbm_meta_data.in_transit[icbm_data] = nil
+                                        ICBM_Repository.update_icbm_data(icbm_data)
+                                    end
+                                end
+
+                                if (icbm_meta_data.icbms) then
+                                    for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
+                                        icbm_data.event_handlers = {}
+                                        ICBM_Repository.update_icbm_data(icbm_data)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
             end
         end
 
@@ -339,8 +380,8 @@ function locals.migrate(data)
     end
 end
 
-function locals.process_space_exploration_universe(data)
-    Log.debug("locals.process_space_exploration_universe")
+function locals.reindex_and_save_mod_data(data)
+    Log.debug("locals.reindex_and_save_mod_data")
     Log.info(data)
 
     if (not storage.constants) then storage.constants = {} end

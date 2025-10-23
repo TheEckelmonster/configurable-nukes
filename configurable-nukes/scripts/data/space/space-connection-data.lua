@@ -3,7 +3,8 @@ local Log = require("libs.log.log")
 
 local space_connection_data = {}
 
-space_connection_data.type = "space-connection"
+space_connection_data.type = "space-connection-data"
+
 space_connection_data.forward = nil
 space_connection_data.reverse = nil
 space_connection_data.length = 0
@@ -32,6 +33,5 @@ function space_connection_data:new(o)
 end
 
 setmetatable(space_connection_data, Data)
-local Space_location_data = space_connection_data:new(Space_location_data)
-
-return Space_location_data
+space_connection_data.__index = space_connection_data
+return space_connection_data

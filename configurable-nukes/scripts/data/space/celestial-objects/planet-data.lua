@@ -3,7 +3,8 @@ local Log = require("libs.log.log")
 
 local planet_data = {}
 
-planet_data.type = "planet"
+planet_data.type = "planet-data"
+
 planet_data.planet_gravity_well = nil
 
 function planet_data:new(o)
@@ -35,7 +36,5 @@ function planet_data:is_solid(data)
 end
 
 setmetatable(planet_data, Space_Location_Data)
-local Planet_Data = planet_data:new(Planet_Data)
-Planet_Data.mt = planet_data
-
-return Planet_Data
+planet_data.__index = planet_data
+return planet_data

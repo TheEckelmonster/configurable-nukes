@@ -6,14 +6,16 @@ local Log = require("libs.log.log")
 
 local version_data = {}
 
+version_data.type = "version-data"
+
 version_data.major = Major_Data:new()
 version_data.major.value = 0
 version_data.major.valid = true
 version_data.minor = Minor_Data:new()
-version_data.minor.value = 6
+version_data.minor.value = 7
 version_data.minor.valid = true
 version_data.bug_fix = Bug_Fix_Data:new()
-version_data.bug_fix.value = 3
+version_data.bug_fix.value = 0
 version_data.bug_fix.valid = true
 
 version_data.string_val = version_data.major.value .. "." .. version_data.minor.value .. "." .. version_data.bug_fix.value
@@ -23,6 +25,7 @@ function version_data:new(o)
     Log.info(o)
 
     local defaults = {
+        type = self.type,
         major = self.major,
         minor = self.minor,
         bug_fix = self.bug_fix,
@@ -55,6 +58,5 @@ function version_data:to_string()
 end
 
 setmetatable(version_data, Data)
-local Version_Data = version_data:new(Version_Data)
-
-return Version_Data
+version_data.__index = version_data
+return version_data
