@@ -210,26 +210,3 @@ end
 setmetatable(icbm_data, Data)
 icbm_data.__index = icbm_data
 return icbm_data
--- local ICBM_Data = icbm_data:new(ICBM_Data)
-
--- function ICBM_Data:next_item_number()
---     Log.debug("ICBM_Data:next_item_number")
-
---     return icbm_data.item_number.get()
--- end
-
--- function ICBM_Data:get_item_numbers()
---     Log.debug("ICBM_Data:get_item_numbers")
---     Log.info(item_number)
-
---     return
---     {
---         get = icbm_data.item_numbers.get,
---         set = icbm_data.item_numbers.set,
---         remove = icbm_data.item_numbers.remove,
---         -- get_all = icbm_data.item_numbers.get_all,
---         remove_all = icbm_data.item_numbers.remove_all,
---     }
--- end
-
--- return ICBM_Data

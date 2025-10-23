@@ -12,21 +12,21 @@ local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-reposit
 local rocket_silo_gui_controller = {}
 rocket_silo_gui_controller.name = "rocket_silo_gui_controller"
 
-function rocket_silo_gui_controller.on_gui_click(event)
-    Log.debug("rocket_silo_gui_controller.on_gui_clicked")
-    Log.info(event)
+-- function rocket_silo_gui_controller.on_gui_click(event)
+--     Log.debug("rocket_silo_gui_controller.on_gui_clicked")
+--     Log.info(event)
 
-    if (not event or type(event) ~= "table") then return end
-    if (not event.element) then return end
-    if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
+--     if (not event or type(event) ~= "table") then return end
+--     if (not event.element) then return end
+--     if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
 
-end
-Event_Handler:register_event({
-    event_name = "on_gui_click",
-    source_name = "rocket_silo_gui_controller.on_gui_click",
-    func_name = "rocket_silo_gui_controller.on_gui_click",
-    func = rocket_silo_gui_controller.on_gui_click,
-})
+-- end
+-- Event_Handler:register_event({
+--     event_name = "on_gui_click",
+--     source_name = "rocket_silo_gui_controller.on_gui_click",
+--     func_name = "rocket_silo_gui_controller.on_gui_click",
+--     func = rocket_silo_gui_controller.on_gui_click,
+-- })
 
 function rocket_silo_gui_controller.on_gui_opened(event)
     Log.debug("rocket_silo_gui_controller.on_gui_opened")

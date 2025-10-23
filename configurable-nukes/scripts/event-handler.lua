@@ -261,10 +261,8 @@ function event_handlers:register_event(data)
 
     if (event_registered) then
         if (data.restore_on_load and storage) then
-            -- log(serpent.block(event))
             if (event_data and event_name and event) then
                 event_data.event_name = event_name
-                -- table.insert(event_handlers.restore_on_load, event)
                 if (event_name == "on_nth_tick") then
                     if (not event_handlers.restore_on_load[event_name]) then event_handlers.restore_on_load[event_name] = {} end
                     event_handlers.restore_on_load[event_name][data.nth_tick] = event
@@ -275,7 +273,6 @@ function event_handlers:register_event(data)
                 if (data.save_to_storage) then
                     --[[ TODO: Implement specific copying/saving, rather than cloning the entire table every time ]]
                     local cleaned_event_handlers_copy = deepcopy_exclude_functions(event_handlers)
-                    -- log(serpent.block(cleaned_event_handlers_copy))
 
                     if (cleaned_event_handlers_copy) then
                         storage.event_handlers = { restore_on_load = cleaned_event_handlers_copy.restore_on_load }
@@ -287,8 +284,6 @@ function event_handlers:register_event(data)
         return
         {
             event_name = event_name,
-            -- event = deepcopy_exclude_functions(event),
-            -- event_data = deepcopy_exclude_functions(event_data),
             source_name = event_data.source_name,
             nth_tick = event_data.nth_tick,
         }
@@ -422,7 +417,6 @@ function event_handlers:remove_event(data)
 
             --[[ TODO: Implement specific copying/saving, rather than clonging the entire table every time ]]
             local cleaned_event_handlers_copy = deepcopy_exclude_functions(event_handlers)
-            -- log(serpent.block(cleaned_event_handlers_copy))
 
             if (cleaned_event_handlers_copy) then
                 storage.event_handlers = { restore_on_load = cleaned_event_handlers_copy.restore_on_load }

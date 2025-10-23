@@ -202,18 +202,18 @@ data:extend({
         --     mode = { "nothing" },
         --     cursor_box_type = "copy",
         -- },
-        reverse_select =
-        {
-            border_color = { 255 - 71, 255 - 255, 255 - 73 },
-            mode = { "nothing" },
-            cursor_box_type = "copy",
-        },
-        alt_reverse_select =
-        {
-            border_color = { 255 - 239, 255 - 153, 255 - 34 },
-            mode = { "nothing" },
-            cursor_box_type = "copy",
-        },
+        -- reverse_select =
+        -- {
+        --     border_color = { 255 - 71, 255 - 255, 255 - 73 },
+        --     mode = { "nothing" },
+        --     cursor_box_type = "copy",
+        -- },
+        -- alt_reverse_select =
+        -- {
+        --     border_color = { 255 - 239, 255 - 153, 255 - 34 },
+        --     mode = { "nothing" },
+        --     cursor_box_type = "copy",
+        -- },
         open_sound = "__base__/sound/item-open.ogg",
         close_sound = "__base__/sound/item-close.ogg"
     },
