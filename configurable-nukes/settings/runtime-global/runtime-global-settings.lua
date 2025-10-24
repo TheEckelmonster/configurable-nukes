@@ -1,6 +1,7 @@
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
+local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 
 data:extend({
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE,
@@ -10,17 +11,13 @@ data:extend({
 
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER,
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION,
-    -- Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_RADIUS_MODIFIER,
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER,
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION,
-    -- Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_RADIUS_MODIFIER,
 
     Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER,
     Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION,
-    -- Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_RADIUS_MODIFIER,
     Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER,
     Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION,
-    -- Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_RADIUS_MODIFIER,
 
     Runtime_Global_Settings_Constants.settings.PIN_TARGETS,
     Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET,
@@ -67,5 +64,16 @@ if (k2so_active) then
         Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_ADDITION,
         Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_MODIFIER,
         Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_ADDITION,
+    })
+end
+
+if (saa_s_active) then
+    data:extend({
+        Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_POLLUTION,
+        --[[ saa-s-atomic-artillery-shell ]]
+        Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BASE_DAMAGE_MODIFIER,
+        Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BASE_DAMAGE_ADDITION,
+        Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BONUS_DAMAGE_MODIFIER,
+        Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BONUS_DAMAGE_ADDITION,
     })
 end

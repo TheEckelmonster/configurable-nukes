@@ -141,9 +141,9 @@ function rocket_dashboard_gui_controller.on_scrub_button_clicked(event)
     local storage_ref = storage.gui_data and storage.gui_data[event.player_index] and storage.gui_data[event.player_index][Rocket_Dashboard_Constants.gui_data_index]
     if (not storage_ref) then return end
 
-    local icbm_data = storage_ref[item_number] and storage_ref[item_number].icbm_data
+    local icbm_data = storage_ref.item_numbers and storage_ref.item_numbers[item_number] and storage_ref.item_numbers[item_number].icbm_data
     if (not icbm_data or not icbm_data.valid) then
-        icbm_data = ICBM_Repository.get_icbm_data(storage_ref[item_number].surface_name, item_number)
+        icbm_data = ICBM_Repository.get_icbm_data(storage_ref.item_numbers[item_number].surface_name, item_number)
         if (not icbm_data or not icbm_data.valid) then return end
     end
 
@@ -371,6 +371,29 @@ Event_Handler:register_event({
     source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
     func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
     func = rocket_dashboard_gui_controller.instantiate_if_not_exists,
+})
+
+function rocket_dashboard_gui_controller.cn_on_init_complete(event)
+    Log.debug("rocket_dashboard_gui_controller.cn_on_init_complete")
+    Log.info(event)
+
+    if (game and game.forces) then
+        for k, force in pairs(game.forces) do
+            if (force.valid and force.players) then
+                for k_2, player in pairs(force.players) do
+                    if (player.valid) then
+                        Rocket_Dashboard_Gui_Service.update_gui_data({ player_index = player.index, })
+                    end
+                end
+            end
+        end
+    end
+end
+Event_Handler:register_event({
+    event_name = Custom_Events.cn_on_init_complete.name,
+    source_name = "rocket_dashboard_gui_controller.cn_on_init_complete",
+    func_name = "rocket_dashboard_gui_controller.cn_on_init_complete",
+    func = rocket_dashboard_gui_controller.cn_on_init_complete,
 })
 
 rocket_dashboard_gui_controller.configurable_nukes = true

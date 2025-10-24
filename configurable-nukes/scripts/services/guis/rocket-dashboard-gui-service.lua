@@ -53,9 +53,17 @@ function rocket_dashboard_gui_service.get_or_instantiate_button_open(data)
         local cn_button_open_rocket_dashboard = nil
         local mod_button_flow = Mod_Gui.get_button_flow(player)
         if (mod_button_flow) then
-            cn_button_open_rocket_dashboard = mod_button_flow.add(button)
+            if (mod_button_flow[Rocket_Dashboard_Constants.button_open_name]) then
+                cn_button_open_rocket_dashboard = mod_button_flow[Rocket_Dashboard_Constants.button_open_name]
+            else
+                cn_button_open_rocket_dashboard = mod_button_flow.add(button)
+            end
         else
-            cn_button_open_rocket_dashboard = player.gui.top.add(button)
+            if (player.gui.top[Rocket_Dashboard_Constants.button_open_name]) then
+                cn_button_open_rocket_dashboard = player.gui.top[Rocket_Dashboard_Constants.button_open_name]
+            else
+                cn_button_open_rocket_dashboard = player.gui.top.add(button)
+            end
         end
 
         storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index][Rocket_Dashboard_Constants.button_open_name] = cn_button_open_rocket_dashboard
@@ -80,64 +88,129 @@ function rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard(data)
     local storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]
     if (not storage_ref[Rocket_Dashboard_Constants.frame_main_name]) then
 
-        local cn_frame_main = player.gui.screen.add({
-            type = "frame",
+        local get_or_instantiate = function (params)
+            -- Log.debug("local.get_or_instantiate")
+            -- Log.info(params)
+
+            if (not params or type(params) ~= "table") then return end
+            ---@diagnostic disable-next-line: undefined-field
+            if (not params.gui or not params.gui.valid) then return end
+            if (not params.name or type(params.name) ~= "string") then return end
+            if (not params.element_to_instantiate or type(params.element_to_instantiate) ~= "table") then return end
+            if (not params.element_to_instantiate.type or type(params.element_to_instantiate.type) ~= "string") then return end
+
+            local return_val = nil
+            if (params.gui[params.name]) then
+                return_val = params.gui[params.name]
+            else
+                ---@diagnostic disable-next-line: undefined-field
+                return_val = params.gui.add(params.element_to_instantiate)
+            end
+
+            return return_val
+        end
+
+        local cn_frame_main = get_or_instantiate({
+            gui = player.gui.screen,
             name = Rocket_Dashboard_Constants.frame_main_name,
-            direction = "vertical",
-            location = { 268, 98 },
+            element_to_instantiate =
+            {
+                type = "frame",
+                name = Rocket_Dashboard_Constants.frame_main_name,
+                direction = "vertical",
+                location = { 268, 98 },
+            }
         })
-        local header_flow = cn_frame_main.add({
-            type = "flow",
+
+        local header_flow = get_or_instantiate({
+            gui = cn_frame_main,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_header_flow",
+            element_to_instantiate =
+            {
+                type = "flow",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_header_flow",
+            }
         })
-        local title = header_flow.add({
-            type = "label",
+
+        local title = get_or_instantiate({
+            gui = header_flow,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_header_title",
-            style = "frame_title",
-            caption = { "cn-rocket-dashboard.frame-title", }
+            element_to_instantiate =
+            {
+                type = "label",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_header_title",
+                style = "frame_title",
+                caption = { "cn-rocket-dashboard.frame-title", }
+            }
         })
         title.drag_target = cn_frame_main
 
-        local dragger = header_flow.add({
-            type = "empty-widget",
+        local dragger = get_or_instantiate({
+            gui = header_flow,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_dragger",
-            style = "draggable_space_header",
+            element_to_instantiate =
+            {
+                type = "empty-widget",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_dragger",
+                style = "draggable_space_header",
+            }
         })
         dragger.style.vertically_stretchable = true
         dragger.style.horizontally_stretchable = true
         dragger.drag_target = cn_frame_main
 
-        local pin_button = header_flow.add({
-            type = "sprite-button",
-            style = "frame_action_button",
-            name =  Rocket_Dashboard_Constants.button_pin_name,
-            sprite = "utility/track_button",
-            auto_toggle = true,
+        local pin_button = get_or_instantiate({
+            gui = header_flow,
+            name = Rocket_Dashboard_Constants.button_pin_name,
+            element_to_instantiate =
+            {
+                type = "sprite-button",
+                style = "frame_action_button",
+                name =  Rocket_Dashboard_Constants.button_pin_name,
+                sprite = "utility/track_button",
+                auto_toggle = true,
+            }
         })
         storage_ref.pin_button = pin_button
 
-        local close_button = header_flow.add({
-            type = "sprite-button",
-            name =  Rocket_Dashboard_Constants.button_close_name,
-            style = "frame_action_button",
-            sprite = "utility/close"
+        local close_button = get_or_instantiate({
+            gui = header_flow,
+            name = Rocket_Dashboard_Constants.button_close_name,
+            element_to_instantiate =
+            {
+                type = "sprite-button",
+                name =  Rocket_Dashboard_Constants.button_close_name,
+                style = "frame_action_button",
+                sprite = "utility/close"
+            }
         })
         storage_ref.close_button = close_button
 
-        local gui_inner_frame = cn_frame_main.add({
-            type = "frame",
+        local gui_inner_frame = get_or_instantiate({
+            gui = cn_frame_main,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_inner_frame",
-            style = "inside_shallow_frame_with_padding",
-            direction = "vertical",
+            element_to_instantiate =
+            {
+                type = "frame",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_inner_frame",
+                style = "inside_shallow_frame_with_padding",
+                direction = "vertical",
+            }
         })
         storage_ref.inner_frame = gui_inner_frame
-        local gui_inner_table = gui_inner_frame.add({
-            type = "table",
+
+        local gui_inner_table = get_or_instantiate({
+            gui = gui_inner_frame,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_inner_table",
-            column_count = 5,
-            draw_vertical_lines = true,
-            draw_horizontal_line_after_headers = true,
-            style = "cn_rocket_dashboard_table",
+            element_to_instantiate =
+            {
+                type = "table",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_inner_table",
+                column_count = 5,
+                draw_vertical_lines = true,
+                draw_horizontal_line_after_headers = true,
+                style = "cn_rocket_dashboard_table",
+            }
         })
         storage_ref.inner_table = gui_inner_table
 
@@ -149,40 +222,65 @@ function rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard(data)
 
         local padding = { 1, 4 }
 
-        local gui = gui_inner_table.add({
-            type = "label",
+        local gui = get_or_instantiate({
+            gui = gui_inner_table,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_target_num",
-            caption = { "cn-rocket-dashboard-headers.target-num", }
+            element_to_instantiate =
+            {
+                type = "label",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_target_num",
+                caption = { "cn-rocket-dashboard-headers.target-num", }
+            }
         })
         gui.style.padding = padding
 
-        gui = gui_inner_table.add({
-            type = "label",
+        gui = get_or_instantiate({
+            gui = gui_inner_table,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_source",
-            caption = { "cn-rocket-dashboard-headers.source",  }
+            element_to_instantiate =
+            {
+                type = "label",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_source",
+                caption = { "cn-rocket-dashboard-headers.source",  }
+            }
         })
         gui.style.padding = padding
 
-        gui = gui_inner_table.add({
-            type = "label",
+        gui = get_or_instantiate({
+            gui = gui_inner_table,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_destination",
-            caption = { "cn-rocket-dashboard-headers.destination",  }
+            element_to_instantiate =
+            {
+                type = "label",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_destination",
+                caption = { "cn-rocket-dashboard-headers.destination",  }
+            }
         })
         gui.style.padding = padding
 
-        gui = gui_inner_table.add({
-            type = "label",
+        gui = get_or_instantiate({
+            gui = gui_inner_table,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_time_remaining",
-            caption = { "cn-rocket-dashboard-headers.time-remaining",  },
-            tooltip = { "cn-rocket-dashboard.time-remaining-tooltip", }
+            element_to_instantiate =
+            {
+                type = "label",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_time_remaining",
+                caption = { "cn-rocket-dashboard-headers.time-remaining",  },
+                tooltip = { "cn-rocket-dashboard.time-remaining-tooltip", }
+            }
         })
         gui.style.padding = padding
 
-        gui = gui_inner_table.add({
-            type = "label",
+        gui = get_or_instantiate({
+            gui = gui_inner_table,
             name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_scrub",
-            caption = { "cn-rocket-dashboard-headers.scrub",  },
-            tooltip = { "cn-rocket-dashboard.scrub-tooltip", }
+            element_to_instantiate =
+            {
+                type = "label",
+                name = Rocket_Dashboard_Constants.gui_data_index .. "_horiz_inner_flow_headers_scrub",
+                caption = { "cn-rocket-dashboard-headers.scrub",  },
+                tooltip = { "cn-rocket-dashboard.scrub-tooltip", }
+            }
         })
         gui.style.padding = padding
 
@@ -305,7 +403,7 @@ function rocket_dashboard_gui_service.remove_rocket_data_for_force(data)
         if (dashboard_gui) then
             rocket_dashboard_gui_service.remove_rocket_data({
                 storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index],
-                icbm_data = data.icbm_data,
+                item_number = data.icbm_data.item_number,
             })
         end
     end
@@ -317,13 +415,14 @@ function rocket_dashboard_gui_service.remove_rocket_data(data)
 
     if (not data or type(data) ~= "table") then return end
     if (not data.storage_ref or type(data.storage_ref) ~= "table") then return end
-    if (not data.icbm_data or type(data.icbm_data) ~= "table") then return end
+    if (not data.storage_ref.item_numbers or type(data.storage_ref.item_numbers) ~= "table") then return end
+    if (not data.item_number or type(data.item_number) ~= "number" or data.item_number < 1) then return end
     if (not data.gui or not data.gui.valid) then
         data.gui = data.storage_ref.inner_table
         if (not data.gui or not data.gui.valid) then return end
     end
 
-    local prefix = Rocket_Dashboard_Constants.gui_data_index .. "_inner_table_" .. data.icbm_data.item_number
+    local prefix = Rocket_Dashboard_Constants.gui_data_index .. "_inner_table_" .. data.item_number
 
     local removed = false
     -- Check if the gui element already exists
@@ -335,7 +434,7 @@ function rocket_dashboard_gui_service.remove_rocket_data(data)
     end
 
     if (removed) then
-        data.storage_ref[data.icbm_data.item_number] = nil
+        data.storage_ref.item_numbers[data.item_number] = nil
     end
 end
 
@@ -382,7 +481,8 @@ function rocket_dashboard_gui_service.add_rocket_data(data)
         return
     end
 
-    data.storage_ref[data.icbm_data.item_number] =
+    if (not data.storage_ref.item_numbers) then data.storage_ref.item_numbers = {} end
+    data.storage_ref.item_numbers[data.icbm_data.item_number] =
     {
         icbm_data = data.icbm_data,
         surface_name = source_name,
@@ -508,10 +608,12 @@ function rocket_dashboard_gui_service.on_label_clicked(data)
     if (not storage.gui_data) then storage.gui_data = {} end
     if (not storage.gui_data[player.index]) then storage.gui_data[player.index] = {} end
     if (not storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]) then storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index] = {} end
-    local storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]
 
-    if (storage_ref[data.item_number]) then
-        local icbm_data = storage_ref[data.item_number].icbm_data
+    local storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]
+    if (not storage_ref.item_numbers) then storage_ref.item_numbers = {} end
+
+    if (storage_ref.item_numbers[data.item_number]) then
+        local icbm_data = storage_ref.item_numbers[data.item_number].icbm_data
         if (icbm_data and icbm_data.valid) then
             if (data.label == "source_label") then
                 if (icbm_data.source_silo and icbm_data.source_silo.valid) then
@@ -557,6 +659,7 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
     if (not data or type(data) ~= "table") then return end
     if (not data.player_index) then return end
     if (not data.storage_ref) then return end
+    if (not data.storage_ref.item_numbers) then return end
     if (not data.gui or not data.gui.valid) then
         data.gui = data.storage_ref.inner_table
         if (not data.gui or not data.gui.valid) then return end
@@ -571,8 +674,8 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
 
         if (label ~= "time_remaining_flow" and label ~= "source_flow") then goto continue end
 
-        if (item_number ~= nil and data.storage_ref[item_number]) then
-            local meta_icbm_data = data.storage_ref[item_number]
+        if (item_number ~= nil and data.storage_ref.item_numbers[item_number]) then
+            local meta_icbm_data = data.storage_ref.item_numbers[item_number]
             local icbm_data = meta_icbm_data.icbm_data
             if (icbm_data and icbm_data.valid and icbm_data.tick_to_target <= 0) then
 
@@ -580,6 +683,13 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
                 if (_icbm_data and _icbm_data.valid) then
                     icbm_data = _icbm_data
                     meta_icbm_data.icbm_data = icbm_data
+                else
+                    rocket_dashboard_gui_service.remove_rocket_data({
+                        storage_ref = data.storage_ref,
+                        item_number = icbm_data.item_number,
+                        gui = data.gui,
+                    })
+                    goto continue
                 end
             end
 
@@ -669,7 +779,7 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
             ) then
                 rocket_dashboard_gui_service.remove_rocket_data({
                     storage_ref = data.storage_ref,
-                    icbm_data = icbm_data,
+                    item_number = icbm_data.item_number,
                     gui = data.gui,
                 })
             end
@@ -680,8 +790,8 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
 end
 
 function rocket_dashboard_gui_service.toggle_rocket_dashboard(data)
-    Log.debug("rocket_dashboard_gui_service.toggle_rocket_dashboard")
-    Log.info(data)
+    Log.error("rocket_dashboard_gui_service.toggle_rocket_dashboard")
+    Log.warn(data)
 
     if (not data or type(data) ~= "table") then return end
     if (not data.player_index or type(data.player_index) ~= "number" or data.player_index < 1) then return end
@@ -767,6 +877,38 @@ function rocket_dashboard_gui_service.close_rocket_dashboard(data)
                 player_index = data.player_index,
                 button_name = Rocket_Dashboard_Constants.button_close_name,
             })
+        end
+    end
+end
+
+function rocket_dashboard_gui_service.update_gui_data(data)
+    Log.debug("rocket_dashboard_gui_service.update_gui_data")
+    Log.info(data)
+
+    if (not data or type(data) ~= "table") then return end
+    if (not data.player_index or type(data.player_index) ~= "number" or data.player_index < 1) then return end
+
+    local player = game.get_player(data.player_index)
+    if (not player or not player.valid) then return end
+
+    if (not storage.gui_data) then storage.gui_data = {} end
+    if (not storage.gui_data[player.index]) then storage.gui_data[player.index] = {} end
+    if (not storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]) then storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index] = {} end
+
+    local storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]
+    if (not storage_ref.item_numbers) then storage_ref.item_numbers = {} end
+
+    if (storage_ref.item_numbers) then
+        for k, v in pairs(storage_ref.item_numbers) do
+            local _icbm_data = ICBM_Repository.get_icbm_data(v.surface_name, k)
+            if (_icbm_data and _icbm_data.valid) then
+                storage_ref.item_numbers[k].icbm_data = _icbm_data
+            else
+                rocket_dashboard_gui_service.remove_rocket_data({
+                    storage_ref = storage_ref,
+                    item_number = k,
+                })
+            end
         end
     end
 end

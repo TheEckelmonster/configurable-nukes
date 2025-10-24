@@ -156,7 +156,8 @@ local get_nuclear_weapons_research_ingredients = function ()
 end
 
 --[[ Nuclear Ammo Type Bonuses ]]
-local nuclear_artillery_research_bonus_visible = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY.name }) == "nuclear-artillery"
+local nuclear_artillery_research_bonus_visible =   Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY.name }) == "nuclear-artillery"
+                                                or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_SHELL_AMMO_CATEGORY.name }) == "nuclear-artillery"
 
 data:extend({
     {
