@@ -81,39 +81,38 @@ if (k2so_active) then
             table.insert(rocket_turret.attack_parameters.ammo_categories, "nuclear")
             rocket_turret.attack_parameters.ammo_category = nil
         end
-
-        local action =
+    end
+    local action =
+    {
         {
-            {
-                action_delivery = {
-                    target_effects = {
-                        {
-                            type = "script",
-                            effect_id = "kr-atomic-artillery-projectile-fired"
-                        }
-                    },
-                    type = "instant"
-                },
-                trigger_from_target = true,
-                type = "direct"
-            },
-            {
-                type = "direct",
-                action_delivery =
-                {
-                    type = "artillery",
-                    projectile = "kr-atomic-artillery-projectile-placeholder",
-                    starting_speed = 1,
-                    source_effects =
+            action_delivery = {
+                target_effects = {
                     {
-                        type = "create-entity",
-                        entity_name = "artillery-cannon-muzzle-flash"
+                        type = "script",
+                        effect_id = "kr-atomic-artillery-projectile-fired"
                     }
                 },
-            }
+                type = "instant"
+            },
+            trigger_from_target = true,
+            type = "direct"
+        },
+        {
+            type = "direct",
+            action_delivery =
+            {
+                type = "artillery",
+                projectile = "kr-atomic-artillery-projectile-placeholder",
+                starting_speed = 1,
+                source_effects =
+                {
+                    type = "create-entity",
+                    entity_name = "artillery-cannon-muzzle-flash"
+                }
+            },
         }
+    }
 
-        local kr_nuclear_artillery_shell_ammo_item = data.raw["ammo"]["kr-nuclear-artillery-shell"]
-        kr_nuclear_artillery_shell_ammo_item.ammo_type.action = action
-    end
+    local kr_nuclear_artillery_shell_ammo_item = data.raw["ammo"]["kr-nuclear-artillery-shell"]
+    kr_nuclear_artillery_shell_ammo_item.ammo_type.action = action
 end

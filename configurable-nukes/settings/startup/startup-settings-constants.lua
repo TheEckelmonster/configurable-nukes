@@ -6,6 +6,7 @@ end
 local Util = require("__core__.lualib.util")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true or scripts and scripts.active_mods and scripts.active_mods["Krastorio2-spaced-out"]
+local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true or scripts and scripts.active_mods and scripts.active_mods["SimpleAtomicArtillery-S"]
 local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
 local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
 
@@ -728,6 +729,55 @@ startup_settings_constants.settings = {
         allowed_values = { "artillery-shell", "nuclear-artillery" },
         default_value = "artillery-shell",
         hidden = not k2so_active,
+    },
+    --[[ SimpleAtomicArtillery-S: atomic-artillery-shell ]]
+    SIMPLE_ATOMIC_ARTILLERY_SHELL_AREA_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "saa-s-atomic-artillery-shell-area-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+        hidden = not saa_s_active,
+    },
+    SIMPLE_ATOMIC_ARTILLERY_SHELL_DAMAGE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "saa-s-atomic-artillery-shell-damage-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 1,
+        hidden = not saa_s_active,
+    },
+    SIMPLE_ATOMIC_ARTILLERY_SHELL_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "saa-s-atomic-artillery-shell-repeat-multiplier",
+        setting_type = "startup",
+        order = "",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+        hidden = not saa_s_active,
+    },
+    SIMPLE_ATOMIC_ARTILLERY_SHELL_FIRE_WAVE = {
+        type = "bool-setting",
+        name = prefix .. "saa-s-atomic-artillery-shell-fire-wave",
+        setting_type = "startup",
+        order = "",
+        default_value = false,
+        hidden = not saa_s_active,
+    },
+    --[[ SimpleAtomicArtillery-S: atomic-artillery-shell ]]
+    SIMPLE_ATOMIC_ARTILLERY_SHELL_AMMO_CATEGORY = {
+        type = "string-setting",
+        name = prefix .. "saa-s-atomic-artillery-shell-ammo-category",
+        setting_type = "startup",
+        order = "",
+        allowed_values = { "artillery-shell", "nuclear-artillery" },
+        default_value = "artillery-shell",
+        hidden = not saa_s_active,
     },
     --[[ Item Settings ]]
     --[[ Bomb ]]

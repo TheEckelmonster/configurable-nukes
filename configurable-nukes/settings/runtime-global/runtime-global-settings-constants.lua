@@ -4,6 +4,7 @@ if _runtime_global_settings_constants and _runtime_global_settings_constants.con
 end
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true or scripts and scripts.active_mods and scripts.active_mods["Krastorio2-spaced-out"]
+local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true or scripts and scripts.active_mods and scripts.active_mods["SimpleAtomicArtillery-S"]
 local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
 local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
 
@@ -93,6 +94,16 @@ runtime_global_settings_constants.settings = {
         maximum_value = 11,
         minimum_value = 0,
         hidden = not k2so_active,
+    },
+    SIMPLE_ATOMIC_ARTILLERY_POLLUTION = {
+        type = "double-setting",
+        name = prefix .. "saa-s-atomic-artillery-pollution",
+        setting_type = "runtime-global",
+        order = "cbf",
+        default_value = 0.166,
+        maximum_value = 11,
+        minimum_value = 0,
+        hidden = not saa_s_active,
     },
     PIN_TARGETS = {
         type = "bool-setting",
@@ -261,6 +272,42 @@ runtime_global_settings_constants.settings = {
     K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_ADDITION = {
         type = "double-setting",
         name = prefix .. "kr-nuclear-artillery-bonus-damage-addition",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 0,
+        minimum_value = 0,
+        maximum_value = 2 ^ 42,
+    },
+    SIMPLE_ATOMIC_ARTILLERY_BASE_DAMAGE_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "saa-s-atomic-artillery-base-damage-modifier",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 1,
+        minimum_value = 1,
+        maximum_value = 11,
+    },
+    SIMPLE_ATOMIC_ARTILLERY_BASE_DAMAGE_ADDITION = {
+        type = "double-setting",
+        name = prefix .. "saa-s-atomic-artillery-base-damage-addition",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 0,
+        minimum_value = 0,
+        maximum_value = 2 ^ 42,
+    },
+    SIMPLE_ATOMIC_ARTILLERY_BONUS_DAMAGE_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "saa-s-atomic-artillery-bonus-damage-modifier",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 1,
+        minimum_value = 1,
+        maximum_value = 11,
+    },
+    SIMPLE_ATOMIC_ARTILLERY_BONUS_DAMAGE_ADDITION = {
+        type = "double-setting",
+        name = prefix .. "saa-s-atomic-artillery-bonus-damage-addition",
         setting_type = "runtime-global",
         order = "",
         default_value = 0,

@@ -899,6 +899,17 @@ function icbm_utils.time_to_target_5_event(event, event_data)
         source_name = event_data.source_name,
     })
 
+    if (event_data.icbm_data and event_data.icbm_data.valid) then
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+            Log.warn("icbm_data no longer exists or is not valid")
+            return
+        end
+    else
+        Log.warn("icbm_data not provided or is not valid")
+        return
+    end
+
     if (event_data.icbm_data.scrubbed) then return end
 
     local print_message = function (param)
@@ -929,6 +940,17 @@ function icbm_utils.time_to_target_3_event(event, event_data)
         source_name = event_data.source_name,
     })
 
+    if (event_data.icbm_data and event_data.icbm_data.valid) then
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+            Log.warn("icbm_data no longer exists or is not valid")
+            return
+        end
+    else
+        Log.warn("icbm_data not provided or is not valid")
+        return
+    end
+
     if (event_data.icbm_data.scrubbed) then return end
 
     if (not game or game.tick > event_data.nth_tick) then return end
@@ -945,6 +967,17 @@ function icbm_utils.time_to_target_2_event(event, event_data)
         nth_tick = event_data.nth_tick,
         source_name = event_data.source_name,
     })
+
+    if (event_data.icbm_data and event_data.icbm_data.valid) then
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+            Log.warn("icbm_data no longer exists or is not valid")
+            return
+        end
+    else
+        Log.warn("icbm_data not provided or is not valid")
+        return
+    end
 
     if (event_data.icbm_data.scrubbed) then return end
 
@@ -963,6 +996,17 @@ function icbm_utils.time_to_target_1_event(event, event_data)
         source_name = event_data.source_name,
     })
 
+    if (event_data.icbm_data and event_data.icbm_data.valid) then
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+            Log.warn("icbm_data no longer exists or is not valid")
+            return
+        end
+    else
+        Log.warn("icbm_data not provided or is not valid")
+        return
+    end
+
     if (event_data.icbm_data.scrubbed) then return end
 
     if (not game or game.tick > event_data.nth_tick) then return end
@@ -979,6 +1023,24 @@ function icbm_utils.payload_arrive_event(event, event_data)
         nth_tick = event_data.nth_tick,
         source_name = event_data.source_name,
     })
+
+    if (event_data.icbm_data and event_data.icbm_data.valid) then
+        if (game.forces[event_data.icbm_data.force_index] and game.forces[event_data.icbm_data.force_index].valid) then
+            local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(event_data.icbm_data.force_index)
+            if (force_launch_data.valid) then
+                force_launch_data.launch_action_queue:remove({ data = event_data.icbm_data.enqueued_data })
+            end
+        end
+
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+            Log.warn("icbm_data no longer exists or is not valid")
+            return
+        end
+    else
+        Log.warn("icbm_data not provided or is not valid")
+        return
+    end
 
     if (event_data.icbm_data.scrubbed) then return end
 
@@ -1199,15 +1261,11 @@ function icbm_utils.payload_arrived(data)
     if (data.target_surface == nil or type(data.target_surface) ~= "userdata" or not data.target_surface.valid) then return -1 end
 
     local icbm = data.icbm
+    if (icbm and icbm.valid) then
+        icbm = ICBM_Repository.get_icbm_data(icbm.surface_name, icbm.item_number)
+    end
 
     if (icbm and icbm.valid) then
-        if (game.forces[icbm.force_index] and game.forces[icbm.force_index].valid) then
-            local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm.force_index)
-            if (force_launch_data.valid) then
-                force_launch_data.launch_action_queue:remove({ data = icbm.enqueued_data })
-            end
-        end
-
         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DO_ICBMS_REVEAL_TARGET.name })) then
             if (game.forces[icbm.force_index] and game.forces[icbm.force_index].valid) then
                 game.forces[icbm.force.index].chart(
@@ -1277,6 +1335,23 @@ function icbm_utils.print_space_launched_time_to_target_message(data)
 
     if (storage.icbm_utils and storage.icbm_utils.space_launches_initiated) then
         for k, v in pairs(storage.icbm_utils.space_launches_initiated) do
+            if (k and k.valid) then
+                local icbm_data = ICBM_Repository.get_icbm_data(k.surface_name, k.item_number)
+                if (not icbm_data or not icbm_data.valid) then
+                    Log.warn("icbm_data no longer exists or is not valid")
+                    storage.icbm_utils.space_launches_initiated[k] = nil
+                    goto continue
+                elseif (icbm_data.scrubbed) then
+                    Log.warn("icbm_data scrubbed")
+                    storage.icbm_utils.space_launches_initiated[k] = nil
+                    goto continue
+                end
+            else
+                Log.warn("icbm_data not provided or is not valid")
+                storage.icbm_utils.space_launches_initiated[k] = nil
+                goto continue
+            end
+
             if (game.tick >= v.tick) then
                 if (math.floor(v.time_to_target / 60) >= 1) then
                     if (k.player_launched_index == 0) then
@@ -1293,6 +1368,8 @@ function icbm_utils.print_space_launched_time_to_target_message(data)
                     storage.icbm_utils.space_launches_initiated[k] = nil
                 end
             end
+
+            :: continue ::
         end
     end
 end
