@@ -790,8 +790,8 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
 end
 
 function rocket_dashboard_gui_service.toggle_rocket_dashboard(data)
-    Log.error("rocket_dashboard_gui_service.toggle_rocket_dashboard")
-    Log.warn(data)
+    Log.debug("rocket_dashboard_gui_service.toggle_rocket_dashboard")
+    Log.info(data)
 
     if (not data or type(data) ~= "table") then return end
     if (not data.player_index or type(data.player_index) ~= "number" or data.player_index < 1) then return end
