@@ -143,7 +143,7 @@ function rocket_dashboard_gui_controller.on_scrub_button_clicked(event)
 
     local icbm_data = storage_ref.item_numbers and storage_ref.item_numbers[item_number] and storage_ref.item_numbers[item_number].icbm_data
     if (not icbm_data or not icbm_data.valid) then
-        icbm_data = ICBM_Repository.get_icbm_data(storage_ref.item_numbers[item_number].surface_name, item_number)
+        icbm_data = ICBM_Repository.get_icbm_data(storage_ref.item_numbers[item_number] and storage_ref.item_numbers[item_number].surface_name, item_number)
         if (not icbm_data or not icbm_data.valid) then return end
     end
 

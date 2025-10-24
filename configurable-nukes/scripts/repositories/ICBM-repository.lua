@@ -227,7 +227,7 @@ function icbm_repository.get_icbm_data(planet_name, item_number, optionals)
     local return_val = ICBM_Data:new({ item_number = -1 })
 
     if (not game) then return return_val end
-    if (not planet_name) then return return_val end
+    if (not planet_name or type(planet_name) ~= "string") then return return_val end
     if (not item_number) then return return_val end
 
     optionals = optionals or {}
