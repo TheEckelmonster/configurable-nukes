@@ -7,6 +7,7 @@ local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.r
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
+local Custom_Events = require("prototypes.custom-events.custom-events")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
@@ -173,6 +174,14 @@ function locals.initialize(from_scratch, maintain_data)
 
     storage.configurable_nukes.valid = true
 
+    script.raise_event(
+        Custom_Events.cn_on_init_complete.name,
+        {
+            name = defines.events[Custom_Events.cn_on_init_complete.name],
+            tick = game.tick,
+        }
+    )
+
     if (from_scratch) then log({ "initialization.initialization-complete", Constants.mod_name }) end
     if (from_scratch and game) then game.print({ "initialization.initialization-complete", Constants.mod_name }) end
     Log.info(storage)
@@ -221,6 +230,22 @@ function locals.migrate(data)
     Log.debug("migrate")
     Log.info(data)
 
+    local storage_old = storage.storage_old
+    if (not storage_old) then return end
+    if (not type(storage_old) == "table") then return end
+
+    local reassign = function (table_old, table_new, data)
+        if (type(table_old) == "table" and table_old[data.field] and type(table_new) == "table") then
+            table_new[data.field] = table_old[data.field]
+            table_old[data.field] = nil
+        end
+    end
+    reassign(storage_old, storage, { field = "configurable_nukes_controller" })
+    reassign(storage_old, storage, { field = "event_handlers" })
+    reassign(storage_old, storage, { field = "gui_data" })
+    reassign(storage_old, storage, { field = "icbm_data" })
+    reassign(storage_old, storage, { field = "nth_tick" })
+
     if (not data or type(data) ~= "table") then return end
     if (not data.maintain_data) then return end
     if (not data.new_version_data) then
@@ -230,10 +255,6 @@ function locals.migrate(data)
             return
         end
     end
-
-    local storage_old = storage.storage_old
-    if (not storage_old) then return end
-    if (not type(storage_old) == "table") then return end
 
     if (storage_old.configurable_nukes) then
         local migration_start_message_printed = false
@@ -340,6 +361,35 @@ function locals.migrate(data)
                         end
                     end
                 end
+
+                if (prev_version_data.minor.value <= 7) then
+                    Log.warn(prev_version_data.minor.value)
+                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 7) then
+                        Log.warn(new_version_data.major.value)
+                        Log.warn(new_version_data.minor.value)
+                        --[[ Version 0.7.1:
+                            -> changed:
+                                storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index][item_number]
+                                to
+                                storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index].item_numbers[item_number]
+                        ]]
+                        if (storage.gui_data) then
+                            for _, gui_data in pairs(storage.gui_data) do
+                                for _, storage_ref in pairs(gui_data) do
+                                    for k, v in pairs(storage_ref) do
+                                        if (type(k) == "number" and k >=1) then
+                                            if (storage_ref[k].icbm_data or storage_ref[k].surface_name) then
+                                                if (not storage_ref.item_numbers) then storage_ref.item_numbers = {} end
+                                                storage_ref.item_numbers[k] = v
+                                                storage_ref[k] = nil
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
             end
         end
 
@@ -368,9 +418,13 @@ function locals.migrate(data)
             end
         end
 
-        if (storage_old.icbm_data) then
-            storage.icbm_data = storage_old.icbm_data
-            storage_old.icbm_data = nil
+        reassign(storage_old.configurable_nukes, storage.configurable_nukes, { field = "force_launch_data" })
+        for force_index, force_launch_data in pairs(storage_old.configurable_nukes.force_launch_data) do
+            if (force_launch_data.launch_action_queue and force_launch_data.launch_action_queue.count > 0) then
+                for index, value in pairs(force_launch_data.launch_action_queue) do
+                    if (value.cargo_pod) then value.cargo_pod = nil end
+                end
+            end
         end
 
         if (migration_start_message_printed) then

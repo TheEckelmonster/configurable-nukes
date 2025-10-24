@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.7.1
+Date: 2025-10-24
+  Bug Fixes:
+    - Fixed runtime error if command /configurable_nukes.init was executed
+  Misc:
+    - Added explicit compatibility for SimpleAtomicArtillery, by StarkillerHDX
+      - Atomic artillery shells are now affected by quality
+      - Same usual set of startup and runtime settings are available
+        - Startup: AoE, Damage, Radius, and Fire Wave
+        - Runtime: pollution, base modifier, base addition, bonus modifier, and bonus addition
+---------------------------------------------------------------------------------------------------
 Version: 0.7.0
 Date: 2025-10-23
   Minor Features:
@@ -41,7 +52,7 @@ Date: 2025-10-16
       - Nuclear turret rockets are now configurable and affected by quality
       - Nuclear artillery shells are now configurable and affected by quality
         - Both have AoE, Damage, Radius, and Fire Wave startup settings
-        - As well as, base modifier, base addition, bonus modifier, and bonus addition runtime damage settings
+        - As well as, pollution, base modifier, base addition, bonus modifier, and bonus addition runtime damage settings
       - Added custom-tooltips for both to show the effects of quality/how the numbers scale
       - Added additional ammo-category/configurable setting to allow nuclear artillery shells to have their damge scaled by nuclear-weapons research
         - Toggleable by setting the startup setting for nuclear artillery ammo category to either "artillery-shell" (default), or "nuclear-artillery"

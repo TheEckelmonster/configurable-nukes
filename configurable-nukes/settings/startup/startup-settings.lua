@@ -1,6 +1,7 @@
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
+local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
@@ -104,6 +105,17 @@ if (k2so_active) then
         Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_REPEAT_MULTIPLIER,
         Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_FIRE_WAVE,
         Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY,
+    })
+end
+
+if (saa_s_active) then
+    --[[ atomic-artillery-shell ]]
+    data:extend({
+        Startup_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_SHELL_AREA_MULTIPLIER,
+        Startup_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_SHELL_DAMAGE_MULTIPLIER,
+        Startup_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_SHELL_REPEAT_MULTIPLIER,
+        Startup_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_SHELL_FIRE_WAVE,
+        Startup_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_SHELL_AMMO_CATEGORY,
     })
 end
 

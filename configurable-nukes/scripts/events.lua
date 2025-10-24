@@ -18,9 +18,11 @@ local valid_event_effect_ids =
     ["atomic-warhead-pollution"] = true,
     ["k2-nuclear-turret-rocket-pollution"] = true,
     ["k2-atomic-artillery-pollution"] = true,
+    ["saa-s-atomic-artillery-pollution"] = true,
     ["atomic-bomb-fired"] = true,
     ["kr-nuclear-turret-rocket-projectile-fired"] = true,
     ["kr-atomic-artillery-projectile-fired"] = true,
+    ["saa-s-atomic-artillery-projectile-fired"] = true,
 }
 
 local events = {
@@ -153,7 +155,36 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                     radius_modifier = 1,
                 },
             })
-            if (entity and entity.valid and event.source_entity.type == "spider-vehicle") then entity.orientation = _orientation end
+        end
+    elseif (event.effect_id == "saa-s-atomic-artillery-projectile-fired") then
+        local source, target = event.source_position, event.target_position
+        local quality = event.quality
+        quality = quality and prototypes.quality[quality] and quality or "normal"
+
+        if (target == nil and event.target_entity and event.target_entity.valid) then
+            target = event.target_entity.position
+        end
+
+        if (source ~= nil and target ~= nil) then
+            local entity = surface.create_entity({
+                name = "atomic-artillery-projectile" .. "-" .. quality,
+                position = source,
+                force = event.cause_entity and event.cause_entity.valid and event.cause_entity.force or "player",
+                target = target,
+                source = source,
+                cause = event.cause_entity and event.cause_entity.valid and event.cause_entity,
+                speed = 1,
+                base_damage_modifiers = {
+                    damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_MODIFIER.name }),
+                    damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_ADDITION.name }),
+                    radius_modifier = 1,
+                },
+                bonus_damage_modifiers = {
+                    damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_MODIFIER.name }),
+                    damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_MODIFIER.name }),
+                    radius_modifier = 1,
+                },
+            })
         end
     else
         local position = event.source_position or event.target_position
@@ -167,6 +198,8 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 surface.pollute(position, Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_TURRET_ROCKET_POLLUTION.name }), "kr-nuclear-turret-rocket-projectile")
             elseif (event.effect_id == "k2-atomic-artillery-pollution") then
                 surface.pollute(position, Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_POLLUTION.name }), "kr-atomic-artillery-projectile")
+            elseif (event.effect_id == "saa-s-atomic-artillery-pollution") then
+                surface.pollute(position, Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_POLLUTION.name }), "atomic-artillery-projectile")
             end
         end
     end
