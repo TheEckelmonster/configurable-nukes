@@ -11,6 +11,7 @@ local Log = require("libs.log.log")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Rocket_Dashboard_Constants = require("scripts.constants.gui.rocket-dashboard-constants")
+local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local String_Utils = require("scripts.utils.string-utils")
 
 local rocket_dashboard_gui_service = {}
@@ -402,6 +403,7 @@ function rocket_dashboard_gui_service.remove_rocket_data_for_force(data)
 
         if (dashboard_gui) then
             rocket_dashboard_gui_service.remove_rocket_data({
+                player_index = player.index,
                 storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index],
                 item_number = data.icbm_data.item_number,
             })
@@ -414,6 +416,7 @@ function rocket_dashboard_gui_service.remove_rocket_data(data)
     Log.info(data)
 
     if (not data or type(data) ~= "table") then return end
+    if (not data.player_index or type(data.player_index) ~= "number" or data.player_index < 1) then return end
     if (not data.storage_ref or type(data.storage_ref) ~= "table") then return end
     if (not data.storage_ref.item_numbers or type(data.storage_ref.item_numbers) ~= "table") then return end
     if (not data.item_number or type(data.item_number) ~= "number" or data.item_number < 1) then return end
@@ -434,6 +437,10 @@ function rocket_dashboard_gui_service.remove_rocket_data(data)
     end
 
     if (removed) then
+        Rocket_Silo_Utils.scrub_launch({
+            player_index = data.player_index,
+            enqueued_data = data.storage_ref.item_numbers[data.item_number].icbm_data
+        })
         data.storage_ref.item_numbers[data.item_number] = nil
     end
 end
@@ -685,6 +692,7 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
                     meta_icbm_data.icbm_data = icbm_data
                 else
                     rocket_dashboard_gui_service.remove_rocket_data({
+                        player_index = data.player_index,
                         storage_ref = data.storage_ref,
                         item_number = icbm_data.item_number,
                         gui = data.gui,
@@ -778,6 +786,7 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
                 and game.tick > icbm_data.tick_to_target
             ) then
                 rocket_dashboard_gui_service.remove_rocket_data({
+                    player_index = data.player_index,
                     storage_ref = data.storage_ref,
                     item_number = icbm_data.item_number,
                     gui = data.gui,
@@ -898,17 +907,17 @@ function rocket_dashboard_gui_service.update_gui_data(data)
     local storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]
     if (not storage_ref.item_numbers) then storage_ref.item_numbers = {} end
 
-    if (storage_ref.item_numbers) then
-        for k, v in pairs(storage_ref.item_numbers) do
-            local _icbm_data = ICBM_Repository.get_icbm_data(v.surface_name, k)
-            if (_icbm_data and _icbm_data.valid) then
-                storage_ref.item_numbers[k].icbm_data = _icbm_data
-            else
-                rocket_dashboard_gui_service.remove_rocket_data({
-                    storage_ref = storage_ref,
-                    item_number = k,
-                })
-            end
+    for k, v in pairs(storage_ref.item_numbers) do
+        local _icbm_data = ICBM_Repository.get_icbm_data(v.surface_name, k)
+        if (_icbm_data and _icbm_data.valid) then
+            storage_ref.item_numbers[k].icbm_data = _icbm_data
+            storage_ref.item_numbers[k].surface_name = _icbm_data.surface and _icbm_data.surface.valid and _icbm_data.surface.name or _icbm_data.surface_name
+        else
+            rocket_dashboard_gui_service.remove_rocket_data({
+                player_index = player.index,
+                storage_ref = storage_ref,
+                item_number = k,
+            })
         end
     end
 end
