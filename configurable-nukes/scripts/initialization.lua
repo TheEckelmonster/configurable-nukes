@@ -418,14 +418,16 @@ function locals.migrate(data)
             end
         end
 
-        reassign(storage_old.configurable_nukes, storage.configurable_nukes, { field = "force_launch_data" })
-        for force_index, force_launch_data in pairs(storage_old.configurable_nukes.force_launch_data) do
-            if (force_launch_data.launch_action_queue and force_launch_data.launch_action_queue.count > 0) then
-                for index, value in pairs(force_launch_data.launch_action_queue) do
-                    if (value.cargo_pod) then value.cargo_pod = nil end
+        if (storage_old.configurable_nukes.force_launch_data) then
+            for force_index, force_launch_data in pairs(storage_old.configurable_nukes.force_launch_data) do
+                if (force_launch_data.launch_action_queue and force_launch_data.launch_action_queue.count > 0) then
+                    for index, value in pairs(force_launch_data.launch_action_queue) do
+                        if (value.cargo_pod) then value.cargo_pod = nil end
+                    end
                 end
             end
         end
+        reassign(storage_old.configurable_nukes, storage.configurable_nukes, { field = "force_launch_data" })
 
         if (migration_start_message_printed) then
             Log.debug(Constants.mod_name .. ": Migration complete")
