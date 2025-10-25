@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.7.2
+Date: 2025-10-24
+  Bug Fixes:
+    - Fixed an error that would prevent a save from loading depending on version/data state
+      - Improper ordering of data migration logic: missing a nil check
+---------------------------------------------------------------------------------------------------
 Version: 0.7.1
 Date: 2025-10-24
   Bug Fixes:
