@@ -1,25 +1,14 @@
+local Data_Utils = require("data-utils")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
-local name_prefix = se_active and "se-" or ""
 
-if (not sa_active and not se_active) then return end
-
-local get_ipbms_research_count = function ()
-    local setting = Startup_Settings_Constants.settings.IPBMS_RESEARCH_COUNT.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_COUNT.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_COUNT.name].value
-    end
-
-    return setting
-end
 local get_ipbms_research_prerequisites = function ()
-    local setting = Startup_Settings_Constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value
+    local setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_PREREQUISITES.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_PREREQUISITES.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES.name].value
     end
 
     local prerequisites = {}
@@ -40,6 +29,7 @@ local get_ipbms_research_prerequisites = function ()
     local found_func = function (found_match, param, t, type)
         for _, j in pairs(t) do
             if (j.name == param) then
+                log("found")
                 found_match = true
                 break
             elseif (j.name:find(param, 1, true)) then
@@ -51,9 +41,10 @@ local get_ipbms_research_prerequisites = function ()
     end
 
     while param ~= nil do
-
+        log(param)
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
         param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        log(param)
 
         for k, v in pairs(data.raw) do
             found_match = false
@@ -77,19 +68,16 @@ local get_ipbms_research_prerequisites = function ()
     -- end
 
     if (#prerequisites <= 0) then
-        prerequisites = {
-            "icbms",
-            "guidance-systems-4",
-        }
+        prerequisites = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES.prerequisites
     end
 
     return prerequisites
 end
 local get_ipbms_research_ingredients = function ()
-    local setting = Startup_Settings_Constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value
+    local setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_INGREDIENTS.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_INGREDIENTS.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS.name].value
     end
 
     local ingredients = {}
@@ -149,100 +137,136 @@ local get_ipbms_research_ingredients = function ()
     -- end
 
     if (#ingredients <= 0) then
-        ingredients = {
-            { "automation-science-pack", 1 },
-            { "logistic-science-pack", 1 },
-            { "chemical-science-pack", 1 },
-            { "military-science-pack", 1 },
-            { "utility-science-pack", 1 },
-            { "production-science-pack", 1 },
-            { "space-science-pack", 1 },
-        }
-
-        if (mods and mods["space-exploration"]) then
-            ingredients = {
-                { "automation-science-pack", 1 },
-                { "logistic-science-pack", 1 },
-                { "chemical-science-pack", 1 },
-                { "military-science-pack", 1 },
-                { "utility-science-pack", 1 },
-                { "production-science-pack", 1 },
-                { "space-science-pack", 1 },
-                { "se-rocket-science-pack", 1 },
-            }
-        end
+        ingredients = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS.ingredients
     end
 
     return ingredients
 end
-local get_ipbms_research_time = function ()
-    local setting = Startup_Settings_Constants.settings.IPBMS_RESEARCH_TIME.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_TIME.name].value
-    end
-
-    return setting
-end
-
---[[ IPBMs Technology ]]
-local rocket_part_basic_unlock =
+--[[ rod-from-god Technology ]]
+local cn_rod_from_god_unlock =
 {
     type = "unlock-recipe",
-    recipe = "ipbm-rocket-part-basic",
-}
-
-local ipbm_silo_unlock =
-{
-    type = "unlock-recipe",
-    recipe = "ipbm-rocket-silo",
-}
-
-local advanced_rocket_control_unit_recipe =
-{
-    type = "unlock-recipe",
-    recipe = "advanced-rocket-control-unit",
+    recipe = "cn-rod-from-god",
 }
 
 local technology_effects =
 {
-    (sa_active or se_active) and rocket_part_basic_unlock or nil,
-    (sa_active or se_active) and ipbm_silo_unlock or nil,
-    (sa_active or se_active) and advanced_rocket_control_unit_recipe or nil,
+    cn_rod_from_god_unlock,
 }
+
+local icons =
+{
+    {
+        icon = "__base__/graphics/technology/atomic-bomb.png",
+        icon_size = 256,
+    },
+    {
+        icon = "__base__/graphics/technology/rocket-silo.png",
+        icon_size = 256,
+        scale = 1 / 2 ^ 2,
+        shift = { 0, 32 },
+    },
+    {
+        icon = "__base__/graphics/icons/nauvis.png",
+        icon_size = 64,
+        scale = 1 / 2 ^ 1,
+        shift = { 0, 64 },
+    },
+    {
+        icon = "__base__/graphics/technology/steel-processing.png",
+        icon_size = 256,
+        scale = 1 / 2 ^ 3,
+        shift = { -32, 64 },
+    },
+    {
+        icon = "__base__/graphics/technology/rocketry.png",
+        icon_size = 256,
+        scale = 1 / 2 ^ 3,
+        shift = { 32, 64 },
+    },
+}
+
+if (sa_active) then
+    icons =
+    {
+        {
+            icon = "__base__/graphics/technology/atomic-bomb.png",
+            icon_size = 256,
+        },
+        {
+            icon = "__base__/graphics/technology/rocket-silo.png",
+            icon_size = 256,
+            scale = 1 / 2 ^ 2,
+            shift = { 0, 32 },
+        },
+        {
+            icon = "__space-age__/graphics/technology/vulcanus.png",
+            icon_size = 256,
+            scale = 1 / 2 ^ 3,
+            shift = { 0, 64 },
+        },
+        {
+            icon = "__space-age__/graphics/technology/tungsten-steel.png",
+            icon_size = 256,
+            scale = 1 / 2 ^ 3,
+            shift = { -32, 64 },
+        },
+        {
+            icon = "__space-age__/graphics/technology/tungsten-carbide.png",
+            icon_size = 256,
+            scale = 1 / 2 ^ 3,
+            shift = { 32, 64 },
+        },
+    }
+elseif (se_active) then
+    icons =
+    {
+        {
+            icon = "__base__/graphics/technology/atomic-bomb.png",
+            icon_size = 256,
+        },
+        {
+            icon = "__base__/graphics/technology/rocket-silo.png",
+            icon_size = 256,
+            scale = 1 / 2 ^ 2,
+            shift = { 0, 32 },
+        },
+        {
+            icon = "__base__/graphics/icons/nauvis.png",
+            icon_size = 64,
+            scale = 1 / 2 ^ 1,
+            shift = { 0, 64 },
+        },
+        {
+            icon = "__space-exploration-graphics__/graphics/technology/heavy-girder.png",
+            icon_size = 128,
+            scale = 1 / 2 ^ 2,
+            shift = { -32, 64 },
+        },
+        {
+            icon = "__base__/graphics/technology/rocketry.png",
+            icon_size = 256,
+            scale = 1 / 2 ^ 3,
+            shift = { 32, 64 },
+        },
+    }
+end
 
 data:extend({
     {
         type = "technology",
-        name = "ipbms",
-        icons =
-        {
-            {
-                icon = "__base__/graphics/technology/atomic-bomb.png",
-                icon_size = 256,
-            },
-            {
-                icon = "__base__/graphics/technology/rocket-silo.png",
-                icon_size = 256,
-                scale = 1 / 2 ^ 2,
-                shift = { 0, 32 },
-            },
-            {
-                icon = "__base__/graphics/icons/nauvis.png",
-                icon_size = 64,
-                scale = 1 / 2 ^ 1,
-                shift = { 32, 64 },
-            },
-        },
-        localised_name = { "technology-name." .. name_prefix .. "ipbms" },
-        localised_description = { "technology-description." .. name_prefix .. "ipbms" },
+        name = "cn-rod-from-god",
+        icons = icons,
+        localised_name = { "technology-name.cn-rod-from-god" },
+        localised_description = { "technology-description.cn-rod-from-god" },
         effects = technology_effects,
         prerequisites = get_ipbms_research_prerequisites(),
         unit =
         {
-            count = get_ipbms_research_count(),
+            count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_COUNT.name }),
             ingredients = get_ipbms_research_ingredients(),
-            time = get_ipbms_research_time(),
+            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_TIME.name }),
         },
     },
 })

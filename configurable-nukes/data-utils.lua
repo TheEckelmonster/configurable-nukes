@@ -115,7 +115,9 @@ local data_utils = {
                 elseif (target_effects[i].type == "nested-result") then
                     if (target_effects[i].action.type == "area") then
                         if (target_effects[i].action.action_delivery.type == "projectile") then
-                            if (target_effects[i].action.action_delivery.projectile:find(entity_name .. "-ground-zero-projectile-" .. object_entities.dictionary[quality_object.entity.name].quality, 1, true)) then
+                            if (   target_effects[i].action.action_delivery.projectile:find(entity_name .. "-ground-zero-projectile-" .. object_entities.dictionary[quality_object.entity.name].quality, 1, true)
+                                or target_effects[i].action.action_delivery.projectile:find("atomic-bomb-ground-zero-projectile-" .. object_entities.dictionary[quality_object.entity.name].quality, 1, true)
+                            ) then
                                 local ground_zero_projectile_effects = data.raw["projectile"][entity_name .. "-ground-zero-projectile-" .. object_entities.dictionary[quality_object.entity.name].quality]
                                 ground_zero_projectile_effects = ground_zero_projectile_effects.action
                                 ground_zero_projectile_effects = ground_zero_projectile_effects[1]
@@ -352,7 +354,14 @@ local data_utils = {
                         end
                     end
 
-                    local num_val_2 = target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects.damage.amount
+                    local target_effects = target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects
+                    local damage = target_effects.damage
+                    if (not damage) then
+                        damage = target_effects[1] and target_effects[1].damage
+                    end
+                    if (not damage) then goto continue end
+                    -- local num_val_2 = target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects.damage.amount
+                    local num_val_2 = damage.amount
                     local suffix_2 = ""
                     local directive_2 = "%d"
                     if (num_val_2 > 1000 ^ 3) then
@@ -379,7 +388,9 @@ local data_utils = {
                         name = { "quality-nested-result.damage", },
                         value = { "atomic-bomb-placeholder.damage-mult", string.format(directive, num_val) .. suffix, string.format(directive_2, num_val_2) .. suffix_2, "", { "damage-type." .. target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects.damage.type } },
                     }
+
                     order = order + 1
+                    :: continue ::
                 end
             end
 

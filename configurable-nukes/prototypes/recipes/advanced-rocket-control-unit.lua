@@ -237,7 +237,7 @@ local advanced_rocket_control_unit_recipe =
     -- results = {{ type = "item", name = "cn-rocket-control-unit", amount = get_result_count() }},
     category = get_rocket_control_unit_crafting_machine(),
     additional_categories = get_rocket_control_unit_additional_crafting_machines(),
-    auto_recycle = false
+    auto_recycle = false,
 }
 
 if (mods and (mods["space-age"] or mods["space-exploration"])) then

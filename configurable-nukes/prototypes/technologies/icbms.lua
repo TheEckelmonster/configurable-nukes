@@ -1,5 +1,8 @@
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local sa_active = mods and mods["space-age"] and true
+local se_active = mods and mods["space-exploration"] and true
+
 local get_icbms_research_count = function ()
     local setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.default_value
 
@@ -128,7 +131,7 @@ local get_icbms_research_ingredients = function ()
 
         for k, v in pairs(data.raw) do
             found_match = false
-            if (k == "tool") then found_func(param, param_val, v, "tool")
+            if (k == "technology") then found_func(param, param_val, v, "technology")
             end
 
             if (found_match) then break end
@@ -182,6 +185,18 @@ local get_icbms_research_time = function ()
 end
 
 --[[ ICBMs Technology ]]
+local cn_payload_vehicle_unlock =
+{
+    type = "unlock-recipe",
+    recipe = "cn-payload-vehicle",
+}
+
+
+local technology_effects =
+{
+    cn_payload_vehicle_unlock,
+}
+
 data:extend({
     {
         type = "technology",
@@ -200,6 +215,7 @@ data:extend({
             },
         },
         localised_description = { "technology-description.icbms" },
+        effects = technology_effects,
         prerequisites = get_icbms_research_prerequisites(),
         unit =
         {

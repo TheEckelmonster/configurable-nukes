@@ -23,4 +23,13 @@ if (quality_active) then
     })
 
     atomic_warhead_item.custom_tooltip_fields = custom_tooltip_fields
+
+    -- cn-rod-from-god
+    local atomic_warhead_item = data.raw["ammo"]["cn-rod-from-god"]
+    custom_tooltip_fields = Data_Utils.create_custom_tooltip_quality_effects_atomic({
+        type = "projectile",
+        name = "cn-rod-from-god",
+    })
+
+    atomic_warhead_item.custom_tooltip_fields = custom_tooltip_fields
 end

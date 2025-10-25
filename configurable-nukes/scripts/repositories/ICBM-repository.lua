@@ -22,9 +22,10 @@ function icbm_repository.save_icbm_data(icbm, optionals)
 
     if (not game) then return return_val end
     if (not icbm or not icbm.valid) then return return_val end
-    if (not icbm or type(icbm.type) ~= "string") then return return_val end
+    -- if (not icbm or type(icbm.type) ~= "string") then return return_val end
     if (not icbm.surface or not icbm.surface.valid) then return return_val end
     if (not icbm.item or type(icbm.item) ~= "table") then return return_val end
+    if (not icbm.item_name or type(icbm.item_name) ~= "string") then return return_val end
     if (not icbm.tick_launched or type(icbm.tick_launched) ~= "number") then return return_val end
     if (not icbm.tick_to_target or type(icbm.tick_to_target) ~= "number") then return return_val end
     if (not icbm.same_surface or type(icbm.same_surface) ~= "boolean") then icbm.same_surface = false end
@@ -99,11 +100,12 @@ function icbm_repository.save_icbm_data(icbm, optionals)
 
     local icbms = storage.configurable_nukes.icbm_meta_data[planet_name].icbms
 
-    return_val.type = icbm.type
+    -- return_val.type = icbm.type
     return_val.surface = icbm.surface
     return_val.surface_name = icbm.surface.name
     return_val.item_number = icbm.item_number
     return_val.item = icbm.item
+    return_val.item_name = icbm.item_name
     return_val.tick_launched = icbm.tick_launched
     return_val.tick_to_target = icbm.tick_to_target
     return_val.same_surface = icbm.same_surface

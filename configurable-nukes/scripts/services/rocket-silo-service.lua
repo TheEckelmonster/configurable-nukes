@@ -65,8 +65,10 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
             for _, item in ipairs(inventory.get_contents()) do
                 if (    (string.find(item.name, "atomic-bomb", 1, true) and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }))
                     or
-                        (item.name == "atomic-warhead" and Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })))
-                then
+                        (item.name == "atomic-warhead" and Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }))
+                    or
+                        (item.name == "cn-rod-from-god")
+                ) then
                     local return_val = ICBM_Utils.on_cargo_pod_finished_ascending({
                         surface = cargo_pod.surface,
                         item = item,

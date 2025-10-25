@@ -8,6 +8,7 @@ local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
 local Custom_Events = require("prototypes.custom-events.custom-events")
+local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
@@ -383,6 +384,34 @@ function locals.migrate(data)
                                                 storage_ref.item_numbers[k] = v
                                                 storage_ref[k] = nil
                                             end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+
+                if (prev_version_data.minor.value <= 7) then
+                    Log.warn(prev_version_data.minor.value)
+                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 8) then
+                        Log.warn(new_version_data.major.value)
+                        Log.warn(new_version_data.minor.value)
+                        --[[ Version 0.8.0:
+                            -> changed:
+                                icbm_data.type
+                                to
+                                icbm_data.item_name
+                        ]]
+                        if (storage_old.configurable_nukes.icbm_meta_data) then
+                            local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
+                            for k, icbm_meta_data in pairs(all_icbm_meta_data) do
+                                if (icbm_meta_data.icbms) then
+                                    for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
+                                        if (icbm_data.valid) then
+                                            icbm_data.item_name = icbm_data.type
+                                            icbm_data.type = ICBM_Data.type
+                                            ICBM_Repository.update_icbm_data(icbm_data)
                                         end
                                     end
                                 end

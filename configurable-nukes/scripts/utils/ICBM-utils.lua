@@ -1058,10 +1058,11 @@ function icbm_utils.launch_initiated(data)
     Log.info(data)
 
     if (data == nil) then return -1 end
-    if (data.type == nil or type(data.type) ~= "string") then return -1 end
+    -- if (data.type == nil or type(data.type) ~= "string") then return -1 end
     if (data.surface == nil or not data.surface.valid) then return -1 end
     if (data.target_surface == nil or not data.target_surface.valid) then return -1 end
     if (data.item == nil or type(data.item) ~= "table") then return -1 end
+    if (data.item_name == nil or type(data.item_name) ~= "string") then return -1 end
     if (data.tick == nil or type(data.tick) ~= "number") then return -1 end
     if (data.area == nil or type(data.area) ~= "table") then return -1 end
     if (data.cargo_pod == nil or not data.cargo_pod.valid) then return -1 end
@@ -1104,12 +1105,13 @@ function icbm_utils.launch_initiated(data)
 
     local icbm_data = ICBM_Data:new({
         se_active = se_active,
-        type = data.type,
+        -- type = data.type,
         surface = data.surface,
         surface_name = data.surface.name,
         same_surface = same_surface,
         item_number = ICBM_Data:next_item_number(),
         item = data.item,
+        item_name = data.item_name,
         tick_launched = data.tick,
         tick_to_target = -1,
         source_silo = data.source_silo,
@@ -1287,7 +1289,8 @@ function icbm_utils.payload_arrived(data)
         Log.warn(icbm)
 
         icbm.target_surface.create_entity({
-            name = icbm.type .. "-" .. icbm.item.quality,
+            -- name = icbm.type .. "-" .. icbm.item.quality,
+            name = icbm.item_name .. "-" .. icbm.item.quality,
             position = payload_spawn_position,
             direction = defines.direction.south,
             force = icbm.source_silo.valid and icbm.source_silo.force or "player",

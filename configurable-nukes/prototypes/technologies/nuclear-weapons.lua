@@ -117,7 +117,7 @@ local get_nuclear_weapons_research_ingredients = function ()
 
         for k, v in pairs(data.raw) do
             found_match = false
-            if (k == "tool") then found_func(param, param_val, v, "tool")
+            if (k == "technology") then found_func(param, param_val, v, "technology")
             end
 
             if (found_match) then break end

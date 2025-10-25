@@ -48,6 +48,42 @@ data:extend({
 })
 
 data:extend({
+    --[[ payload-vehicle ]]
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_STACK_SIZE,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_WEIGHT_MODIFIER,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_CRAFTING_TIME,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_INPUT_MULTIPLIER,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_RESULT_COUNT,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_RECIPE,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_RECIPE_ALLOW_NONE,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_CRAFTING_MACHINE,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_ADDITIONAL_CRAFTING_MACHINES,
+})
+
+data:extend({
+    --[[ rod-from-god ]]
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_AREA_MULTIPLIER,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_DAMAGE_MULTIPLIER,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_REPEAT_MULTIPLIER,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_FIRE_WAVE,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_STACK_SIZE,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_WEIGHT_MODIFIER,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_CRAFTING_TIME,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_INPUT_MULTIPLIER,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_RESULT_COUNT,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_RECIPE,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_RECIPE_ALLOW_NONE,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_CRAFTING_MACHINE,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_ADDITIONAL_CRAFTING_MACHINES,
+
+    --[[ rod-from-god research ]]
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_TIME,
+    Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_COUNT,
+})
+
+data:extend({
     --[[ ICBMs research ]]
     Startup_Settings_Constants.settings.ICBMS_RESEARCH_PREREQUISITES,
     Startup_Settings_Constants.settings.ICBMS_RESEARCH_INGREDIENTS,

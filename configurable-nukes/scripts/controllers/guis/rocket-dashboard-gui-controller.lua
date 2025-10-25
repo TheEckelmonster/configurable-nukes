@@ -1,6 +1,6 @@
 -- If already defined, return
 if _rocket_dashboard_gui_controller and _rocket_dashboard_gui_controller.configurable_nukes then
-  return _rocket_dashboard_gui_controller
+    return _rocket_dashboard_gui_controller
 end
 
 local Custom_Events = require("prototypes.custom-events.custom-events")

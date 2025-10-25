@@ -1,6 +1,6 @@
 -- If already defined, return
 if _rocket_silo_gui_controller and _rocket_silo_gui_controller.configurable_nukes then
-  return _rocket_silo_gui_controller
+    return _rocket_silo_gui_controller
 end
 
 local Util = require("__core__.lualib.util")

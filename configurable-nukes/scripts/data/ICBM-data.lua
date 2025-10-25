@@ -88,6 +88,7 @@ icbm_data.item_numbers = {
 }
 
 icbm_data.item = nil
+icbm_data.item_name = nil
 icbm_data.cargo_pod = nil
 icbm_data.cargo_pod_unit_number = -1
 icbm_data.force = nil
@@ -139,6 +140,7 @@ function icbm_data:new(o)
         surface_name = nil,
         item_number = icbm_data.item_number.get(),
         item = nil,
+        item_name = nil,
         cargo_pod = nil,
         cargo_pod_unit_number = self.cargo_pod_unit_number,
         force = nil,
