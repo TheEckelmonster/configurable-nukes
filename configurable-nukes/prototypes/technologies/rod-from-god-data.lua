@@ -29,7 +29,6 @@ local get_ipbms_research_prerequisites = function ()
     local found_func = function (found_match, param, t, type)
         for _, j in pairs(t) do
             if (j.name == param) then
-                log("found")
                 found_match = true
                 break
             elseif (j.name:find(param, 1, true)) then
@@ -41,10 +40,8 @@ local get_ipbms_research_prerequisites = function ()
     end
 
     while param ~= nil do
-        log(param)
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
         param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
-        log(param)
 
         for k, v in pairs(data.raw) do
             found_match = false

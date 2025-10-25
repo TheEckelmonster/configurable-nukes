@@ -97,6 +97,8 @@ local data_utils = {
                 object_entities.dictionary[v] = { entity = quality_object, quality = object_names.dictionary[v].quality }
             end
         end
+        -- log(serpent.block(object_entities.array))
+        -- log(serpent.block(object_entities.dictionary))
 
         local target_effects_dictionary = {}
 
@@ -122,6 +124,21 @@ local data_utils = {
                                 ground_zero_projectile_effects = ground_zero_projectile_effects.action
                                 ground_zero_projectile_effects = ground_zero_projectile_effects[1]
 
+                                local found_target_effect, found_target_effects = nil, nil
+                                local _target_effects = ground_zero_projectile_effects.action_delivery.target_effects
+                                if (_target_effects) then
+                                    if (_target_effects.type) then
+                                        -- Single element
+                                        found_target_effect = _target_effects
+                                    elseif (#_target_effects > 0) then
+                                        -- Array
+                                        found_target_effects = {}
+                                        for k, v in pairs(_target_effects) do
+                                            table.insert(found_target_effects, { damage = v.damage })
+                                        end
+                                    end
+                                end
+
                                 array[i].type = "nested-result"
                                 array[i]["nested-result"] = {}
                                 array[i]["nested-result"][entity_name .. "-ground-zero-projectile"] =
@@ -133,10 +150,7 @@ local data_utils = {
                                         radius = ground_zero_projectile_effects.radius,
                                         action_delivery =
                                         {
-                                            target_effects =
-                                            {
-                                                damage = ground_zero_projectile_effects.action_delivery.target_effects.damage
-                                            }
+                                            target_effects = found_target_effect or found_target_effects or {}
                                         }
                                     }
                                 }
@@ -359,8 +373,7 @@ local data_utils = {
                     if (not damage) then
                         damage = target_effects[1] and target_effects[1].damage
                     end
-                    if (not damage) then goto continue end
-                    -- local num_val_2 = target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects.damage.amount
+                    if (not damage) then log(serpent.block(target_effects)); goto continue end
                     local num_val_2 = damage.amount
                     local suffix_2 = ""
                     local directive_2 = "%d"
@@ -383,13 +396,24 @@ local data_utils = {
                         end
                     end
 
-                    quality_values[quality_level][order] =
-                    {
-                        name = { "quality-nested-result.damage", },
-                        value = { "atomic-bomb-placeholder.damage-mult", string.format(directive, num_val) .. suffix, string.format(directive_2, num_val_2) .. suffix_2, "", { "damage-type." .. target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects.damage.type } },
-                    }
+                    if (target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects.type) then
+                        quality_values[quality_level][order] =
+                        {
+                            name = { "quality-nested-result.damage", },
+                            value = { "atomic-bomb-placeholder.damage-mult", string.format(directive, num_val) .. suffix, string.format(directive_2, num_val_2) .. suffix_2, "", { "damage-type." .. target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects.damage.type } },
+                        }
+                        order = order + 1
+                    elseif (#target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects > 0) then
+                        for k, v in pairs(target_effects_dictionary[quality_level][i]["nested-result"][projectile].projectile.action_delivery.target_effects) do
+                            quality_values[quality_level][order] =
+                            {
+                                name = { "quality-nested-result.damage", },
+                                value = { "atomic-bomb-placeholder.damage-mult", string.format(directive, num_val) .. suffix, string.format(directive_2, num_val_2) .. suffix_2, "", { "damage-type." .. v.damage.type } },
+                            }
+                            order = order + 1
+                        end
+                    end
 
-                    order = order + 1
                     :: continue ::
                 end
             end

@@ -96,8 +96,6 @@ while i <= #target_effects do
     num_loops = num_loops + 1
 end
 
-log(serpent.block(original_rod_from_god))
-
 local rod_from_god = nil
 
 local create_quality_rod_from_god = function (params)
