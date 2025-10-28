@@ -34,7 +34,6 @@ local events = {
     [Planet_Controller.name] = Planet_Controller,
     [Rocket_Silo_Controller.name] = Rocket_Silo_Controller,
     [Settings_Controller.name] = Settings_Controller,
-    [Settings_Controller.name] = Settings_Controller,
 }
 
 --[[ TODO: Move this to its own controller/service/utils? ]]

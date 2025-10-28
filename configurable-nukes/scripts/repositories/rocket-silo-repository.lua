@@ -1,8 +1,3 @@
--- If already defined, return
-if _rocket_silo_repository and _rocket_silo_repository.configurable_nukes then
-    return _rocket_silo_repository
-end
-
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
 local Log = require("libs.log.log")
@@ -174,9 +169,5 @@ function rocket_silo_repository.get_rocket_silo_data(planet_name, unit_number, o
 
     return rocket_silos[unit_number]
 end
-
-rocket_silo_repository.configurable_nukes = true
-
-local _rocket_silo_repository = rocket_silo_repository
 
 return rocket_silo_repository

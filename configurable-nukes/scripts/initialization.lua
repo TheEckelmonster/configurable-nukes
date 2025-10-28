@@ -1,8 +1,3 @@
--- If already defined, return
-if _initialization and _initialization.configurable_nukes then
-    return _initialization
-end
-
 local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
@@ -491,9 +486,5 @@ function locals.reindex_and_save_mod_data(data)
     if (not storage.constants) then storage.constants = {} end
     storage.constants.mod_data = Constants.get_mod_data(true)
 end
-
-initialization.configurable_nukes = true
-
-local _initialization = initialization
 
 return initialization

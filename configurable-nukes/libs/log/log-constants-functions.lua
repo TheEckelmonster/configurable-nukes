@@ -3,7 +3,7 @@ if _log_constants_functions and _log_constants_functions.configurable_nukes then
   return _log_constants_functions
 end
 
-Log_Constants = require("libs.log.log-constants")
+local Log_Constants = require("libs.log.log-constants")
 
 local log_constants_functions = {}
 

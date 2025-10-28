@@ -373,7 +373,7 @@ local data_utils = {
                     if (not damage) then
                         damage = target_effects[1] and target_effects[1].damage
                     end
-                    if (not damage) then log(serpent.block(target_effects)); goto continue end
+                    if (not damage) then goto continue end
                     local num_val_2 = damage.amount
                     local suffix_2 = ""
                     local directive_2 = "%d"

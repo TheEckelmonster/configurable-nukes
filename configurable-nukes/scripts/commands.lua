@@ -1,8 +1,3 @@
--- If already defined, return
-if _configurable_nukes_commands and _configurable_nukes_commands.configurable_nukes then
-    return _configurable_nukes_commands
-end
-
 local Constants = require("scripts.constants.constants")
 local Initialization = require("scripts.initialization")
 local Log = require("libs.log.log")
@@ -60,9 +55,9 @@ function configurable_nukes_commands.reinit(command)
 end
 
 function configurable_nukes_commands.print_table(command)
-    Log.debug("configurable_nukes_commands.print_storage")
+    Log.debug("configurable_nukes_commands.print_table")
     locals.validate_command(command, function (player)
-        Log.info("commands.print_storage", true)
+        Log.info("commands.print_table", true)
 
         if (command.parameter == nil or type(command.parameter) ~= "string" and #(string.gsub(command.parameter, " ", "")) > 0) then return end
 
@@ -86,7 +81,7 @@ function configurable_nukes_commands.print_table(command)
             parameter_string = parameter_string:sub(j + 1, #parameter_string)
             log(parameter_string)
 
-            i, j, param, param_val = parameter_string:find("--(%a+)=(%d+)%s*", 1)
+            i, j, param, param_val = parameter_string:find("%-%-(%a+)=(%d+)%s*", 1)
         end
 
         -- Get the table name(s)
@@ -351,7 +346,6 @@ if (mods and mods["space-exploration"] or script and script.active_mods and scri
     end
 end
 
-
 function configurable_nukes_commands.print_event_handlers(command)
     Log.debug("configurable_nukes_commands.print_event_handlers")
     locals.validate_command(command, function (player)
@@ -401,9 +395,5 @@ commands.add_command("configurable_nukes.print_storage", "Exports to a .json fil
 --     commands.add_command("configurable_nukes.print_space_exploration_universe", "", configurable_nukes_commands.print_space_exploration_universe)
 --     commands.add_command("configurable_nukes.print_space_exploration_dictionary", "", configurable_nukes_commands.print_space_exploration_dictionary)
 -- end
-
-configurable_nukes_commands.configurable_nukes = true
-
-local _configurable_nukes_commands = configurable_nukes_commands
 
 return configurable_nukes_commands
