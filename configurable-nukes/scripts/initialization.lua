@@ -115,8 +115,8 @@ function locals.initialize(from_scratch, maintain_data)
             storage.configurable_nukes = Configurable_Nukes_Data:new()
             configurable_nukes_data = storage.configurable_nukes
         end
-        if (not configurable_nukes_data.icbm_meta_data) then configurable_nukes_data.icbm_meta_data = ICBM_Meta_Data:new() end
-        if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = Rocket_Silo_Meta_Data:new() end
+        if (not configurable_nukes_data.icbm_meta_data) then configurable_nukes_data.icbm_meta_data = {} end
+        if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = {} end
     end
 
     storage.sa_active = sa_active ~= nil and sa_active or storage.sa_active
@@ -252,7 +252,7 @@ function locals.migrate(data)
         end
     end
 
-    if (storage_old.configurable_nukes) then
+    if (type(storage_old.configurable_nukes) == "table") then
         local migration_start_message_printed = false
         if (storage_old.configurable_nukes.version_data and storage_old.configurable_nukes.version_data.created) then
             if (storage_old.configurable_nukes.version_data.created >= 0) then
@@ -388,10 +388,13 @@ function locals.migrate(data)
                 end
 
                 if (prev_version_data.minor.value <= 7) then
+                    Log.warn(prev_version_data.major.value)
                     Log.warn(prev_version_data.minor.value)
+                    Log.warn(prev_version_data.bug_fix.value)
                     if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 8) then
                         Log.warn(new_version_data.major.value)
                         Log.warn(new_version_data.minor.value)
+                        Log.warn(new_version_data.bug_fix.value)
                         --[[ Version 0.8.0:
                             -> changed:
                                 icbm_data.type
@@ -401,7 +404,7 @@ function locals.migrate(data)
                         if (storage_old.configurable_nukes.icbm_meta_data) then
                             local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
                             for k, icbm_meta_data in pairs(all_icbm_meta_data) do
-                                if (icbm_meta_data.icbms) then
+                                if (type(icbm_meta_data) == "table" and icbm_meta_data.valid and icbm_meta_data.icbms) then
                                     for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
                                         if (icbm_data.valid) then
                                             icbm_data.item_name = icbm_data.type
@@ -417,34 +420,26 @@ function locals.migrate(data)
             end
         end
 
-        local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-        local dictionary =     not se_active and Constants.get_planets(true) and Constants.planets_dictionary
-                            or Constants.get_space_exploration_universe(true) and Constants.space_exploration_dictionary
-
-        if (Log.get_log_level().level.num_val <= 2) then
-            log(serpent.block(dictionary))
-        end
-
-        if (storage_old.configurable_nukes.icbm_meta_data) then
-            for k, v in pairs(storage_old.configurable_nukes.icbm_meta_data) do
-                if (dictionary[k]) then
-                    ICBM_Meta_Repository.update_icbm_meta_data(v)
-                    storage_old.configurable_nukes.icbm_meta_data[k] = nil
-                end
-            end
-        end
-
-        if (storage_old.configurable_nukes.rocket_silo_meta_data) then
+        if (type(storage_old.configurable_nukes.rocket_silo_meta_data) == "table") then
             for k, v in pairs(storage_old.configurable_nukes.rocket_silo_meta_data) do
-                for k_2, v_2 in pairs(v.rocket_silos) do
-                    Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
+                if (type(v) == "table" and v.valid) then
+                    if (type(v.rocket_silos) == "table") then
+                        for k_2, v_2 in pairs(v.rocket_silos) do
+                            Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
+                        end
+                    end
                 end
             end
         end
 
         if (storage_old.configurable_nukes.force_launch_data) then
             for force_index, force_launch_data in pairs(storage_old.configurable_nukes.force_launch_data) do
-                if (force_launch_data.launch_action_queue and force_launch_data.launch_action_queue.count > 0) then
+                if (    type(force_launch_data) == "table"
+                    and force_launch_data.valid
+                    and type(force_launch_data.launch_action_queue == "table")
+                    and type(force_launch_data.launch_action_queue.count) == "number"
+                    and force_launch_data.launch_action_queue.count > 0
+                ) then
                     if (type(force_launch_data.launch_action_queue.data_array) == "table") then
                         local i, num_loops = 1, 1
                         while i <= #force_launch_data.launch_action_queue.data_array do
@@ -453,7 +448,7 @@ function locals.migrate(data)
                             local should_increment = true
                             if (type(value) == "table") then
                                 if (type(value.icbm_data) == "table") then
-                                    if (value.icbm_data.cargo_pod) then value.cargo_pod = nil end
+                                    if (value.icbm_data.cargo_pod) then value.icbm_data.cargo_pod = nil end
                                     if (type(value.icbm_data.cargo_pod_unit_number) == "number" and value.icbm_data.cargo_pod_unit_number < 1) then
                                         force_launch_data.launch_action_queue:remove({ data = value.icbm_data.enqueued_data })
                                         should_increment = false
@@ -471,6 +466,23 @@ function locals.migrate(data)
             end
         end
         reassign(storage_old.configurable_nukes, storage.configurable_nukes, { field = "force_launch_data" })
+
+        local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+        local dictionary =     not se_active and Constants.get_planets(true) and Constants.planets_dictionary
+                            or Constants.get_space_exploration_universe(true) and Constants.space_exploration_dictionary
+
+        if (Log.get_log_level().level.num_val <= 2) then
+            log(serpent.block(dictionary))
+        end
+
+        if (type(storage_old.configurable_nukes.icbm_meta_data) == "table") then
+            for k, v in pairs(storage_old.configurable_nukes.icbm_meta_data) do
+                if (dictionary[k]) then
+                    ICBM_Meta_Repository.update_icbm_meta_data(v)
+                    storage_old.configurable_nukes.icbm_meta_data[k] = nil
+                end
+            end
+        end
 
         if (migration_start_message_printed) then
             Log.debug(Constants.mod_name .. ": Migration complete")
