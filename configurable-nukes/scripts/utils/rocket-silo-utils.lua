@@ -1,24 +1,20 @@
--- If already defined, return
-if _rocket_silo_utils and _rocket_silo_utils.configurable_nukes then
-    return _rocket_silo_utils
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
 local Util = require("__core__.lualib.util")
 
 local Zone_Static_Data = require("scripts.data.static.zone-static-data")
 
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
-local Constants = require("scripts.constants.constants")
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
-local Log = require("libs.log.log")
 local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local has_power = function (data)
@@ -1365,9 +1361,5 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
 
     return -2
 end
-
-rocket_silo_utils.configurable_nukes = true
-
-local _rocket_silo_utils = rocket_silo_utils
 
 return rocket_silo_utils

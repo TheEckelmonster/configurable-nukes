@@ -1,16 +1,26 @@
+--[[ Globals ]]
+Constants = require("scripts.constants.constants")
+
+Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
+Settings_Service = require("__TheEckelmonster-core-library__.scripts.services.settings-serivce")
+
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
+
+---
+
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
-local Constants = require("scripts.constants.constants")
 local Custom_Input = require("prototypes.custom-input.custom-input")
 local Initialization = require("scripts.initialization")
 local Rocket_Silo_Gui_Controller = require("scripts.controllers.guis.rocket-silo-gui-controller")
 local Rocket_Dashboard_Gui_Controller = require("scripts.controllers.guis.rocket-dashboard-gui-controller")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
-local Log = require("libs.log.log")
 local Planet_Controller = require("scripts.controllers.planet-controller")
 local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Controller = require("scripts.controllers.settings-controller")
-local Settings_Service = require("scripts.services.settings-service")
+
+local Log_Settings = require("__TheEckelmonster-core-library__.libs.log.log-settings")
+local Settings_Controller = require("__TheEckelmonster-core-library__.scripts.controllers.settings-controller")
 
 local valid_event_effect_ids =
 {
@@ -204,16 +214,74 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     end
 end)
 
+local did_init = false
+
+function events.on_init()
+    if (type(storage) ~= "table") then return end
+
+    local return_val = 0
+
+    storage.handles = {
+        log_handle = {},
+        setting_handle = {},
+    }
+
+    return_val = Settings_Service.init({ storage_ref = storage.handles.setting_handle })
+    return_val = Settings_Controller.init({ settings_service = Settings_Service })
+
+    local log_settings = Log_Settings.create({ prefix = Constants.mod_name })
+
+    return_val = Log.init({
+        storage_ref = storage.handles.log_handle,
+        debug_level_name = log_settings[1].name,
+        traceback_setting_name = log_settings[2].name,
+        do_not_print_setting_name = log_settings[3].name,
+    })
+    Log.ready()
+
+    Initialization.init({ maintain_data = false })
+    did_init = true
+end
+Event_Handler:register_event({
+    event_name = "on_init",
+    source_name = "events.on_init",
+    func_name = "events.on_init",
+    func = events.on_init,
+})
+
+local initialized_from_load = false
+
 function events.on_load()
-    Log.debug("events.on_load")
 
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
+    local return_val = 0
+
+    if (type(storage.handles) == "table") then
+        initialized_from_load = true
+        return_val = initialized_from_load and Settings_Service.init({ storage_ref = storage.handles.setting_handle })
+        if (not return_val) then initialized_from_load = false end
+        return_val = initialized_from_load and Settings_Controller.init({ settings_service = Settings_Service })
+        if (not return_val) then initialized_from_load = false end
+
+        local log_settings = Log_Settings.create({ prefix = Constants.mod_name })
+
+        return_val = initialized_from_load and Log.init({
+            storage_ref = storage.handles.log_handle,
+            debug_level_name = log_settings[1].name,
+            traceback_setting_name = log_settings[2].name,
+            do_not_print_setting_name = log_settings[3].name,
+        })
+        if (not return_val) then initialized_from_load = false end
+
+        if (initialized_from_load) then Log.ready() end
+    end
+
     if (se_active) then
         local event_num = remote.call("space-exploration", "get_on_zone_surface_created_event")
 
-        if (event_num ~= nil and type(event_num) == "number") then
+        if (type(event_num) == "number") then
             local event_position = Event_Handler:get_event_position({
                 event_name = event_num,
                 source_name = "Planet_Controller.on_surface_created",
@@ -233,62 +301,7 @@ function events.on_load()
 
     Constants.get_mod_data(true, { on_load = true })
 
-    if (not storage or not storage.event_handlers or type(storage.event_handlers) ~= "table") then return end
-
-    if (storage.event_handlers.restore_on_load) then
-        local events_to_restore = storage.event_handlers.restore_on_load
-
-        local restore_on_load = function (data)
-            Log.debug("restore_on_load")
-            Log.info(data)
-
-            local i = 1
-            while data.event.order and i <= #data.event.order do
-                local search_pattern = "(%g+)%.(%g+)"
-                local _, _, class, func_name = data.event.order[i].func_name:find(search_pattern, 1)
-                local func = events and events[class] and events[class][func_name] or nil
-
-                if (type(func) == "function") then
-                    Event_Handler:register_event({
-                        event_name = data.event.order[i].event_name,
-                        source_name = data.event.order[i].source_name,
-                        func_name = data.event.order[i].func_name,
-                        nth_tick = data.nth_tick,
-                        restore_on_load = true,
-                        func = func,
-                        func_data = data.event.order[i].func_data,
-                    })
-                    i = i + 1
-                end
-            end
-
-            i = 1
-            while data.event.order and i <= #data.event.order do
-                Event_Handler:set_event_position({
-                    event_name = data.event.order[i].event_name,
-                    source_name = data.event.order[i].source_name,
-                    new_position = data.event.order[i].index,
-                })
-
-                i = i + 1
-            end
-        end
-
-        for k, v in pairs(events_to_restore) do
-            if (k == "on_nth_tick") then
-                for k_2, v_2 in pairs(v) do
-                    restore_on_load({
-                        event = v_2,
-                        nth_tick = k_2
-                    })
-                end
-            else
-                restore_on_load({
-                    event = v_2,
-                })
-            end
-        end
-    end
+    Event_Handler:on_load_restore({ events = events })
 end
 Event_Handler:register_event({
     event_name = "on_load",
@@ -298,9 +311,6 @@ Event_Handler:register_event({
 })
 
 function events.on_configuration_changed(event)
-    Log.debug("events.on_configuration_changed")
-    Log.info(event)
-
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
@@ -310,31 +320,55 @@ function events.on_configuration_changed(event)
     if (event.mod_changes) then
         --[[ Check if our mod updated ]]
         if (event.mod_changes["configurable-nukes"]) then
-            game.print({ "configurable-nukes-controller.on-configuration-changed", Constants.mod_name })
+            if (not did_init) then
+                game.print({ Constants.mod_name .. ".on-configuration-changed", Constants.mod_name })
 
-            Initialization.init({ maintain_data = true })
+                if (type(storage.handles) ~= "table" or not initialized_from_load) then
+                    storage.handles = {
+                        log_handle = {},
+                        setting_handle = {},
+                    }
 
-            local cn_controller_data = storage and storage.configurable_nukes_controller or {}
+                    local return_val = 0
+                    return_val = Settings_Service.init({ storage_ref = storage.handles.setting_handle })
+                    return_val = Settings_Controller.init({ settings_service = Settings_Service })
 
-            cn_controller_data.reinitialized = true
-            cn_controller_data.reinit_tick = game.tick
+                    local log_settings = Log_Settings.create({ prefix = Constants.mod_name })
 
-            cn_controller_data.initialized = true
-            cn_controller_data.init_tick = game.tick
+                    return_val = Log.init({
+                        storage_ref = storage.handles.log_handle,
+                        debug_level_name = log_settings[1].name,
+                        traceback_setting_name = log_settings[2].name,
+                        do_not_print_setting_name = log_settings[3].name,
+                    })
 
-            -- Constants.get_mod_data(true)
+                    Log.ready()
+                end
 
-            storage.configurable_nukes_controller = {
-                planet_index = cn_controller_data.planet_index,
-                surface_name = cn_controller_data.surface_name,
-                space_location = cn_controller_data.space_location,
-                tick = game.tick,
-                prev_tick = cn_controller_data.tick,
-                initialized = cn_controller_data.initialized,
-                initialized_tick = cn_controller_data.init_tick,
-                reinitialized = cn_controller_data.reinitialized,
-                reinitialized_tick = cn_controller_data.reinit_tick,
-            }
+                Initialization.init({ maintain_data = true })
+
+                local cn_controller_data = storage and storage.configurable_nukes_controller or {}
+
+                cn_controller_data.reinitialized = true
+                cn_controller_data.reinit_tick = game.tick
+
+                cn_controller_data.initialized = true
+                cn_controller_data.init_tick = game.tick
+
+                -- Constants.get_mod_data(true)
+
+                storage.configurable_nukes_controller = {
+                    planet_index = cn_controller_data.planet_index,
+                    surface_name = cn_controller_data.surface_name,
+                    space_location = cn_controller_data.space_location,
+                    tick = game.tick,
+                    prev_tick = cn_controller_data.tick,
+                    initialized = cn_controller_data.initialized,
+                    initialized_tick = cn_controller_data.init_tick,
+                    reinitialized = cn_controller_data.reinitialized,
+                    reinitialized_tick = cn_controller_data.reinit_tick,
+                }
+            end
         end
     end
 end

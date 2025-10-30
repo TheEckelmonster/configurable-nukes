@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local space_connection_data = {}
 
@@ -10,8 +13,8 @@ space_connection_data.reverse = nil
 space_connection_data.length = 0
 
 function space_connection_data:new(o)
-    Log.debug("space_connection_data:new")
-    Log.info(o)
+    _Log.debug("space_connection_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,

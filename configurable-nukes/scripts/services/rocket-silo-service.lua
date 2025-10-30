@@ -1,17 +1,14 @@
--- If already defined, return
-if _rocket_silo_service and _rocket_silo_service.configurable_nukes then
-  return _rocket_silo_service
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
 local Circuit_Network_Validations = require("scripts.validations.circuit-network-data.rocket-silo-validations")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
-local Log = require("libs.log.log")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local rocket_silo_service = {}
@@ -76,7 +73,7 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
                         cargo_pod = cargo_pod,
                     })
 
-                    if (Log.get_log_level().level.num_val <= 3) then
+                    if (Log.get_log_level().num_val <= 3) then
                         log(serpent.block(return_val))
                     end
                     if (return_val and return_val ~= 1) then
@@ -216,9 +213,5 @@ function rocket_silo_service.scrub_all_launches(data)
         force_launch_data.force.print({ "rocket-silo-service.scrub-all-launches" })
     end
 end
-
-rocket_silo_service.configurable_nukes = true
-
-local _rocket_silo_service = rocket_silo_service
 
 return rocket_silo_service

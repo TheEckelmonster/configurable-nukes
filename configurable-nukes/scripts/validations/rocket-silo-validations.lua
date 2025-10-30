@@ -1,9 +1,7 @@
--- If already defined, return
-if _rocket_silo_validations and _rocket_silo_validations.configurable_nukes then
-    return _rocket_silo_validations
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
-local Log = require("libs.log.log")
 local String_Utils = require("scripts.utils.string-utils")
 
 local rocket_silo_validations = {}
@@ -77,9 +75,5 @@ function rocket_silo_validations.is_targetable_surface(data)
 
     return true
 end
-
-rocket_silo_validations.configurable_nukes = true
-
-local _rocket_silo_validations = rocket_silo_validations
 
 return rocket_silo_validations

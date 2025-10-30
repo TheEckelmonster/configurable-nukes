@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local major_data = {}
 
@@ -7,8 +10,8 @@ major_data.value = 0
 major_data.valid = true
 
 function major_data:new(o)
-    Log.debug("major_data:new")
-    Log.info(o)
+    _Log.debug("major_data:new")
+    _Log.info(o)
 
     local defaults = {
         value = major_data.value,

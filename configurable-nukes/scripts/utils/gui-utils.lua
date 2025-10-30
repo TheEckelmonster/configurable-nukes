@@ -1,9 +1,6 @@
--- If already defined, return
-if _gui_utils and _gui_utils.configurable_nukes then
-  return _gui_utils
-end
-
-local Log = require("libs.log.log")
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
 local gui_utils = {}
 
@@ -47,9 +44,5 @@ function gui_utils.get_platform_name_from_surface(data)
 
     return platform_name
 end
-
-gui_utils.configurable_nukes = true
-
-local _gui_utils = gui_utils
 
 return gui_utils

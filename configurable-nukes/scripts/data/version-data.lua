@@ -1,8 +1,11 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
 local Bug_Fix_Data = require("scripts.data.versions.bug-fix-data")
 local Major_Data = require("scripts.data.versions.major-data")
 local Minor_Data = require("scripts.data.versions.minor-data")
-local Log = require("libs.log.log")
 
 local version_data = {}
 
@@ -21,8 +24,8 @@ version_data.bug_fix.valid = true
 version_data.string_val = version_data.major.value .. "." .. version_data.minor.value .. "." .. version_data.bug_fix.value
 
 function version_data:new(o)
-    Log.debug("version_data:new")
-    Log.info(o)
+    _Log.debug("version_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,
@@ -48,12 +51,12 @@ end
 
 
 function version_data.__concat(self)
-    Log.debug("version_data.__concat")
+    _Log.debug("version_data.__concat")
     return self.string_val
 end
 
 function version_data:to_string()
-    Log.debug("version_data:to_string")
+    _Log.debug("version_data:to_string")
     return self.string_val
 end
 

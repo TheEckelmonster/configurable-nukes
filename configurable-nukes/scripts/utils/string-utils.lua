@@ -1,9 +1,6 @@
--- If already defined, return
-if _string_utils and _string_utils.configurable_nukes then
-    return _string_utils
-end
-
-local Log = require("libs.log.log")
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
 local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 local locals = {}
@@ -71,9 +68,5 @@ locals.is_string_valid = function(string_data)
 
     return string_data and type(string_data) == "string" and string_data:gsub("%s+", "") ~= ""
 end
-
-string_utils.configurable_nukes = true
-
-local _string_utils = string_utils
 
 return string_utils

@@ -1,13 +1,11 @@
--- If already defined, return
-if _rocket_dashboard_gui_service and _rocket_dashboard_gui_service.configurable_nukes then
-  return _rocket_dashboard_gui_service
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
 local Mod_Gui = require("__core__.lualib.mod-gui")
 
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local Gui_Utils = require("scripts.utils.gui-utils")
-local Log = require("libs.log.log")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Rocket_Dashboard_Constants = require("scripts.constants.gui.rocket-dashboard-constants")
@@ -921,9 +919,5 @@ function rocket_dashboard_gui_service.update_gui_data(data)
         end
     end
 end
-
-rocket_dashboard_gui_service.configurable_nukes = true
-
-local _rocket_dashboard_gui_service = rocket_dashboard_gui_service
 
 return rocket_dashboard_gui_service

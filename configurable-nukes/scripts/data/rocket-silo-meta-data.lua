@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local rocket_silo_meta_data = Data:new()
 
@@ -13,8 +16,8 @@ rocket_silo_meta_data.rocket_silos = {}
 rocket_silo_meta_data.surface_index = -1
 
 function rocket_silo_meta_data:new(o)
-    Log.debug("rocket_silo_meta_data:new")
-    Log.info(o)
+    _Log.debug("rocket_silo_meta_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,

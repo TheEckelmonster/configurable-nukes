@@ -1,19 +1,13 @@
--- If already defined, return
-if _configurable_nukes_controller and _configurable_nukes_controller.configurable_nukes then
-    return _configurable_nukes_controller
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
 local Circuit_Network_Service = require("scripts.services.circuit-network-service")
-local Constants = require("scripts.constants.constants")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
-local Initialization = require("scripts.initialization")
-local Log = require("libs.log.log")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Service = require("scripts.services.settings-service")
 local String_Utils = require("scripts.utils.string-utils")
-local Version_Validations = require("scripts.validations.version-validations")
 
 local configurable_nukes_controller = {}
 configurable_nukes_controller.name = "configurable_nukes_controller"
@@ -22,14 +16,10 @@ configurable_nukes_controller.planet_index = nil
 configurable_nukes_controller.planet = nil
 configurable_nukes_controller.nth_tick = nil
 
-configurable_nukes_controller.initialized =     storage
-                                            and storage.configurable_nukes_controller
-                                            and storage.configurable_nukes_controller.initialized
-                                        or false
-
-configurable_nukes_controller.reinitialized = false
-
 configurable_nukes_controller.checked_research = false
+
+local sa_active = script and script.active_mods and script.active_mods["space-age"]
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 function configurable_nukes_controller.on_tick(event)
     -- Log.debug("configurable_nukes_controller.on_tick")
@@ -41,64 +31,11 @@ function configurable_nukes_controller.on_tick(event)
     local nth_tick = configurable_nukes_controller.nth_tick or 4
     local tick_modulo = tick % nth_tick
 
-    local sa_active = storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
-    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     if (tick_modulo ~= 0) then return end
 
-    -- Check/validate the storage version
-    if (not configurable_nukes_controller.initialized) then
-        -- Previously initialized?
-        if (storage and (not storage.configurable_nukes_controller or not storage.configurable_nukes_controller.initialized)) then
-            Initialization.init({ maintain_data = true })
-            configurable_nukes_controller.reinitialized = true
-            configurable_nukes_controller.reinit_tick = tick
-            sa_active = script and script.active_mods and script.active_mods["space-age"]
-            se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
-            storage.sa_active = sa_active
-            storage.se_active = se_active
-        end
-        configurable_nukes_controller.initialized = true
-        configurable_nukes_controller.init_tick = tick
-
-        if (not storage.constants) then Constants.get_mod_data(true) end
-
-        return
-    else
-        if (not Version_Validations.validate_version()) then
-            Initialization.reinit()
-            configurable_nukes_controller.reinitialized = true
-            configurable_nukes_controller.init_tick = tick
-
-            if (not storage.constants) then Constants.get_mod_data(true) end
-
-            sa_active = script and script.active_mods and script.active_mods["space-age"]
-            se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
-            storage.sa_active = sa_active
-            storage.se_active = se_active
-
-            return
-        end
-    end
-
-    if (configurable_nukes_controller and configurable_nukes_controller.active_mod_check_tick) then
-        if (tick - 60 > configurable_nukes_controller.active_mod_check_tick) then
-            configurable_nukes_controller.active_mod_check_tick = tick
-
-            sa_active = script and script.active_mods and script.active_mods["space-age"]
-            se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
-            storage.sa_active = sa_active
-            storage.se_active = se_active
-        end
-    end
-
-    if ((not se_active and not Constants.planets_dictionary) or configurable_nukes_controller.reinitialized) then
-        -- Constants.get_planets(true)
+    if (not se_active and not Constants.planets_dictionary) then
         Constants.get_planets(not Constants.planets_dictionary)
-        configurable_nukes_controller.reinitialized = false
     end
 
     ICBM_Utils.print_space_launched_time_to_target_message()
@@ -132,7 +69,6 @@ function configurable_nukes_controller.on_tick(event)
             end
         end
         if (not space_location) then
-            --[[ This shouldn't be necessary, but syntax parser is flagging subsequent lines as needing a nil check without this ]]
             failures = failures + 1
             goto continue
         end
@@ -205,11 +141,6 @@ function configurable_nukes_controller.on_tick(event)
         nth_tick = nth_tick,
         tick = tick,
         prev_tick = configurable_nukes_controller.tick,
-        active_mod_check_tick = configurable_nukes_controller.active_mod_check_tick,
-        initialized = true,
-        initialized_tick = configurable_nukes_controller.init_tick,
-        reinitialized = false,
-        reinitialized_tick = configurable_nukes_controller.reinit_tick,
     }
 end
 Event_Handler:register_event({
@@ -218,9 +149,5 @@ Event_Handler:register_event({
     func_name = "configurable_nukes_controller.on_tick",
     func = configurable_nukes_controller.on_tick,
 })
-
-configurable_nukes_controller.configurable_nukes = true
-
-local _configurable_nukes_controller = configurable_nukes_controller
 
 return configurable_nukes_controller

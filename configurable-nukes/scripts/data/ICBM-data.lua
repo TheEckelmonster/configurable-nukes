@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
 local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
@@ -129,8 +132,8 @@ icbm_data.enqueued_data = nil
 icbm_data.event_handlers = {}
 
 function icbm_data:new(o)
-    Log.debug("icbm_data:new")
-    Log.info(o)
+    _Log.debug("icbm_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,
@@ -190,14 +193,14 @@ function icbm_data:new(o)
 end
 
 function icbm_data:next_item_number()
-    Log.debug("icbm_data:next_item_number")
+    _Log.debug("icbm_data:next_item_number")
 
     return icbm_data.item_number.get()
 end
 
 function icbm_data:get_item_numbers()
-    Log.debug("icbm_data:get_item_numbers")
-    Log.info(item_number)
+    _Log.debug("icbm_data:get_item_numbers")
+    _Log.info(item_number)
 
     return
     {

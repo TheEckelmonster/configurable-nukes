@@ -1,12 +1,11 @@
--- If already defined, return
-if _constants and _constants.configurable_nukes then
-  return _constants
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 
 local Anomaly_Data = require("scripts.data.space.celestial-objects.anomaly-data")
 local Asteroid_Belt_Data = require("scripts.data.space.celestial-objects.asteroid-belt-data")
 local Asteroid_Field_Data = require("scripts.data.space.celestial-objects.asteroid-field-data")
-local Log = require("libs.log.log")
 local Orbit_Data = require("scripts.data.space.celestial-objects.orbit-data")
 local Moon_Data = require("scripts.data.space.celestial-objects.moon-data")
 local Planet_Data = require("scripts.data.space.celestial-objects.planet-data")
@@ -1126,9 +1125,5 @@ locals.get_space_exploration_universe = function(data)
 
     return constants["space-exploration"]
 end
-
-constants.configurable_nukes = true
-
-local _constants = constants
 
 return constants

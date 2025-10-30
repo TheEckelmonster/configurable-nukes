@@ -1,11 +1,8 @@
--- If already defined, return
-if _icbm_repository and _icbm_repository.configurable_nukes then
-    return _icbm_repository
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
-local Constants = require("scripts.constants.constants")
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
-local Log = require("libs.log.log")
 local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 
@@ -247,9 +244,5 @@ function icbm_repository.get_icbm_data(planet_name, item_number, optionals)
 
     return icbms[item_number]
 end
-
-icbm_repository.configurable_nukes = true
-
-local _icbm_repository = icbm_repository
 
 return icbm_repository

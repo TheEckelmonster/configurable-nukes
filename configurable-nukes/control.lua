@@ -1,3 +1,10 @@
+
+-- Globals
+Log = require("__TheEckelmonster-core-library__.libs.log.log")
+Event_Handler = require("__TheEckelmonster-core-library__.scripts.event-handler")
+
+---
+
 --[[ Data types and metatables ]]
 
 -- circuit-network
@@ -66,10 +73,6 @@ script.register_metatable("Rocket_Silo_Meta_Data", Rocket_Silo_Meta_Data)
 script.register_metatable("Version_Data", Version_Data)
 
 ---
-
--- Globals
-Event_Handler = require("scripts.event-handler")
-Log = require("libs.log.log")
 
 require("scripts.events")
 require("scripts.commands")

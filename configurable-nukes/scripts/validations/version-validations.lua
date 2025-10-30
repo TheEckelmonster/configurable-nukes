@@ -1,11 +1,8 @@
--- If already defined, return
-if (_version_validations and _version_validations.configurable_nukes) then
-    return _version_validations
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
-local Constants = require("scripts.constants.constants")
 local Initialization = require("scripts.initialization")
-local Log = require("libs.log.log")
 local Version_Data = require("scripts.data.version-data")
 local Version_Service = require("scripts.services.version-service")
 local Version_Repository = require("scripts.repositories.version-repository")
@@ -41,7 +38,4 @@ function version_validations.validate_version()
     return return_val
 end
 
-version_validations.configurable_nukes = true
-
-local _version_validations = version_validations
 return version_validations

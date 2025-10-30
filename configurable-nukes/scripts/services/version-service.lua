@@ -1,9 +1,7 @@
--- If already defined, return
-if _version_service and _version_service.configurable_nukes then
-    return _version_service
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
-local Log = require("libs.log.log")
 local Version_Data = require("scripts.data.version-data")
 local Version_Repository = require("scripts.repositories.version-repository")
 
@@ -63,9 +61,5 @@ function version_service.validate_version(optionals)
 
     return return_val
 end
-
-version_service.configurable_nukes = true
-
-local _version_service = version_service
 
 return version_service

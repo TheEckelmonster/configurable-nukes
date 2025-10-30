@@ -1,17 +1,13 @@
--- If already defined, return
-if _icbm_utils and _icbm_utils.configurable_nukes then
-  return _icbm_utils
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
-local Constants = require("scripts.constants.constants")
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
-local Log = require("libs.log.log")
 local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local icbm_utils = {
@@ -1421,9 +1417,5 @@ function icbm_utils.rocket_silo_cloned(data)
         destination_icbm_meta_data.item_numbers[k] = v
     end
 end
-
-icbm_utils.configurable_nukes = true
-
-local _icbm_utils = icbm_utils
 
 return icbm_utils

@@ -1,9 +1,6 @@
--- If already defined, return
-if _startup_settings_constants and _startup_settings_constants.configurable_nukes then
-    return _startup_settings_constants
-end
-
 local Util = require("__core__.lualib.util")
+
+local Settings_Utils = require("__TheEckelmonster-core-library__.libs.utils.settings-utils")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true or scripts and scripts.active_mods and scripts.active_mods["Krastorio2-spaced-out"]
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true or scripts and scripts.active_mods and scripts.active_mods["SimpleAtomicArtillery-S"]
@@ -11,43 +8,6 @@ local sa_active = mods and mods["space-age"] and true or scripts and scripts.act
 local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
 
 local startup_settings_constants = {}
-
-local order_struct = {
-    order_array = {
-        -- "a", "b", "c", "d", "e",  "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-        [0] = "a",
-        [1] = "b",
-        [2] = "c",
-        [3] = "d",
-        [4] = "e",
-        [5] = "f",
-        [6] = "g",
-        [7] = "h",
-        [8] = "i",
-        [9] = "j",
-        [10] = "k",
-        [11] = "l",
-        [12] = "m",
-        [13] = "n",
-        [14] = "o",
-        [15] = "p",
-        [16] = "q",
-        [17] = "r",
-        [18] = "s",
-        [19] = "t",
-        [20] = "u",
-        [21] = "v",
-        [22] = "w",
-        [23] = "x",
-        [24] = "y",
-        [25] = "z",
-    },
-    order_dictionary = {},
-}
-
-for k, v in pairs(order_struct.order_array) do
-    order_struct.order_dictionary[v] = k
-end
 
 local se_multiplier = se_active and 0.4 or 1
 
@@ -165,12 +125,12 @@ local rod_from_god =
 }
 
 if (sa_active) then
-    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-plate",     amount = 1000, })
-    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-carbide",   amount = 500,  })
+    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-plate",   amount = 1000, })
+    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-carbide", amount = 500,  })
 elseif (se_active) then
-    table.insert(rod_from_god.ingredients, { type = "item", name = "se-heavy-girder",   amount = 500,  })
+    table.insert(rod_from_god.ingredients, { type = "item", name = "se-heavy-girder", amount = 500,  })
 else
-    table.insert(rod_from_god.ingredients, { type = "item", name = "steel-plate",   amount = 2000,  })
+    table.insert(rod_from_god.ingredients, { type = "item", name = "steel-plate", amount = 2000,  })
 end
 
 if (mods and mods["atan-nuclear-science"]) then
@@ -2203,22 +2163,9 @@ startup_settings_constants.settings = {
     },
 }
 
-local settings_array = {}
-local i = 1
-for k, v in pairs(startup_settings_constants.settings) do
-    settings_array[i] = v
-    i = i + 1
-end
-
-for k, v in pairs(settings_array) do
-    local order_1 = ((k - 1) % 26)
-    local order_2 = math.floor((k - 1) / 26) % 26
-    local order_3 = math.floor((k - 1) / 676) % 26
-
-    local order = order_struct.order_array[order_3] .. order_struct.order_array[order_2] .. order_struct.order_array[order_1]
-    v.order = order
-    v.order_num = k
-end
+local order_settings = Settings_Utils.order_settings({ settings = startup_settings_constants.settings })
+startup_settings_constants.settings_array = order_settings.array
+startup_settings_constants.settings_dictionary = order_settings.dictionary
 
 -- Atomic Bomb
 if (sa_active) then
@@ -2480,15 +2427,5 @@ create_research_prerequisites_string({ prerequisites = default_technology_prereq
 
 -- GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS
 create_research_ingredients_string({ ingredients = default_technology_ingredients_guidance_systems, setting = startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS })
-
-startup_settings_constants.settings_dictionary  = {}
-
-for k, v in pairs(startup_settings_constants.settings) do
-    startup_settings_constants.settings_dictionary[v.name] = v
-end
-
-startup_settings_constants.configurable_nukes = true
-
-local _startup_settings_constants = startup_settings_constants
 
 return startup_settings_constants

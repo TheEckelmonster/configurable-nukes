@@ -1,6 +1,9 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local rocket_silo_data = {}
 
@@ -15,8 +18,8 @@ rocket_silo_data.surface_index = -1
 rocket_silo_data.circuit_network_data = nil
 
 function rocket_silo_data:new(o)
-    Log.debug("rocket_silo_data:new")
-    Log.info(o)
+    _Log.debug("rocket_silo_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,
@@ -47,9 +50,9 @@ function rocket_silo_data:new(o)
 end
 
 function rocket_silo_data:is_ipbm_silo(data)
-    -- Log.debug("rocket_silo_data:is_ipbm_silo")
-    -- Log.info(self)
-    -- Log.info(data)
+    -- _Log.debug("rocket_silo_data:is_ipbm_silo")
+    -- _Log.info(self)
+    -- _Log.info(data)
 
     return self.entity and self.entity.valid and self.entity.name == "ipbm-rocket-silo"
 end

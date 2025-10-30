@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 local Space_Location_Data = require("scripts.data.space.space-location-data")
-local Log = require("libs.log.log")
 
 local spaceship_data = {}
 
@@ -11,8 +14,8 @@ spaceship_data.previous_surface_index = -1
 spaceship_data.previous_surface_name = nil
 
 function spaceship_data:new(o)
-    Log.debug("spaceship_data:new")
-    Log.info(o)
+    _Log.debug("spaceship_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,
@@ -35,8 +38,8 @@ function spaceship_data:new(o)
 end
 
 function spaceship_data:is_solid(data)
-    Log.debug("spaceship_data:is_solid")
-    Log.info(data)
+    _Log.debug("spaceship_data:is_solid")
+    _Log.info(data)
 
     return true
 end

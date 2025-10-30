@@ -1,9 +1,7 @@
--- If already defined, return
-if _planet_controller and _planet_controller.configurable_nukes then
-    return _planet_controller
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
-local Log = require("libs.log.log")
 local Planet_Service = require("scripts.services.planet-service")
 
 local planet_controller = {}
@@ -44,9 +42,5 @@ Event_Handler:register_event({
     func_name = "planet_controller.on_pre_surface_deleted",
     func = planet_controller.on_pre_surface_deleted,
 })
-
-planet_controller.configurable_nukes = true
-
-local _planet_controller = planet_controller
 
 return planet_controller

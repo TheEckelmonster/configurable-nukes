@@ -1,15 +1,11 @@
--- If already defined, return
-if _circuit_network_service and _circuit_network_service.configurable_nukes then
-  return _circuit_network_service
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
-local Constants = require("scripts.constants.constants")
-local Log = require("libs.log.log")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
 local Rocket_Silo_Validations = require("scripts.validations.rocket-silo-validations")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Service = require("scripts.services.settings-service")
 
 local circuit_network_service = {}
 
@@ -293,9 +289,5 @@ function circuit_network_service.attempt_launch_silos(data)
         ::continue::
     end
 end
-
-circuit_network_service.configurable_nukes = true
-
-local _circuit_network_service = circuit_network_service
 
 return circuit_network_service

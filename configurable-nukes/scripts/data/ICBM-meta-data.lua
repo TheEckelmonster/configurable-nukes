@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local icbm_meta_data = {}
 
@@ -12,8 +15,8 @@ icbm_meta_data.in_transit = {}
 icbm_meta_data.icbms = {}
 
 function icbm_meta_data:new(o)
-    Log.debug("icbm_meta_data:new")
-    Log.info(o)
+    _Log.debug("icbm_meta_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,
@@ -37,8 +40,8 @@ function icbm_meta_data:new(o)
 end
 
 function icbm_meta_data:remove_data(data)
-    Log.debug("icbm_meta_data:remove_data")
-    Log.info(data)
+    _Log.debug("icbm_meta_data:remove_data")
+    _Log.info(data)
 
     if (not data or type(data) ~= "table") then return end
     if (not data.icbm_data or type(data.icbm_data) ~= "table") then return end

@@ -1,19 +1,15 @@
--- If already defined, return
-if _rocket_dashboard_gui_controller and _rocket_dashboard_gui_controller.configurable_nukes then
-    return _rocket_dashboard_gui_controller
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Custom_Input = require("prototypes.custom-input.custom-input")
-local Data_Utils = require("data-utils")
 
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
-local Log = require("libs.log.log")
 local Rocket_Dashboard_Constants = require("scripts.constants.gui.rocket-dashboard-constants")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Service = require("scripts.services.settings-service")
 
 local rocket_dashboard_gui_controller = {}
 
@@ -395,9 +391,5 @@ Event_Handler:register_event({
     func_name = "rocket_dashboard_gui_controller.cn_on_init_complete",
     func = rocket_dashboard_gui_controller.cn_on_init_complete,
 })
-
-rocket_dashboard_gui_controller.configurable_nukes = true
-
-local _rocket_dashboard_gui_controller = rocket_dashboard_gui_controller
 
 return rocket_dashboard_gui_controller

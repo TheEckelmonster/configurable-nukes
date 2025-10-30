@@ -1,10 +1,6 @@
--- If already defined, return
-if _spaceship_service and _spaceship_service.configurable_nukes then
-  return _spaceship_service
-end
-
-local Constants = require("scripts.constants.constants")
-local Log = require("libs.log.log")
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not _Log) then _Log = Log_Stub end
 
 local spaceship_service = {}
 
@@ -26,7 +22,7 @@ function spaceship_service.rocket_silo_cloned(data)
     end
     if (not source) then return -1 end
     Log.warn(source.name)
-    if (Log.get_log_level().level.num_val <= 2) then
+    if (Log.get_log_level().num_val <= 2) then
         log(serpent.block(source))
     end
     local destination = Constants.space_exploration_dictionary[data.destination_silo.surface.name:lower()]
@@ -37,7 +33,7 @@ function spaceship_service.rocket_silo_cloned(data)
     end
     if (not destination) then return -1 end
     Log.warn(destination.name)
-    if (Log.get_log_level().level.num_val <= 2) then
+    if (Log.get_log_level().num_val <= 2) then
         log(serpent.block(destination))
     end
 
@@ -54,9 +50,5 @@ function spaceship_service.rocket_silo_cloned(data)
         Log.warn("source and destination are spaceships")
     end
 end
-
-spaceship_service.configurable_nukes = true
-
-local _spaceship_service = spaceship_service
 
 return spaceship_service
