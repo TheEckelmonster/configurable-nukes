@@ -240,6 +240,7 @@ function locals.migrate(data)
             table_old[data.field] = nil
         end
     end
+    reassign(storage_old, storage, { field = "constants" })
     reassign(storage_old, storage, { field = "configurable_nukes_controller" })
     reassign(storage_old, storage, { field = "event_handlers" })
     reassign(storage_old, storage, { field = "gui_data" })

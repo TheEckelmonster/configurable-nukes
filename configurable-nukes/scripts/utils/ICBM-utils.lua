@@ -68,7 +68,16 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
 
     if (icbm_data.scrubbed) then return 0 end
 
-    local guidance_systems_modifier = icbm_data.force.get_ammo_damage_modifier("icbm-guidance") or 0
+    local guidance_systems_modifier = 0
+    if (icbm_data.force and icbm_data.force.valid) then
+        guidance_systems_modifier = icbm_data.force.get_ammo_damage_modifier("icbm-guidance") or 0
+        if (type(guidance_systems_modifier) ~= "number" or guidance_systems_modifier < -1 or guidance_systems_modifier > 0) then guidance_systems_modifier = -1 end
+    end
+
+    local absolute_guidance_systems_modifier = math.abs(guidance_systems_modifier)
+    local guidance_systems_modifier_difference = 1 - absolute_guidance_systems_modifier
+    if (guidance_systems_modifier_difference < 0) then guidance_systems_modifier_difference = 0 end
+
     local top_speed_modifier = icbm_data.force.get_ammo_damage_modifier("icbm-top-speed") or 1
 
     local time_to_target = 0
@@ -147,12 +156,14 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             remaining_distance = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name }) * remaining_distance
         end
 
-        target_distance = icbm_data.launched_from == "orbit" and ((math.log(1 + target_distance, 10 * (4 - 3 * (1 + guidance_systems_modifier)))) * magnitude) or target_distance
+        target_distance = icbm_data.launched_from == "orbit" and ((math.log(1 + target_distance, 10 * (4 - 3 * guidance_systems_modifier_difference))) * magnitude) or target_distance
 
-        local distance_modifier = (1 - 0.125) * (1 + guidance_systems_modifier) + 0.125
+        local distance_modifier = (1 - 0.125) * (1 - absolute_guidance_systems_modifier) + 0.125
         target_distance = icbm_data.launched_from == "surface" and icbm_data.same_surface and ((target_distance * distance_modifier) * magnitude) or target_distance
 
-        local exponent = 1 - (1/3) * guidance_systems_modifier
+        target_distance = target_distance + 1
+
+        local exponent = math.abs(1 + (1/3) * absolute_guidance_systems_modifier)
         local base = ((1 + target_distance) ^ (exponent)) + 1
         local base_log = math.log(1 + target_distance, base)
         target_distance = destination_is_target and icbm_data.launched_from == "interplanetary" and base_log * target_distance or target_distance
@@ -191,9 +202,6 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             end
 
             local icbm_deviation_scaling_factor = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_DEVIATION_SCALING_FACTOR.name })
-            local guidance_systems_deviation_base_modifier = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name })
-            local guidance_systems_deviation_max = 10 * math.abs(guidance_systems_deviation_base_modifier)
-            local deviation_proportion = 1 - math.abs(guidance_systems_modifier) / guidance_systems_deviation_max
 
             local deviation_threshold = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.name })
             local threshold = -(1 - deviation_threshold) * guidance_systems_modifier + deviation_threshold
@@ -211,53 +219,54 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                         local deviation_limit = 32 ^ 1
 
                         if (icbm_data.silo_type == "ipbm-rocket-silo") then
-                            deviation_limit = ((8 + deviation_proportion * 16) * (i ^ (math.pi / 6))) ^ (0.75 * icbm_deviation_scaling_factor)
+                            deviation_limit = ((8 + guidance_systems_modifier_difference * 16) * (i ^ (math.pi / 6))) ^ (0.75 * icbm_deviation_scaling_factor)
                         else
-                            deviation_limit = ((16 + deviation_proportion * 16) * (i ^ (math.pi / 6))) ^ icbm_deviation_scaling_factor
+                            deviation_limit = ((16 + guidance_systems_modifier_difference * 16) * (i ^ (math.pi / 6))) ^ icbm_deviation_scaling_factor
                         end
                         Log.warn("deviation_limit = " .. deviation_limit)
-                        deviation_limit = math.exp(1) * math.log(deviation_limit + 1, math.exp(1)) * deviation_limit ^ 0.25
+                        deviation_limit = math.exp(1) * math.log(math.exp(1) + deviation_limit, math.exp(1)) * deviation_limit ^ 0.25
                         Log.warn(deviation_limit)
 
-                        if (not se_active) then
-                            Log.warn("deviation_limit = " .. deviation_limit)
-                            icbm_data.target_position = {
-                                x = icbm_data.target_position.x + math.random(-deviation_limit, deviation_limit),
-                                y = icbm_data.target_position.y + math.random(-deviation_limit, deviation_limit),
-                            }
-                        else
-                            local target_surface_name = icbm_data.target_surface and icbm_data.surface.valid and icbm_data.target_surface.name:lower() or icbm_data.target_surface_name
-                            if (not Constants.space_exploration_dictionary[target_surface_name]) then Constants.get_space_exploration_universe(true) end
-                            local target_space_location = Constants.space_exploration_dictionary[target_surface_name]
-
-                            if (target_space_location) then
-                                local radius_max = target_space_location.radius
-
+                        if (type(deviation_limit) == "number" and deviation_limit >= 1 and deviation_limit < math.huge) then
+                            if (not se_active) then
                                 Log.warn("deviation_limit = " .. deviation_limit)
-                                local previous_position = {
-                                    x = icbm_data.target_position.x,
-                                    y = icbm_data.target_position.y,
-                                }
-
                                 icbm_data.target_position = {
-                                    x = icbm_data.target_position.x + math.random(-deviation_limit, deviation_limit),
-                                    y = icbm_data.target_position.y + math.random(-deviation_limit, deviation_limit),
+                                    x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
+                                    y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
                                 }
-
-                                local delta_from_origin = ((icbm_data.target_position.x) ^ 2 + (icbm_data.target_position.y) ^ 2) ^ 0.5
-
-                                -- if (delta_from_origin > radius_max) then
-                                if (radius_max and delta_from_origin >= radius_max) then
-                                    --[[ Taret position deviated outside of the planet's bounds]]
-                                    icbm_data.target_position = previous_position
-                                end
                             else
-                               --[[ Couldn't find a valid taget space_location
-                                    -> How?
-                               ]]
-                            --    log(target_surface_name)
-                            --    log(serpent.block(icbm_data))
-                            --    error("Could not find a valid target space_location for " .. target_surface_name)
+                                local target_surface_name = icbm_data.target_surface and icbm_data.surface.valid and icbm_data.target_surface.name:lower() or icbm_data.target_surface_name
+                                if (not Constants.space_exploration_dictionary[target_surface_name]) then Constants.get_space_exploration_universe(true) end
+                                local target_space_location = Constants.space_exploration_dictionary[target_surface_name]
+
+                                if (target_space_location) then
+                                    local radius_max = target_space_location.radius
+
+                                    Log.warn("deviation_limit = " .. deviation_limit)
+                                    local previous_position = {
+                                        x = icbm_data.target_position.x,
+                                        y = icbm_data.target_position.y,
+                                    }
+
+                                    icbm_data.target_position = {
+                                        x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
+                                        y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
+                                    }
+
+                                    local delta_from_origin = ((icbm_data.target_position.x) ^ 2 + (icbm_data.target_position.y) ^ 2) ^ 0.5
+
+                                    if (radius_max and delta_from_origin >= radius_max) then
+                                        --[[ Target position deviated outside of the planet's bounds]]
+                                        icbm_data.target_position = previous_position
+                                    end
+                                else
+                                --[[ Couldn't find a valid taget space_location
+                                        -> How?
+                                ]]
+                                --    log(target_surface_name)
+                                --    log(serpent.block(icbm_data))
+                                --    error("Could not find a valid target space_location for " .. target_surface_name)
+                                end
                             end
                         end
                     end
@@ -592,7 +601,6 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             distance_divisor = icbm_data.launched_from == "surface" and (24 / magnitude ^ 1.5) or distance_divisor
             distance_divisor = icbm_data.launched_from == "interplanetary" and (16 / magnitude ^ 2.25) * 1.25 or distance_divisor
         end
-
         local num_speed_checks = math.ceil(target_distance / (distance_divisor))
 
         local check_threshold = math.log(num_speed_checks, math.exp(1))
@@ -697,7 +705,10 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         if (not storage.icbm_utils) then storage.icbm_utils = {} end
         storage.icbm_utils.space_launches_initiated = icbm_utils.space_launches_initiated
     else
-        time_to_target = time_to_target + math.random(60 * (math.log(target_distance, 2.71) * (magnitude ^ 1.66))) * magnitude
+        local rand_additional_time = (math.log(2.71 + target_distance, 2.71) * (magnitude ^ 1.66))
+        if (type(rand_additional_time) ~= "number" or rand_additional_time < 1 or rand_additional_time >= math.huge) then rand_additional_time = 1 end
+
+        time_to_target = time_to_target + math.random(60 * rand_additional_time) * magnitude
     end
 
     Log.warn("game.tick = " .. game.tick)
