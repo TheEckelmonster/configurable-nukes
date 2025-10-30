@@ -1,4 +1,6 @@
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local get_atomic_warhead_research_prerequisites = function ()
     local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_PREREQUISITES.default_value
@@ -165,36 +167,9 @@ local get_atomic_warhead_research_ingredients = function ()
 
     return ingredients
 end
-local get_atomic_warhead_research_time = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_TIME.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_TIME.name].value
-    end
-
-    return setting
-end
-local get_atomic_warhead_research_count = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_COUNT.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_COUNT.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_COUNT.name].value
-    end
-
-    return setting
-end
-local get_atomic_warhead_enabled = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name].value
-    end
-
-    return setting
-end
 
 --[[ Atomic Warhead Unlock ]]
-if (get_atomic_warhead_enabled()) then
+if (Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })) then
     data:extend({
         {
             type = "technology",
@@ -226,8 +201,8 @@ if (get_atomic_warhead_enabled()) then
             unit =
             {
                 ingredients = get_atomic_warhead_research_ingredients(),
-                time = get_atomic_warhead_research_time(),
-                count = get_atomic_warhead_research_count(),
+                time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_TIME.name }),
+                count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_RESEARCH_COUNT.name }),
             }
         }
     })

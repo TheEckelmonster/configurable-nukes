@@ -1,5 +1,6 @@
-local Data_Utils = require("data-utils")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true

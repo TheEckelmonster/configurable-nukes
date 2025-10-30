@@ -1,7 +1,8 @@
 local Util = require("__core__.lualib.util")
 
-local Data_Utils = require("data-utils")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local get_nuclear_weapons_research_prerequisites = function ()
     local setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES.default_value

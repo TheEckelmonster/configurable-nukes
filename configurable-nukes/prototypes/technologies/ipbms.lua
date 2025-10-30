@@ -1,4 +1,6 @@
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
@@ -175,15 +177,6 @@ local get_ipbms_research_ingredients = function ()
 
     return ingredients
 end
-local get_ipbms_research_time = function ()
-    local setting = Startup_Settings_Constants.settings.IPBMS_RESEARCH_TIME.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.IPBMS_RESEARCH_TIME.name].value
-    end
-
-    return setting
-end
 
 --[[ IPBMs Technology ]]
 local rocket_part_basic_unlock =
@@ -242,7 +235,7 @@ data:extend({
         {
             count = get_ipbms_research_count(),
             ingredients = get_ipbms_research_ingredients(),
-            time = get_ipbms_research_time(),
+            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.IPBMS_RESEARCH_TIME.name }),
         },
     },
 })

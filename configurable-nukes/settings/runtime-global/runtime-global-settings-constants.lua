@@ -429,7 +429,7 @@ runtime_global_settings_constants.settings = {
 }
 
 local order_settings = Settings_Utils.order_settings({ settings = runtime_global_settings_constants.settings })
-runtime_global_settings_constants.settings_dictionary = order_settings.array
-runtime_global_settings_constants.settings_array = order_settings.dictionary
+runtime_global_settings_constants.settings_array = order_settings.array
+runtime_global_settings_constants.settings_dictionary = order_settings.dictionary
 
 return runtime_global_settings_constants

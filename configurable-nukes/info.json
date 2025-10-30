@@ -9,7 +9,7 @@
 		"base >= 2.0.69",
 		"? space-age >= 2.0.69",
 		"? quality >= 2.0.69",
-        "TheEckelmonster-core-library >= 0.1.0",
+        "TheEckelmonster-core-library >= 0.1.1",
 		"? atan-nuclear-science >= 0.3.3",
 		"? mushroom-cloud >= 1.0.2",
 		"? Temporary_nuclear_scorchmark >= 0.0.2",

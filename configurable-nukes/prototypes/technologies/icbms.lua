@@ -1,17 +1,10 @@
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
-local get_icbms_research_count = function ()
-    local setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.name].value
-    end
-
-    return setting
-end
 local get_icbms_research_prerequisites = function ()
     local setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_PREREQUISITES.default_value
 
@@ -174,15 +167,6 @@ local get_icbms_research_ingredients = function ()
 
     return ingredients
 end
-local get_icbms_research_time = function ()
-    local setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME.name].value
-    end
-
-    return setting
-end
 
 --[[ ICBMs Technology ]]
 local cn_payload_vehicle_unlock =
@@ -190,7 +174,6 @@ local cn_payload_vehicle_unlock =
     type = "unlock-recipe",
     recipe = "cn-payload-vehicle",
 }
-
 
 local technology_effects =
 {
@@ -219,9 +202,9 @@ data:extend({
         prerequisites = get_icbms_research_prerequisites(),
         unit =
         {
-            count = get_icbms_research_count(),
+            count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.name }),
             ingredients = get_icbms_research_ingredients(),
-            time = get_icbms_research_time(),
+            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME.name }),
         },
     },
 })

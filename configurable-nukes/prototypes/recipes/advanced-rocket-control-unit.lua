@@ -1,15 +1,7 @@
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
--- ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME
-local get_crafting_time = function ()
-    local setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME.default_value
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME.name].value
-    end
-
-    return setting
-end
 -- -- INPUT_MULTIPLIER
 -- local get_input_multiplier = function ()
 --     local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_INPUT_MULTIPLIER.default_value
@@ -20,46 +12,6 @@ end
 
 --     return setting
 -- end
--- RESULT_COUNT
-local get_result_count = function ()
-    local setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT.name].value
-    end
-
-    return setting
-end
--- ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT
-local get_rocket_control_unit_recipe_string = function ()
-    local setting = ""
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.name].value
-    end
-
-    return setting
-end
--- ROCKET_CONTROL_UNIT_RECIPE_ALLOW_NONE
-local get_rocket_control_unit_recipe_allow_none = function ()
-    local setting = false
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RECIPE_ALLOW_NONE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RECIPE_ALLOW_NONE.name].value
-    end
-
-    return setting
-end
--- ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE
-local get_rocket_control_unit_crafting_machine = function ()
-    local setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.name].value
-    end
-
-    return setting
-end
 -- ROCKET_CONTROL_UNIT_ADDITIONAL_CRAFTING_MACHINES
 local get_rocket_control_unit_additional_crafting_machines = function ()
     local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_ADDITIONAL_CRAFTING_MACHINES.default_value
@@ -125,7 +77,7 @@ local get_rocket_control_unit_additional_crafting_machines = function ()
 end
 
 local ingredients = {}
-local rocket_control_unit_recipe_string = get_rocket_control_unit_recipe_string()
+local rocket_control_unit_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.name, default_value = "" })
 
 --[[ Looks for:
         >= 0 commas,
@@ -192,7 +144,7 @@ while param ~= nil and param_val ~= nil do
     i, j, param, param_val = string.find(rocket_control_unit_recipe_string, search_pattern, 1)
 end
 
-if (not get_rocket_control_unit_recipe_allow_none()) then
+if (not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RECIPE_ALLOW_NONE.name })) then
     -- if (#ingredients <= 0) then
     --     for k, v in pairs(possible_matches) do
     --         table.insert(ingredients, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
@@ -231,11 +183,11 @@ local advanced_rocket_control_unit_recipe =
     name = "advanced-rocket-control-unit",
     -- name = "cn-rocket-control-unit",
     enabled = false,
-    energy_required = get_crafting_time(),
+    energy_required = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME.name }),
     ingredients = ingredients,
-    results = {{ type = "item", name = "rocket-control-unit", amount = get_result_count() }},
-    -- results = {{ type = "item", name = "cn-rocket-control-unit", amount = get_result_count() }},
-    category = get_rocket_control_unit_crafting_machine(),
+    results = {{ type = "item", name = "rocket-control-unit", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT.name }) }},
+    -- results = {{ type = "item", name = "cn-rocket-control-unit", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT.name }) }},
+    category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.name }),
     additional_categories = get_rocket_control_unit_additional_crafting_machines(),
     auto_recycle = false,
 }

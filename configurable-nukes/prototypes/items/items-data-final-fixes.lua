@@ -1,6 +1,6 @@
 local Util = require("__core__.lualib.util")
 
-local Data_Utils = require("data-utils")
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local quality_active = mods and mods["quality"]
 

@@ -1,7 +1,8 @@
 local Util = require("__core__.lualib.util")
 
-local Data_Utils = require("data-utils")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 -- INPUT_MULTIPLIER
 local get_input_multiplier = function ()
@@ -72,7 +73,7 @@ local get_payload_vehicle_additional_crafting_machines = function ()
 end
 
 local ingredients = {}
-local payload_vehicle_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_RECIPE.name })
+local payload_vehicle_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_RECIPE.name, default_value = "" })
 
 --[[ Looks for:
         >= 0 commas,

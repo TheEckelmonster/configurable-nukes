@@ -1,46 +1,12 @@
 local Util = require("__core__.lualib.util")
 
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
-local get_atomic_warhead_enabled = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name].value
-    end
-
-    return setting
-end
-local get_guidance_systems_research_modifier = function ()
-    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name].value
-    end
-
-    return setting
-end
-local get_guidance_systems_research_top_speed_modifier = function()
-    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.default_value
-
-    if (settings and settings.global and settings.global[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name]) then
-        setting = settings.global[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name].value
-    end
-
-    return setting
-end
-local get_guidance_systems_research_formula = function ()
-    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_FORMULA.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_FORMULA.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_FORMULA.name].value
-    end
-
-    return setting
-end
 local get_guidance_systems_research_prerequisites = function ()
     local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES.default_value
 
@@ -104,7 +70,9 @@ local get_guidance_systems_research_prerequisites = function ()
 
     if (#prerequisites <= 0) then
         prerequisites = {
-            get_atomic_warhead_enabled() and "rocket-control-unit" or "icbms",
+                Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })
+            and "rocket-control-unit"
+            or  "icbms",
             "automation-science-pack",
             "logistic-science-pack",
             "chemical-science-pack",
@@ -262,15 +230,6 @@ local get_guidance_systems_research_ingredients = function (param_data)
 
     return ingredients
 end
-local get_guidance_systems_research_time = function ()
-    local setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TIME.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TIME.name].value
-    end
-
-    return setting
-end
 
 --[[ Guidance Systems Deviation Chance Reduction ]]
 local guidance_systems_levels = {}
@@ -281,7 +240,7 @@ local guidance_effect =
 {
     type = "ammo-damage",
     ammo_category = "icbm-guidance",
-    modifier = get_guidance_systems_research_modifier(),
+    modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_DAMAGE_MODIFIER.name }),
     icons =
     {
         {
@@ -304,9 +263,9 @@ for i = 1, guidance_systems_levels_max, 1 do
         prerequisites = i < 2 and get_guidance_systems_research_prerequisites() or i == 2 and { "guidance-systems" } or { "guidance-systems-" .. (i - 1) },
         unit =
         {
-            count_formula = get_guidance_systems_research_formula(),
+            count_formula = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_FORMULA.name }),
             ingredients = get_guidance_systems_research_ingredients({ level = i }),
-            time = get_guidance_systems_research_time(),
+            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TIME.name }),
         },
         upgrade = i > 1 and true
     }
@@ -315,7 +274,7 @@ for i = 1, guidance_systems_levels_max, 1 do
     {
         type = "ammo-damage",
         ammo_category = "icbm-top-speed",
-        modifier = get_guidance_systems_research_top_speed_modifier(),
+        modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name }),
         use_icon_overlay_constant = false,
     }
 

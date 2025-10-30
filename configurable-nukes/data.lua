@@ -1,3 +1,6 @@
+Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 

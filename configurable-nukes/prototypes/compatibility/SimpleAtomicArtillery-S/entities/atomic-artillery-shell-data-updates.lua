@@ -1,7 +1,8 @@
 local Util = require("__core__.lualib.util")
 
-local Data_Utils = require("data-utils")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local clamp_max_distance = function (value, multiplier)
     local modified_value = value * multiplier

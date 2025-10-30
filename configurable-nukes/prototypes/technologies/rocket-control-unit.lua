@@ -5,7 +5,9 @@ local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 if (se_active) then return end
 
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local get_rocket_control_unit_research_prerequisites = function ()
     local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.default_value
@@ -171,24 +173,6 @@ local get_rocket_control_unit_research_ingredients = function ()
 
     return ingredients
 end
-local get_rocket_control_unit_research_time = function ()
-    local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_TIME.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_TIME.name].value
-    end
-
-    return setting
-end
-local get_rocket_control_unit_research_count = function ()
-    local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_COUNT.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_COUNT.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_COUNT.name].value
-    end
-
-    return setting
-end
 
 --[[ Rocket Control Unit Unlock ]]
 if (sa_active) then
@@ -218,8 +202,8 @@ if (sa_active) then
             unit =
             {
                 ingredients = get_rocket_control_unit_research_ingredients(),
-                time = get_rocket_control_unit_research_time(),
-                count = get_rocket_control_unit_research_count(),
+                time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_TIME.name }),
+                count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_COUNT.name }),
             }
         }
     })

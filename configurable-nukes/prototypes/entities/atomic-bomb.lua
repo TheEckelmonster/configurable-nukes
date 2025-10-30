@@ -1,5 +1,9 @@
 local Util = require("__core__.lualib.util")
 
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
+
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 
 -- AREA_MULTIPLIER

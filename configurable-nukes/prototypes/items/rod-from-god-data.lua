@@ -1,7 +1,8 @@
 -- local Item_Sounds = require("__base__.prototypes.item_sounds")
 
-local Data_Utils = require("data-utils")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local function item_sound(filename, volume)
     return

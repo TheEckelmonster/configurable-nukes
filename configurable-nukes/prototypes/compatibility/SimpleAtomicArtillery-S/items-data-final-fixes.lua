@@ -1,4 +1,4 @@
-local Data_Utils = require("data-utils")
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 local quality_active = mods and mods["quality"]
