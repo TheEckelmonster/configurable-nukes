@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.7.3
+Date: 2025-10-30
+  Bug Fixes:
+    - Fixed an error of providing NaN to math.random
+    - Fixed an error of providing infinity to math.random
+  Misc:
+    - Changed the minimum value of the "Guidance system targeting deviation modifier" setting from -11 to -1
+---------------------------------------------------------------------------------------------------
 Version: 0.7.2
 Date: 2025-10-24
   Bug Fixes:
