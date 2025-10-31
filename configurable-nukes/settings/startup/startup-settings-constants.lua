@@ -2113,7 +2113,7 @@ startup_settings_constants.settings = {
         setting_type = "startup",
         order = "dja",
         default_value = -0.1,
-        minimum_value = -11,
+        minimum_value = -1,
         maximum_value = 0,
     },
     GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER = {
