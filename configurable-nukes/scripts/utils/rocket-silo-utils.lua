@@ -55,8 +55,6 @@ function rocket_silo_utils.scrub_launch(data)
     Log.info(data)
 
     if (not data) then return end
-    if (not data.tick) then return end
-    if (not data.tick_event) then return end
     if (not data.player_index or type(data.player_index) ~= "number" or data.player_index < 1) then return end
     if (not data.player) then
         data.player = game.get_player(data.player_index)
@@ -86,6 +84,9 @@ function rocket_silo_utils.scrub_launch(data)
         Log.warn(launch_to_scrub)
         if (not launch_to_scrub) then return end
 
+        Log.warn(launch_to_scrub.icbm_data)
+        if (type(launch_to_scrub.icbm_data) ~= "table" or not launch_to_scrub.icbm_data.valid) then return end
+
         local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
         local icbm_meta_data_source = configurable_nukes_data.icbm_meta_data[launch_to_scrub.icbm_data.surface_name]
         local icbm_meta_data_target = nil
@@ -112,26 +113,41 @@ function rocket_silo_utils.scrub_launch(data)
         if (data.space_launches_initiated[launch_to_scrub.icbm_data]) then data.space_launches_initiated[launch_to_scrub.icbm_data] = nil end
 
         -- Remove any registered event_handlers for the launch
-        for _, event_handler_data in pairs(launch_to_scrub.icbm_data.event_handlers) do
-            Event_Handler:unregister_event({
-                event_name = event_handler_data.event_name,
-                source_name = event_handler_data.source_name,
-                nth_tick = event_handler_data.nth_tick,
-            })
+        if (type(launch_to_scrub.icbm_data.event_handlers) == "table") then --[[ May not exist for launches from previous versions ]]
+            for _, event_handler_data in pairs(launch_to_scrub.icbm_data.event_handlers) do
+                Event_Handler:unregister_event({
+                    event_name = event_handler_data.event_name,
+                    source_name = event_handler_data.source_name,
+                    nth_tick = event_handler_data.nth_tick,
+                })
+            end
         end
 
         launch_to_scrub.icbm_data.scrubbed = true
         ICBM_Repository.update_icbm_data(launch_to_scrub.icbm_data)
 
+        if (type(launch_to_scrub.icbm_data) == "table" and launch_to_scrub.icbm_data.valid) then
+            ICBM_Repository.delete_icbm_data_by_item_number(launch_to_scrub.icbm_data.surface_name, launch_to_scrub.icbm_data.item_number)
+        end
+
         launch_to_scrub.icbm_data.cargo_pod = nil
-        script.raise_event(
-            Custom_Events.cn_on_rocket_launch_scrubbed.name,
-            {
-                name = defines.events[Custom_Events.cn_on_rocket_launch_scrubbed.name],
-                tick = game.tick,
-                icbm_data = launch_to_scrub.icbm_data,
-            }
-        )
+
+        local force = launch_to_scrub.icbm_data.force
+        if (not force or not force.valid) then force = game.forces[launch_to_scrub.icbm_data.force_index] end
+        if (not force or not force.valid) then force = game.forces["player"] end
+        if (not force or not force.valid) then force = nil end
+
+        if (data.raise_event) then
+            script.raise_event(
+                Custom_Events.cn_on_rocket_launch_scrubbed.name,
+                {
+                    name = defines.events[Custom_Events.cn_on_rocket_launch_scrubbed.name],
+                    tick = game.tick,
+                    force = force,
+                    item_number = launch_to_scrub.icbm_data.item_number,
+                }
+            )
+        end
 
         if (    data.print_message
             and launch_to_scrub.icbm_data.force
@@ -783,6 +799,7 @@ function rocket_silo_utils.launch_rocket(event)
 
     Log.warn(rocket_silo_array)
 
+    local return_val, return_data
     for _, rocket_silo_data in ipairs(rocket_silo_array) do
         local rocket_silo = nil
         local launched = false
@@ -828,7 +845,8 @@ function rocket_silo_utils.launch_rocket(event)
 
                             local launch_initiated_params =
                             {
-                                type = item.name == "atomic-bomb" and "atomic-rocket" or "atomic-warhead",
+                                item_name = item.name == "atomic-bomb" and "atomic-rocket" or "atomic-warhead",
+                                -- type = item.name == "atomic-bomb" and "atomic-rocket" or "atomic-warhead",
                                 surface = rocket_silo.surface,
                                 target_surface = surface,
                                 item = item,
@@ -849,7 +867,7 @@ function rocket_silo_utils.launch_rocket(event)
                                 -- source_target_system = rocket_silo_data.source_target_system,
                             }
                             Log.debug(launch_initiated_params)
-                            ICBM_Utils.launch_initiated(launch_initiated_params)
+                            return_val, return_data = ICBM_Utils.launch_initiated(launch_initiated_params)
                             launched = true
                             break
                         else
@@ -864,7 +882,7 @@ function rocket_silo_utils.launch_rocket(event)
             end
         end
 
-        if (launched) then return end
+        if (launched) then return return_val, return_data end
     end
 end
 

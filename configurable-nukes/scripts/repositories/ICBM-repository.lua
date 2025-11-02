@@ -22,7 +22,8 @@ function icbm_repository.save_icbm_data(icbm, optionals)
 
     if (not game) then return return_val end
     if (not icbm or not icbm.valid) then return return_val end
-    if (not icbm or type(icbm.type) ~= "string") then return return_val end
+    if (not icbm or type(icbm.item_name) ~= "string") then return return_val end
+    -- if (not icbm or type(icbm.type) ~= "string") then return return_val end
     if (not icbm.surface or not icbm.surface.valid) then return return_val end
     if (not icbm.item or type(icbm.item) ~= "table") then return return_val end
     if (not icbm.tick_launched or type(icbm.tick_launched) ~= "number") then return return_val end
@@ -99,7 +100,8 @@ function icbm_repository.save_icbm_data(icbm, optionals)
 
     local icbms = storage.configurable_nukes.icbm_meta_data[planet_name].icbms
 
-    return_val.type = icbm.type
+    return_val.item_name = icbm.item_name
+    return_val.type = ICBM_Data.type
     return_val.surface = icbm.surface
     return_val.surface_name = icbm.surface.name
     return_val.item_number = icbm.item_number
@@ -135,6 +137,9 @@ function icbm_repository.save_icbm_data(icbm, optionals)
     return_val.valid = true
 
     icbms[return_val.item_number] = return_val
+
+    local item_numbers = ICBM_Data:get_item_numbers()
+    if (item_numbers) then item_numbers.set(return_val.item_number) end
 
     return icbm_repository.update_icbm_data(return_val)
 end
@@ -180,6 +185,8 @@ function icbm_repository.update_icbm_data(update_data, optionals)
 
     local item_numbers = ICBM_Data:get_item_numbers()
     if (not item_numbers.get(return_val.item_number)) then item_numbers.set(return_val.item_number) end
+
+    ICBM_Data.validate_fields(return_val)
 
     return return_val
 end
@@ -230,6 +237,7 @@ function icbm_repository.get_icbm_data(planet_name, item_number, optionals)
     if (not planet_name or type(planet_name) ~= "string") then return return_val end
     if (not item_number) then return return_val end
 
+    if (optionals and type(optionals) ~= "table") then optionals = {} end
     optionals = optionals or {}
 
     if (not storage) then return return_val end
@@ -243,7 +251,11 @@ function icbm_repository.get_icbm_data(planet_name, item_number, optionals)
 
     local icbms = storage.configurable_nukes.icbm_meta_data[planet_name].icbms
 
-    return icbms[item_number]
+    return_val = icbms[item_number]
+
+    if (optionals.validate_fields) then ICBM_Data.validate_fields(return_val) end
+
+    return return_val
 end
 
 icbm_repository.configurable_nukes = true
