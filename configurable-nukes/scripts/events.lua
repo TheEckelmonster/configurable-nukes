@@ -1,3 +1,7 @@
+Did_Init = false
+
+local Data_Utils = require("data-utils")
+
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Constants = require("scripts.constants.constants")
 local Custom_Input = require("prototypes.custom-input.custom-input")
@@ -205,6 +209,82 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     end
 end)
 
+function events.on_singleplayer_init(event)
+
+    Is_Singleplayer = true
+    Is_Multiplayer = false
+end
+-- Event_Handler:register_event({
+--     event_name = "on_singleplayer_init",
+--     source_name = "events.on_singleplayer_init",
+--     func_name = "events.on_singleplayer_init",
+--     func = events.on_singleplayer_init,
+-- })
+
+function events.on_multiplayer_init(event)
+
+    Is_Singleplayer = false
+    Is_Multiplayer = true
+end
+-- Event_Handler:register_event({
+--     event_name = "on_multiplayer_init",
+--     source_name = "events.on_multiplayer_init",
+--     func_name = "events.on_multiplayer_init",
+--     func = events.on_multiplayer_init,
+-- })
+
+function events.on_init()
+
+    local sa_active = script and script.active_mods and script.active_mods["space-age"]
+    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+    if (se_active) then
+        local event_num = remote.call("space-exploration", "get_on_zone_surface_created_event")
+
+        if (event_num ~= nil and type(event_num) == "number") then
+            local event_position = Event_Handler:get_event_position({
+                event_name = event_num,
+                source_name = "Planet_Controller.on_surface_created",
+            })
+
+            if (event_position == nil) then
+                Event_Handler:register_event({
+                    event_num = event_num,
+                    fallback_event_name = "on_zone_surface_created",
+                    source_name = "Planet_Controller.on_surface_created",
+                    func_name = "Planet_Controller.on_surface_created",
+                    func = Planet_Controller.on_surface_created,
+                })
+            end
+        end
+    end
+
+    Event_Handler:register_event({
+        event_name = "on_tick",
+        source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+        func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
+        func = Rocket_Dashboard_Gui_Controller.instantiate_if_not_exists,
+    })
+
+    Event_Handler:register_event({
+        event_name = "on_nth_tick",
+        nth_tick = Rocket_Dashboard_Gui_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DASHBOARD_REFRESH_RATE.name }) or 6,
+        source_name = "rocket_dashboard_gui_controller.on_nth_tick",
+        func_name = "rocket_dashboard_gui_controller.on_nth_tick",
+        func = Rocket_Dashboard_Gui_Controller.on_nth_tick,
+    })
+
+    Constants.get_mod_data(true, { on_load = true })
+
+    Did_Init = true
+end
+Event_Handler:register_event({
+    event_name = "on_init",
+    source_name = "events.on_init",
+    func_name = "events.on_init",
+    func = events.on_init,
+})
+
 function events.on_load()
     Log.debug("events.on_load")
 
@@ -231,6 +311,21 @@ function events.on_load()
             end
         end
     end
+
+    Event_Handler:register_event({
+        event_name = "on_tick",
+        source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+        func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
+        func = Rocket_Dashboard_Gui_Controller.instantiate_if_not_exists,
+    })
+
+    Event_Handler:register_event({
+        event_name = "on_nth_tick",
+        nth_tick = Rocket_Dashboard_Gui_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DASHBOARD_REFRESH_RATE.name }) or 6,
+        source_name = "rocket_dashboard_gui_controller.on_nth_tick",
+        func_name = "rocket_dashboard_gui_controller.on_nth_tick",
+        func = Rocket_Dashboard_Gui_Controller.on_nth_tick,
+    })
 
     Constants.get_mod_data(true, { on_load = true })
 
@@ -290,6 +385,8 @@ function events.on_load()
             end
         end
     end
+
+    Loaded = true
 end
 Event_Handler:register_event({
     event_name = "on_load",

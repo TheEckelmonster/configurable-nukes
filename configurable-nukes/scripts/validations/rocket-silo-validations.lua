@@ -48,20 +48,6 @@ function rocket_silo_validations.is_targetable_surface(data)
         return return_val
     end
     if (string.find(data.surface.name, "spaceship-", 1, true)) then
-        --[[ TODO: Reach out about the bug caused when launching a rocket while a spaceship takes off
-            -> No error on this side; rather, is coming from SE:
-
-                The mod Space Exploration (0.7.34) caused a non-recoverable error.
-                Please report this error to the mod author.
-
-                Error while running event space-exploration::on_rocket_launched (ID 14)
-                __space-exploration__/control.lua:1551: attempt to index field 'attached_cargo_pod' (a nil value)
-                stack traceback:
-                    __space-exploration__/control.lua:1551: in function 'callback'
-                    __space-exploration__/scripts/event.lua:20: in function <__space-exploration__/scripts/event.lua:18>
-
-            -> [Missing a '.valid' check when a cargo-pod finishes ascending]
-        ]]
         Log.warn("attempted to launch at a spaceship")
         if (data.player) then
             if (not storage.rocket_silo_controller) then storage.rocket_silo_controller = {} end

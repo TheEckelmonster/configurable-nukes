@@ -71,6 +71,10 @@ script.register_metatable("Version_Data", Version_Data)
 Event_Handler = require("scripts.event-handler")
 Log = require("libs.log.log")
 
+Loaded = false
+Is_Singleplayer = false
+Is_Multiplayer = false
+
 require("scripts.events")
 require("scripts.commands")
 

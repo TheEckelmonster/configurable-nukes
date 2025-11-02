@@ -46,59 +46,8 @@ function configurable_nukes_controller.on_tick(event)
 
     if (tick_modulo ~= 0) then return end
 
-    -- Check/validate the storage version
-    if (not configurable_nukes_controller.initialized) then
-        -- Previously initialized?
-        if (storage and (not storage.configurable_nukes_controller or not storage.configurable_nukes_controller.initialized)) then
-            Initialization.init({ maintain_data = true })
-            configurable_nukes_controller.reinitialized = true
-            configurable_nukes_controller.reinit_tick = tick
-            sa_active = script and script.active_mods and script.active_mods["space-age"]
-            se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
-            storage.sa_active = sa_active
-            storage.se_active = se_active
-        end
-        configurable_nukes_controller.initialized = true
-        configurable_nukes_controller.init_tick = tick
-
-        if (not storage.constants) then Constants.get_mod_data(true) end
-
-        return
-    else
-        if (not Version_Validations.validate_version()) then
-            Initialization.reinit()
-            configurable_nukes_controller.reinitialized = true
-            configurable_nukes_controller.init_tick = tick
-
-            if (not storage.constants) then Constants.get_mod_data(true) end
-
-            sa_active = script and script.active_mods and script.active_mods["space-age"]
-            se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
-            storage.sa_active = sa_active
-            storage.se_active = se_active
-
-            return
-        end
-    end
-
-    if (configurable_nukes_controller and configurable_nukes_controller.active_mod_check_tick) then
-        if (tick - 60 > configurable_nukes_controller.active_mod_check_tick) then
-            configurable_nukes_controller.active_mod_check_tick = tick
-
-            sa_active = script and script.active_mods and script.active_mods["space-age"]
-            se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
-            storage.sa_active = sa_active
-            storage.se_active = se_active
-        end
-    end
-
-    if ((not se_active and not Constants.planets_dictionary) or configurable_nukes_controller.reinitialized) then
-        -- Constants.get_planets(true)
+    if (not se_active and not Constants.planets_dictionary) then
         Constants.get_planets(not Constants.planets_dictionary)
-        configurable_nukes_controller.reinitialized = false
     end
 
     ICBM_Utils.print_space_launched_time_to_target_message()
