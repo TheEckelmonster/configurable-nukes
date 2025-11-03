@@ -148,7 +148,9 @@ end
 function rocket_silo_service.launch_rocket(event)
     Log.debug("rocket_silo_service.launch_rocket")
     Log.info(event)
-    Rocket_Silo_Utils.launch_rocket(event)
+    local return_val, return_data = Rocket_Silo_Utils.launch_rocket(event)
+
+    return return_val, return_data
 end
 
 function rocket_silo_service.on_space_platform_mined_entity(event)

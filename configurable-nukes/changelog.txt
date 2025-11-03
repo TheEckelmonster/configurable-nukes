@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.7.4
+Date: 2025-11-02
+  Bug Fixes:
+    - Fixed a bug when a rocket-silo was cloned
+      - e.g. when a Space-Exploration spaceship with a ballistic-rocket-silo on it took off or landed (i.e. changed surface)
+    - Fixed a bug when a surface was deleted
+    - Fixed a bug when a singleplayer save was made open to multiplayer
+  Misc:
+    - Actually have a means of testing multiplayer now
+      - Haven't tested super extensively, but have not encountered any issues since fixing the above multiplayer issue
+      - Should hopefully be multiplayer safe
+---------------------------------------------------------------------------------------------------
 Version: 0.7.3
 Date: 2025-10-30
   Bug Fixes:

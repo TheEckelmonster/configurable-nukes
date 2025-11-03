@@ -5,7 +5,9 @@ end
 
 local Custom_Input = require("prototypes.custom-input.custom-input")
 local Log = require("libs.log.log")
+local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
+local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
 local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
 local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
 local Rocket_Silo_Validations = require("scripts.validations.rocket-silo-validations")
@@ -305,7 +307,18 @@ function rocket_silo_controller.launch_rocket(event)
 
     if (not Rocket_Silo_Validations.is_targetable_surface({ surface = event.surface, player = player })) then return end
 
-    Rocket_Silo_Service.launch_rocket(event)
+    local return_val, return_data = Rocket_Silo_Service.launch_rocket(event)
+
+    if (type(return_val) == "number" and return_val == 1) then
+        if (type(return_data) == "table" and return_data.valid) then
+            local icbm_data = ICBM_Repository.get_icbm_data(return_data.surface_name, return_data.item_number, { validate_fields = true })
+            if (not icbm_data or not icbm_data.valid) then return end
+
+            Rocket_Dashboard_Gui_Service.add_rocket_data_for_force({
+                icbm_data = icbm_data,
+            })
+        end
+    end
 end
 Event_Handler:register_event({
     event_name = "on_player_selected_area",

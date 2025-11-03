@@ -755,7 +755,8 @@ function icbm_utils.register_delivery_data(data)
     if (not data or type(data) ~= "table") then return end
     if (not data.icbm_data or type(data.icbm_data) ~= "table") then return end
 
-    -- local tick = storage and storage.tick or 0
+    ICBM_Repository.update_icbm_data(data.icbm_data)
+
     local tick = game and game.tick or storage and storage.tick or math.huge
     Log.warn(tick)
 
@@ -911,7 +912,7 @@ function icbm_utils.time_to_target_5_event(event, event_data)
     })
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
         if (not event_data.icbm_data or not event_data.icbm_data.valid) then
             Log.warn("icbm_data no longer exists or is not valid")
             return
@@ -952,7 +953,7 @@ function icbm_utils.time_to_target_3_event(event, event_data)
     })
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
         if (not event_data.icbm_data or not event_data.icbm_data.valid) then
             Log.warn("icbm_data no longer exists or is not valid")
             return
@@ -980,7 +981,7 @@ function icbm_utils.time_to_target_2_event(event, event_data)
     })
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
         if (not event_data.icbm_data or not event_data.icbm_data.valid) then
             Log.warn("icbm_data no longer exists or is not valid")
             return
@@ -1008,7 +1009,7 @@ function icbm_utils.time_to_target_1_event(event, event_data)
     })
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
         if (not event_data.icbm_data or not event_data.icbm_data.valid) then
             Log.warn("icbm_data no longer exists or is not valid")
             return
@@ -1038,12 +1039,12 @@ function icbm_utils.payload_arrive_event(event, event_data)
     if (event_data.icbm_data and event_data.icbm_data.valid) then
         if (game.forces[event_data.icbm_data.force_index] and game.forces[event_data.icbm_data.force_index].valid) then
             local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(event_data.icbm_data.force_index)
-            if (force_launch_data.valid) then
+            if (force_launch_data and force_launch_data.valid and force_launch_data.launch_action_queue) then
                 force_launch_data.launch_action_queue:remove({ data = event_data.icbm_data.enqueued_data })
             end
         end
 
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number)
+        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
         if (not event_data.icbm_data or not event_data.icbm_data.valid) then
             Log.warn("icbm_data no longer exists or is not valid")
             return
@@ -1069,7 +1070,8 @@ function icbm_utils.launch_initiated(data)
     Log.info(data)
 
     if (data == nil) then return -1 end
-    if (data.type == nil or type(data.type) ~= "string") then return -1 end
+    if (data.item_name == nil or type(data.item_name) ~= "string") then return -1 end
+    -- if (data.type == nil or type(data.type) ~= "string") then return -1 end
     if (data.surface == nil or not data.surface.valid) then return -1 end
     if (data.target_surface == nil or not data.target_surface.valid) then return -1 end
     if (data.item == nil or type(data.item) ~= "table") then return -1 end
@@ -1115,7 +1117,8 @@ function icbm_utils.launch_initiated(data)
 
     local icbm_data = ICBM_Data:new({
         se_active = se_active,
-        type = data.type,
+        item_name = data.item_name,
+        -- type = data.type,
         surface = data.surface,
         surface_name = data.surface.name,
         same_surface = same_surface,
@@ -1251,15 +1254,15 @@ function icbm_utils.launch_initiated(data)
     end
 
     -- -- icbm_data.cargo_pod = nil
-    script.raise_event(
-        Custom_Events.cn_on_rocket_launch_initiated_successfully.name,
-        {
-            name = defines.events[Custom_Events.cn_on_rocket_launch_initiated_successfully.name],
-            tick = game.tick,
-            icbm_data = icbm_data,
-        }
-    )
-    return 1
+    -- script.raise_event(
+    --     Custom_Events.cn_on_rocket_launch_initiated_successfully.name,
+    --     {
+    --         name = defines.events[Custom_Events.cn_on_rocket_launch_initiated_successfully.name],
+    --         tick = game.tick,
+    --         icbm_data = icbm_data,
+    --     }
+    -- )
+    return 1, icbm_data
 end
 
 function icbm_utils.payload_arrived(data)
@@ -1273,7 +1276,7 @@ function icbm_utils.payload_arrived(data)
 
     local icbm = data.icbm
     if (icbm and icbm.valid) then
-        icbm = ICBM_Repository.get_icbm_data(icbm.surface_name, icbm.item_number)
+        icbm = ICBM_Repository.get_icbm_data(icbm.surface_name, icbm.item_number, { validate_fields = true })
     end
 
     if (icbm and icbm.valid) then
@@ -1297,16 +1300,36 @@ function icbm_utils.payload_arrived(data)
 
         Log.warn(icbm)
 
+        local force =   icbm.force
+                    and icbm.force.valid
+                    and icbm.force
+                    or
+                        type(icbm.force_index) == "number"
+                    and icbm.force_index >= 1
+                    and game.forces[icbm.force_index]
+
+        if (not force or not force.valid) then
+            if (    icbm.source_silo
+                and icbm.source_silo.valid
+                and icbm.source_silo.force
+                and icbm.source_silo.force.valid
+            ) then
+                force = icbm.source_silo.force
+            else
+                force = game.forces["player"]
+                if (not force or not force.valid) then force = nil end
+            end
+        end
+
         icbm.target_surface.create_entity({
-            name = icbm.type .. "-" .. icbm.item.quality,
+            name = icbm.item_name .. "-" .. icbm.item.quality,
             position = payload_spawn_position,
             direction = defines.direction.south,
-            force = icbm.source_silo.valid and icbm.source_silo.force or "player",
+            force = force,
             target = icbm.target_position,
             source = icbm.source_position,
             --[[ TODO: Make configurable ]]
-            -- cause = icbm.same_surface and icbm.source_silo or "player",
-            cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or "player",
+            cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
             speed = 0.1 * math.exp(1),
             base_damage_modifiers = {
                 damage_modifier = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
@@ -1325,7 +1348,8 @@ function icbm_utils.payload_arrived(data)
             {
                 name = defines.events[Custom_Events.cn_on_payload_delivered.name],
                 tick = game.tick,
-                icbm_data = icbm,
+                force = force,
+                item_number = icbm.item_number,
             }
         )
     else
@@ -1347,7 +1371,7 @@ function icbm_utils.print_space_launched_time_to_target_message(data)
     if (storage.icbm_utils and storage.icbm_utils.space_launches_initiated) then
         for k, v in pairs(storage.icbm_utils.space_launches_initiated) do
             if (k and k.valid) then
-                local icbm_data = ICBM_Repository.get_icbm_data(k.surface_name, k.item_number)
+                local icbm_data = ICBM_Repository.get_icbm_data(k.surface_name, k.item_number, { validate_fields = true })
                 if (not icbm_data or not icbm_data.valid) then
                     Log.warn("icbm_data no longer exists or is not valid")
                     storage.icbm_utils.space_launches_initiated[k] = nil
@@ -1406,27 +1430,12 @@ function icbm_utils.rocket_silo_cloned(data)
     if (not data.destination_silo.surface or not data.destination_silo.surface.valid) then return end
 
     local source_icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(data.source_silo.surface.name)
-    local icbms = {}
 
     for k, v in pairs(source_icbm_meta_data.icbms) do
         if (v.source_silo == data.source_silo) then
-            v.surface = data.destination_silo.surface
-            v.surface_name = data.destination_silo.surface.name
             v.source_silo = data.destination_silo
-            icbms[k] = v
-            source_icbm_meta_data.icbms[k] = nil
-            source_icbm_meta_data.item_numbers[k] = nil
         end
-    end
-
-    local destination_icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(data.destination_silo.surface.name)
-
-    Log.warn(serpent.block(icbms))
-    Log.debug(destination_icbm_meta_data)
-
-    for k, v in pairs(icbms) do
-        destination_icbm_meta_data.icbms[k] = v
-        destination_icbm_meta_data.item_numbers[k] = v
+        ICBM_Data.validate_fields(v)
     end
 end
 

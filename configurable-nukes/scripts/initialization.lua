@@ -8,6 +8,7 @@ local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Constants = require("scripts.constants.constants")
 local Custom_Events = require("prototypes.custom-events.custom-events")
+local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
@@ -257,15 +258,19 @@ function locals.migrate(data)
         end
     end
 
-    if (storage_old.configurable_nukes) then
+    if (type(storage_old.configurable_nukes)) then
         local migration_start_message_printed = false
         if (storage_old.configurable_nukes.version_data and storage_old.configurable_nukes.version_data.created) then
             if (storage_old.configurable_nukes.version_data.created >= 0) then
-                if (storage.tick and type(storage.tick) == "number" and storage.tick > 0) then
-                    Log.debug(storage_old.configurable_nukes.version_data)
-                    Log.debug(Constants.mod_name .. ": Migrating existing data")
-                    game.print({ "initialization.migrate-start", Constants.mod_name})
-                    migration_start_message_printed = true
+                if (    type(storage.tick) == "number" and storage.tick > 0
+                    or  type(storage_old.tick) == "number" and storage_old.tick > 0
+                ) then
+                    if (not Did_Init) then
+                        Log.debug(storage_old.configurable_nukes.version_data)
+                        Log.debug(Constants.mod_name .. ": Migrating existing data")
+                        game.print({ "initialization.migrate-start", Constants.mod_name})
+                        migration_start_message_printed = true
+                    end
                 end
             end
         end
@@ -273,116 +278,175 @@ function locals.migrate(data)
         if (storage_old.configurable_nukes.version_data) then
             local prev_version_data = storage_old.configurable_nukes.version_data
             local new_version_data = data.new_version_data
-            if (prev_version_data.major.value == 0) then
-                if (prev_version_data.minor.value <= 4) then
-                    --[[ Version 0.5.0 changed from using "planet_name" to using "space_location_name" ]]
-                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 5) then
-                        if (storage_old.configurable_nukes.rocket_silo_meta_data) then
-                            local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
-                            for k, v in pairs(all_rocket_silo_meta_data) do
-                                if (v.planet_name) then
-                                    v.space_location_name = v.planet_name
-                                    --[[
-                                        I think, by not setting the previous value of v.planet_name to nil,
-                                        that ?should? maintain backwards compatability if someone were to
-                                        downgrade, rather than only upgrade
-                                        Really not sure on this; need to test, but not highest priority.
-                                        TODO: See above
-                                    ]]
-                                end
-                            end
-                        end
-                    end
-                end
 
-                if (prev_version_data.minor.value <= 5) then
-                    Log.warn(prev_version_data.minor.value)
-                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 6) then
-                        Log.warn(new_version_data.major.value)
-                        Log.warn(new_version_data.minor.value)
-                        --[[ Version 0.6.0 switched to encapsulating the gui/circuit_network_data into its own object ]]
-                        if (storage_old.configurable_nukes.rocket_silo_meta_data) then
-                            local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
-                            for k, v in pairs(all_rocket_silo_meta_data) do
-                                for k_2, v_2 in pairs(v.rocket_silos) do
-                                    if (v_2.signals) then
-                                        v_2.circuit_network_data = Circuit_Network_Rocket_Silo_Data:new({
-                                            entity = v_2.entity,
-                                            unit_number = v_2.entity and v_2.entity.valid and v_2.entity.unit_number,
-                                            surface = v_2.entity and v_2.entity.valid and v_2.entity.surface and v_2.entity.surface.valid and v_2.entity.surface,
-                                            surface_name = v_2.entity and v_2.entity.valid and v_2.entity.surface and v_2.entity.surface.valid and v_2.entity.surface.name,
-                                            signals = v_2.signals,
-                                        })
+            if (    locals.validate_version({ version_data = prev_version_data })
+                and locals.validate_version({ version_data = new_version_data })
+            ) then
+                log("previous version")
+                log(serpent.block(prev_version_data.string_val))
 
-                                        Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
+                log("new version")
+                log(serpent.block(new_version_data.string_val))
 
-                if (prev_version_data.minor.value <= 6) then
-                    Log.warn(prev_version_data.minor.value)
-                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 7) then
-                        Log.warn(new_version_data.major.value)
-                        Log.warn(new_version_data.minor.value)
-                        --[[ Version 0.7.0:
-                            -> removed item_numbers from icbm_meta_data
-                            -> changed/enforced icbm_meta_data.surface_name instead of icbm_meta_data.planet_name
-
-                            -> Event_Handler system indtroduced
-                              -> Move existing inflight rockets to registered scheduled events
-                              -> icbm_data.event_handlers field introduced
+                if (prev_version_data.major.value == 0) then
+                    if (prev_version_data.minor.value <= 4) then
+                        log("Version 0.5.0 Migration")
+                        --[[ Version 0.5.0:
+                            -> changed from using "planet_name" to using "space_location_name"
                         ]]
-                        if (storage_old.configurable_nukes.icbm_meta_data) then
-                            local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
-                            for k, icbm_meta_data in pairs(all_icbm_meta_data) do
-                                icbm_meta_data.item_numbers = nil
-                                icbm_meta_data.surface_name = icbm_meta_data.planet_name
-                                icbm_meta_data.planet_name = nil
-                                ICBM_Meta_Repository.update_icbm_meta_data(icbm_meta_data)
-
-                                if (icbm_meta_data.in_transit) then
-                                    for icbm_data, _  in pairs(icbm_meta_data.in_transit) do
-                                        icbm_data.event_handlers = {}
-                                        ICBM_Utils.register_delivery_data({ icbm_data = icbm_data })
-                                        icbm_meta_data.in_transit[icbm_data] = nil
-                                        ICBM_Repository.update_icbm_data(icbm_data)
-                                    end
-                                end
-
-                                if (icbm_meta_data.icbms) then
-                                    for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
-                                        icbm_data.event_handlers = {}
-                                        ICBM_Repository.update_icbm_data(icbm_data)
+                        if (    new_version_data.major.value <= 0
+                            and new_version_data.minor.value >= 5
+                            and new_version_data.bug_fix.value >= 0
+                        ) then
+                            if (storage_old.configurable_nukes.rocket_silo_meta_data) then
+                                local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
+                                for k, v in pairs(all_rocket_silo_meta_data) do
+                                    if (v.planet_name) then
+                                        v.space_location_name = v.planet_name
+                                        --[[
+                                            I think, by not setting the previous value of v.planet_name to nil,
+                                            that ?should? maintain backwards compatability if someone were to
+                                            downgrade, rather than only upgrade
+                                            Really not sure on this; need to test, but not highest priority.
+                                            TODO: See above
+                                        ]]
                                     end
                                 end
                             end
                         end
                     end
-                end
 
-                if (prev_version_data.minor.value <= 7) then
-                    Log.warn(prev_version_data.minor.value)
-                    if (new_version_data.major.value <= 0 and new_version_data.minor.value >= 7) then
-                        Log.warn(new_version_data.major.value)
-                        Log.warn(new_version_data.minor.value)
-                        --[[ Version 0.7.1:
-                            -> changed:
-                                storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index][item_number]
-                                to
-                                storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index].item_numbers[item_number]
-                        ]]
-                        if (storage.gui_data) then
-                            for _, gui_data in pairs(storage.gui_data) do
-                                for _, storage_ref in pairs(gui_data) do
-                                    for k, v in pairs(storage_ref) do
-                                        if (type(k) == "number" and k >=1) then
-                                            if (storage_ref[k].icbm_data or storage_ref[k].surface_name) then
-                                                if (not storage_ref.item_numbers) then storage_ref.item_numbers = {} end
-                                                storage_ref.item_numbers[k] = v
-                                                storage_ref[k] = nil
+                    if (prev_version_data.minor.value <= 5) then
+                        if (    new_version_data.major.value <= 0
+                            and new_version_data.minor.value >= 6
+                            and new_version_data.bug_fix.value >= 0
+                        ) then
+                            log("Version 0.6.0 Migration")
+                            --[[ Version 0.6.0:
+                                -> switched to encapsulating the gui/circuit_network_data into its own object
+                            ]]
+                            if (storage_old.configurable_nukes.rocket_silo_meta_data) then
+                                local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
+                                for k, v in pairs(all_rocket_silo_meta_data) do
+                                    for k_2, v_2 in pairs(v.rocket_silos) do
+                                        if (v_2.signals) then
+                                            v_2.circuit_network_data = Circuit_Network_Rocket_Silo_Data:new({
+                                                entity = v_2.entity,
+                                                unit_number = v_2.entity and v_2.entity.valid and v_2.entity.unit_number,
+                                                surface = v_2.entity and v_2.entity.valid and v_2.entity.surface and v_2.entity.surface.valid and v_2.entity.surface,
+                                                surface_name = v_2.entity and v_2.entity.valid and v_2.entity.surface and v_2.entity.surface.valid and v_2.entity.surface.name,
+                                                signals = v_2.signals,
+                                            })
+
+                                            Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    if (prev_version_data.minor.value <= 6) then
+                        if (    new_version_data.major.value <= 0
+                            and new_version_data.minor.value >= 7
+                            and new_version_data.bug_fix.value >= 0
+                        ) then
+                            log("Version 0.7.0 Migration")
+                            --[[ Version 0.7.0:
+                                -> removed item_numbers from icbm_meta_data
+                                -> changed/enforced icbm_meta_data.surface_name instead of icbm_meta_data.planet_name
+
+                                -> Event_Handler system indtroduced
+                                -> Move existing inflight rockets to registered scheduled events
+                                -> icbm_data.event_handlers field introduced
+                            ]]
+                            if (storage_old.configurable_nukes.icbm_meta_data) then
+                                local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
+                                for k, icbm_meta_data in pairs(all_icbm_meta_data) do
+                                    icbm_meta_data.item_numbers = nil
+                                    icbm_meta_data.surface_name = icbm_meta_data.planet_name
+                                    icbm_meta_data.planet_name = nil
+                                    ICBM_Meta_Repository.update_icbm_meta_data(icbm_meta_data)
+
+                                    if (icbm_meta_data.in_transit) then
+                                        for icbm_data, _  in pairs(icbm_meta_data.in_transit) do
+                                            icbm_data.event_handlers = {}
+                                            ICBM_Utils.register_delivery_data({ icbm_data = icbm_data })
+                                            icbm_meta_data.in_transit[icbm_data] = nil
+                                            ICBM_Repository.update_icbm_data(icbm_data)
+                                        end
+                                    end
+
+                                    if (icbm_meta_data.icbms) then
+                                        for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
+                                            icbm_data.event_handlers = {}
+                                            ICBM_Repository.update_icbm_data(icbm_data)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    if (    prev_version_data.minor.value <= 7
+                        and prev_version_data.bug_fix.value <= 0
+                    ) then
+                        if (    new_version_data.major.value >= 0
+                            and new_version_data.minor.value >= 7
+                            and new_version_data.bug_fix.value >= 1
+                        ) then
+                            log("Version 0.7.1 Migration")
+                            --[[ Version 0.7.1:
+                                -> changed:
+                                    storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index][item_number]
+                                    to
+                                    storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index].item_numbers[item_number]
+                            ]]
+                            if (storage.gui_data) then
+                                for _, gui_data in pairs(storage.gui_data) do
+                                    for _, storage_ref in pairs(gui_data) do
+                                        for k, v in pairs(storage_ref) do
+                                            if (type(k) == "number" and k >=1) then
+                                                if (storage_ref[k].icbm_data or storage_ref[k].surface_name) then
+                                                    if (not storage_ref.item_numbers) then storage_ref.item_numbers = {} end
+                                                    storage_ref.item_numbers[k] = v
+                                                    storage_ref[k] = nil
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    if (    prev_version_data.minor.value <= 7
+                        and prev_version_data.bug_fix.value <= 3
+                    ) then
+                        if (    new_version_data.major.value >= 0
+                            and new_version_data.minor.value >= 7
+                            and new_version_data.bug_fix.value >= 4
+                        ) then
+                            log("Version 0.7.4 Migration")
+                            --[[ Version 0.7.4:
+                                -> changed:
+                                    icbm_data.type
+                                    to
+                                    icbm_data.item_name
+                            ]]
+                            if (storage_old.configurable_nukes.icbm_meta_data) then
+                                local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
+                                if (type(all_icbm_meta_data) == "table") then
+                                    for k, icbm_meta_data in pairs(all_icbm_meta_data) do
+                                        if (type(icbm_meta_data) == "table" and icbm_meta_data.valid and icbm_meta_data.icbms) then
+                                            if (type(icbm_meta_data.icbms) == "table") then
+                                                for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
+                                                    if (type(icbm_data) == "table" and icbm_data.valid) then
+                                                        icbm_data.item_name = icbm_data.type
+                                                        icbm_data.type = ICBM_Data.type
+                                                        ICBM_Repository.update_icbm_data(icbm_data)
+                                                    end
+                                                end
                                             end
                                         end
                                     end
@@ -394,34 +458,41 @@ function locals.migrate(data)
             end
         end
 
-        local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-        local dictionary =     not se_active and Constants.get_planets(true) and Constants.planets_dictionary
-                            or Constants.get_space_exploration_universe(true) and Constants.space_exploration_dictionary
-
-        if (Log.get_log_level().level.num_val <= 2) then
-            log(serpent.block(dictionary))
-        end
-
-        if (storage_old.configurable_nukes.icbm_meta_data) then
-            for k, v in pairs(storage_old.configurable_nukes.icbm_meta_data) do
-                if (dictionary[k]) then
-                    ICBM_Meta_Repository.update_icbm_meta_data(v)
-                    storage_old.configurable_nukes.icbm_meta_data[k] = nil
+        if (type(storage_old.configurable_nukes.icbm_meta_data) == "table") then
+            for k, icbm_meta_data in pairs(storage_old.configurable_nukes.icbm_meta_data) do
+                if (type(icbm_meta_data.icbms) == "table") then
+                    for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
+                        if (type(icbm_data) == "table" and icbm_data.valid) then
+                            if (icbm_data.cargo_pod and not icbm_data.cargo_pod.valid) then
+                                icbm_data.cargo_pod = nil
+                            end
+                            ICBM_Repository.update_icbm_data(icbm_data)
+                        end
+                    end
                 end
             end
         end
 
-        if (storage_old.configurable_nukes.rocket_silo_meta_data) then
+        if (type(storage_old.configurable_nukes.rocket_silo_meta_data) == "table") then
             for k, v in pairs(storage_old.configurable_nukes.rocket_silo_meta_data) do
-                for k_2, v_2 in pairs(v.rocket_silos) do
-                    Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
+                if (type(v) == "table" and v.valid) then
+                    if (type(v.rocket_silos) == "table") then
+                        for k_2, v_2 in pairs(v.rocket_silos) do
+                            Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
+                        end
+                    end
                 end
             end
         end
 
-        if (storage_old.configurable_nukes.force_launch_data) then
+        if (type(storage_old.configurable_nukes.force_launch_data) == "table") then
             for force_index, force_launch_data in pairs(storage_old.configurable_nukes.force_launch_data) do
-                if (force_launch_data.launch_action_queue and force_launch_data.launch_action_queue.count > 0) then
+                if (    type(force_launch_data) == "table"
+                    and force_launch_data.valid
+                    and type(force_launch_data.launch_action_queue == "table")
+                    and type(force_launch_data.launch_action_queue.count) == "number"
+                    and force_launch_data.launch_action_queue.count > 0
+                ) then
                     if (type(force_launch_data.launch_action_queue.data_array) == "table") then
                         local i, num_loops = 1, 1
                         while i <= #force_launch_data.launch_action_queue.data_array do
@@ -430,7 +501,7 @@ function locals.migrate(data)
                             local should_increment = true
                             if (type(value) == "table") then
                                 if (type(value.icbm_data) == "table") then
-                                    if (value.icbm_data.cargo_pod) then value.cargo_pod = nil end
+                                    if (value.icbm_data.cargo_pod) then value.icbm_data.cargo_pod = nil end
                                     if (type(value.icbm_data.cargo_pod_unit_number) == "number" and value.icbm_data.cargo_pod_unit_number < 1) then
                                         force_launch_data.launch_action_queue:remove({ data = value.icbm_data.enqueued_data })
                                         should_increment = false
@@ -449,6 +520,23 @@ function locals.migrate(data)
         end
         reassign(storage_old.configurable_nukes, storage.configurable_nukes, { field = "force_launch_data" })
 
+        local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+        local dictionary =     not se_active and Constants.get_planets(true) and Constants.planets_dictionary
+                            or Constants.get_space_exploration_universe(true) and Constants.space_exploration_dictionary
+
+        if (Log.get_log_level().level.num_val <= 2) then
+            log(serpent.block(dictionary))
+        end
+
+        if (type(storage_old.configurable_nukes.icbm_meta_data) == "table") then
+            for k, v in pairs(storage_old.configurable_nukes.icbm_meta_data) do
+                if (dictionary[k]) then
+                    ICBM_Meta_Repository.update_icbm_meta_data(v)
+                    storage_old.configurable_nukes.icbm_meta_data[k] = nil
+                end
+            end
+        end
+
         if (migration_start_message_printed) then
             Log.debug(Constants.mod_name .. ": Migration complete")
             game.print({ "initialization.migrate-finish", Constants.mod_name})
@@ -462,6 +550,29 @@ function locals.reindex_and_save_mod_data(data)
 
     if (not storage.constants) then storage.constants = {} end
     storage.constants.mod_data = Constants.get_mod_data(true)
+end
+
+function locals.validate_version(data)
+    Log.debug("locals.validate_version")
+    Log.info(data)
+
+    local return_val = false
+
+    if (not data or type(data) ~= "table") then return return_val end
+
+    if (    type(data.version_data) == "table"
+        and type(data.version_data.major) == "table"
+        and type(data.version_data.major.value) == "number"
+        and type(data.version_data.minor) == "table"
+        and type(data.version_data.minor.value) == "number"
+        and type(data.version_data.bug_fix) == "table"
+        and type(data.version_data.bug_fix.value) == "number"
+        and type(data.version_data.string_val) == "string"
+    ) then
+        return_val = true
+    end
+
+    return return_val
 end
 
 initialization.configurable_nukes = true

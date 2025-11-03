@@ -207,6 +207,21 @@ function icbm_data:get_item_numbers()
     }
 end
 
+function icbm_data:validate_fields()
+    Log.debug("icbm_data:validate_fields")
+    Log.info(self)
+
+    if (not self or type(self) ~= "table") then return end
+
+    if (type(self.type) == "string" and self.type == icbm_data.type) then
+        if (not self.cargo_pod or not self.cargo_pod.valid) then self.cargo_pod = nil end
+        if (not self.surface or not self.surface.valid) then self.surface = nil end
+        if (not self.source_silo or not self.source_silo.valid) then self.source_silo = nil end
+        if (not self.target_surface or not self.target_surface.valid) then self.target_surface = nil end
+        if (not self.player_launched_by or not self.player_launched_by.valid) then self.player_launched_by = nil end
+    end
+end
+
 setmetatable(icbm_data, Data)
 icbm_data.__index = icbm_data
 return icbm_data
