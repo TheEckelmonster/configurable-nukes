@@ -51,11 +51,7 @@ if (default_recipe_atomic_warhead) then
         end
     end
 
-    if (se_active) then
-        table.insert(default_recipe_atomic_warhead.ingredients, { name = "rocket-control-unit", amount = 25 })
-    else
-        table.insert(default_recipe_atomic_warhead.ingredients, { name = "rocket-control-unit", amount = 25 })
-    end
+    table.insert(default_recipe_atomic_warhead.ingredients, { name = "rocket-control-unit", amount = 25 })
 end
 
 local default_technology_prerequisites_atomic_warhead = {
