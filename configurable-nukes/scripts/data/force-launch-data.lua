@@ -1,10 +1,11 @@
 local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
-if (not _Log) then _Log = Log_Stub end
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 
 local Data = require("scripts.data.data")
-local Queue_Data = require("scripts.data.structures.queue-data")
+
+local Queue_Data = require("__TheEckelmonster-core-library__.libs.data.structures.queue-data")
 
 local force_launch_data = {}
 

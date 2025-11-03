@@ -7,9 +7,9 @@
 	"description": "Makes most/many aspects of the atomic bomb configurable, and affected by quality, as well as allows for the weaponization of rocket-silos: introduces an atomic warhead, ICBMs (Intercontinental Ballistic Missiles), IPBMs (Interplanetary Ballistic Missiles), and ISBMs (Interstellar Ballistic Missiles): why shouldn't rocket-silo rockets be used offensively?",
 	"dependencies": [
 		"base >= 2.0.69",
+        "TheEckelmonster-core-library >= 0.1.1",
 		"? space-age >= 2.0.69",
 		"? quality >= 2.0.69",
-        "TheEckelmonster-core-library >= 0.1.1",
 		"? atan-nuclear-science >= 0.3.3",
 		"? mushroom-cloud >= 1.0.2",
 		"? Temporary_nuclear_scorchmark >= 0.0.2",

@@ -343,6 +343,7 @@ if (sa_active or se_active) then
     local ipbm_rocket_part = Util.table.deepcopy(data.raw["item"]["rocket-part"])
     ipbm_rocket_part.name = name_prefix .. "ipbm-rocket-part"
 
+    ipbm_rocket_part.hidden = false
     ipbm_rocket_part.stack_size = get_ballistic_rocket_part_stack_size()
     ipbm_rocket_part.weight = get_ballistic_rocket_part_weight_modifier() * tons
 

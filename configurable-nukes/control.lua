@@ -40,14 +40,14 @@ script.register_metatable("Space_Location_Data", Space_Location_Data)
 script.register_metatable("Spaceship_Data", Spaceship_Data)
 
 -- structures
-local Queue_Data = require("scripts.data.structures.queue-data")
+local Queue_Data = require("__TheEckelmonster-core-library__.libs.data.structures.queue-data")
 
 script.register_metatable("Queue_Data", Queue_Data)
 
 -- versions
-local Bug_Fix_Data = require("scripts.data.versions.bug-fix-data")
-local Major_Data = require("scripts.data.versions.major-data")
-local Minor_Data = require("scripts.data.versions.minor-data")
+local Bug_Fix_Data = require("__TheEckelmonster-core-library__.libs.data.versions.bug-fix-data")
+local Major_Data = require("__TheEckelmonster-core-library__.libs.data.versions.major-data")
+local Minor_Data = require("__TheEckelmonster-core-library__.libs.data.versions.minor-data")
 
 script.register_metatable("Bug_Fix_Data", Bug_Fix_Data)
 script.register_metatable("Major_Data", Major_Data)
@@ -55,7 +55,7 @@ script.register_metatable("Minor_Data", Minor_Data)
 
 -- unsorted
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
-local Data = require("scripts.data.data")
+local Data = require("__TheEckelmonster-core-library__.libs.data.data")
 local Force_Launch_Data = require("scripts.data.force-launch-data")
 local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")

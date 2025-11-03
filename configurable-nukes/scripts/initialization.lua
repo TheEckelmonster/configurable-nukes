@@ -1,6 +1,6 @@
 local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
-if (not _Log) then _Log = Log_Stub end
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local TECL_Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
@@ -280,15 +280,14 @@ function locals.migrate(data)
                 log("new version")
                 log(serpent.block(new_version_data.string_val))
 
-                if (prev_version_data.major.value == 0) then
+                if (prev_version_data.major.value >= 0) then
                     if (prev_version_data.minor.value <= 4) then
                         log("Version 0.5.0 Migration")
                         --[[ Version 0.5.0:
                             -> changed from using "planet_name" to using "space_location_name"
                         ]]
-                        if (    new_version_data.major.value <= 0
+                        if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 5
-                            and new_version_data.bug_fix.value >= 0
                         ) then
                             if (storage_old.configurable_nukes.rocket_silo_meta_data) then
                                 local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
@@ -309,9 +308,8 @@ function locals.migrate(data)
                     end
 
                     if (prev_version_data.minor.value <= 5) then
-                        if (    new_version_data.major.value <= 0
+                        if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 6
-                            and new_version_data.bug_fix.value >= 0
                         ) then
                             log("Version 0.6.0 Migration")
                             --[[ Version 0.6.0:
@@ -339,9 +337,8 @@ function locals.migrate(data)
                     end
 
                     if (prev_version_data.minor.value <= 6) then
-                        if (    new_version_data.major.value <= 0
+                        if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 7
-                            and new_version_data.bug_fix.value >= 0
                         ) then
                             log("Version 0.7.0 Migration")
                             --[[ Version 0.7.0:
@@ -385,7 +382,6 @@ function locals.migrate(data)
                     ) then
                         if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 7
-                            and new_version_data.bug_fix.value >= 1
                         ) then
                             log("Version 0.7.1 Migration")
                             --[[ Version 0.7.1:
@@ -417,7 +413,6 @@ function locals.migrate(data)
                     ) then
                         if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 7
-                            and new_version_data.bug_fix.value >= 4
                         ) then
                             log("Version 0.7.4 Migration")
                             --[[ Version 0.7.4:
@@ -444,21 +439,6 @@ function locals.migrate(data)
                                     end
                                 end
                             end
-                        end
-                    end
-                end
-            end
-        end
-
-        if (type(storage_old.configurable_nukes.icbm_meta_data) == "table") then
-            for k, icbm_meta_data in pairs(storage_old.configurable_nukes.icbm_meta_data) do
-                if (type(icbm_meta_data.icbms) == "table") then
-                    for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
-                        if (type(icbm_data) == "table" and icbm_data.valid) then
-                            if (icbm_data.cargo_pod and not icbm_data.cargo_pod.valid) then
-                                icbm_data.cargo_pod = nil
-                            end
-                            ICBM_Repository.update_icbm_data(icbm_data)
                         end
                     end
                 end

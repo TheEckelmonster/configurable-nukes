@@ -1,11 +1,11 @@
 local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
-if (not _Log) then _Log = Log_Stub end
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
-local Data = require("scripts.data.data")
-local Bug_Fix_Data = require("scripts.data.versions.bug-fix-data")
-local Major_Data = require("scripts.data.versions.major-data")
-local Minor_Data = require("scripts.data.versions.minor-data")
+local Data = require("__TheEckelmonster-core-library__.libs.data.data")
+local Bug_Fix_Data = require("__TheEckelmonster-core-library__.libs.data.versions.bug-fix-data")
+local Major_Data = require("__TheEckelmonster-core-library__.libs.data.versions.major-data")
+local Minor_Data = require("__TheEckelmonster-core-library__.libs.data.versions.minor-data")
 
 local version_data = {}
 

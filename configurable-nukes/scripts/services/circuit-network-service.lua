@@ -1,6 +1,6 @@
 local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
-if (not _Log) then _Log = Log_Stub end
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
