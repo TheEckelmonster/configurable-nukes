@@ -94,12 +94,11 @@ cn_payload_vehicle =
     ingredients =
     {
         { type = "item", name = "radar",                 amount = 5   },
-        { type = "item", name = "low-density-structure", amount = 100 },
-        { type = "item", name = "solar-panel",           amount = 25  },
-        { type = "item", name = "accumulator",           amount = 25  },
+        { type = "item", name = "low-density-structure", amount = 25 },
+        { type = "item", name = "accumulator",           amount = 10  },
         { type = "item", name = "steel-chest",           amount = 10  },
-        { type = "item", name = "processing-unit",       amount = 100 },
-        { type = "item", name = "rocket-fuel",           amount = 50  },
+        { type = "item", name = "processing-unit",       amount = 25 },
+        { type = "item", name = "rocket-fuel",           amount = 25  },
     },
     result_amount = 1,
     energy_required = 30,
@@ -109,7 +108,7 @@ cn_payload_vehicle =
 }
 
 if (se_active) then
-    table.insert(cn_payload_vehicle.ingredients, { type = "item", name = "se-heat-shielding",     amount = 50, })
+    table.insert(cn_payload_vehicle.ingredients, { type = "item", name = "se-heat-shielding",     amount = 25, })
 end
 
 local rod_from_god =
