@@ -73,7 +73,7 @@ function configurable_nukes_commands.print_storage(event)
         _Log.info("commands.print_storage")
 
         local file_name = "storage_" .. game.tick
-        local exported_file_name = Core_Utils.table.traversal.traverse_print(storage, file_name, _, { full = true  })
+        local exported_file_name = Core_Utils.table.traversal.traverse_print(storage, file_name, _, { max_depth = 4,  })
         player.print("Exported table to: ../Factorio/script-output/" .. tostring(exported_file_name))
     end)
 end
@@ -88,7 +88,7 @@ function configurable_nukes_commands.print_mod_data(event)
         end
 
         local file_name = "Constants.mod_data_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.mod_data, file_name, _, { full = true  })
+        Core_Utils.table.traverse_print(Constants.mod_data, file_name, _, { max_depth = 4,  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -103,7 +103,7 @@ function configurable_nukes_commands.print_mod_data_dictionary(event)
         end
 
         local file_name = "Constants.mod_data_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.mod_data_dictionary, file_name, _, { full = true  })
+        Core_Utils.table.traverse_print(Constants.mod_data_dictionary, file_name, _, { max_depth = 3,  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end

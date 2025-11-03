@@ -8,14 +8,13 @@ local Custom_Input = require("prototypes.custom-input.custom-input")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local Rocket_Dashboard_Constants = require("scripts.constants.gui.rocket-dashboard-constants")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
-local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
 local rocket_dashboard_gui_controller = {}
 
 rocket_dashboard_gui_controller.name = "rocket_dashboard_gui_controller"
 
-local nth_tick = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DASHBOARD_REFRESH_RATE.name })
+rocket_dashboard_gui_controller.nth_tick = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DASHBOARD_REFRESH_RATE.name })
 
 function rocket_dashboard_gui_controller.on_gui_click_close_rocket_dashboard(event)
     Log.debug("rocket_dashboard_gui_controller.on_gui_click_toggle_rocket_dashboard")
@@ -139,16 +138,20 @@ function rocket_dashboard_gui_controller.on_scrub_button_clicked(event)
 
     local icbm_data = storage_ref.item_numbers and storage_ref.item_numbers[item_number] and storage_ref.item_numbers[item_number].icbm_data
     if (not icbm_data or not icbm_data.valid) then
-        icbm_data = ICBM_Repository.get_icbm_data(storage_ref.item_numbers[item_number] and storage_ref.item_numbers[item_number].surface_name, item_number)
+        icbm_data = ICBM_Repository.get_icbm_data(storage_ref.item_numbers[item_number] and storage_ref.item_numbers[item_number].surface_name, item_number, { validate_fields = true })
         if (not icbm_data or not icbm_data.valid) then return end
     end
 
-    Rocket_Silo_Utils.scrub_launch({
-        tick = game.tick,
-        tick_event = event.tick,
-        player_index = event.player_index,
-        remove = true,
-        enqueued_data = icbm_data.enqueued_data,
+    local force = icbm_data.force
+    if (not force or not force.valid) then force = game.forces[icbm_data.force_index] end
+    if (not force or not force.valid) then force = game.forces["player"] end
+    if (not force or not force.valid) then force = nil end
+
+    Rocket_Dashboard_Gui_Service.remove_rocket_data_for_force({
+        item_number = icbm_data.item_number,
+        force = force,
+        print_message = true,
+        scrub = true,
     })
 end
 Event_Handler:register_event({
@@ -224,6 +227,12 @@ function rocket_dashboard_gui_controller.add_or_update_rocket_data_for_force(eve
     if (not event) then return end
     if (not event.icbm_data or type(event.icbm_data) ~= "table") then return end
 
+    local icbm_data = event.icbm_data
+    if (not icbm_data or not icbm_data.valid) then
+        icbm_data = ICBM_Repository.get_icbm_data(icbm_data.surface_name, icbm_data.item_number, { validate_fields = true })
+        if (not icbm_data or not icbm_data.valid) then return end
+    end
+
     Rocket_Dashboard_Gui_Service.add_rocket_data_for_force({
         icbm_data = event.icbm_data,
     })
@@ -240,10 +249,11 @@ function rocket_dashboard_gui_controller.scrub_rocket_data_for_force(event)
     Log.info(event)
 
     if (not event) then return end
-    if (not event.icbm_data or type(event.icbm_data) ~= "table") then return end
+    if (event.item_number == nil or type(event.item_number) ~= "number" or event.item_number < 1) then return end
 
     Rocket_Dashboard_Gui_Service.remove_rocket_data_for_force({
-        icbm_data = event.icbm_data,
+        item_number = event.item_number,
+        force = event.force,
     })
 end
 Event_Handler:register_event({
@@ -258,10 +268,12 @@ function rocket_dashboard_gui_controller.cn_on_payload_delivered(event)
     Log.info(event)
 
     if (not event) then return end
-    if (not event.icbm_data or type(event.icbm_data) ~= "table") then return end
+    if (event.item_number == nil or type(event.item_number) ~= "number" or event.item_number < 1) then return end
 
     Rocket_Dashboard_Gui_Service.remove_rocket_data_for_force({
-        icbm_data = event.icbm_data,
+        item_number = event.item_number,
+        force = event.force,
+        print_message = false,
     })
 end
 Event_Handler:register_event({
@@ -279,7 +291,7 @@ function rocket_dashboard_gui_controller.on_nth_tick(event)
     if (not event.tick) then return end
     if (not event.nth_tick) then return end
     if (not storage.nth_tick) then storage.nth_tick = {} end
-    nth_tick = event.nth_tick
+    rocket_dashboard_gui_controller.nth_tick = event.nth_tick
 
     if (game and game.forces) then
         for k, force in pairs(game.forces) do
@@ -292,13 +304,7 @@ function rocket_dashboard_gui_controller.on_nth_tick(event)
         end
     end
 end
-Event_Handler:register_event({
-    event_name = "on_nth_tick",
-    nth_tick = nth_tick,
-    source_name = "rocket_dashboard_gui_controller.on_nth_tick",
-    func_name = "rocket_dashboard_gui_controller.on_nth_tick",
-    func = rocket_dashboard_gui_controller.on_nth_tick,
-})
+--[[ Registerd in events.lua ]]
 
 function rocket_dashboard_gui_controller.on_runtime_mod_setting_changed(event)
     Log.debug("rocket_dashboard_gui_controller.on_runtime_mod_setting_changed")
@@ -314,7 +320,7 @@ function rocket_dashboard_gui_controller.on_runtime_mod_setting_changed(event)
         if (new_nth_tick ~= nil and type(new_nth_tick) == "number" and new_nth_tick >= 1 and new_nth_tick <= 60) then
             new_nth_tick = new_nth_tick - new_nth_tick % 1 -- Shouldn't be necessary, but just to be sure
 
-            local prev_nth_tick = nth_tick
+            local prev_nth_tick = rocket_dashboard_gui_controller.nth_tick
             Event_Handler:unregister_event({
                 event_name = "on_nth_tick",
                 nth_tick = prev_nth_tick,
@@ -328,7 +334,7 @@ function rocket_dashboard_gui_controller.on_runtime_mod_setting_changed(event)
                 func_name = "rocket_dashboard_gui_controller.on_nth_tick",
                 func = rocket_dashboard_gui_controller.on_nth_tick,
             })
-            nth_tick = new_nth_tick
+            rocket_dashboard_gui_controller.nth_tick = new_nth_tick
         end
     end
 end
@@ -343,28 +349,38 @@ function rocket_dashboard_gui_controller.instantiate_if_not_exists(event)
     Log.debug("rocket_dashboard_gui_controller.instantiate_if_not_exists")
     Log.info(event)
 
-    if (game and game.forces) then
-        for k, force in pairs(game.forces) do
-            if (force.valid and force.players) then
-                for k_2, player in pairs(force.players) do
-                    if (player.valid) then
-                        Rocket_Dashboard_Gui_Service.instantiate_guis({ player_index = player.index, })
+    if (event) then
+        if (event.name == defines.events.on_tick) then
+            if (game and game.forces) then
+                for k, force in pairs(game.forces) do
+                    if (force.valid and force.players) then
+                        for k_2, player in pairs(force.players) do
+                            if (player.valid) then
+                                Rocket_Dashboard_Gui_Service.instantiate_guis({ player_index = player.index, })
+                            end
+                        end
                     end
                 end
             end
+
+            Event_Handler:unregister_event({
+                event_name = "on_tick",
+                source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+            })
+        elseif (event.name == defines.events.on_player_joined_game) then
+
+            if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
+
+            local player = game.get_player(event.player_index)
+            if (not player or not player.valid) then return end
+
+            Rocket_Dashboard_Gui_Service.instantiate_guis({ player_index = player.index, })
         end
     end
-
-    Event_Handler:unregister_event({
-        event_name = "on_nth_tick",
-        nth_tick = 1,
-        source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
-    })
 end
 Event_Handler:register_event({
-    event_name = "on_nth_tick",
-    nth_tick = 1,
-    source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
+    event_name = "on_player_joined_game",
+    source_name = "rocket_dashboard_gui_controller.on_player_joined_game.instantiate_if_not_exists",
     func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
     func = rocket_dashboard_gui_controller.instantiate_if_not_exists,
 })

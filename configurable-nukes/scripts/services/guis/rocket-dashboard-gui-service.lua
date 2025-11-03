@@ -15,6 +15,16 @@ local String_Utils = require("scripts.utils.string-utils")
 local rocket_dashboard_gui_service = {}
 rocket_dashboard_gui_service.name = "rocket_dashboard_gui_service"
 
+function rocket_dashboard_gui_service.intstantiate_if_not_exists(data)
+    Log.debug("rocket_dashboard_gui_service.intstantiate_if_not_exists")
+    Log.info(data)
+
+    if (not data or type(data) ~= "table") then return end
+    if (not data.player or not data.player.valid) then return end
+
+    Rocket_Dashboard_Gui_Service.instantiate_guis({ player_index = data.player.index, })
+end
+
 function rocket_dashboard_gui_service.instantiate_guis(data)
     Log.debug("rocket_dashboard_gui_service.instantiate_guis")
     Log.info(data)
@@ -325,27 +335,31 @@ function rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard(data)
             while i <= #icbms_array do
                 local icbm_data = icbms_array[i]
                 if (icbm_data.force_index > 0 and icbm_data.force_index < 64) then
-                    if (icbm_data.cargo_pod and not icbm_data.cargo_pod.valid) then icbm_data.cargo_pod = nil end
+                    icbm_data = ICBM_Repository.get_icbm_data(icbm_data.surface_name, icbm_data.item_number, { validate_fields = true })
 
-                    local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
-                    local enqueued_data = force_launch_data.launch_action_queue:enqueue({
-                        data =
-                        {
-                            tick = game.tick,
+                    if (icbm_data and icbm_data.valid) then
+                        if (not icbm_data.enqueued_data) then
+                            local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
+                            local enqueued_data = force_launch_data.launch_action_queue:enqueue({
+                                data =
+                                {
+                                    tick = game.tick,
+                                    icbm_data = icbm_data,
+                                }
+                            })
+                            icbm_data.enqueued_data = enqueued_data
+                        end
+
+                        Log.warn(icbm_data)
+
+                        icbm_data = ICBM_Repository.update_icbm_data(icbm_data)
+
+                        rocket_dashboard_gui_service.add_rocket_data({
+                            storage_ref = storage_ref,
+                            gui = gui_inner_table,
                             icbm_data = icbm_data,
-                        }
-                    })
-                    icbm_data.enqueued_data = enqueued_data
-
-                    Log.warn(icbm_data)
-
-                    icbm_data = ICBM_Repository.update_icbm_data(icbm_data)
-
-                    rocket_dashboard_gui_service.add_rocket_data({
-                        storage_ref = storage_ref,
-                        gui = gui_inner_table,
-                        icbm_data = icbm_data,
-                    })
+                        })
+                    end
                 end
 
                 i = i + 1
@@ -387,24 +401,42 @@ function rocket_dashboard_gui_service.remove_rocket_data_for_force(data)
     Log.info(data)
 
     if (not data or type(data) ~= "table") then return end
-    if (not data.icbm_data or type(data.icbm_data) ~= "table") then return end
+    if (data.item_number == nil or type(data.item_number) ~= "number" or data.item_number < 1) then return end
 
-    local force = data.icbm_data.force
-    if (not force or not force.valid) then return end
+    local force = data.force
+    if (not force or not force.valid) then
+        if (data.count) then return end
+
+        for k, _force in pairs(game.forces) do
+            if (_force.valid) then
+                rocket_dashboard_gui_service.remove_rocket_data_for_force({
+                    item_number = data.item_number,
+                    force = _force,
+                    count = 1,
+                    print_message = data.print_message,
+                    scrub = data.scrub,
+                })
+            end
+        end
+    end
     local players = force.players
     if (not players or not next(players, nil)) then return end
 
     for k, player in pairs(players) do
-        local dashboard_gui = rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard({
-            player_index = player.index,
-        })
-
-        if (dashboard_gui) then
-            rocket_dashboard_gui_service.remove_rocket_data({
+        if (player.valid) then
+            local dashboard_gui = rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard({
                 player_index = player.index,
-                storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index],
-                item_number = data.icbm_data.item_number,
             })
+
+            if (dashboard_gui) then
+                rocket_dashboard_gui_service.remove_rocket_data({
+                    player_index = player.index,
+                    storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index],
+                    item_number = data.item_number,
+                    print_message = data.print_message,
+                    scrub = data.scrub,
+                })
+            end
         end
     end
 end
@@ -435,10 +467,38 @@ function rocket_dashboard_gui_service.remove_rocket_data(data)
     end
 
     if (removed) then
-        Rocket_Silo_Utils.scrub_launch({
-            player_index = data.player_index,
-            enqueued_data = data.storage_ref.item_numbers[data.item_number].icbm_data
-        })
+
+        local enqueued_data =   data.storage_ref.item_numbers[data.item_number]
+                            and data.storage_ref.item_numbers[data.item_number].icbm_data
+                            and data.storage_ref.item_numbers[data.item_number].icbm_data.enqueued_data
+
+        local icbm_data = nil
+        if (not enqueued_data) then
+            local all_icbm_meta_data = ICBM_Repository.get_all_icbm_meta_data()
+            if (all_icbm_meta_data) then
+                for surface_name, icbm_meta_data in pairs(all_icbm_meta_data) do
+                    if (icbm_meta_data.icbms and type(icbm_meta_data.icbms) == "table") then
+                        if ((icbm_meta_data.icbms[data.item_number]) == "table") then
+                            icbm_data = icbm_meta_data.icbms[data.item_number]
+                            if (type(icbm_data) ~= "table") then icbm_data = nil end
+                        end
+                    end
+                end
+            end
+        end
+
+        if (not enqueued_data and icbm_data and icbm_data.valid) then
+            enqueued_data = icbm_data.enqueued_data
+        end
+
+        if (data.scrub) then
+            Rocket_Silo_Utils.scrub_launch({
+                player_index = data.player_index,
+                enqueued_data = enqueued_data,
+                remove = true,
+                print_message = data.print_message,
+            })
+        end
         data.storage_ref.item_numbers[data.item_number] = nil
     end
 end
@@ -682,21 +742,33 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
         if (item_number ~= nil and data.storage_ref.item_numbers[item_number]) then
             local meta_icbm_data = data.storage_ref.item_numbers[item_number]
             local icbm_data = meta_icbm_data.icbm_data
-            if (icbm_data and icbm_data.valid and icbm_data.tick_to_target <= 0) then
+            local _icbm_data = ICBM_Repository.get_icbm_data(meta_icbm_data.surface_name, item_number, { validate_fields = true })
 
-                local _icbm_data = ICBM_Repository.get_icbm_data(meta_icbm_data.surface_name, icbm_data.item_number)
-                if (_icbm_data and _icbm_data.valid) then
-                    icbm_data = _icbm_data
-                    meta_icbm_data.icbm_data = icbm_data
-                else
+            if (_icbm_data and _icbm_data.valid and not _icbm_data.scrubbed) then
+                icbm_data = _icbm_data
+                meta_icbm_data.icbm_data = icbm_data
+            else
+                if (    not icbm_data
+                    or
+                        not icbm_data.valid
+                    or
+                        icbm_data
+                        and icbm_data.valid
+                        and (
+                                game.tick > icbm_data.tick_to_target
+                            or
+                                icbm_data.scrubbed
+                        )
+                ) then
                     rocket_dashboard_gui_service.remove_rocket_data({
                         player_index = data.player_index,
                         storage_ref = data.storage_ref,
-                        item_number = icbm_data.item_number,
+                        item_number = item_number,
                         gui = data.gui,
+                        print_message = false
                     })
-                    goto continue
                 end
+                goto continue
             end
 
             local time_remaining = 0
@@ -778,6 +850,29 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
                 end
             end
 
+            if (time_remaining == 0) then
+                if (    icbm_data
+                    and icbm_data.valid
+                    and icbm_data.created
+                    and icbm_data.created + 30 * 60 < game.tick
+                    and icbm_data.tick_to_target
+                    and game.tick > icbm_data.tick_to_target
+                ) then
+                    local player = game.get_player(data.player_index)
+                    if (player and player.valid) then
+                        player.print({ "rocket-dashboard.failed-to-launch-successfully", icbm_data.item_number })
+                    end
+                    rocket_dashboard_gui_service.remove_rocket_data({
+                        player_index = data.player_index,
+                        storage_ref = data.storage_ref,
+                        item_number = icbm_data.item_number,
+                        gui = data.gui,
+                        print_message = false,
+                        scrub = true,
+                    })
+                end
+            end
+
             if (    icbm_data
                 and icbm_data.valid
                 and icbm_data.tick_to_target > 0
@@ -788,6 +883,8 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
                     storage_ref = data.storage_ref,
                     item_number = icbm_data.item_number,
                     gui = data.gui,
+                    print_message = false,
+                    scrub = true,
                 })
             end
         end
@@ -906,7 +1003,7 @@ function rocket_dashboard_gui_service.update_gui_data(data)
     if (not storage_ref.item_numbers) then storage_ref.item_numbers = {} end
 
     for k, v in pairs(storage_ref.item_numbers) do
-        local _icbm_data = ICBM_Repository.get_icbm_data(v.surface_name, k)
+        local _icbm_data = ICBM_Repository.get_icbm_data(v.surface_name, k, { validate_fields = true, })
         if (_icbm_data and _icbm_data.valid) then
             storage_ref.item_numbers[k].icbm_data = _icbm_data
             storage_ref.item_numbers[k].surface_name = _icbm_data.surface and _icbm_data.surface.valid and _icbm_data.surface.name or _icbm_data.surface_name

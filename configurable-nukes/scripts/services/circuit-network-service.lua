@@ -2,6 +2,8 @@ local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
 if (not _Log) then _Log = Log_Stub end
 
+local ICBM_Repository = require("scripts.repositories.ICBM-repository")
+local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
 local Rocket_Silo_Validations = require("scripts.validations.rocket-silo-validations")
@@ -266,7 +268,7 @@ function circuit_network_service.attempt_launch_silos(data)
 
                                 --[[ Ensure the surface exists, and is a valid target surface ]]
                                 if (target_surface and target_surface.valid and Rocket_Silo_Validations.is_targetable_surface({ surface = target_surface })) then
-                                    Rocket_Silo_Service.launch_rocket({
+                                    local return_val, return_data = Rocket_Silo_Service.launch_rocket({
                                         circuit_launched = true,
                                         circuit_launched_space_location_name = rocket_silo.surface.name,
                                         rocket_silo_data = rocket_silo_data,
@@ -279,6 +281,17 @@ function circuit_network_service.attempt_launch_silos(data)
                                         last_user_index = entity and entity.valid and entity.last_user and entity.last_user.index,
                                         orbit_to_surface = orbit_to_surface,
                                     })
+
+                                    if (type(return_val) == "number" and return_val == 1) then
+                                        if (type(return_data) == "table" and return_data.valid) then
+                                            local icbm_data = ICBM_Repository.get_icbm_data(return_data.surface_name, return_data.item_number, { validate_fields = true })
+                                            if (not icbm_data or not icbm_data.valid) then return end
+
+                                            Rocket_Dashboard_Gui_Service.add_rocket_data_for_force({
+                                                icbm_data = icbm_data,
+                                            })
+                                        end
+                                    end
                                 end
                             end
                         end

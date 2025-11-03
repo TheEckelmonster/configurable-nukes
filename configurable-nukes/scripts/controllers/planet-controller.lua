@@ -19,18 +19,6 @@ Event_Handler:register_event({
     func = planet_controller.on_surface_created,
 })
 
-function planet_controller.on_surface_deleted(event)
-    Log.debug("planet_controller.on_surface_deleted")
-    Log.info(event)
-    Planet_Service.on_surface_deleted(event)
-end
-Event_Handler:register_event({
-    event_name = "on_surface_deleted",
-    source_name = "planet_controller.on_surface_deleted",
-    func_name = "planet_controller.on_surface_deleted",
-    func = planet_controller.on_surface_deleted,
-})
-
 function planet_controller.on_pre_surface_deleted(event)
     Log.debug("planet_controller.on_pre_surface_deleted")
     Log.info(event)
