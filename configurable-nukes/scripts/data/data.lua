@@ -1,10 +1,12 @@
-local Log = require("libs.log.log")
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local locals = {}
 locals = {
     ["defaults"] = function (self, _, data)
-        Log.debug("data.locals:defaults")
-        Log.info(data)
+        _Log.debug("data.locals:defaults")
+        _Log.info(data)
 
         local index = game and game.tick or 0
 
@@ -17,9 +19,9 @@ locals = {
         }
     end,
     ["new"] = function (self, obj, data)
-        Log.debug("data.locals:new")
-        Log.info(obj)
-        Log.info(data)
+        _Log.debug("data.locals:new")
+        _Log.info(obj)
+        _Log.info(data)
 
         local defaults = self:defaults()
 
@@ -34,9 +36,9 @@ locals = {
 local _data = {}
 
 function _data:new(o, data)
-    Log.debug("data:new")
-    Log.info(o)
-    Log.info(data)
+    _Log.debug("data:new")
+    _Log.info(o)
+    _Log.info(data)
 
     local defaults = locals:defaults(_, data)
 
@@ -59,7 +61,7 @@ function _data:new(o, data)
 end
 
 function _data:is_valid()
-    Log.debug("data:is_valid")
+    _Log.debug("data:is_valid")
     return  self.created ~= nil
         and type(self.created) == "number"
         and self.created >= 0
@@ -69,9 +71,9 @@ function _data:is_valid()
 end
 
 function _data:update(data)
-    Log.debug("data:update")
-    Log.info(self)
-    Log.info(data)
+    _Log.debug("data:update")
+    _Log.info(self)
+    _Log.info(data)
 
     if (data and type(data) ~= "table") then return -1 end
 

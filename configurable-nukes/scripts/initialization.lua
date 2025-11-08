@@ -1,22 +1,19 @@
--- If already defined, return
-if _initialization and _initialization.configurable_nukes then
-    return _initialization
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
+
+local TECL_Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
 local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
-local Constants = require("scripts.constants.constants")
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local ICBM_Data = require("scripts.data.ICBM-data")
-local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
-local Log = require("libs.log.log")
 local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
-local Rocket_Silo_Meta_Data = require("scripts.data.rocket-silo-meta-data")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local String_Utils = require("scripts.utils.string-utils")
@@ -120,8 +117,8 @@ function locals.initialize(from_scratch, maintain_data)
             storage.configurable_nukes = Configurable_Nukes_Data:new()
             configurable_nukes_data = storage.configurable_nukes
         end
-        if (not configurable_nukes_data.icbm_meta_data) then configurable_nukes_data.icbm_meta_data = ICBM_Meta_Data:new() end
-        if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = Rocket_Silo_Meta_Data:new() end
+        if (not configurable_nukes_data.icbm_meta_data) then configurable_nukes_data.icbm_meta_data = {} end
+        if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = {} end
     end
 
     storage.sa_active = sa_active ~= nil and sa_active or storage.sa_active
@@ -235,18 +232,15 @@ function locals.migrate(data)
     if (not storage_old) then return end
     if (not type(storage_old) == "table") then return end
 
-    local reassign = function (table_old, table_new, data)
-        if (type(table_old) == "table" and table_old[data.field] and type(table_new) == "table") then
-            table_new[data.field] = table_old[data.field]
-            table_old[data.field] = nil
-        end
-    end
-    reassign(storage_old, storage, { field = "constants" })
-    reassign(storage_old, storage, { field = "configurable_nukes_controller" })
-    reassign(storage_old, storage, { field = "event_handlers" })
-    reassign(storage_old, storage, { field = "gui_data" })
-    reassign(storage_old, storage, { field = "icbm_data" })
-    reassign(storage_old, storage, { field = "nth_tick" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "event_handlers" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "handles" })
+
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "constants" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "gui_data" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "icbm_data" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "nth_tick" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "tick" })
 
     if (not data or type(data) ~= "table") then return end
     if (not data.maintain_data) then return end
@@ -258,19 +252,17 @@ function locals.migrate(data)
         end
     end
 
-    if (type(storage_old.configurable_nukes)) then
+    if (type(storage_old.configurable_nukes) == "table") then
         local migration_start_message_printed = false
         if (storage_old.configurable_nukes.version_data and storage_old.configurable_nukes.version_data.created) then
             if (storage_old.configurable_nukes.version_data.created >= 0) then
-                if (    type(storage.tick) == "number" and storage.tick > 0
-                    or  type(storage_old.tick) == "number" and storage_old.tick > 0
+                if (   (type(storage.tick) == "number" and storage.tick > 0)
+                    or (type(storage_old.tick) == "number" and storage_old.tick > 0)
                 ) then
-                    if (not Did_Init) then
-                        Log.debug(storage_old.configurable_nukes.version_data)
-                        Log.debug(Constants.mod_name .. ": Migrating existing data")
-                        game.print({ "initialization.migrate-start", Constants.mod_name})
-                        migration_start_message_printed = true
-                    end
+                    Log.debug(storage_old.configurable_nukes.version_data)
+                    Log.debug(Constants.mod_name .. ": Migrating existing data")
+                    game.print({ "initialization.migrate-start", Constants.mod_name})
+                    migration_start_message_printed = true
                 end
             end
         end
@@ -288,15 +280,14 @@ function locals.migrate(data)
                 log("new version")
                 log(serpent.block(new_version_data.string_val))
 
-                if (prev_version_data.major.value == 0) then
+                if (prev_version_data.major.value >= 0) then
                     if (prev_version_data.minor.value <= 4) then
                         log("Version 0.5.0 Migration")
                         --[[ Version 0.5.0:
                             -> changed from using "planet_name" to using "space_location_name"
                         ]]
-                        if (    new_version_data.major.value <= 0
+                        if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 5
-                            and new_version_data.bug_fix.value >= 0
                         ) then
                             if (storage_old.configurable_nukes.rocket_silo_meta_data) then
                                 local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
@@ -317,9 +308,8 @@ function locals.migrate(data)
                     end
 
                     if (prev_version_data.minor.value <= 5) then
-                        if (    new_version_data.major.value <= 0
+                        if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 6
-                            and new_version_data.bug_fix.value >= 0
                         ) then
                             log("Version 0.6.0 Migration")
                             --[[ Version 0.6.0:
@@ -347,9 +337,8 @@ function locals.migrate(data)
                     end
 
                     if (prev_version_data.minor.value <= 6) then
-                        if (    new_version_data.major.value <= 0
+                        if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 7
-                            and new_version_data.bug_fix.value >= 0
                         ) then
                             log("Version 0.7.0 Migration")
                             --[[ Version 0.7.0:
@@ -393,7 +382,6 @@ function locals.migrate(data)
                     ) then
                         if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 7
-                            and new_version_data.bug_fix.value >= 1
                         ) then
                             log("Version 0.7.1 Migration")
                             --[[ Version 0.7.1:
@@ -425,7 +413,6 @@ function locals.migrate(data)
                     ) then
                         if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 7
-                            and new_version_data.bug_fix.value >= 4
                         ) then
                             log("Version 0.7.4 Migration")
                             --[[ Version 0.7.4:
@@ -452,21 +439,6 @@ function locals.migrate(data)
                                     end
                                 end
                             end
-                        end
-                    end
-                end
-            end
-        end
-
-        if (type(storage_old.configurable_nukes.icbm_meta_data) == "table") then
-            for k, icbm_meta_data in pairs(storage_old.configurable_nukes.icbm_meta_data) do
-                if (type(icbm_meta_data.icbms) == "table") then
-                    for k_2, icbm_data in pairs(icbm_meta_data.icbms) do
-                        if (type(icbm_data) == "table" and icbm_data.valid) then
-                            if (icbm_data.cargo_pod and not icbm_data.cargo_pod.valid) then
-                                icbm_data.cargo_pod = nil
-                            end
-                            ICBM_Repository.update_icbm_data(icbm_data)
                         end
                     end
                 end
@@ -518,13 +490,13 @@ function locals.migrate(data)
                 end
             end
         end
-        reassign(storage_old.configurable_nukes, storage.configurable_nukes, { field = "force_launch_data" })
+        TECL_Core_Utils.table.reassign(storage_old.configurable_nukes, storage.configurable_nukes, { field = "force_launch_data" })
 
         local se_active = script and script.active_mods and script.active_mods["space-exploration"]
         local dictionary =     not se_active and Constants.get_planets(true) and Constants.planets_dictionary
                             or Constants.get_space_exploration_universe(true) and Constants.space_exploration_dictionary
 
-        if (Log.get_log_level().level.num_val <= 2) then
+        if (Log.get_log_level().num_val <= 2) then
             log(serpent.block(dictionary))
         end
 
@@ -574,9 +546,5 @@ function locals.validate_version(data)
 
     return return_val
 end
-
-initialization.configurable_nukes = true
-
-local _initialization = initialization
 
 return initialization

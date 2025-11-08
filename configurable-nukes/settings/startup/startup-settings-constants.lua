@@ -1,9 +1,6 @@
--- If already defined, return
-if _startup_settings_constants and _startup_settings_constants.configurable_nukes then
-    return _startup_settings_constants
-end
-
 local Util = require("__core__.lualib.util")
+
+local Settings_Utils = require("__TheEckelmonster-core-library__.libs.utils.settings-utils")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true or scripts and scripts.active_mods and scripts.active_mods["Krastorio2-spaced-out"]
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true or scripts and scripts.active_mods and scripts.active_mods["SimpleAtomicArtillery-S"]
@@ -11,43 +8,6 @@ local sa_active = mods and mods["space-age"] and true or scripts and scripts.act
 local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
 
 local startup_settings_constants = {}
-
-local order_struct = {
-    order_array = {
-        -- "a", "b", "c", "d", "e",  "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-        [0] = "a",
-        [1] = "b",
-        [2] = "c",
-        [3] = "d",
-        [4] = "e",
-        [5] = "f",
-        [6] = "g",
-        [7] = "h",
-        [8] = "i",
-        [9] = "j",
-        [10] = "k",
-        [11] = "l",
-        [12] = "m",
-        [13] = "n",
-        [14] = "o",
-        [15] = "p",
-        [16] = "q",
-        [17] = "r",
-        [18] = "s",
-        [19] = "t",
-        [20] = "u",
-        [21] = "v",
-        [22] = "w",
-        [23] = "x",
-        [24] = "y",
-        [25] = "z",
-    },
-    order_dictionary = {},
-}
-
-for k, v in pairs(order_struct.order_array) do
-    order_struct.order_dictionary[v] = k
-end
 
 local se_multiplier = se_active and 0.4 or 1
 
@@ -91,11 +51,7 @@ if (default_recipe_atomic_warhead) then
         end
     end
 
-    if (se_active) then
-        table.insert(default_recipe_atomic_warhead.ingredients, { name = "rocket-control-unit", amount = 25 })
-    else
-        table.insert(default_recipe_atomic_warhead.ingredients, { name = "rocket-control-unit", amount = 25 })
-    end
+    table.insert(default_recipe_atomic_warhead.ingredients, { name = "rocket-control-unit", amount = 25 })
 end
 
 local default_technology_prerequisites_atomic_warhead = {
@@ -130,6 +86,97 @@ end
 if (mods and mods["atan-nuclear-science"]) then
     table.insert(default_technology_ingredients_atomic_warhead, { name = "nuclear-science-pack", amount = 1 })
 end
+
+--[[ Payload Vehicle ]]
+
+local cn_payload_vehicle = nil
+
+cn_payload_vehicle =
+{
+    ingredients =
+    {
+        { type = "item", name = "radar",                 amount = 4   },
+        { type = "item", name = "storage-tank",          amount = 2   },
+        { type = "item", name = "low-density-structure", amount = 25  },
+        { type = "item", name = "accumulator",           amount = 10  },
+        { type = "item", name = "steel-chest",           amount = 10  },
+        { type = "item", name = "processing-unit",       amount = 25  },
+        { type = "item", name = "rocket-fuel",           amount = 25  },
+    },
+    result_amount = 1,
+    energy_required = 30,
+    hide_from_player_crafting = false,
+    auto_recycle = false,
+    requester_paste_multiplier = 1
+}
+
+if (se_active) then
+    table.insert(cn_payload_vehicle.ingredients, { type = "item", name = "se-heat-shielding",     amount = 25, })
+end
+
+--[[ Rod from God ]]
+
+local rod_from_god =
+{
+    ingredients =
+    {
+        { type = "item", name = "cn-payload-vehicle", amount = 1,   },
+    },
+    result_amount = 1,
+    energy_required = 50,
+    hide_from_player_crafting = false,
+    auto_recycle = false,
+}
+
+if (sa_active) then
+    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-plate",   amount = 2000, })
+    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-carbide", amount = 1000,  })
+elseif (se_active) then
+    table.insert(rod_from_god.ingredients, { type = "item", name = "se-heavy-girder", amount = 500,  })
+else
+    table.insert(rod_from_god.ingredients, { type = "item", name = "steel-plate", amount = 3000,  })
+end
+
+--[[ Jericho ]]
+local jericho =
+{
+    ingredients =
+    {
+        { type = "item", name = "cn-payload-vehicle", amount = 1, },
+        { type = "item", name = "explosive-rocket", amount = 100, },
+        { type = "item", name = "advanced-circuit", amount = 100, },
+
+    },
+    result_amount = 1,
+    energy_required = 50,
+    hide_from_player_crafting = false,
+    auto_recycle = false,
+}
+
+if (sa_active) then
+    table.insert(jericho.ingredients, { type = "item", name = "carbon-fiber", amount = 100, })
+elseif (se_active) then
+    table.insert(jericho.ingredients, { type = "item", name = "se-aeroframe-pole", amount = 50, })
+else
+    table.insert(jericho.ingredients, { type = "item", name = "low-density-structure", amount = 50, })
+end
+
+--[[ tesla-rocket ]]
+local tesla_rocket =
+{
+    ingredients =
+    {
+        { type = "item", name = "cn-payload-vehicle", amount = 1, },
+        { type = "item", name = "lightning-collector", amount = 1, },
+        { type = "item", name = "processing-unit", amount = 10, },
+        { type = "item", name = "tesla-ammo", amount = 100, },
+        { type = "fluid", name = "electrolyte", amount = 1000, },
+    },
+    result_amount = 1,
+    energy_required = 50,
+    hide_from_player_crafting = false,
+    auto_recycle = false,
+}
 
 local default_technology_prerequisites_ICBMs = {
     "automation-science-pack",
@@ -485,6 +532,82 @@ if (k2so_active) then
     end
 end
 
+--[[ Rod from God ]]
+
+local technology_rod_from_god =
+{
+    default_technology_prerequisites_rod_from_god = {
+        "icbms",
+    },
+    default_technology_ingredients_rod_from_god = {
+        { name = "automation-science-pack",  amount = 1 },
+        { name = "logistic-science-pack",    amount = 1 },
+        { name = "chemical-science-pack",    amount = 1 },
+        { name = "military-science-pack",    amount = 1 },
+        { name = "utility-science-pack",     amount = 1 },
+        { name = "production-science-pack",  amount = 1 },
+        { name = "space-science-pack",       amount = 1 },
+    }
+}
+
+if (sa_active) then
+    table.insert(technology_rod_from_god.default_technology_prerequisites_rod_from_god, "metallurgic-science-pack")
+    table.insert(technology_rod_from_god.default_technology_ingredients_rod_from_god, { name = "metallurgic-science-pack", amount = 1 })
+elseif (se_active) then
+    table.insert(technology_rod_from_god.default_technology_prerequisites_rod_from_god, "se-heavy-girder")
+    table.insert(technology_rod_from_god.default_technology_ingredients_rod_from_god, { name = "se-material-science-pack-1", amount = 1 })
+end
+
+--[[ Jericho ]]
+
+local technology_jericho =
+{
+    default_technology_prerequisites_jericho = {
+        "icbms",
+        "explosive-rocketry",
+    },
+    default_technology_ingredients_jericho = {
+        { name = "automation-science-pack",  amount = 1 },
+        { name = "logistic-science-pack",    amount = 1 },
+        { name = "chemical-science-pack",    amount = 1 },
+        { name = "military-science-pack",    amount = 1 },
+        { name = "utility-science-pack",     amount = 1 },
+        { name = "production-science-pack",  amount = 1 },
+        { name = "space-science-pack",       amount = 1 },
+    }
+}
+
+if (sa_active) then
+    table.insert(technology_jericho.default_technology_prerequisites_jericho, "carbon-fiber")
+    table.insert(technology_jericho.default_technology_ingredients_jericho, { name = "agricultural-science-pack", amount = 1 })
+elseif (se_active) then
+    table.insert(technology_jericho.default_technology_prerequisites_jericho, "se-aeroframe-pole")
+    table.insert(technology_jericho.default_technology_ingredients_jericho, { name = "se-astronomic-science-pack-1", amount = 1 })
+end
+
+--[[ tesla-rocket ]]
+
+local technology_tesla_rocket =
+{
+    default_technology_prerequisites_tesla_rocket = {
+        "icbms",
+        "tesla-weapons",
+        "lightning-collector",
+    },
+    default_technology_ingredients_tesla_rocket = {
+        { name = "automation-science-pack",      amount = 1 },
+        { name = "logistic-science-pack",        amount = 1 },
+        { name = "chemical-science-pack",        amount = 1 },
+        { name = "military-science-pack",        amount = 1 },
+        { name = "utility-science-pack",         amount = 1 },
+        { name = "production-science-pack",      amount = 1 },
+        { name = "space-science-pack",           amount = 1 },
+        { name = "electromagnetic-science-pack", amount = 1 },
+    }
+}
+
+--[[ nuclear-weapons ]]
+
 local default_technology_prerequisites_nuclear_weapons = {
     "atomic-bomb",
     "space-science-pack",
@@ -641,6 +764,106 @@ startup_settings_constants.settings = {
         setting_type = "startup",
         order = "bbe",
         default_value = true,
+    },
+    --[[ rod-from-god ]]
+    ROD_FROM_GOD_AREA_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "rod-from-god-area-multiplier",
+        setting_type = "startup",
+        order = "bbb",
+        default_value = 1.57,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    ROD_FROM_GOD_DAMAGE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "rod-from-god-damage-multiplier",
+        setting_type = "startup",
+        order = "bbc",
+        default_value = 1.57,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    ROD_FROM_GOD_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "rod-from-god-repeat-multiplier",
+        setting_type = "startup",
+        order = "bbd",
+        default_value = 1.57,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    ROD_FROM_GOD_FIRE_WAVE = {
+        type = "bool-setting",
+        name = prefix .. "rod-from-god-fire-wave",
+        setting_type = "startup",
+        order = "bbe",
+        default_value = false,
+    },
+    --[[ jericho ]]
+    JERICHO_AREA_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-area-multiplier",
+        setting_type = "startup",
+        order = "bbb",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    JERICHO_DAMAGE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-damage-multiplier",
+        setting_type = "startup",
+        order = "bbc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    JERICHO_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-repeat-multiplier",
+        setting_type = "startup",
+        order = "bbd",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    JERICHO_SUB_ROCKET_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-sub-rocket-repeat-multiplier",
+        setting_type = "startup",
+        order = "bbd",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    --[[ tesla-rocket ]]
+    TESLA_ROCKET_AREA_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-area-multiplier",
+        setting_type = "startup",
+        order = "bbb",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+    },
+    TESLA_ROCKET_DAMAGE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-damage-multiplier",
+        setting_type = "startup",
+        order = "bbc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+    },
+    TESLA_ROCKET_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-repeat-multiplier",
+        setting_type = "startup",
+        order = "bbd",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
     },
     --[[ Krastorio2-spaced-out: kr-nuclear-turret-rocket ]]
     K2_SO_NUCLEAR_TURRET_ROCKET_AREA_MULTIPLIER = {
@@ -974,6 +1197,370 @@ startup_settings_constants.settings = {
     ATOMIC_WARHEAD_ADDITIONAL_CRAFTING_MACHINES = {
         type = "string-setting",
         name = prefix .. "atomic-warhead-additional-crafting-machines",
+        setting_type = "startup",
+        order = "dck",
+        default_value = "",
+        allow_blank = true,
+        auto_trim = true,
+    },
+    --[[ cn-payload-vehicle ]]
+    PAYLOAD_VEHICLE_STACK_SIZE = {
+        type = "int-setting",
+        name = prefix .. "payload-vehicle-stack-size",
+        setting_type = "startup",
+        order = "dcb",
+        default_value = 1,
+        maximum_value = 200,
+        minimum_value = 1
+    },
+    PAYLOAD_VEHICLE_WEIGHT_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "payload-vehicle-weight-modifier",
+        setting_type = "startup",
+        order = "dcc",
+        default_value = 0.2,
+        maximum_value = 11,
+        minimum_value = 0.0005
+    },
+    PAYLOAD_VEHICLE_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "payload-vehicle-crafting-time",
+        setting_type = "startup",
+        order = "dce",
+        default_value = cn_payload_vehicle.energy_required or 30,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001
+    },
+    PAYLOAD_VEHICLE_INPUT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "payload-vehicle-input-multiplier",
+        setting_type = "startup",
+        order = "dcf",
+        default_value = 1,
+        maximum_value = 111,
+        minimum_value = 0.0001
+    },
+    PAYLOAD_VEHICLE_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "payload-vehicle-result-count",
+        setting_type = "startup",
+        order = "dcg",
+        default_value = 1,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1
+    },
+    PAYLOAD_VEHICLE_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "payload-vehicle-recipe",
+        setting_type = "startup",
+        order = "dch",
+        ingredients = cn_payload_vehicle.ingredients,
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    PAYLOAD_VEHICLE_RECIPE_ALLOW_NONE = {
+        type = "bool-setting",
+        name = prefix .. "payload-vehicle-recipe-allow-none",
+        setting_type = "startup",
+        order = "dci",
+        default_value = false,
+    },
+    PAYLOAD_VEHICLE_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "payload-vehicle-crafting-machine",
+        setting_type = "startup",
+        order = "dcj",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+    },
+    PAYLOAD_VEHICLE_ADDITIONAL_CRAFTING_MACHINES = {
+        type = "string-setting",
+        name = prefix .. "payload-vehicle-additional-crafting-machines",
+        setting_type = "startup",
+        order = "dck",
+        default_value = "",
+        allow_blank = true,
+        auto_trim = true,
+    },
+    --[[ rod-from-god ]]
+    ROD_FROM_GOD_STACK_SIZE = {
+        type = "int-setting",
+        name = prefix .. "rod-from-god-stack-size",
+        setting_type = "startup",
+        order = "dcb",
+        default_value = 1,
+        maximum_value = 200,
+        minimum_value = 1
+    },
+    ROD_FROM_GOD_WEIGHT_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "rod-from-god-weight-modifier",
+        setting_type = "startup",
+        order = "dcc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.0005
+    },
+    ROD_FROM_GOD_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "rod-from-god-crafting-time",
+        setting_type = "startup",
+        order = "dce",
+        default_value = rod_from_god and rod_from_god.energy_required or 50,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001
+    },
+    ROD_FROM_GOD_INPUT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "rod-from-god-input-multiplier",
+        setting_type = "startup",
+        order = "dcf",
+        default_value = 1,
+        maximum_value = 111,
+        minimum_value = 0.0001
+    },
+    ROD_FROM_GOD_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "rod-from-god-result-count",
+        setting_type = "startup",
+        order = "dcg",
+        default_value = 1,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1
+    },
+    ROD_FROM_GOD_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "rod-from-god-recipe",
+        setting_type = "startup",
+        order = "dch",
+        ingredients = rod_from_god and rod_from_god.ingredients or nil,
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    ROD_FROM_GOD_RECIPE_ALLOW_NONE = {
+        type = "bool-setting",
+        name = prefix .. "rod-from-god-recipe-allow-none",
+        setting_type = "startup",
+        order = "dci",
+        default_value = false,
+    },
+    ROD_FROM_GOD_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "rod-from-god-crafting-machine",
+        setting_type = "startup",
+        order = "dcj",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+    },
+    ROD_FROM_GOD_ADDITIONAL_CRAFTING_MACHINES = {
+        type = "string-setting",
+        name = prefix .. "rod-from-god-additional-crafting-machines",
+        setting_type = "startup",
+        order = "dck",
+        default_value = "",
+        allow_blank = true,
+        auto_trim = true,
+    },
+    --[[ jericho ]]
+    JERICHO_STACK_SIZE = {
+        type = "int-setting",
+        name = prefix .. "jericho-stack-size",
+        setting_type = "startup",
+        order = "dcb",
+        default_value = 1,
+        maximum_value = 200,
+        minimum_value = 1
+    },
+    JERICHO_WEIGHT_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-weight-modifier",
+        setting_type = "startup",
+        order = "dcc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.0005
+    },
+    JERICHO_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "jericho-crafting-time",
+        setting_type = "startup",
+        order = "dce",
+        default_value = jericho and jericho.energy_required or 50,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001
+    },
+    JERICHO_INPUT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-input-multiplier",
+        setting_type = "startup",
+        order = "dcf",
+        default_value = 1,
+        maximum_value = 111,
+        minimum_value = 0.0001
+    },
+    JERICHO_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "jericho-result-count",
+        setting_type = "startup",
+        order = "dcg",
+        default_value = 1,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1
+    },
+    JERICHO_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "jericho-recipe",
+        setting_type = "startup",
+        order = "dch",
+        ingredients = jericho and jericho.ingredients or nil,
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    JERICHO_RECIPE_ALLOW_NONE = {
+        type = "bool-setting",
+        name = prefix .. "jericho-recipe-allow-none",
+        setting_type = "startup",
+        order = "dci",
+        default_value = false,
+    },
+    JERICHO_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "jericho-crafting-machine",
+        setting_type = "startup",
+        order = "dcj",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+    },
+    JERICHO_ADDITIONAL_CRAFTING_MACHINES = {
+        type = "string-setting",
+        name = prefix .. "jericho-additional-crafting-machines",
+        setting_type = "startup",
+        order = "dck",
+        default_value = "",
+        allow_blank = true,
+        auto_trim = true,
+    },
+    --[[ tesla-rocket ]]
+    TESLA_ROCKET_STACK_SIZE = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-stack-size",
+        setting_type = "startup",
+        order = "dcb",
+        default_value = 1,
+        maximum_value = 200,
+        minimum_value = 1,
+    },
+    TESLA_ROCKET_WEIGHT_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-weight-modifier",
+        setting_type = "startup",
+        order = "dcc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.0005,
+    },
+    TESLA_ROCKET_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-crafting-time",
+        setting_type = "startup",
+        order = "dce",
+        default_value = tesla_rocket and tesla_rocket.energy_required or 50,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001,
+    },
+    TESLA_ROCKET_INPUT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-input-multiplier",
+        setting_type = "startup",
+        order = "dcf",
+        default_value = 1,
+        maximum_value = 111,
+        minimum_value = 0.0001,
+    },
+    TESLA_ROCKET_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-result-count",
+        setting_type = "startup",
+        order = "dcg",
+        default_value = 1,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1,
+    },
+    TESLA_ROCKET_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-recipe",
+        setting_type = "startup",
+        order = "dch",
+        ingredients = tesla_rocket and tesla_rocket.ingredients or nil,
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    TESLA_ROCKET_RECIPE_ALLOW_NONE = {
+        type = "bool-setting",
+        name = prefix .. "tesla-rocket-recipe-allow-none",
+        setting_type = "startup",
+        order = "dci",
+        default_value = false,
+    },
+    TESLA_ROCKET_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-crafting-machine",
+        setting_type = "startup",
+        order = "dcj",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+    },
+    TESLA_ROCKET_ADDITIONAL_CRAFTING_MACHINES = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-additional-crafting-machines",
         setting_type = "startup",
         order = "dck",
         default_value = "",
@@ -1749,6 +2336,123 @@ startup_settings_constants.settings = {
         minimum_value = 1,
         maximum_value = 2 ^ 42,
     },
+    --[[ Rod from God ]]
+    ROD_FROM_GOD_RESEARCH_PREREQUISITES = {
+        type = "string-setting",
+        name = prefix .. "rod-from-god-research-prerequisites",
+        setting_type = "startup",
+        order = "dha",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        prerequisites = technology_rod_from_god.default_technology_prerequisites_rod_from_god,
+    },
+    ROD_FROM_GOD_RESEARCH_INGREDIENTS = {
+        type = "string-setting",
+        name = prefix .. "rod-from-god-research-ingredients",
+        setting_type = "startup",
+        order = "dhb",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        ingredients = technology_rod_from_god.default_technology_ingredients_rod_from_god
+    },
+    ROD_FROM_GOD_RESEARCH_TIME = {
+        type = "int-setting",
+        name = prefix .. "rod-from-god-research-time",
+        setting_type = "startup",
+        order = "dhc",
+        default_value = 60,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    ROD_FROM_GOD_RESEARCH_COUNT = {
+        type = "int-setting",
+        name = prefix .. "rod-from-god-research-count",
+        setting_type = "startup",
+        order = "dhd",
+        default_value = 5000,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    --[[ Jericho ]]
+    JERICHO_RESEARCH_PREREQUISITES = {
+        type = "string-setting",
+        name = prefix .. "jericho-research-prerequisites",
+        setting_type = "startup",
+        order = "dha",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        prerequisites = technology_jericho.default_technology_prerequisites_jericho,
+    },
+    JERICHO_RESEARCH_INGREDIENTS = {
+        type = "string-setting",
+        name = prefix .. "jericho-research-ingredients",
+        setting_type = "startup",
+        order = "dhb",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        ingredients = technology_jericho.default_technology_ingredients_jericho
+    },
+    JERICHO_RESEARCH_TIME = {
+        type = "int-setting",
+        name = prefix .. "jericho-research-time",
+        setting_type = "startup",
+        order = "dhc",
+        default_value = 60,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    JERICHO_RESEARCH_COUNT = {
+        type = "int-setting",
+        name = prefix .. "jericho-research-count",
+        setting_type = "startup",
+        order = "dhd",
+        default_value = 5000,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    --[[ tesla-rocket ]]
+    TESLA_ROCKET_RESEARCH_PREREQUISITES = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-research-prerequisites",
+        setting_type = "startup",
+        order = "dha",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        prerequisites = technology_tesla_rocket.default_technology_prerequisites_tesla_rocket,
+    },
+    TESLA_ROCKET_RESEARCH_INGREDIENTS = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-research-ingredients",
+        setting_type = "startup",
+        order = "dhb",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        ingredients = technology_tesla_rocket.default_technology_ingredients_tesla_rocket,
+    },
+    TESLA_ROCKET_RESEARCH_TIME = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-research-time",
+        setting_type = "startup",
+        order = "dhc",
+        default_value = 60,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    TESLA_ROCKET_RESEARCH_COUNT = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-research-count",
+        setting_type = "startup",
+        order = "dhd",
+        default_value = 5000,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
     --[[ Damage Research ]]
     NUCLEAR_WEAPONS_RESEARCH_DAMAGE_MODIFIER = {
         type = "double-setting",
@@ -1877,22 +2581,9 @@ startup_settings_constants.settings = {
     },
 }
 
-local settings_array = {}
-local i = 1
-for k, v in pairs(startup_settings_constants.settings) do
-    settings_array[i] = v
-    i = i + 1
-end
-
-for k, v in pairs(settings_array) do
-    local order_1 = ((k - 1) % 26)
-    local order_2 = math.floor((k - 1) / 26) % 26
-    local order_3 = math.floor((k - 1) / 676) % 26
-
-    local order = order_struct.order_array[order_3] .. order_struct.order_array[order_2] .. order_struct.order_array[order_1]
-    v.order = order
-    v.order_num = k
-end
+local order_settings = Settings_Utils.order_settings({ settings = startup_settings_constants.settings })
+startup_settings_constants.settings_array = order_settings.array
+startup_settings_constants.settings_dictionary = order_settings.dictionary
 
 -- Atomic Bomb
 if (sa_active) then
@@ -1920,6 +2611,11 @@ if (sa_active) then
     for k, v in pairs(sa_crafting_categories) do
         table.insert(startup_settings_constants.settings.ATOMIC_BOMB_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ATOMIC_WARHEAD_CRAFTING_MACHINE.allowed_values, v)
+
+        table.insert(startup_settings_constants.settings.PAYLOAD_VEHICLE_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.ROD_FROM_GOD_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.JERICHO_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.TESLA_ROCKET_CRAFTING_MACHINE.allowed_values, v)
 
         table.insert(startup_settings_constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
@@ -2003,6 +2699,11 @@ if (se_active) then
         table.insert(startup_settings_constants.settings.ATOMIC_BOMB_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ATOMIC_WARHEAD_CRAFTING_MACHINE.allowed_values, v)
 
+        table.insert(startup_settings_constants.settings.PAYLOAD_VEHICLE_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.ROD_FROM_GOD_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.JERICHO_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.TESLA_ROCKET_CRAFTING_MACHINE.allowed_values, v)
+
         table.insert(startup_settings_constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
 
@@ -2016,17 +2717,20 @@ if (se_active) then
     end
 end
 
--- ATOMIC_BOMB_RECIPE
-if (default_recipe_atomic_bomb and default_recipe_atomic_bomb.ingredients) then
-    for k, v in pairs(default_recipe_atomic_bomb.ingredients) do
-        if (not startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value or startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value == "") then
-            startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value =
+local create_recipe_string = function (data)
+    if (not data or type(data) ~= "table") then return end
+    if (not data.ingredients or type(data.ingredients) ~= "table") then return end
+    if (not data.setting or type(data.setting) ~= "table") then return end
+
+    for k, v in pairs(data.ingredients) do
+        if (not data.setting.default_value or data.setting.default_value == "") then
+            data.setting.default_value =
                 v.name
                 .. "="
                 .. v.amount
         else
-            startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value =
-                startup_settings_constants.settings.ATOMIC_BOMB_RECIPE.default_value
+            data.setting.default_value =
+                data.setting.default_value
                 .. ","
                 .. v.name
                 .. "="
@@ -2035,17 +2739,52 @@ if (default_recipe_atomic_bomb and default_recipe_atomic_bomb.ingredients) then
     end
 end
 
+-- ATOMIC_BOMB_RECIPE
+create_recipe_string({ ingredients = default_recipe_atomic_bomb.ingredients, setting = startup_settings_constants.settings.ATOMIC_BOMB_RECIPE })
+
 -- ATOMIC_WARHEAD_RECIPE
-if (default_recipe_atomic_bomb and default_recipe_atomic_bomb.ingredients) then
-    for k, v in pairs(default_recipe_atomic_warhead.ingredients) do
-        if (not startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value or startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value == "") then
-            startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value =
+create_recipe_string({ ingredients = default_recipe_atomic_warhead.ingredients, setting = startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE })
+
+-- PAYLOAD_VEHICLE_RECIPE
+create_recipe_string({ ingredients = cn_payload_vehicle.ingredients, setting = startup_settings_constants.settings.PAYLOAD_VEHICLE_RECIPE })
+
+-- ROD_FROM_GOD_RECIPE
+create_recipe_string({ ingredients = rod_from_god.ingredients, setting = startup_settings_constants.settings.ROD_FROM_GOD_RECIPE })
+
+-- JERICHO_RECIPE
+create_recipe_string({ ingredients = jericho.ingredients, setting = startup_settings_constants.settings.JERICHO_RECIPE })
+
+-- TESLA_ROCKET_RECIPE
+create_recipe_string({ ingredients = tesla_rocket.ingredients, setting = startup_settings_constants.settings.TESLA_ROCKET_RECIPE })
+
+local create_research_prerequisites_string = function (data)
+    if (not data or type(data) ~= "table") then return end
+    if (not data.prerequisites or type(data.prerequisites) ~= "table") then return end
+    if (not data.setting or type(data.setting) ~= "table") then return end
+
+    for k, v in pairs(data.prerequisites) do
+        if (not data.setting.default_value or data.setting.default_value == "") then
+            data.setting.default_value = v
+        else
+            data.setting.default_value = data.setting.default_value .. ",".. v
+        end
+    end
+end
+
+local create_research_ingredients_string = function (data)
+    if (not data or type(data) ~= "table") then return end
+    if (not data.ingredients or type(data.ingredients) ~= "table") then return end
+    if (not data.setting or type(data.setting) ~= "table") then return end
+
+    for k, v in pairs(data.ingredients) do
+        if (not data.setting.default_value or data.setting.default_value == "") then
+            data.setting.default_value =
                 v.name
                 .. "="
                 .. v.amount
         else
-            startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value =
-                startup_settings_constants.settings.ATOMIC_WARHEAD_RECIPE.default_value
+            data.setting.default_value =
+                data.setting.default_value
                 .. ","
                 .. v.name
                 .. "="
@@ -2055,337 +2794,81 @@ if (default_recipe_atomic_bomb and default_recipe_atomic_bomb.ingredients) then
 end
 
 -- ATOMIC_WARHEAD_RESEARCH_PREREQUISITES
-for k, v in pairs(default_technology_prerequisites_atomic_warhead) do
-    if (not startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_PREREQUISITES.default_value or startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_PREREQUISITES.default_value == "") then
-        startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_PREREQUISITES.default_value = v
-    else
-        startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_PREREQUISITES.default_value =
-            startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_PREREQUISITES.default_value .. ",".. v
-    end
-end
+create_research_prerequisites_string({ prerequisites = default_technology_prerequisites_atomic_warhead, setting = startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_PREREQUISITES })
 
 -- ATOMIC_WARHEAD_RESEARCH_INGREDIENTS
-for k, v in pairs(default_technology_ingredients_atomic_warhead) do
-    if (not startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value =
-            v.name
-            .. "="
-            .. v.amount
-    else
-        startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
-    end
-end
+create_research_ingredients_string({ ingredients = default_technology_ingredients_atomic_warhead, setting = startup_settings_constants.settings.ATOMIC_WARHEAD_RESEARCH_INGREDIENTS })
+
+-- ROD_FROM_GOD_RESEARCH_PREREQUISITES
+create_research_prerequisites_string({ prerequisites = technology_rod_from_god.default_technology_prerequisites_rod_from_god, setting = startup_settings_constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES })
+
+-- ROD_FROM_GOD_RESEARCH_INGREDIENTS
+create_research_ingredients_string({ ingredients = technology_rod_from_god.default_technology_ingredients_rod_from_god, setting = startup_settings_constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS })
+
+-- JERICHO_RESEARCH_PREREQUISITES
+create_research_prerequisites_string({ prerequisites = technology_jericho.default_technology_prerequisites_jericho, setting = startup_settings_constants.settings.JERICHO_RESEARCH_PREREQUISITES })
+
+-- JERICHO_RESEARCH_INGREDIENTS
+create_research_ingredients_string({ ingredients = technology_jericho.default_technology_ingredients_jericho, setting = startup_settings_constants.settings.JERICHO_RESEARCH_INGREDIENTS })
+
+-- TESLA_ROCKET_RESEARCH_PREREQUISITES
+create_research_prerequisites_string({ prerequisites = technology_tesla_rocket.default_technology_prerequisites_tesla_rocket, setting = startup_settings_constants.settings.TESLA_ROCKET_RESEARCH_PREREQUISITES })
+
+-- TESLA_ROCKET_RESEARCH_INGREDIENTS
+create_research_ingredients_string({ ingredients = technology_tesla_rocket.default_technology_ingredients_tesla_rocket, setting = startup_settings_constants.settings.TESLA_ROCKET_RESEARCH_INGREDIENTS })
 
 -- ICBMS_RESEARCH_PREREQUISITES
-for k, v in pairs(default_technology_prerequisites_ICBMs) do
-    if (not startup_settings_constants.settings.ICBMS_RESEARCH_PREREQUISITES.default_value or startup_settings_constants.settings.ICBMS_RESEARCH_PREREQUISITES.default_value == "") then
-        startup_settings_constants.settings.ICBMS_RESEARCH_PREREQUISITES.default_value = v
-    else
-        startup_settings_constants.settings.ICBMS_RESEARCH_PREREQUISITES.default_value =
-            startup_settings_constants.settings.ICBMS_RESEARCH_PREREQUISITES.default_value .. ",".. v
-    end
-end
+create_research_prerequisites_string({ prerequisites = default_technology_prerequisites_ICBMs, setting = startup_settings_constants.settings.ICBMS_RESEARCH_PREREQUISITES })
 
 -- ICBMS_RESEARCH_INGREDIENTS
-for k, v in pairs(default_technology_ingredients_ICBMs) do
-    if (not startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value =
-            v.name
-            .. "="
-            .. v.amount
-    else
-        startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
-    end
-end
+create_research_ingredients_string({ ingredients = default_technology_ingredients_ICBMs, setting = startup_settings_constants.settings.ICBMS_RESEARCH_INGREDIENTS })
 
 -- IPBMS_RESEARCH_PREREQUISITES
-for k, v in pairs(default_technology_prerequisites_IPBMs) do
-    if (not startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value or startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value == "") then
-        startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value = v
-    else
-        startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value =
-            startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES.default_value .. ",".. v
-    end
-end
+create_research_prerequisites_string({ prerequisites = default_technology_prerequisites_IPBMs, setting = startup_settings_constants.settings.IPBMS_RESEARCH_PREREQUISITES })
 
 -- IPBMS_RESEARCH_INGREDIENTS
-for k, v in pairs(default_technology_ingredients_IPBMs) do
-    if (not startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value =
-            v.name
-            .. "="
-            .. v.amount
-    else
-        startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
-    end
-end
+create_research_ingredients_string({ ingredients = default_technology_ingredients_IPBMs, setting = startup_settings_constants.settings.IPBMS_RESEARCH_INGREDIENTS })
 
 -- ROCKET_CONTROL_UNIT_RECIPE
-if (default_recipe_rocket_control_unit and default_recipe_rocket_control_unit.ingredients) then
-    for k, v in pairs(default_recipe_rocket_control_unit.ingredients) do
-        if (not startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value or startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value == "") then
-            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value =
-                startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    end
-end
+create_recipe_string({ ingredients = default_recipe_rocket_control_unit.ingredients, setting = startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RECIPE })
 
 -- ADVANCED_ROCKET_CONTROL_UNIT_RECIPE
-if (advanced_recipe_rocket_control_unit and advanced_recipe_rocket_control_unit.ingredients) then
-    for k, v in pairs(advanced_recipe_rocket_control_unit.ingredients) do
-        if (not startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value or startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value == "") then
-            startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value =
-                startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    end
-end
+create_recipe_string({ ingredients = advanced_recipe_rocket_control_unit.ingredients, setting = startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RECIPE })
 
 -- BALLISTIC_ROCKET_SILO_RECIPE
-if (recipe_ballistic_rocket_silo and recipe_ballistic_rocket_silo.ingredients) then
-    for k, v in pairs(recipe_ballistic_rocket_silo.ingredients) do
-        if (not startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value or startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value == "") then
-            startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value =
-                startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    end
-end
+create_recipe_string({ ingredients = recipe_ballistic_rocket_silo.ingredients, setting = startup_settings_constants.settings.BALLISTIC_ROCKET_SILO_RECIPE })
 
 -- ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES
-for k, v in pairs(default_technology_prerequisites_rocket_control_unit) do
-    if (not startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.default_value or startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.default_value == "") then
-        startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.default_value = v
-    else
-        startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.default_value =
-            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.default_value .. ",".. v
-    end
-end
+create_research_prerequisites_string({ prerequisites = default_technology_prerequisites_rocket_control_unit, setting = startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES })
 
 -- ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS
-for k, v in pairs(default_technology_ingredients_rocket_control_unit) do
-    if (v.name and v.amount) then
-        if (not startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value == "") then
-            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value =
-                startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    else
-        startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value = ""
-        break
-    end
-end
+create_research_ingredients_string({ ingredients = default_technology_ingredients_rocket_control_unit, setting = startup_settings_constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS })
 
 -- BALLISTIC_ROCKET_PART_RECIPE
-if (recipe_ballistic_rocket_part_basic and recipe_ballistic_rocket_part_basic.ingredients) then
-    for k, v in pairs(recipe_ballistic_rocket_part_basic.ingredients) do
-        if (not startup_settings_constants.settings.BALLISTIC_ROCKET_PART_RECIPE.default_value or startup_settings_constants.settings.BALLISTIC_ROCKET_PART_RECIPE.default_value == "") then
-            startup_settings_constants.settings.BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                startup_settings_constants.settings.BALLISTIC_ROCKET_PART_RECIPE.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    end
-end
+create_recipe_string({ ingredients = recipe_ballistic_rocket_part_basic.ingredients, setting = startup_settings_constants.settings.BALLISTIC_ROCKET_PART_RECIPE })
 
 -- INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE
-if (recipe_ballistic_rocket_part_intermediate and recipe_ballistic_rocket_part_intermediate.ingredients) then
-    for k, v in pairs(recipe_ballistic_rocket_part_intermediate.ingredients) do
-        if (not startup_settings_constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE.default_value or startup_settings_constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE.default_value == "") then
-            startup_settings_constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                startup_settings_constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    end
-end
+create_recipe_string({ ingredients = recipe_ballistic_rocket_part_intermediate.ingredients, setting = startup_settings_constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RECIPE })
 
 -- ADVANCED_BALLISTIC_ROCKET_PART_RECIPE
-if (recipe_ballistic_rocket_part_advanced and recipe_ballistic_rocket_part_advanced.ingredients) then
-    for k, v in pairs(recipe_ballistic_rocket_part_advanced.ingredients) do
-        if (not startup_settings_constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.default_value or startup_settings_constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.default_value == "") then
-            startup_settings_constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                startup_settings_constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    end
-end
+create_recipe_string({ ingredients = recipe_ballistic_rocket_part_advanced.ingredients, setting = startup_settings_constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE })
 
 -- BEYOND_BALLISTIC_ROCKET_PART_RECIPE
-if (recipe_ballistic_rocket_part_beyond and recipe_ballistic_rocket_part_beyond.ingredients) then
-    for k, v in pairs(recipe_ballistic_rocket_part_beyond.ingredients) do
-        if (not startup_settings_constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.default_value or startup_settings_constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.default_value == "") then
-            startup_settings_constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                startup_settings_constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    end
-end
+create_recipe_string({ ingredients = recipe_ballistic_rocket_part_beyond.ingredients, setting = startup_settings_constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE })
 
 -- BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE
-if (recipe_ballistic_rocket_part_beyond_2 and recipe_ballistic_rocket_part_beyond_2.ingredients) then
-    for k, v in pairs(recipe_ballistic_rocket_part_beyond_2.ingredients) do
-        if (not startup_settings_constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE.default_value or startup_settings_constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE.default_value == "") then
-            startup_settings_constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE.default_value =
-                startup_settings_constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    end
-end
+create_recipe_string({ ingredients = recipe_ballistic_rocket_part_beyond_2.ingredients, setting = startup_settings_constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RECIPE })
 
 -- NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES
-for k, v in pairs(default_technology_prerequisites_nuclear_weapons) do
-    if (not startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES.default_value or startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES.default_value == "") then
-        startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES.default_value = v
-    else
-        startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES.default_value =
-            startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES.default_value .. ",".. v
-    end
-end
+create_research_prerequisites_string({ prerequisites = default_technology_prerequisites_nuclear_weapons, setting = startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES })
 
 -- NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS
-for k, v in pairs(default_technology_ingredients_nuclear_weapons) do
-    if (not startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value == "") then
-        startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value =
-            v.name
-            .. "="
-            .. v.amount
-    else
-        startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value =
-            startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS.default_value
-            .. ","
-            .. v.name
-            .. "="
-            .. v.amount
-    end
-end
+create_research_ingredients_string({ ingredients = default_technology_ingredients_nuclear_weapons, setting = startup_settings_constants.settings.NUCLEAR_WEAPONS_RESEARCH_INGREDIENTS })
 
 -- GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES
-for k, v in pairs(default_technology_prerequisites_guidance_systems) do
-    if (not startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES.default_value or startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES.default_value == "") then
-        startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES.default_value = v
-    else
-        startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES.default_value =
-            startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES.default_value .. ",".. v
-    end
-end
+create_research_prerequisites_string({ prerequisites = default_technology_prerequisites_guidance_systems, setting = startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_PREREQUISITES })
 
 -- GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS
-for k, v in pairs(default_technology_ingredients_guidance_systems) do
-    if (v.name and v.amount) then
-        if (not startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value or startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value == "") then
-            startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value =
-                v.name
-                .. "="
-                .. v.amount
-        else
-            startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value =
-                startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value
-                .. ","
-                .. v.name
-                .. "="
-                .. v.amount
-        end
-    else
-        startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS.default_value = ""
-        break
-    end
-end
-
-startup_settings_constants.settings_dictionary  = {}
-
-for k, v in pairs(startup_settings_constants.settings) do
-    startup_settings_constants.settings_dictionary[v.name] = v
-end
-
-startup_settings_constants.configurable_nukes = true
-
-local _startup_settings_constants = startup_settings_constants
+create_research_ingredients_string({ ingredients = default_technology_ingredients_guidance_systems, setting = startup_settings_constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS })
 
 return startup_settings_constants

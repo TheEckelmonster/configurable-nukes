@@ -1,8 +1,9 @@
 local Util = require("__core__.lualib.util")
 -- local Item_Sounds = require("__base__.prototypes.item_sounds")
 
-local Data_Utils = require("data-utils")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local sa_active = mods and mods["space-age"] and true
@@ -342,6 +343,7 @@ if (sa_active or se_active) then
     local ipbm_rocket_part = Util.table.deepcopy(data.raw["item"]["rocket-part"])
     ipbm_rocket_part.name = name_prefix .. "ipbm-rocket-part"
 
+    ipbm_rocket_part.hidden = false
     ipbm_rocket_part.stack_size = get_ballistic_rocket_part_stack_size()
     ipbm_rocket_part.weight = get_ballistic_rocket_part_weight_modifier() * tons
 

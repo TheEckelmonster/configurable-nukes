@@ -1,9 +1,7 @@
--- If already defined, return
-if _configurable_nukes_repository and _configurable_nukes_repository.configurable_nukes then
-    return _configurable_nukes_repository
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
-local Log = require("libs.log.log")
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 
 local configurable_nukes_repository = {}
@@ -99,9 +97,5 @@ function configurable_nukes_repository.get_configurable_nukes_data(optionals)
 
     return return_val
 end
-
-configurable_nukes_repository.configurable_nukes = true
-
-local _configurable_nukes_repository = configurable_nukes_repository
 
 return configurable_nukes_repository

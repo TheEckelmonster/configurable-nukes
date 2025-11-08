@@ -1,7 +1,8 @@
 local Util = require("__core__.lualib.util")
 
-local Data_Utils = require("data-utils")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local get_nuclear_weapons_research_prerequisites = function ()
     local setting = Startup_Settings_Constants.settings.NUCLEAR_WEAPONS_RESEARCH_PREREQUISITES.default_value
@@ -117,7 +118,7 @@ local get_nuclear_weapons_research_ingredients = function ()
 
         for k, v in pairs(data.raw) do
             found_match = false
-            if (k == "tool") then found_func(param, param_val, v, "tool")
+            if (k == "technology") then found_func(param, param_val, v, "technology")
             end
 
             if (found_match) then break end

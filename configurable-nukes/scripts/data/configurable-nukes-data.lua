@@ -1,7 +1,8 @@
-
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 local Version_Data = require("scripts.data.version-data")
 
 local configurable_nukes_data = {}
@@ -16,8 +17,8 @@ configurable_nukes_data.force_launch_data = {}
 configurable_nukes_data.version_data = Version_Data:new()
 
 function configurable_nukes_data:new(o)
-    Log.debug("configurable_nukes_data:new")
-    Log.info(o)
+    _Log.debug("configurable_nukes_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,

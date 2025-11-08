@@ -1,14 +1,10 @@
--- If already defined, return
-if _gui_service and _gui_service.configurable_nukes then
-  return _gui_service
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Circuit_Network_Validations = require("scripts.validations.circuit-network-data.rocket-silo-validations")
-local Constants = require("scripts.constants.constants")
 local Gui_Utils = require("scripts.utils.gui-utils")
-local Log = require("libs.log.log")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Service = require("scripts.services.settings-service")
 
 local rocket_silo_gui_service = {}
 
@@ -246,10 +242,5 @@ function rocket_silo_gui_service.create_rocket_silo_gui(data)
         gui_flow.style.padding = { 4, 6, 4, 4 }
     end
 end
-
-
-rocket_silo_gui_service.configurable_nukes = true
-
-local _gui_service = rocket_silo_gui_service
 
 return rocket_silo_gui_service

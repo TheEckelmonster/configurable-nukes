@@ -1,8 +1,11 @@
-local Data_Utils = require("data-utils")
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local nuclear_artillery_research_bonus_visible =   Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_SHELL_AMMO_CATEGORY.name }) == "nuclear-artillery"
                                                 or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_SHELL_AMMO_CATEGORY.name }) == "nuclear-artillery"
+
+local sa_active = mods and mods["space-age"] and true
 
 data:extend({
     {
@@ -60,3 +63,25 @@ data:extend({
         subgroup = "ammo-category"
     },
 })
+
+data:extend({
+    {
+        type = "ammo-category",
+        name = "kinetic-weapon",
+        hidden = true,
+        hidden_in_factoriopedia = true,
+        subgroup = "ammo-category"
+    },
+})
+
+if (sa_active) then
+    data:extend({
+        {
+            type = "ammo-category",
+            name = "tesla-rocket",
+            hidden = true,
+            hidden_in_factoriopedia = true,
+            subgroup = "ammo-category"
+        },
+    })
+end

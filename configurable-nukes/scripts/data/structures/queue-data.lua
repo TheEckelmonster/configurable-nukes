@@ -1,14 +1,17 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local queue_data = {}
 
 queue_data.type = "queue-data"
 
 function queue_data:new(o, data)
-    Log.debug("queue_data:new")
-    Log.info(o)
-    Log.info(data)
+    _Log.debug("queue_data:new")
+    _Log.info(o)
+    _Log.info(data)
 
     local index = data and (data.index or data.tick) or 1
 
@@ -45,7 +48,7 @@ function queue_data:new(o, data)
 end
 
 function queue_data:next(data)
-    Log.debug("queue_data:next")
+    _Log.debug("queue_data:next")
 
     if (data == nil or type(data) ~= "table") then return end
     if (not data.order or type(data.order) ~= "string") then data.order = "first" end
@@ -127,8 +130,8 @@ function queue_data:next(data)
 end
 
 function queue_data:remove(data)
-    Log.debug("queue_data:remove")
-    Log.info(data)
+    _Log.debug("queue_data:remove")
+    _Log.info(data)
 
     if (self == nil or type(self) ~= "table") then return -1 end
     if (data == nil or type(data) ~= "table") then return -1 end
@@ -209,8 +212,8 @@ function queue_data:remove(data)
 end
 
 function queue_data:enqueue(data)
-    Log.debug("queue_data:enqueue")
-    Log.info(data)
+    _Log.debug("queue_data:enqueue")
+    _Log.info(data)
 
     if (self.limit and self.count >= 1 + self.limit * 1.5 --[[TODO: Make this configurable]]) then return { valid = false } end
 
@@ -287,8 +290,8 @@ function queue_data:enqueue(data)
 end
 
 function queue_data:dequeue(data)
-    Log.debug("queue_data:dequeue")
-    Log.info(data)
+    _Log.debug("queue_data:dequeue")
+    _Log.info(data)
 
     return self:next(data)
 end

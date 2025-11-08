@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 --[[ From "Space-Exploration" v 0.7.34
     -> zone.lua

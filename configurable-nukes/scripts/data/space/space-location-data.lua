@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local space_location_data = {}
 
@@ -34,8 +37,8 @@ space_location_data.radius = nil
 space_location_data.radius_multiplier = nil
 
 function space_location_data:new(o)
-    Log.debug("space_location_data:new")
-    Log.info(o)
+    _Log.debug("space_location_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,
@@ -79,8 +82,8 @@ function space_location_data:new(o)
 end
 
 function space_location_data:get_stellar_system(data)
-    Log.debug("space_location_data:get_stellar_system")
-    Log.info(data)
+    _Log.debug("space_location_data:get_stellar_system")
+    _Log.info(data)
 
     if (data and type(data) ~= "table") then return end
     if (not data) then data = {} end
@@ -100,8 +103,8 @@ function space_location_data:get_stellar_system(data)
 end
 
 function space_location_data:is_solid(data)
-    Log.debug("space_location_data:is_solid")
-    Log.info(data)
+    _Log.debug("space_location_data:is_solid")
+    _Log.info(data)
 
     return true
 end

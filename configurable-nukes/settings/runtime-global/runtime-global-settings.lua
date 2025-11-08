@@ -1,5 +1,8 @@
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
+local Constants = require("scripts.constants.constants")
+local Log_Settings = require("__TheEckelmonster-core-library__.libs.log.log-settings")
+
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 
@@ -77,3 +80,5 @@ if (saa_s_active) then
         Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BONUS_DAMAGE_ADDITION,
     })
 end
+
+data:extend(Log_Settings.create({ prefix = Constants.mod_name, settings_array = Runtime_Global_Settings_Constants.settings }))

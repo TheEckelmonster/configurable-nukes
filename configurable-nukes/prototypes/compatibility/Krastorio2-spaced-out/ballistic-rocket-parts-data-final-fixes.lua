@@ -3,7 +3,7 @@ if (not k2so_active) then return end
 
 local Util = require("__core__.lualib.util")
 
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local recipes =
 {

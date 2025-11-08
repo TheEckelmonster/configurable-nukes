@@ -1,18 +1,39 @@
--- If already defined, return
-if _rocket_silo_service and _rocket_silo_service.configurable_nukes then
-  return _rocket_silo_service
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Circuit_Network_Validations = require("scripts.validations.circuit-network-data.rocket-silo-validations")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
-local Log = require("libs.log.log")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
-local Settings_Service = require("scripts.services.settings-service")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local valid_payloads =
+{
+    ["atomic-bomb"] = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }) end,
+    ["atomic-warhead"] = function () return Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }) end,
+    ["cn-rod-from-god"] = function () return true end,
+    ["cn-jericho"] = function () return true end,
+    ["cn-tesla-rocket"] = function () return true end,
+}
+
+local function valid_payload(data)
+    local return_val = false
+
+    if (not data or type(data) ~= "table") then return return_val end
+    if (not data.item_name or type(data.item_name) ~= "string") then return return_val end
+
+    if (    valid_payloads[data.item_name]
+        and valid_payloads[data.item_name]()
+    ) then
+        return_val = true
+    end
+
+    return return_val
+end
 
 local rocket_silo_service = {}
 
@@ -63,10 +84,7 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
 
         if (inventory) then
             for _, item in ipairs(inventory.get_contents()) do
-                if (    (string.find(item.name, "atomic-bomb", 1, true) and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }))
-                    or
-                        (item.name == "atomic-warhead" and Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })))
-                then
+                if (valid_payload({ item_name = item.name })) then
                     local return_val = ICBM_Utils.on_cargo_pod_finished_ascending({
                         surface = cargo_pod.surface,
                         item = item,
@@ -74,7 +92,7 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
                         cargo_pod = cargo_pod,
                     })
 
-                    if (Log.get_log_level().level.num_val <= 3) then
+                    if (Log.get_log_level().num_val <= 3) then
                         log(serpent.block(return_val))
                     end
                     if (return_val and return_val ~= 1) then
@@ -216,9 +234,5 @@ function rocket_silo_service.scrub_all_launches(data)
         force_launch_data.force.print({ "rocket-silo-service.scrub-all-launches" })
     end
 end
-
-rocket_silo_service.configurable_nukes = true
-
-local _rocket_silo_service = rocket_silo_service
 
 return rocket_silo_service

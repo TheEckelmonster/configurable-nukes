@@ -1,14 +1,10 @@
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
-local get_icbms_research_count = function ()
-    local setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.default_value
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.name].value
-    end
+local sa_active = mods and mods["space-age"] and true
+local se_active = mods and mods["space-exploration"] and true
 
-    return setting
-end
 local get_icbms_research_prerequisites = function ()
     local setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_PREREQUISITES.default_value
 
@@ -128,7 +124,7 @@ local get_icbms_research_ingredients = function ()
 
         for k, v in pairs(data.raw) do
             found_match = false
-            if (k == "tool") then found_func(param, param_val, v, "tool")
+            if (k == "technology") then found_func(param, param_val, v, "technology")
             end
 
             if (found_match) then break end
@@ -171,17 +167,19 @@ local get_icbms_research_ingredients = function ()
 
     return ingredients
 end
-local get_icbms_research_time = function ()
-    local setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME.name].value
-    end
-
-    return setting
-end
 
 --[[ ICBMs Technology ]]
+local cn_payload_vehicle_unlock =
+{
+    type = "unlock-recipe",
+    recipe = "cn-payload-vehicle",
+}
+
+local technology_effects =
+{
+    cn_payload_vehicle_unlock,
+}
+
 data:extend({
     {
         type = "technology",
@@ -200,12 +198,13 @@ data:extend({
             },
         },
         localised_description = { "technology-description.icbms" },
+        effects = technology_effects,
         prerequisites = get_icbms_research_prerequisites(),
         unit =
         {
-            count = get_icbms_research_count(),
+            count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_COUNT.name }),
             ingredients = get_icbms_research_ingredients(),
-            time = get_icbms_research_time(),
+            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ICBMS_RESEARCH_TIME.name }),
         },
     },
 })

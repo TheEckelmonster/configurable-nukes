@@ -7,68 +7,13 @@ end
 
 local Util = require("__core__.lualib.util")
 
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
--- CRAFTING_TIME
-local get_crafting_time = function ()
-    local setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_TIME.default_value
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_TIME.name].value
-    end
-
-    return setting
-end
 -- INPUT_MULTIPLIER
 local get_input_multiplier = function ()
-    local setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER.name].value
-    end
-
-    return setting
-end
--- RESULT_COUNT
-local get_result_count = function ()
-    local setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RESULT_COUNT.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RESULT_COUNT.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RESULT_COUNT.name].value
-    end
-
-    return setting
-end
--- ADVANCED_BALLISTIC_ROCKET_PART_RECIPE
-local get_ballistic_rocket_part_recipe_string = function ()
-    -- local setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.default_value
-    local setting = ""
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.name].value
-    end
-
-    return setting
-end
--- ADVANCED_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE
-local get_ballistic_rocket_part_recipe_allow_none = function ()
-    local setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE.name].value
-    end
-
-    return setting
-end
--- ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE
-local get_ballistic_rocket_part_crafting_machine = function ()
-    local setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.name].value
-    end
-
-    return setting
+    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER.name })
 end
 -- ADVANCED_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES
 local get_ballistic_rocket_part_additional_crafting_machines = function ()
@@ -133,19 +78,9 @@ local get_ballistic_rocket_part_additional_crafting_machines = function ()
 
     return crafting_machines
 end
--- ATOMIC_WARHEAD_ENABLED
-local get_atomic_warhead_enabled = function ()
-    local setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name].value
-    end
-
-    return setting
-end
 
 local ingredients = {}
-local ballistic_rocket_part_recipe_string = get_ballistic_rocket_part_recipe_string()
+local ballistic_rocket_part_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.name })
 
 --[[ Looks for:
         >= 0 commas,
@@ -210,7 +145,7 @@ while param ~= nil and param_val ~= nil do
     i, j, param, param_val = string.find(ballistic_rocket_part_recipe_string, search_pattern, 1)
 end
 
-if (not get_ballistic_rocket_part_recipe_allow_none()) then
+if (not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE.name })) then
     -- if (#ingredients <= 0) then
     --     for k, v in pairs(possible_matches) do
     --         table.insert(ingredients, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
@@ -230,15 +165,15 @@ local ipbm_rocket_part_advanced = Util.table.deepcopy(rocket_part_recipe)
 
 -- ipbm_rocket_part_advanced.name = "ipbm-rocket-part-advanced"
 ipbm_rocket_part_advanced.name = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RECIPE.recipe_name
-ipbm_rocket_part_advanced.energy_required = get_crafting_time()
+ipbm_rocket_part_advanced.energy_required = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_TIME.name })
 ipbm_rocket_part_advanced.ingredients = ingredients
-ipbm_rocket_part_advanced.category = get_ballistic_rocket_part_crafting_machine()
+ipbm_rocket_part_advanced.category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.name })
 ipbm_rocket_part_advanced.additional_categories = get_ballistic_rocket_part_additional_crafting_machines()
 ipbm_rocket_part_advanced.hide_from_player_crafting = false
 ipbm_rocket_part_advanced.auto_recycle = false
 ipbm_rocket_part_advanced.overload_multiplier = 2
 ipbm_rocket_part_advanced.allow_inserter_overload = true
-ipbm_rocket_part_advanced.results = {{ type = "item", name = name_prefix .. "ipbm-rocket-part", amount = get_result_count() }}
+ipbm_rocket_part_advanced.results = {{ type = "item", name = name_prefix .. "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
 ipbm_rocket_part_advanced.enabled = false
 ipbm_rocket_part_advanced.order = "yzzz[ipbm-rocket-part-advanced]-yzzz[ipbm-rocket-part-advanced]"
 ipbm_rocket_part_advanced.localised_name = { "recipe-name." .. name_prefix .. "ipbm-rocket-part-advanced" }

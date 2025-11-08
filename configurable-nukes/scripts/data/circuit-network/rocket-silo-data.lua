@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
+
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
 
 local circuit_network_rocket_silo_data = {}
 
@@ -47,8 +50,8 @@ function circuit_network_rocket_silo_data:new_space_location_gui_selection(data)
 end
 
 function circuit_network_rocket_silo_data:new(o)
-    Log.debug("circuit_network_rocket_silo_data:new")
-    Log.info(o)
+    _Log.debug("circuit_network_rocket_silo_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,
