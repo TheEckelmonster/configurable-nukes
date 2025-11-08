@@ -129,12 +129,12 @@ local rod_from_god =
 }
 
 if (sa_active) then
-    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-plate",   amount = 1000, })
-    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-carbide", amount = 500,  })
+    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-plate",   amount = 2000, })
+    table.insert(rod_from_god.ingredients, { type = "item", name = "tungsten-carbide", amount = 1000,  })
 elseif (se_active) then
     table.insert(rod_from_god.ingredients, { type = "item", name = "se-heavy-girder", amount = 500,  })
 else
-    table.insert(rod_from_god.ingredients, { type = "item", name = "steel-plate", amount = 2000,  })
+    table.insert(rod_from_god.ingredients, { type = "item", name = "steel-plate", amount = 3000,  })
 end
 
 --[[ Jericho ]]
@@ -564,6 +564,7 @@ local technology_jericho =
 {
     default_technology_prerequisites_jericho = {
         "icbms",
+        "explosive-rocketry",
     },
     default_technology_ingredients_jericho = {
         { name = "automation-science-pack",  amount = 1 },
@@ -591,6 +592,7 @@ local technology_tesla_rocket =
     default_technology_prerequisites_tesla_rocket = {
         "icbms",
         "tesla-weapons",
+        "lightning-collector",
     },
     default_technology_ingredients_tesla_rocket = {
         { name = "automation-science-pack",      amount = 1 },
