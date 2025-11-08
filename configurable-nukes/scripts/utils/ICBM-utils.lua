@@ -1262,6 +1262,55 @@ function icbm_utils.launch_initiated(data)
     return 1, icbm_data
 end
 
+local pos_neg = 1
+function icbm_utils.spawn_jericho_event(event, event_data)
+    Log.debug("icbm_utils.spawn_jericho_event")
+    Log.info(event)
+    Log.info(event_data)
+
+    Event_Handler:unregister_event({
+        event_name = "on_nth_tick",
+        nth_tick = event_data.nth_tick,
+        source_name = event_data.source_name,
+    })
+
+    local function create_jericho_rocket(params)
+        params.payload_spawn_position.x = params.payload_spawn_position.x + math.random(2 ^ 4) * pos_neg
+        params.payload_spawn_position.y = params.payload_spawn_position.y - 2 ^ 5 - math.random(2 ^ 4)
+
+        pos_neg = pos_neg * -1
+
+        params.icbm.target_surface.create_entity({
+            name = params.icbm.item_name .. "-" .. params.icbm.item.quality,
+            position = params.payload_spawn_position,
+            direction = defines.direction.south,
+            force = params.force,
+            target = params.target,
+            source = params.icbm.source_position,
+            --[[ TODO: Make configurable ]]
+            cause = params.icbm.same_surface and params.icbm.source_silo and params.icbm.source_silo.valid and params.icbm.source_silo or params.force,
+            speed = 0.00000025 * math.random(1000) * math.exp(1),
+            base_damage_modifiers = {
+                damage_modifier = 1,
+                damage_addition = 1,
+                radius_modifier = 1,
+            },
+            bonus_damage_modifiers = {
+                damage_modifier = 1,
+                damage_addition = 1,
+                radius_modifier = 1,
+            },
+        })
+    end
+
+    create_jericho_rocket({
+        icbm = event_data.icbm,
+        payload_spawn_position = event_data.payload_spawn_position,
+        force = event_data.force,
+        target = event_data.target,
+    })
+end
+
 function icbm_utils.payload_arrived(data)
     Log.debug("icbm_utils.payload_arrived")
     Log.info(data)
@@ -1318,27 +1367,139 @@ function icbm_utils.payload_arrived(data)
             end
         end
 
-        icbm.target_surface.create_entity({
-            name = icbm.item_name .. "-" .. icbm.item.quality,
-            position = payload_spawn_position,
-            direction = defines.direction.south,
-            force = force,
-            target = icbm.target_position,
-            source = icbm.source_position,
-            --[[ TODO: Make configurable ]]
-            cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-            speed = 0.1 * math.exp(1),
-            base_damage_modifiers = {
-                damage_modifier = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
-                damage_addition = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
-                radius_modifier = 1,
-            },
-            bonus_damage_modifiers = {
-                damage_modifier = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.name }) or 1,
-                damage_addition = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.name }) or 1,
-                radius_modifier = icbm.type == 1,
-            },
-        })
+        if (icbm.item_name == "cn-jericho") then
+
+            local quality_factor = prototypes.quality[icbm.item.quality].level or 0
+            local repititions = 3 + math.ceil(quality_factor / 3)
+            local settings_modifier = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_SUB_ROCKET_REPEAT_MULTIPLIER.name, reindex = true })
+            if (settings_modifier == nil) then settings_modifier = 1 end
+            repititions = repititions
+
+            local target =
+            {
+                x = icbm.target_position.x,
+                y = icbm.target_position.y,
+            }
+            local _target = { x = target.x, y = target.y }
+            local function reset_target()
+                return { x = _target.x, y = _target.y }
+            end
+            local function random_scaling()
+                return math.random(10000) * .0001355
+            end
+
+            local area_setting = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_AREA_MULTIPLIER.name, reindex = true })
+            if (area_setting == nil) then area_setting = 1 end
+
+            local targets = {}
+            local ticks = {}
+
+            local threshold = 100
+
+            local rockets_created = 0
+            local random_additional_ticks = 1
+
+            local do_break = false
+            for i = 0, repititions, 1 do
+                if (do_break) then break end
+
+                local loop_count = 2 ^ i + quality_factor + settings_modifier
+                for j = 0, loop_count, 1 do
+
+                    if (threshold < 1) then do_break = true; break end
+                    if (math.random(100) <= threshold) then
+                        threshold = threshold - 0.5
+                        for k = 0, settings_modifier, 1 do
+                            target = reset_target()
+
+                            local factor = ((i) * 5 + 4 * (quality_factor + 1) * area_setting) + math.random(5)
+
+                            if (rockets_created % 5 > 0 and rockets_created % 5 ~= 3) then
+                                target.x = target.x + random_scaling() * factor * math.cos(2 * math.pi * (j / loop_count))
+                                target.y = target.y + random_scaling() * factor * math.sin(2 * math.pi * (j / loop_count))
+                            else
+                                target.x = target.x + factor * math.cos(2 * math.pi * (j / loop_count))
+                                target.y = target.y + factor * math.sin(2 * math.pi * (j / loop_count))
+                            end
+
+                            if (rockets_created > 0) then
+                                random_additional_ticks = random_additional_ticks + math.random(10)
+                            end
+
+                            local nth_tick = game.tick + random_additional_ticks
+                            local source_name = "icbm_utils.spawn_jericho_event-"
+                                                .. rockets_created .. "-"
+                                                .. "on_nth_tick-"
+                                                .. nth_tick
+
+                            rockets_created = rockets_created + 1
+
+                            table.insert(targets, { x = target.x, y = target.y })
+                            table.insert(ticks, { nth_tick = nth_tick, source_name = source_name })
+                        end
+                    end
+                end
+            end
+
+            for i = 1, #ticks, 1 do
+                if (i == 1) then
+                    target = reset_target()
+                else
+                    if (targets and #targets > 0) then
+                        local rand = math.random(#targets)
+                        target = table.remove(targets, rand)
+                    else
+                        target = reset_target()
+                    end
+                end
+
+                local nth_tick = ticks[i].nth_tick
+                local source_name = ticks[i].source_name
+
+                if (target and nth_tick and source_name) then
+                    Event_Handler:register_event({
+                        event_name = "on_nth_tick",
+                        nth_tick = nth_tick,
+                        restore_on_load = true,
+                        source_name = source_name,
+                        func = icbm_utils.spawn_jericho_event,
+                        func_name = "icbm_utils.spawn_jericho_event",
+                        func_data =
+                        {
+                            nth_tick = nth_tick,
+                            source_name = source_name,
+                            icbm = icbm,
+                            payload_spawn_position = { x = payload_spawn_position.x, y = payload_spawn_position.y },
+                            force = force,
+                            target = { x = target.x, y = target.y },
+                        },
+                        save_to_storage = true,
+                    })
+                end
+            end
+        else
+            icbm.target_surface.create_entity({
+                name = icbm.item_name .. "-" .. icbm.item.quality,
+                position = payload_spawn_position,
+                direction = defines.direction.south,
+                force = force,
+                target = icbm.target_position,
+                source = icbm.source_position,
+                --[[ TODO: Make configurable ]]
+                cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
+                speed = 0.1 * math.exp(1),
+                base_damage_modifiers = {
+                    damage_modifier = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
+                    damage_addition = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
+                    radius_modifier = 1,
+                },
+                bonus_damage_modifiers = {
+                    damage_modifier = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.name }) or 1,
+                    damage_addition = icbm.type == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name }) or icbm.type == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.name }) or 1,
+                    radius_modifier = 1,
+                },
+            })
+        end
 
         script.raise_event(
             Custom_Events.cn_on_payload_delivered.name,

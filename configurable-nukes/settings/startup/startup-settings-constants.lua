@@ -83,17 +83,24 @@ if (se_active) then
     }
 end
 
+if (mods and mods["atan-nuclear-science"]) then
+    table.insert(default_technology_ingredients_atomic_warhead, { name = "nuclear-science-pack", amount = 1 })
+end
+
+--[[ Payload Vehicle ]]
+
 local cn_payload_vehicle = nil
 
 cn_payload_vehicle =
 {
     ingredients =
     {
-        { type = "item", name = "radar",                 amount = 5   },
-        { type = "item", name = "low-density-structure", amount = 25 },
+        { type = "item", name = "radar",                 amount = 4   },
+        { type = "item", name = "storage-tank",          amount = 2   },
+        { type = "item", name = "low-density-structure", amount = 25  },
         { type = "item", name = "accumulator",           amount = 10  },
         { type = "item", name = "steel-chest",           amount = 10  },
-        { type = "item", name = "processing-unit",       amount = 25 },
+        { type = "item", name = "processing-unit",       amount = 25  },
         { type = "item", name = "rocket-fuel",           amount = 25  },
     },
     result_amount = 1,
@@ -106,6 +113,8 @@ cn_payload_vehicle =
 if (se_active) then
     table.insert(cn_payload_vehicle.ingredients, { type = "item", name = "se-heat-shielding",     amount = 25, })
 end
+
+--[[ Rod from God ]]
 
 local rod_from_god =
 {
@@ -128,9 +137,46 @@ else
     table.insert(rod_from_god.ingredients, { type = "item", name = "steel-plate", amount = 2000,  })
 end
 
-if (mods and mods["atan-nuclear-science"]) then
-    table.insert(default_technology_ingredients_atomic_warhead, { name = "nuclear-science-pack", amount = 1 })
+--[[ Jericho ]]
+local jericho =
+{
+    ingredients =
+    {
+        { type = "item", name = "cn-payload-vehicle", amount = 1, },
+        { type = "item", name = "explosive-rocket", amount = 100, },
+        { type = "item", name = "advanced-circuit", amount = 100, },
+
+    },
+    result_amount = 1,
+    energy_required = 50,
+    hide_from_player_crafting = false,
+    auto_recycle = false,
+}
+
+if (sa_active) then
+    table.insert(jericho.ingredients, { type = "item", name = "carbon-fiber", amount = 100, })
+elseif (se_active) then
+    table.insert(jericho.ingredients, { type = "item", name = "se-aeroframe-pole", amount = 50, })
+else
+    table.insert(jericho.ingredients, { type = "item", name = "low-density-structure", amount = 50, })
 end
+
+--[[ tesla-rocket ]]
+local tesla_rocket =
+{
+    ingredients =
+    {
+        { type = "item", name = "cn-payload-vehicle", amount = 1, },
+        { type = "item", name = "lightning-collector", amount = 1, },
+        { type = "item", name = "processing-unit", amount = 10, },
+        { type = "item", name = "tesla-ammo", amount = 100, },
+        { type = "fluid", name = "electrolyte", amount = 1000, },
+    },
+    result_amount = 1,
+    energy_required = 50,
+    hide_from_player_crafting = false,
+    auto_recycle = false,
+}
 
 local default_technology_prerequisites_ICBMs = {
     "automation-science-pack",
@@ -486,6 +532,8 @@ if (k2so_active) then
     end
 end
 
+--[[ Rod from God ]]
+
 local technology_rod_from_god =
 {
     default_technology_prerequisites_rod_from_god = {
@@ -509,6 +557,54 @@ elseif (se_active) then
     table.insert(technology_rod_from_god.default_technology_prerequisites_rod_from_god, "se-heavy-girder")
     table.insert(technology_rod_from_god.default_technology_ingredients_rod_from_god, { name = "se-material-science-pack-1", amount = 1 })
 end
+
+--[[ Jericho ]]
+
+local technology_jericho =
+{
+    default_technology_prerequisites_jericho = {
+        "icbms",
+    },
+    default_technology_ingredients_jericho = {
+        { name = "automation-science-pack",  amount = 1 },
+        { name = "logistic-science-pack",    amount = 1 },
+        { name = "chemical-science-pack",    amount = 1 },
+        { name = "military-science-pack",    amount = 1 },
+        { name = "utility-science-pack",     amount = 1 },
+        { name = "production-science-pack",  amount = 1 },
+        { name = "space-science-pack",       amount = 1 },
+    }
+}
+
+if (sa_active) then
+    table.insert(technology_jericho.default_technology_prerequisites_jericho, "carbon-fiber")
+    table.insert(technology_jericho.default_technology_ingredients_jericho, { name = "agricultural-science-pack", amount = 1 })
+elseif (se_active) then
+    table.insert(technology_jericho.default_technology_prerequisites_jericho, "se-aeroframe-pole")
+    table.insert(technology_jericho.default_technology_ingredients_jericho, { name = "se-astronomic-science-pack-1", amount = 1 })
+end
+
+--[[ tesla-rocket ]]
+
+local technology_tesla_rocket =
+{
+    default_technology_prerequisites_tesla_rocket = {
+        "icbms",
+        "tesla-weapons",
+    },
+    default_technology_ingredients_tesla_rocket = {
+        { name = "automation-science-pack",      amount = 1 },
+        { name = "logistic-science-pack",        amount = 1 },
+        { name = "chemical-science-pack",        amount = 1 },
+        { name = "military-science-pack",        amount = 1 },
+        { name = "utility-science-pack",         amount = 1 },
+        { name = "production-science-pack",      amount = 1 },
+        { name = "space-science-pack",           amount = 1 },
+        { name = "electromagnetic-science-pack", amount = 1 },
+    }
+}
+
+--[[ nuclear-weapons ]]
 
 local default_technology_prerequisites_nuclear_weapons = {
     "atomic-bomb",
@@ -701,6 +797,71 @@ startup_settings_constants.settings = {
         setting_type = "startup",
         order = "bbe",
         default_value = false,
+    },
+    --[[ jericho ]]
+    JERICHO_AREA_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-area-multiplier",
+        setting_type = "startup",
+        order = "bbb",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    JERICHO_DAMAGE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-damage-multiplier",
+        setting_type = "startup",
+        order = "bbc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    JERICHO_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-repeat-multiplier",
+        setting_type = "startup",
+        order = "bbd",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    JERICHO_SUB_ROCKET_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-sub-rocket-repeat-multiplier",
+        setting_type = "startup",
+        order = "bbd",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01
+    },
+    --[[ tesla-rocket ]]
+    TESLA_ROCKET_AREA_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-area-multiplier",
+        setting_type = "startup",
+        order = "bbb",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+    },
+    TESLA_ROCKET_DAMAGE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-damage-multiplier",
+        setting_type = "startup",
+        order = "bbc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
+    },
+    TESLA_ROCKET_REPEAT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-repeat-multiplier",
+        setting_type = "startup",
+        order = "bbd",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.01,
     },
     --[[ Krastorio2-spaced-out: kr-nuclear-turret-rocket ]]
     K2_SO_NUCLEAR_TURRET_ROCKET_AREA_MULTIPLIER = {
@@ -1216,6 +1377,188 @@ startup_settings_constants.settings = {
     ROD_FROM_GOD_ADDITIONAL_CRAFTING_MACHINES = {
         type = "string-setting",
         name = prefix .. "rod-from-god-additional-crafting-machines",
+        setting_type = "startup",
+        order = "dck",
+        default_value = "",
+        allow_blank = true,
+        auto_trim = true,
+    },
+    --[[ jericho ]]
+    JERICHO_STACK_SIZE = {
+        type = "int-setting",
+        name = prefix .. "jericho-stack-size",
+        setting_type = "startup",
+        order = "dcb",
+        default_value = 1,
+        maximum_value = 200,
+        minimum_value = 1
+    },
+    JERICHO_WEIGHT_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-weight-modifier",
+        setting_type = "startup",
+        order = "dcc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.0005
+    },
+    JERICHO_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "jericho-crafting-time",
+        setting_type = "startup",
+        order = "dce",
+        default_value = jericho and jericho.energy_required or 50,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001
+    },
+    JERICHO_INPUT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "jericho-input-multiplier",
+        setting_type = "startup",
+        order = "dcf",
+        default_value = 1,
+        maximum_value = 111,
+        minimum_value = 0.0001
+    },
+    JERICHO_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "jericho-result-count",
+        setting_type = "startup",
+        order = "dcg",
+        default_value = 1,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1
+    },
+    JERICHO_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "jericho-recipe",
+        setting_type = "startup",
+        order = "dch",
+        ingredients = jericho and jericho.ingredients or nil,
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    JERICHO_RECIPE_ALLOW_NONE = {
+        type = "bool-setting",
+        name = prefix .. "jericho-recipe-allow-none",
+        setting_type = "startup",
+        order = "dci",
+        default_value = false,
+    },
+    JERICHO_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "jericho-crafting-machine",
+        setting_type = "startup",
+        order = "dcj",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+    },
+    JERICHO_ADDITIONAL_CRAFTING_MACHINES = {
+        type = "string-setting",
+        name = prefix .. "jericho-additional-crafting-machines",
+        setting_type = "startup",
+        order = "dck",
+        default_value = "",
+        allow_blank = true,
+        auto_trim = true,
+    },
+    --[[ tesla-rocket ]]
+    TESLA_ROCKET_STACK_SIZE = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-stack-size",
+        setting_type = "startup",
+        order = "dcb",
+        default_value = 1,
+        maximum_value = 200,
+        minimum_value = 1,
+    },
+    TESLA_ROCKET_WEIGHT_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-weight-modifier",
+        setting_type = "startup",
+        order = "dcc",
+        default_value = 1,
+        maximum_value = 11,
+        minimum_value = 0.0005,
+    },
+    TESLA_ROCKET_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-crafting-time",
+        setting_type = "startup",
+        order = "dce",
+        default_value = tesla_rocket and tesla_rocket.energy_required or 50,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001,
+    },
+    TESLA_ROCKET_INPUT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "tesla-rocket-input-multiplier",
+        setting_type = "startup",
+        order = "dcf",
+        default_value = 1,
+        maximum_value = 111,
+        minimum_value = 0.0001,
+    },
+    TESLA_ROCKET_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-result-count",
+        setting_type = "startup",
+        order = "dcg",
+        default_value = 1,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1,
+    },
+    TESLA_ROCKET_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-recipe",
+        setting_type = "startup",
+        order = "dch",
+        ingredients = tesla_rocket and tesla_rocket.ingredients or nil,
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    TESLA_ROCKET_RECIPE_ALLOW_NONE = {
+        type = "bool-setting",
+        name = prefix .. "tesla-rocket-recipe-allow-none",
+        setting_type = "startup",
+        order = "dci",
+        default_value = false,
+    },
+    TESLA_ROCKET_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-crafting-machine",
+        setting_type = "startup",
+        order = "dcj",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+    },
+    TESLA_ROCKET_ADDITIONAL_CRAFTING_MACHINES = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-additional-crafting-machines",
         setting_type = "startup",
         order = "dck",
         default_value = "",
@@ -1991,7 +2334,7 @@ startup_settings_constants.settings = {
         minimum_value = 1,
         maximum_value = 2 ^ 42,
     },
-    --[[ Rocket Control Unit ]]
+    --[[ Rod from God ]]
     ROD_FROM_GOD_RESEARCH_PREREQUISITES = {
         type = "string-setting",
         name = prefix .. "rod-from-god-research-prerequisites",
@@ -2024,6 +2367,84 @@ startup_settings_constants.settings = {
     ROD_FROM_GOD_RESEARCH_COUNT = {
         type = "int-setting",
         name = prefix .. "rod-from-god-research-count",
+        setting_type = "startup",
+        order = "dhd",
+        default_value = 5000,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    --[[ Jericho ]]
+    JERICHO_RESEARCH_PREREQUISITES = {
+        type = "string-setting",
+        name = prefix .. "jericho-research-prerequisites",
+        setting_type = "startup",
+        order = "dha",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        prerequisites = technology_jericho.default_technology_prerequisites_jericho,
+    },
+    JERICHO_RESEARCH_INGREDIENTS = {
+        type = "string-setting",
+        name = prefix .. "jericho-research-ingredients",
+        setting_type = "startup",
+        order = "dhb",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        ingredients = technology_jericho.default_technology_ingredients_jericho
+    },
+    JERICHO_RESEARCH_TIME = {
+        type = "int-setting",
+        name = prefix .. "jericho-research-time",
+        setting_type = "startup",
+        order = "dhc",
+        default_value = 60,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    JERICHO_RESEARCH_COUNT = {
+        type = "int-setting",
+        name = prefix .. "jericho-research-count",
+        setting_type = "startup",
+        order = "dhd",
+        default_value = 5000,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    --[[ tesla-rocket ]]
+    TESLA_ROCKET_RESEARCH_PREREQUISITES = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-research-prerequisites",
+        setting_type = "startup",
+        order = "dha",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        prerequisites = technology_tesla_rocket.default_technology_prerequisites_tesla_rocket,
+    },
+    TESLA_ROCKET_RESEARCH_INGREDIENTS = {
+        type = "string-setting",
+        name = prefix .. "tesla-rocket-research-ingredients",
+        setting_type = "startup",
+        order = "dhb",
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+        ingredients = technology_tesla_rocket.default_technology_ingredients_tesla_rocket,
+    },
+    TESLA_ROCKET_RESEARCH_TIME = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-research-time",
+        setting_type = "startup",
+        order = "dhc",
+        default_value = 60,
+        minimum_value = 1,
+        maximum_value = 2 ^ 42,
+    },
+    TESLA_ROCKET_RESEARCH_COUNT = {
+        type = "int-setting",
+        name = prefix .. "tesla-rocket-research-count",
         setting_type = "startup",
         order = "dhd",
         default_value = 5000,
@@ -2191,6 +2612,8 @@ if (sa_active) then
 
         table.insert(startup_settings_constants.settings.PAYLOAD_VEHICLE_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ROD_FROM_GOD_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.JERICHO_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.TESLA_ROCKET_CRAFTING_MACHINE.allowed_values, v)
 
         table.insert(startup_settings_constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
@@ -2274,6 +2697,11 @@ if (se_active) then
         table.insert(startup_settings_constants.settings.ATOMIC_BOMB_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ATOMIC_WARHEAD_CRAFTING_MACHINE.allowed_values, v)
 
+        table.insert(startup_settings_constants.settings.PAYLOAD_VEHICLE_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.ROD_FROM_GOD_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.JERICHO_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.TESLA_ROCKET_CRAFTING_MACHINE.allowed_values, v)
+
         table.insert(startup_settings_constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.allowed_values, v)
 
@@ -2320,6 +2748,12 @@ create_recipe_string({ ingredients = cn_payload_vehicle.ingredients, setting = s
 
 -- ROD_FROM_GOD_RECIPE
 create_recipe_string({ ingredients = rod_from_god.ingredients, setting = startup_settings_constants.settings.ROD_FROM_GOD_RECIPE })
+
+-- JERICHO_RECIPE
+create_recipe_string({ ingredients = jericho.ingredients, setting = startup_settings_constants.settings.JERICHO_RECIPE })
+
+-- TESLA_ROCKET_RECIPE
+create_recipe_string({ ingredients = tesla_rocket.ingredients, setting = startup_settings_constants.settings.TESLA_ROCKET_RECIPE })
 
 local create_research_prerequisites_string = function (data)
     if (not data or type(data) ~= "table") then return end
@@ -2368,6 +2802,18 @@ create_research_prerequisites_string({ prerequisites = technology_rod_from_god.d
 
 -- ROD_FROM_GOD_RESEARCH_INGREDIENTS
 create_research_ingredients_string({ ingredients = technology_rod_from_god.default_technology_ingredients_rod_from_god, setting = startup_settings_constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS })
+
+-- JERICHO_RESEARCH_PREREQUISITES
+create_research_prerequisites_string({ prerequisites = technology_jericho.default_technology_prerequisites_jericho, setting = startup_settings_constants.settings.JERICHO_RESEARCH_PREREQUISITES })
+
+-- JERICHO_RESEARCH_INGREDIENTS
+create_research_ingredients_string({ ingredients = technology_jericho.default_technology_ingredients_jericho, setting = startup_settings_constants.settings.JERICHO_RESEARCH_INGREDIENTS })
+
+-- TESLA_ROCKET_RESEARCH_PREREQUISITES
+create_research_prerequisites_string({ prerequisites = technology_tesla_rocket.default_technology_prerequisites_tesla_rocket, setting = startup_settings_constants.settings.TESLA_ROCKET_RESEARCH_PREREQUISITES })
+
+-- TESLA_ROCKET_RESEARCH_INGREDIENTS
+create_research_ingredients_string({ ingredients = technology_tesla_rocket.default_technology_ingredients_tesla_rocket, setting = startup_settings_constants.settings.TESLA_ROCKET_RESEARCH_INGREDIENTS })
 
 -- ICBMS_RESEARCH_PREREQUISITES
 create_research_prerequisites_string({ prerequisites = default_technology_prerequisites_ICBMs, setting = startup_settings_constants.settings.ICBMS_RESEARCH_PREREQUISITES })

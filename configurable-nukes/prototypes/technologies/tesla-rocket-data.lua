@@ -1,19 +1,16 @@
---[[ Space-Exploration is already doing its own thing with the rocket-control-unit technology
-    -> Simply return to avoid mucking things up
-]]
-local sa_active = mods and mods["space-age"] and true
-local se_active = mods and mods["space-exploration"] and true
-if (se_active) then return end
-
 Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
-local get_rocket_control_unit_research_prerequisites = function ()
-    local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.default_value
+local sa_active = mods and mods["space-age"] and true
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_PREREQUISITES.name].value
+if (not sa_active) then return end
+
+local get_tesla_rocket_research_prerequisites = function ()
+    local setting = Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_PREREQUISITES.default_value
+
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_PREREQUISITES.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_PREREQUISITES.name].value
     end
 
     local prerequisites = {}
@@ -45,7 +42,6 @@ local get_rocket_control_unit_research_prerequisites = function ()
     end
 
     while param ~= nil do
-
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
         param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
@@ -71,27 +67,16 @@ local get_rocket_control_unit_research_prerequisites = function ()
     -- end
 
     if (#prerequisites <= 0) then
-        prerequisites = {
-            "icbms",
-        }
-
-        if (mods and mods["space-exploration"]) then
-            prerequisites =
-            {
-                "chemical-science-pack",
-                "advanced-circuit",
-                "battery",
-            }
-        end
+        prerequisites = Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_PREREQUISITES.prerequisites
     end
 
     return prerequisites
 end
-local get_rocket_control_unit_research_ingredients = function ()
-    local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.default_value
+local get_tesla_rocket_research_ingredients = function ()
+    local setting = Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_INGREDIENTS.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_INGREDIENTS.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_INGREDIENTS.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_INGREDIENTS.name].value
     end
 
     local ingredients = {}
@@ -131,7 +116,7 @@ local get_rocket_control_unit_research_ingredients = function ()
 
         for k, v in pairs(data.raw) do
             found_match = false
-            if (k == "tool") then found_func(param, param_val, v, "tool")
+            if (k == "technology") then found_func(param, param_val, v, "technology")
             end
 
             if (found_match) then break end
@@ -151,60 +136,70 @@ local get_rocket_control_unit_research_ingredients = function ()
     -- end
 
     if (#ingredients <= 0) then
-        ingredients = {
-            { "automation-science-pack", 1 },
-            { "logistic-science-pack", 1 },
-            { "chemical-science-pack", 1 },
-            { "military-science-pack", 1 },
-            { "utility-science-pack", 1 },
-            { "production-science-pack", 1 },
-            { "space-science-pack", 1 },
-        }
-
-        if (mods and mods["space-exploration"]) then
-            ingredients =
-            {
-                { name = "automation-science-pack",    amount = 1 },
-                { name = "logistic-science-pack",      amount = 1 },
-                { name = "chemical-science-pack",      amount = 1 },
-            }
-        end
+        ingredients = Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_INGREDIENTS.ingredients
     end
 
     return ingredients
 end
 
---[[ Rocket Control Unit Unlock ]]
-if (sa_active or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })) then
-    data:extend({
+--[[ tesla_rocket Technology ]]
+local cn_rod_from_god_unlock =
+{
+    type = "unlock-recipe",
+    recipe = "cn-tesla-rocket",
+}
+
+local technology_effects =
+{
+    cn_rod_from_god_unlock,
+}
+
+local icons =
+{
+    {
+        icon = "__base__/graphics/technology/atomic-bomb.png",
+        icon_size = 256,
+    },
+    {
+        icon = "__base__/graphics/technology/rocket-silo.png",
+        icon_size = 256,
+        scale = 1 / 2 ^ 2,
+        shift = { 0, 32 },
+    },
+    {
+        icon = "__space-age__/graphics/technology/fulgora.png",
+        icon_size = 256,
+        scale = 1 / 2 ^ 3,
+        shift = { 0, 64 },
+    },
+    {
+        icon = "__space-age__/graphics/technology/lightning-collector.png",
+        icon_size = 256,
+        scale = 1 / 2 ^ 3,
+        shift = { -32, 64 },
+    },
+    {
+        icon = "__space-age__/graphics/icons/lightning.png",
+        icon_size = 64,
+        scale = 1 / 2 ^ 1,
+        shift = { 32, 64 },
+    },
+}
+
+data:extend({
+    {
+        type = "technology",
+        name = "cn-tesla-rocket",
+        icons = icons,
+        localised_name = { "technology-name.cn-tesla-rocket" },
+        localised_description = { "technology-description.cn-tesla-rocket" },
+        effects = technology_effects,
+        prerequisites = get_tesla_rocket_research_prerequisites(),
+        unit =
         {
-            type = "technology",
-            name = "rocket-control-unit",
-            -- name = "cn-rocket-control-unit",
-            icons =
-            {
-                {
-                    icon = "__configurable-nukes__/graphics/technology/rocket-control-unit.png",
-                    icon_size = 256,
-                },
-            },
-            icon_size = 256,
-            localised_description = { "technology-description.rocket-control-unit" },
-            effects =
-            {
-                {
-                    type = "unlock-recipe",
-                    recipe = "rocket-control-unit"
-                    -- recipe = "cn-rocket-control-unit"
-                }
-            },
-            prerequisites = get_rocket_control_unit_research_prerequisites(),
-            unit =
-            {
-                ingredients = get_rocket_control_unit_research_ingredients(),
-                time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_TIME.name }),
-                count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESEARCH_COUNT.name }),
-            }
-        }
-    })
-end
+            count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_COUNT.name }),
+            ingredients = get_tesla_rocket_research_ingredients(),
+            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_TIME.name }),
+        },
+    },
+})

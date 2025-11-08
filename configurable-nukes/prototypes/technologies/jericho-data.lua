@@ -5,11 +5,11 @@ local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-uti
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
-local get_rod_from_god_research_prerequisites = function ()
-    local setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES.default_value
+local get_jericho_research_prerequisites = function ()
+    local setting = Startup_Settings_Constants.settings.JERICHO_RESEARCH_PREREQUISITES.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.JERICHO_RESEARCH_PREREQUISITES.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.JERICHO_RESEARCH_PREREQUISITES.name].value
     end
 
     local prerequisites = {}
@@ -66,16 +66,16 @@ local get_rod_from_god_research_prerequisites = function ()
     -- end
 
     if (#prerequisites <= 0) then
-        prerequisites = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_PREREQUISITES.prerequisites
+        prerequisites = Startup_Settings_Constants.settings.JERICHO_RESEARCH_PREREQUISITES.prerequisites
     end
 
     return prerequisites
 end
-local get_rod_from_god_research_ingredients = function ()
-    local setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS.default_value
+local get_jericho_research_ingredients = function ()
+    local setting = Startup_Settings_Constants.settings.JERICHO_RESEARCH_INGREDIENTS.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.JERICHO_RESEARCH_INGREDIENTS.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.JERICHO_RESEARCH_INGREDIENTS.name].value
     end
 
     local ingredients = {}
@@ -135,17 +135,17 @@ local get_rod_from_god_research_ingredients = function ()
     -- end
 
     if (#ingredients <= 0) then
-        ingredients = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_INGREDIENTS.ingredients
+        ingredients = Startup_Settings_Constants.settings.JERICHO_RESEARCH_INGREDIENTS.ingredients
     end
 
     return ingredients
 end
 
---[[ rod-from-god Technology ]]
+--[[ jericho Technology ]]
 local cn_rod_from_god_unlock =
 {
     type = "unlock-recipe",
-    recipe = "cn-rod-from-god",
+    recipe = "cn-jericho",
 }
 
 local technology_effects =
@@ -172,7 +172,7 @@ local icons =
         shift = { 0, 64 },
     },
     {
-        icon = "__base__/graphics/technology/steel-processing.png",
+        icon = "__base__/graphics/technology/explosive-rocketry.png",
         icon_size = 256,
         scale = 1 / 2 ^ 3,
         shift = { -32, 64 },
@@ -199,19 +199,19 @@ if (sa_active) then
             shift = { 0, 32 },
         },
         {
-            icon = "__space-age__/graphics/technology/vulcanus.png",
+            icon = "__space-age__/graphics/technology/gleba.png",
             icon_size = 256,
             scale = 1 / 2 ^ 3,
             shift = { 0, 64 },
         },
         {
-            icon = "__space-age__/graphics/technology/tungsten-steel.png",
+            icon = "__base__/graphics/technology/explosive-rocketry.png",
             icon_size = 256,
             scale = 1 / 2 ^ 3,
             shift = { -32, 64 },
         },
         {
-            icon = "__space-age__/graphics/technology/tungsten-carbide.png",
+            icon = "__space-age__/graphics/technology/carbon-fiber.png",
             icon_size = 256,
             scale = 1 / 2 ^ 3,
             shift = { 32, 64 },
@@ -237,13 +237,13 @@ elseif (se_active) then
             shift = { 0, 64 },
         },
         {
-            icon = "__space-exploration-graphics__/graphics/technology/heavy-girder.png",
+            icon = "__space-exploration-graphics__/graphics/technology/aeroframe-pole.png",
             icon_size = 128,
             scale = 1 / 2 ^ 2,
             shift = { -32, 64 },
         },
         {
-            icon = "__base__/graphics/technology/rocketry.png",
+            icon = "__base__/graphics/technology/explosive-rocketry.png",
             icon_size = 256,
             scale = 1 / 2 ^ 3,
             shift = { 32, 64 },
@@ -254,17 +254,17 @@ end
 data:extend({
     {
         type = "technology",
-        name = "cn-rod-from-god",
+        name = "cn-jericho",
         icons = icons,
-        localised_name = { "technology-name.cn-rod-from-god" },
-        localised_description = { "technology-description.cn-rod-from-god" },
+        localised_name = { "technology-name.cn-jericho" },
+        localised_description = { "technology-description.cn-jericho" },
         effects = technology_effects,
-        prerequisites = get_rod_from_god_research_prerequisites(),
+        prerequisites = get_jericho_research_prerequisites(),
         unit =
         {
-            count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_COUNT.name }),
-            ingredients = get_rod_from_god_research_ingredients(),
-            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_RESEARCH_TIME.name }),
+            count = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_RESEARCH_COUNT.name }),
+            ingredients = get_jericho_research_ingredients(),
+            time = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_RESEARCH_TIME.name }),
         },
     },
 })

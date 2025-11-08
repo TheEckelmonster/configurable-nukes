@@ -38,10 +38,22 @@ if (not se_active) then
         require("prototypes.recipes.ipbm-rocket-silo")
         require("prototypes.technologies.ipbms")
         require("prototypes.technologies.rocket-part-productivity")
+
+        require("prototypes.items.rod-from-god-data")
+        require("prototypes.recipes.rod-from-god-data")
+        require("prototypes.entities.rod-from-god-data")
+        require("prototypes.technologies.rod-from-god-data")
+
+        require("prototypes.items.jericho-data")
+        require("prototypes.recipes.jericho-data")
+        require("prototypes.entities.jericho-data")
+        require("prototypes.technologies.jericho-data")
     end
 end
 
-require("prototypes.items.rod-from-god-data")
-require("prototypes.recipes.rod-from-god-data")
-require("prototypes.entities.rod-from-god-data")
-require("prototypes.technologies.rod-from-god-data")
+if (sa_active) then
+    require("prototypes.items.tesla-rocket-data")
+    require("prototypes.recipes.tesla-rocket-data")
+    require("prototypes.entities.tesla-rocket-data")
+    require("prototypes.technologies.tesla-rocket-data")
+end

@@ -17,7 +17,7 @@ local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-reposit
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
-local has_power = function (data)
+local function has_power(data)
     if (data and type(type(data) == "table")) then
         if (data.rocket_silo and data.rocket_silo.valid) then
             return  data.rocket_silo.is_connected_to_electric_network()
@@ -25,6 +25,30 @@ local has_power = function (data)
                 and data.rocket_silo.energy >= data.rocket_silo.electric_buffer_size
         end
     end
+end
+
+local valid_payloads =
+{
+    ["atomic-bomb"] = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }) end,
+    ["atomic-warhead"] = function () return Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }) end,
+    ["cn-rod-from-god"] = function () return true end,
+    ["cn-jericho"] = function () return true end,
+    ["cn-tesla-rocket"] = function () return true end,
+}
+
+local function valid_payload(data)
+    local return_val = false
+
+    if (not data or type(data) ~= "table") then return return_val end
+    if (not data.item_name or type(data.item_name) ~= "string") then return return_val end
+
+    if (    valid_payloads[data.item_name]
+        and valid_payloads[data.item_name]()
+    ) then
+        return_val = true
+    end
+
+    return return_val
 end
 
 local rocket_silo_utils = {}
@@ -354,12 +378,7 @@ function rocket_silo_utils.launch_rocket(event)
                                     local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                                     if (inventory and inventory.valid) then
                                         for _, item in ipairs(inventory.get_contents()) do
-                                            if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                                                or
-                                                    (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                                                or
-                                                    (item.name == "cn-rod-from-god")
-                                            ) then
+                                            if (valid_payload({ item_name = item.name })) then
                                                 found_in_orbit = true
                                                 local position = v.entity.position
                                                 local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
@@ -421,12 +440,7 @@ function rocket_silo_utils.launch_rocket(event)
                                 local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                                 if (inventory and inventory.valid) then
                                     for _, item in ipairs(inventory.get_contents()) do
-                                        if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                                            or
-                                                (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                                            or
-                                                (item.name == "cn-rod-from-god")
-                                        ) then
+                                        if (valid_payload({ item_name = item.name })) then
                                             found_in_orbit = true
                                             local position = v.entity.position
                                             local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
@@ -485,12 +499,7 @@ function rocket_silo_utils.launch_rocket(event)
                 local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                 if (inventory and inventory.valid) then
                     for _, item in ipairs(inventory.get_contents()) do
-                        if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                            or
-                                (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                            or
-                                (item.name == "cn-rod-from-god")
-                        ) then
+                        if (valid_payload({ item_name = item.name })) then
                             found_on_surface = true
                             local position = v.entity.position
                             local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
@@ -550,12 +559,7 @@ function rocket_silo_utils.launch_rocket(event)
                                         local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                                         if (inventory and inventory.valid) then
                                             for _, item in ipairs(inventory.get_contents()) do
-                                                if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                                                    or
-                                                        (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                                                    or
-                                                        (item.name == "cn-rod-from-god")
-                                                ) then
+                                                if (valid_payload({ item_name = item.name })) then
                                                     found_in_orbit = true
                                                     local position = v.entity.position
                                                     local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
@@ -612,12 +616,7 @@ function rocket_silo_utils.launch_rocket(event)
                                     local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                                     if (inventory and inventory.valid) then
                                         for _, item in ipairs(inventory.get_contents()) do
-                                            if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                                                or
-                                                    (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                                                or
-                                                    (item.name == "cn-rod-from-god")
-                                            ) then
+                                            if (valid_payload({ item_name = item.name })) then
                                                 found_in_orbit = true
                                                 local position = v.entity.position
                                                 local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
@@ -680,12 +679,7 @@ function rocket_silo_utils.launch_rocket(event)
                 local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                 if (inventory and inventory.valid) then
                     for _, item in ipairs(inventory.get_contents()) do
-                        if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                            or
-                                (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                            or
-                                (item.name == "cn-rod-from-god")
-                        ) then
+                        if (valid_payload({ item_name = item.name })) then
                             found_on_surface = true
                             local position = v.entity.position
                             local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
@@ -751,12 +745,7 @@ function rocket_silo_utils.launch_rocket(event)
                         local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
                         if (inventory and inventory.valid) then
                             for _, item in ipairs(inventory.get_contents()) do
-                                if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                                    or
-                                        (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                                    or
-                                        (item.name == "cn-rod-from-god")
-                                ) then
+                                if (valid_payload({ item_name = item.name })) then
                                     payload_found = true
                                     break
                                 end
@@ -823,12 +812,7 @@ function rocket_silo_utils.launch_rocket(event)
             if (inventory and inventory.valid) then
                 for _, item in ipairs(inventory.get_contents()) do
 
-                    if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                        or
-                            (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                        or
-                            (item.name == "cn-rod-from-god")
-                    ) then
+                    if (valid_payload({ item_name = item.name })) then
                         local rocket = rocket_silo.rocket
 
                         local cargo_pod
@@ -938,12 +922,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
         local inventory = passed_rocket_silo_data.entity.get_inventory(defines.inventory.rocket_silo_rocket)
         if (inventory and inventory.valid) then
             for _, item in ipairs(inventory.get_contents()) do
-                if (    (item.name == "atomic-bomb" and setting_atomic_bomb_rocket_launchable)
-                    or
-                        (item.name == "atomic-warhead" and setting_atomic_warhead_enabled)
-                    or
-                        (item.name == "cn-rod-from-god")
-                ) then
+                if (valid_payload({ item_name = item.name })) then
 
                     local is_travelling = false
                     local space_connection_distance = nil

@@ -11,6 +11,30 @@ local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local valid_payloads =
+{
+    ["atomic-bomb"] = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }) end,
+    ["atomic-warhead"] = function () return Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }) end,
+    ["cn-rod-from-god"] = function () return true end,
+    ["cn-jericho"] = function () return true end,
+    ["cn-tesla-rocket"] = function () return true end,
+}
+
+local function valid_payload(data)
+    local return_val = false
+
+    if (not data or type(data) ~= "table") then return return_val end
+    if (not data.item_name or type(data.item_name) ~= "string") then return return_val end
+
+    if (    valid_payloads[data.item_name]
+        and valid_payloads[data.item_name]()
+    ) then
+        return_val = true
+    end
+
+    return return_val
+end
+
 local rocket_silo_service = {}
 
 function rocket_silo_service.on_cargo_pod_finished_ascending(event)
@@ -60,12 +84,7 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
 
         if (inventory) then
             for _, item in ipairs(inventory.get_contents()) do
-                if (    (string.find(item.name, "atomic-bomb", 1, true) and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }))
-                    or
-                        (item.name == "atomic-warhead" and Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }))
-                    or
-                        (item.name == "cn-rod-from-god")
-                ) then
+                if (valid_payload({ item_name = item.name })) then
                     local return_val = ICBM_Utils.on_cargo_pod_finished_ascending({
                         surface = cargo_pod.surface,
                         item = item,

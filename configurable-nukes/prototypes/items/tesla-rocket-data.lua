@@ -21,13 +21,13 @@ local Item_Sounds = {
 data:extend({
     {
         type = "ammo",
-        name = "cn-rod-from-god",
+        name = "cn-tesla-rocket",
         icons =
         {
             { icon = "__base__/graphics/icons/ammo-category/rocket.png", },
-            { icon = "__base__/graphics/icons/ammo-category/rocket.png", tint = { 31, 7, 81, 95 } },
+            { icon = "__base__/graphics/icons/ammo-category/rocket.png", tint = { 7, 7, 255, 85 } },
         },
-        ammo_category = "kinetic-weapon",
+        ammo_category = "tesla-rocket",
         ammo_type =
         {
             range_modifier = -1,
@@ -39,23 +39,23 @@ data:extend({
                 action_delivery =
                 {
                     type = "projectile",
-                    projectile = "cn-rod-from-god",
-                    starting_speed = 0.0001,
+                    projectile = "cn-tesla-rocket",
+                    starting_speed = 0.05,
                     source_effects =
                     {
                         type = "create-entity",
-                        entity_name = "explosion-hit"
-                    }
-                }
-            }
+                        entity_name = "explosion-hit",
+                    },
+                },
+            },
         },
         subgroup = "ammo",
         order = "d[rocket-launcher]-e[atomic-bomb]",
         inventory_move_sound = Item_Sounds.mechanical_inventory_move,
         pick_sound = Item_Sounds.mechanical_inventory_pickup,
         drop_sound = Item_Sounds.mechanical_inventory_move,
-        stack_size = 1,
-        weight = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROD_FROM_GOD_WEIGHT_MODIFIER.name }) * tons,
-        send_to_orbit_mode = "manual"
+        stack_size = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_STACK_SIZE.name }),
+        weight = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_WEIGHT_MODIFIER.name }) * tons,
+        send_to_orbit_mode = "manual",
     },
 })

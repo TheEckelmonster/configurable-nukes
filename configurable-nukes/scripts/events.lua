@@ -35,6 +35,7 @@ local valid_event_effect_ids =
     ["kr-nuclear-turret-rocket-projectile-fired"] = true,
     ["kr-atomic-artillery-projectile-fired"] = true,
     ["saa-s-atomic-artillery-projectile-fired"] = true,
+    ["cn-tesla-rocket-lightning"] = true,
 }
 
 local events = {
@@ -47,6 +48,9 @@ local events = {
     [Rocket_Silo_Controller.name] = Rocket_Silo_Controller,
     [Settings_Controller.name] = Settings_Controller,
 }
+
+
+local sa_active = mods and mods["space-age"] and true
 
 --[[ TODO: Move this to its own controller/service/utils? ]]
 script.on_event(defines.events.on_script_trigger_effect, function (event)
@@ -63,7 +67,17 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
 
     local surface = game.get_surface(event.surface_index)
 
-    if (event.effect_id == "atomic-bomb-fired") then
+    if (event.effect_id == "cn-tesla-rocket-lightning") then
+        if (not sa_active) then return end
+
+        local target = event.target_position
+
+        if (target == nil and event.target_entity and event.target_entity.valid) then
+            target = event.target_entity.position
+        end
+
+        surface.execute_lightning({ name = "lightning", position = target })
+    elseif (event.effect_id == "atomic-bomb-fired") then
         local source, target = event.source_position, event.target_position
         local quality = event.quality
         quality = quality and prototypes.quality[quality] and quality or "normal"
@@ -186,13 +200,13 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 cause = event.cause_entity and event.cause_entity.valid and event.cause_entity,
                 speed = 1,
                 base_damage_modifiers = {
-                    damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_MODIFIER.name }),
-                    damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BASE_DAMAGE_ADDITION.name }),
+                    damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BASE_DAMAGE_MODIFIER.name }),
+                    damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BASE_DAMAGE_ADDITION.name }),
                     radius_modifier = 1,
                 },
                 bonus_damage_modifiers = {
-                    damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_MODIFIER.name }),
-                    damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.K2_SO_NUCLEAR_ARTILLERY_BONUS_DAMAGE_MODIFIER.name }),
+                    damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BONUS_DAMAGE_MODIFIER.name }),
+                    damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SIMPLE_ATOMIC_ARTILLERY_BONUS_DAMAGE_MODIFIER.name }),
                     radius_modifier = 1,
                 },
             })

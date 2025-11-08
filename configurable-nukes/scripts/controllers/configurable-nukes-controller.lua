@@ -31,7 +31,6 @@ function configurable_nukes_controller.on_tick(event)
     local nth_tick = configurable_nukes_controller.nth_tick or 4
     local tick_modulo = tick % nth_tick
 
-
     if (tick_modulo ~= 0) then return end
 
     if (not se_active and not Constants.planets_dictionary) then
@@ -40,7 +39,7 @@ function configurable_nukes_controller.on_tick(event)
 
     ICBM_Utils.print_space_launched_time_to_target_message()
 
-    local num_surfaces_to_process = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK.name, })
+    local num_surfaces_to_process = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK.name, }) or 1
     local failure_limit = (num_surfaces_to_process * 4) ^ 0.75 + num_surfaces_to_process / 2
     local i, loops, failures = 0, 0, 0
     while i < num_surfaces_to_process do

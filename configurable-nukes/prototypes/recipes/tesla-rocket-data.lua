@@ -4,14 +4,14 @@ local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-uti
 
 -- INPUT_MULTIPLIER
 local get_input_multiplier = function ()
-    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_INPUT_MULTIPLIER.name })
+    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_INPUT_MULTIPLIER.name })
 end
--- ROCKET_CONTROL_UNIT_ADDITIONAL_CRAFTING_MACHINES
-local get_rocket_control_unit_additional_crafting_machines = function ()
-    local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_ADDITIONAL_CRAFTING_MACHINES.default_value
+-- TESLA_ROCKET_ADDITIONAL_CRAFTING_MACHINES
+local get_tesla_rocket_additional_crafting_machines = function ()
+    local setting = Startup_Settings_Constants.settings.TESLA_ROCKET_ADDITIONAL_CRAFTING_MACHINES.default_value
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_ADDITIONAL_CRAFTING_MACHINES.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_ADDITIONAL_CRAFTING_MACHINES.name].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.TESLA_ROCKET_ADDITIONAL_CRAFTING_MACHINES.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.TESLA_ROCKET_ADDITIONAL_CRAFTING_MACHINES.name].value
     end
 
     local crafting_machines = {}
@@ -71,7 +71,7 @@ local get_rocket_control_unit_additional_crafting_machines = function ()
 end
 
 local ingredients = {}
-local rocket_control_unit_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RECIPE.name, default_value = "" })
+local tesla_rocket_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_RECIPE.name })
 
 --[[ Looks for:
         >= 0 commas,
@@ -86,7 +86,7 @@ local rocket_control_unit_recipe_string = Data_Utils.get_startup_setting({ setti
         >= 0 space characters,
 ]]
 local search_pattern = ",*%s*([%w%-%s]+)%s*=%s*(%d+)%s*,*"
-local i, j, param, param_val = string.find(rocket_control_unit_recipe_string, search_pattern, 1)
+local i, j, param, param_val = tesla_rocket_recipe_string:find(search_pattern, 1)
 local possible_matches = {}
 local found_match = false
 local ingredient_type = "item"
@@ -131,12 +131,12 @@ while param ~= nil and param_val ~= nil do
 
     if (found_match) then table.insert(ingredients, { type = ingredient_type or "item", name = param, amount = param_val * get_input_multiplier(), }) end
 
-    rocket_control_unit_recipe_string = string.sub(rocket_control_unit_recipe_string, j + 1, #rocket_control_unit_recipe_string)
+    tesla_rocket_recipe_string = tesla_rocket_recipe_string:sub(j + 1, #tesla_rocket_recipe_string)
 
-    i, j, param, param_val = string.find(rocket_control_unit_recipe_string, search_pattern, 1)
+    i, j, param, param_val = tesla_rocket_recipe_string:find(search_pattern, 1)
 end
 
-if (not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RECIPE_ALLOW_NONE.name })) then
+if (not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_RECIPE_ALLOW_NONE.name })) then
     -- if (#ingredients <= 0) then
     --     for k, v in pairs(possible_matches) do
     --         table.insert(ingredients, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
@@ -144,44 +144,23 @@ if (not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.se
     -- end
 
     if (#ingredients <= 0) then
-        ingredients =
-        {
-            { type = "item", name = "processing-unit", amount = 4 * get_input_multiplier() },
-            { type = "item", name = "speed-module", amount = 2 * get_input_multiplier() },
-            { type = "item", name = "efficiency-module", amount = 2 * get_input_multiplier() },
-            { type = "item", name = "radar", amount = 1 * get_input_multiplier() },
-            { type = "item", name = "battery", amount = 8 * get_input_multiplier() },
-        }
-
-        if (mods and mods["space-exploration"]) then
-            ingredients =
-            {
-                { type = "item", name = "advanced-circuit", amount = 5 * get_input_multiplier() },
-                --[[ Should I keep this? It gets removed by SE given when this is currently loaded ]]
-                -- { type = "item", name = "speed-module", amount = 1 * get_input_multiplier() },
-                { type = "item", name = "efficiency-module", amount = 1 * get_input_multiplier() },
-                { type = "item", name = "radar", amount = 1 * get_input_multiplier() },
-                { type = "item", name = "battery", amount = 5 * get_input_multiplier() },
-                { type = "item", name = "glass", amount = 5 * get_input_multiplier() },
-            }
-        end
+        ingredients = Startup_Settings_Constants.settings.TESLA_ROCKET_RECIPE.ingredients
+        if (ingredients) then for k, v in pairs(ingredients) do v.amount = v.amount * get_input_multiplier() end end
     end
 end
 
-local rocket_control_unit_recipe =
+local recipe_tesla_rocket =
 {
     type = "recipe",
-    name = "rocket-control-unit",
-    -- name = "cn-rocket-control-unit",
+    name = "cn-tesla-rocket",
     enabled = false,
-    energy_required = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_TIME.name }),
+    requester_paste_multiplier = 1,
+    energy_required = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_CRAFTING_TIME.name }),
     ingredients = ingredients,
-    results = {{ type = "item", name = "rocket-control-unit", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESULT_COUNT.name }) }},
-    -- results = {{ type = "item", name = "cn-rocket-control-unit", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESULT_COUNT.name }) }},
-    category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.name }),
-    additional_categories = get_rocket_control_unit_additional_crafting_machines(),
+    results = {{ type = "item", name = "cn-tesla-rocket", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_RESULT_COUNT.name }) }},
+    category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_CRAFTING_MACHINE.name }),
+    additional_categories = get_tesla_rocket_additional_crafting_machines(),
+    auto_recycle = false,
 }
 
-if (mods and (mods["space-age"] or mods["space-exploration"]) or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })) then
-    data:extend({rocket_control_unit_recipe})
-end
+data:extend({recipe_tesla_rocket})

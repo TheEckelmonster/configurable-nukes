@@ -84,6 +84,53 @@ data:extend({
 })
 
 data:extend({
+    --[[ jericho ]]
+    Startup_Settings_Constants.settings.JERICHO_AREA_MULTIPLIER,
+    Startup_Settings_Constants.settings.JERICHO_DAMAGE_MULTIPLIER,
+    Startup_Settings_Constants.settings.JERICHO_REPEAT_MULTIPLIER,
+    Startup_Settings_Constants.settings.JERICHO_SUB_ROCKET_REPEAT_MULTIPLIER,
+    Startup_Settings_Constants.settings.JERICHO_STACK_SIZE,
+    Startup_Settings_Constants.settings.JERICHO_WEIGHT_MODIFIER,
+    Startup_Settings_Constants.settings.JERICHO_CRAFTING_TIME,
+    Startup_Settings_Constants.settings.JERICHO_INPUT_MULTIPLIER,
+    Startup_Settings_Constants.settings.JERICHO_RESULT_COUNT,
+    Startup_Settings_Constants.settings.JERICHO_RECIPE,
+    Startup_Settings_Constants.settings.JERICHO_RECIPE_ALLOW_NONE,
+    Startup_Settings_Constants.settings.JERICHO_CRAFTING_MACHINE,
+    Startup_Settings_Constants.settings.JERICHO_ADDITIONAL_CRAFTING_MACHINES,
+
+    --[[ jericho research ]]
+    Startup_Settings_Constants.settings.JERICHO_RESEARCH_PREREQUISITES,
+    Startup_Settings_Constants.settings.JERICHO_RESEARCH_INGREDIENTS,
+    Startup_Settings_Constants.settings.JERICHO_RESEARCH_TIME,
+    Startup_Settings_Constants.settings.JERICHO_RESEARCH_COUNT,
+})
+
+if (sa_active) then
+    data:extend({
+        --[[ tesla-rocket ]]
+        Startup_Settings_Constants.settings.TESLA_ROCKET_AREA_MULTIPLIER,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_DAMAGE_MULTIPLIER,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_REPEAT_MULTIPLIER,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_STACK_SIZE,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_WEIGHT_MODIFIER,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_CRAFTING_TIME,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_INPUT_MULTIPLIER,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_RESULT_COUNT,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_RECIPE,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_RECIPE_ALLOW_NONE,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_CRAFTING_MACHINE,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_ADDITIONAL_CRAFTING_MACHINES,
+
+        --[[ jericho research ]]
+        Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_PREREQUISITES,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_INGREDIENTS,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_TIME,
+        Startup_Settings_Constants.settings.TESLA_ROCKET_RESEARCH_COUNT,
+    })
+end
+
+data:extend({
     --[[ ICBMs research ]]
     Startup_Settings_Constants.settings.ICBMS_RESEARCH_PREREQUISITES,
     Startup_Settings_Constants.settings.ICBMS_RESEARCH_INGREDIENTS,

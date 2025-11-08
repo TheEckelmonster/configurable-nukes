@@ -27,6 +27,16 @@ if (se_active) then
         require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond-2")
         require("prototypes.recipes.ipbm-rocket-silo")
         require("prototypes.technologies.ipbms")
+
+        require("prototypes.items.rod-from-god-data")
+        require("prototypes.recipes.rod-from-god-data")
+        require("prototypes.entities.rod-from-god-data")
+        require("prototypes.technologies.rod-from-god-data")
+
+        require("prototypes.items.jericho-data")
+        require("prototypes.recipes.jericho-data")
+        require("prototypes.entities.jericho-data")
+        require("prototypes.technologies.jericho-data")
     else
         --[[ TODO: Handle this situation
             -> Don't think this is currently possible without manual changes
@@ -36,3 +46,8 @@ end
 
 --[[ Create the custom tooltips for atomic-bombs and atomic-warheads to display quality effects ]]
 require("prototypes.items.items-data-final-fixes")
+
+--[[ Enable lightning generation on all planets if space-age is present ]]
+if (sa_active) then
+    require("prototypes.planets.planet-data")
+end
