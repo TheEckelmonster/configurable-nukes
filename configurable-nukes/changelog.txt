@@ -3,11 +3,12 @@ Version: 0.8.0
 Date: 2025-11-08
   Minor Features:
     - Added "Rods from God"
-      - Kinetic weapon on par with the atomic-bomb/warhead in terms of desctructive force, without the radioactive fallout
+      - Kinetic weapon on par with the atomic-bomb/warhead in terms of destructive force, without the radioactive fallout
     - Added "Jericho" warheads
       - Single warhead that serparates on delivery into a barrage of multiple sub-rockets
     - Added "Mjölnir" warheads
       - Explosive payload that calls down a lightning bolt and releases chain-lightning on impact
+      - Only available with Space-Age
     - Introduced the "payload-vehicle" item/recipe
       - Used in the crafting of the above payloads
     - Added usual set of configurable startup settings for the above "Rod from God", "Jericho", "Mjölnir", and "Payload Vehicle"
