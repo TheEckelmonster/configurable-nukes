@@ -1,10 +1,8 @@
--- If already defined, return
-if _circuit_network_data_rocket_silo_validations and _circuit_network_data_rocket_silo_validations.configurable_nukes then
-    return _circuit_network_data_rocket_silo_validations
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
-local Log = require("libs.log.log")
 
 local circuit_network_data_rocket_silo_validations = {}
 
@@ -47,9 +45,5 @@ function circuit_network_data_rocket_silo_validations.validate(data)
 
     return return_val
 end
-
-circuit_network_data_rocket_silo_validations.configurable_nukes = true
-
-local _circuit_network_data_rocket_silo_validations = circuit_network_data_rocket_silo_validations
 
 return circuit_network_data_rocket_silo_validations

@@ -1,8 +1,11 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 
 local Data = require("scripts.data.data")
-local Log = require("libs.log.log")
-local Queue_Data = require("scripts.data.structures.queue-data")
+
+local Queue_Data = require("__TheEckelmonster-core-library__.libs.data.structures.queue-data")
 
 local force_launch_data = {}
 
@@ -19,8 +22,8 @@ function force_launch_data:new_force_launch_data_queue(data)
 end
 
 function force_launch_data:new(o)
-    Log.debug("force_launch_data:new")
-    Log.info(o)
+    _Log.debug("force_launch_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,

@@ -13,6 +13,11 @@ require("prototypes.entities.rocket-silo-rocket")
 require("prototypes.items.items-data")
 require("prototypes.recipes.rocket-control-unit")
 
+require("prototypes.technologies.technology-data")
+
+require("prototypes.items.cn-payload-vehicle-data")
+require("prototypes.recipes.cn-payload-vehicle-data")
+
 if (sa_active or se_active) then
     require("prototypes.recipes.advanced-rocket-control-unit")
 end
@@ -33,5 +38,22 @@ if (not se_active) then
         require("prototypes.recipes.ipbm-rocket-silo")
         require("prototypes.technologies.ipbms")
         require("prototypes.technologies.rocket-part-productivity")
+
+        require("prototypes.items.rod-from-god-data")
+        require("prototypes.recipes.rod-from-god-data")
+        require("prototypes.entities.rod-from-god-data")
+        require("prototypes.technologies.rod-from-god-data")
+
+        require("prototypes.items.jericho-data")
+        require("prototypes.recipes.jericho-data")
+        require("prototypes.entities.jericho-data")
+        require("prototypes.technologies.jericho-data")
     end
+end
+
+if (sa_active) then
+    require("prototypes.items.tesla-rocket-data")
+    require("prototypes.recipes.tesla-rocket-data")
+    require("prototypes.entities.tesla-rocket-data")
+    require("prototypes.technologies.tesla-rocket-data")
 end

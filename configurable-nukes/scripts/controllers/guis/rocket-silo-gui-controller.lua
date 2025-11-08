@@ -1,12 +1,10 @@
--- If already defined, return
-if _rocket_silo_gui_controller and _rocket_silo_gui_controller.configurable_nukes then
-  return _rocket_silo_gui_controller
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Util = require("__core__.lualib.util")
 
 local Rocket_Silo_Gui_Service = require("scripts.services.guis.rocket-silo-gui-service")
-local Log = require("libs.log.log")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 
 local rocket_silo_gui_controller = {}
@@ -254,9 +252,5 @@ Event_Handler:register_event({
     func_name = "rocket_silo_gui_controller.on_entity_settings_pasted",
     func = rocket_silo_gui_controller.on_entity_settings_pasted,
 })
-
-rocket_silo_gui_controller.configurable_nukes = true
-
-local _rocket_silo_gui_controller = rocket_silo_gui_controller
 
 return rocket_silo_gui_controller

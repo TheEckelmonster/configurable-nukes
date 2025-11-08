@@ -1,11 +1,9 @@
--- If already defined, return
-if _rocket_silo_repository and _rocket_silo_repository.configurable_nukes then
-    return _rocket_silo_repository
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
-local Log = require("libs.log.log")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 
@@ -174,9 +172,5 @@ function rocket_silo_repository.get_rocket_silo_data(planet_name, unit_number, o
 
     return rocket_silos[unit_number]
 end
-
-rocket_silo_repository.configurable_nukes = true
-
-local _rocket_silo_repository = rocket_silo_repository
 
 return rocket_silo_repository

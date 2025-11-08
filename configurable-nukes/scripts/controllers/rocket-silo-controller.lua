@@ -1,10 +1,9 @@
--- If already defined, return
-if _rocket_silo_controller and _rocket_silo_controller.configurable_nukes then
-    return _rocket_silo_controller
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Custom_Input = require("prototypes.custom-input.custom-input")
-local Log = require("libs.log.log")
+
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
@@ -395,9 +394,5 @@ Event_Handler:register_event({
     func = rocket_silo_controller.on_space_platform_mined_entity,
     filter = rocket_silo_controller.filter,
 })
-
-rocket_silo_controller.configurable_nukes = true
-
-local _rocket_silo_controller = rocket_silo_controller
 
 return rocket_silo_controller

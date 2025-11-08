@@ -1,11 +1,9 @@
--- If already defined, return
-if _force_launch_data_repository and _force_launch_data_repository.configurable_nukes then
-    return _force_launch_data_repository
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Force_Launch_Data = require("scripts.data.force-launch-data")
-local Log = require("libs.log.log")
 
 local force_launch_data_repository = {}
 
@@ -143,9 +141,5 @@ function force_launch_data_repository.get_all_force_launch_data(optionals)
 
     return storage.configurable_nukes.force_launch_data
 end
-
-force_launch_data_repository.configurable_nukes = true
-
-local _force_launch_data_repository = force_launch_data_repository
 
 return force_launch_data_repository

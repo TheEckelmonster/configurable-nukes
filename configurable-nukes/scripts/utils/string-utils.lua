@@ -1,9 +1,6 @@
--- If already defined, return
-if _string_utils and _string_utils.configurable_nukes then
-    return _string_utils
-end
-
-local Log = require("libs.log.log")
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 local locals = {}
@@ -14,14 +11,18 @@ function string_utils.find_invalid_substrings(string_data)
     Log.debug("string_utils.find_invalid_substrings")
     Log.info(string_data)
 
-    return (not locals.is_string_valid(string_data)
-        or string_data:find("EE_", 1, true)
-        or string_data:find("TEST", 1, true)
-        or string_data:find("test", 1, true)
-        or string_data:find("aai-signals", 1, true)
+    return
+        (not locals.is_string_valid(string_data))
+        or
+        (      string_data:find("EE_", 1, true)
+            or string_data:find("TEST", 1, true)
+            or string_data:find("test", 1, true)
+            or string_data:find("aai-signals", 1, true)
         )
-        or (se_active
-            and (string_data:find("starmap-", 1, true)))
+        or
+        (       se_active
+            and (string_data:find("starmap-", 1, true))
+        )
 end
 
 function string_utils.format_surface_name(data)
@@ -67,9 +68,5 @@ locals.is_string_valid = function(string_data)
 
     return string_data and type(string_data) == "string" and string_data:gsub("%s+", "") ~= ""
 end
-
-string_utils.configurable_nukes = true
-
-local _string_utils = string_utils
 
 return string_utils

@@ -5,68 +5,13 @@ if (not sa_active and not se_active) then return end
 
 local Util = require("__core__.lualib.util")
 
-local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
--- CRAFTING_TIME
-local get_crafting_time = function ()
-    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_TIME.default_value
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_TIME.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_TIME.name].value
-    end
-
-    return setting
-end
 -- INPUT_MULTIPLIER
 local get_input_multiplier = function ()
-    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_INPUT_MULTIPLIER.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_INPUT_MULTIPLIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_INPUT_MULTIPLIER.name].value
-    end
-
-    return setting
-end
--- RESULT_COUNT
-local get_result_count = function ()
-    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RESULT_COUNT.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RESULT_COUNT.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RESULT_COUNT.name].value
-    end
-
-    return setting
-end
--- BALLISTIC_ROCKET_SILO_RECIPE
-local get_ballistic_rocket_silo_recipe_string = function ()
-    -- local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.default_value
-    local setting = ""
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.name].value
-    end
-
-    return setting
-end
--- BALLISTIC_ROCKET_SILO_RECIPE_ALLOW_NONE
-local get_ballistic_rocket_silo_recipe_allow_none = function ()
-    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE_ALLOW_NONE.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE_ALLOW_NONE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE_ALLOW_NONE.name].value
-    end
-
-    return setting
-end
--- BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE
-local get_ballistic_rocket_silo_crafting_machine = function ()
-    local setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE.default_value
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE.name].value
-    end
-
-    return setting
+    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_INPUT_MULTIPLIER.name })
 end
 -- BALLISTIC_ROCKET_SILO_ADDITIONAL_CRAFTING_MACHINES
 local get_ballistic_rocket_silo_additional_crafting_machines = function ()
@@ -133,7 +78,7 @@ local get_ballistic_rocket_silo_additional_crafting_machines = function ()
 end
 
 local ingredients = {}
-local ballistic_rocket_silo_recipe_string = get_ballistic_rocket_silo_recipe_string()
+local ballistic_rocket_silo_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE.name, default_value = "" })
 
 --[[ Looks for:
         >= 0 commas,
@@ -198,7 +143,7 @@ while param ~= nil and param_val ~= nil do
     i, j, param, param_val = string.find(ballistic_rocket_silo_recipe_string, search_pattern, 1)
 end
 
-if (not get_ballistic_rocket_silo_recipe_allow_none()) then
+if (not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RECIPE_ALLOW_NONE.name })) then
     -- if (#ingredients <= 0) then
     --     for k, v in pairs(possible_matches) do
     --         table.insert(ingredients, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
@@ -220,16 +165,16 @@ local rocket_silo_recipe = data.raw["recipe"]["rocket-silo"]
 local interplanetary_rocket_silo_recipe = Util.table.deepcopy(rocket_silo_recipe)
 interplanetary_rocket_silo_recipe.name = "ipbm-rocket-silo"
 
-interplanetary_rocket_silo_recipe.energy_required = get_crafting_time()
+interplanetary_rocket_silo_recipe.energy_required = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_TIME.name })
 interplanetary_rocket_silo_recipe.ingredients = ingredients
-interplanetary_rocket_silo_recipe.category = get_ballistic_rocket_silo_crafting_machine()
+interplanetary_rocket_silo_recipe.category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_MACHINE.name })
 interplanetary_rocket_silo_recipe.additional_categories = get_ballistic_rocket_silo_additional_crafting_machines()
 interplanetary_rocket_silo_recipe.hide_from_player_crafting = false
 -- interplanetary_rocket_silo_recipe.auto_recycle = false
 interplanetary_rocket_silo_recipe.overload_multiplier = 2
 interplanetary_rocket_silo_recipe.allow_inserter_overload = true
 
-interplanetary_rocket_silo_recipe.results = {{ type = "item", name = "ipbm-rocket-silo", amount = get_result_count() }}
+interplanetary_rocket_silo_recipe.results = {{ type = "item", name = "ipbm-rocket-silo", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_RESULT_COUNT.name }) }}
 
 interplanetary_rocket_silo_recipe.localised_name = { "entity-name." .. name_prefix .. "ipbm-rocket-silo" }
 interplanetary_rocket_silo_recipe.localised_description = { "entity-description." .. name_prefix .. "ipbm-rocket-silo" }

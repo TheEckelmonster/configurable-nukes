@@ -33,5 +33,3 @@ else
 
     return custom_events_dictionary
 end
-
-

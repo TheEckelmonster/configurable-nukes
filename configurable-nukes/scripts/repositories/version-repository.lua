@@ -1,10 +1,8 @@
--- If already defined, return
-if _version_repository and _version_repository.configurable_nukes then
-    return _version_repository
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
-local Log = require("libs.log.log")
 local Version_Data = require("scripts.data.version-data")
 
 local version_repository = {}
@@ -82,9 +80,5 @@ function version_repository.get_version_data(optionals)
 
     return storage.configurable_nukes.version_data
 end
-
-version_repository.configurable_nukes = true
-
-local _version_repository = version_repository
 
 return version_repository

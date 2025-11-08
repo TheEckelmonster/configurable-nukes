@@ -1,11 +1,8 @@
--- If already defined, return
-if _planet_service and _planet_service.configurable_nukes then
-    return _planet_service
-end
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
-local Constants = require("scripts.constants.constants")
-local Log = require("libs.log.log")
 local Spaceship_Data = require("scripts.data.space.spaceship-data")
 local String_Utils = require("scripts.utils.string-utils")
 
@@ -138,9 +135,5 @@ function planet_service.on_pre_surface_deleted(event)
 
     Log.debug(space_location)
 end
-
-planet_service.configurable_nukes = true
-
-local _planet_service = planet_service
 
 return planet_service

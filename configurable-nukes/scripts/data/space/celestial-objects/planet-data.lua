@@ -1,5 +1,8 @@
+local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
+local _Log = Log
+if (not script or not _Log or mods) then _Log = Log_Stub end
+
 local Space_Location_Data = require("scripts.data.space.space-location-data")
-local Log = require("libs.log.log")
 
 local planet_data = {}
 
@@ -8,8 +11,8 @@ planet_data.type = "planet-data"
 planet_data.planet_gravity_well = nil
 
 function planet_data:new(o)
-    Log.debug("planet_data:new")
-    Log.info(o)
+    _Log.debug("planet_data:new")
+    _Log.info(o)
 
     local defaults = {
         type = self.type,
@@ -29,8 +32,8 @@ function planet_data:new(o)
 end
 
 function planet_data:is_solid(data)
-    Log.debug("planet_data:is_solid")
-    Log.info(data)
+    _Log.debug("planet_data:is_solid")
+    _Log.info(data)
 
     return true
 end
