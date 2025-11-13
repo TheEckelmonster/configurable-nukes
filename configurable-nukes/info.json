@@ -1,13 +1,13 @@
 {
 	"name": "configurable-nukes",
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"factorio_version": "2.0",
 	"title": "Configurable Nukes & ICBMs",
 	"author": "TheEckelmonster",
 	"description": "Makes most/many aspects of the atomic bomb configurable, and affected by quality, as well as allows for the weaponization of rocket-silos: introduces an atomic warhead, \"Rods from God\", the \"Jericho\" warhead, the \"Mjölnir\" warhead, ICBMs (Intercontinental Ballistic Missiles), IPBMs (Interplanetary Ballistic Missiles), and ISBMs (Interstellar Ballistic Missiles): why shouldn't rocket-silo rockets be used offensively?",
 	"dependencies": [
 		"base >= 2.0.72",
-        "TheEckelmonster-core-library >= 0.1.1",
+        "TheEckelmonster-core-library >= 0.1.2",
 		"? space-age >= 2.0.72",
 		"? quality >= 2.0.72",
 		"? atan-nuclear-science >= 0.3.3",

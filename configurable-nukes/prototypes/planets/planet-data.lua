@@ -3,6 +3,17 @@ local sa_active = mods and mods["space-age"] and true
 
 if (not sa_active) then return end
 
+local exemption_rules = {}
+
+for k, _ in pairs(defines.prototypes["entity"]) do
+    -- log(serpent.block(k))
+    if (data and data.raw and data.raw[k]) then
+        for _, v in pairs(data.raw[k]) do
+            table.insert(exemption_rules, { type = "prototype", string = v.name, })
+        end
+    end
+end
+
 local _lightning_properties =
 {
     lightnings_per_chunk_per_tick = 0,
@@ -13,6 +24,7 @@ local _lightning_properties =
         filename = "__configurable-nukes__/graphics/icons/empty.png",
         size = 64,
     },
+    -- exemption_rules = exemption_rules,
 }
 
 for k, v in pairs(data.raw["planet"]) do

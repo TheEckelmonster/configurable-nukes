@@ -32,7 +32,7 @@ function initialization.init(data)
 
     if (not data or type(data) ~= "table") then data = { maintain_data = false} end
 
-    if (data and data.maintain_data) then data.maintain_data = true -- Expllicitly set maintain_data to be a boolean value of true
+    if (data and data.maintain_data) then data.maintain_data = true -- Explicitly set maintain_data to be a boolean value of true
     else data.maintain_data = false
     end
 
@@ -46,7 +46,7 @@ function initialization.reinit(data)
 
     if (not data or type(data) ~= "table") then data = { maintain_data = false} end
 
-    if (data and data.maintain_data) then data.maintain_data = true -- Expllicitly set maintain_data to be a boolean value of true
+    if (data and data.maintain_data) then data.maintain_data = true -- Explicitly set maintain_data to be a boolean value of true
     else data.maintain_data = false
     end
 

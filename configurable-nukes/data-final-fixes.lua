@@ -19,6 +19,17 @@ if (se_active) then
     require("prototypes.technologies.icbms")
     require("prototypes.technologies.atomic-warhead")
     require("prototypes.technologies.guidance-systems")
+
+    require("prototypes.items.rod-from-god-data")
+    require("prototypes.recipes.rod-from-god-data")
+    require("prototypes.entities.rod-from-god-data")
+    require("prototypes.technologies.rod-from-god-data")
+
+    require("prototypes.items.jericho-data")
+    require("prototypes.recipes.jericho-data")
+    require("prototypes.entities.jericho-data")
+    require("prototypes.technologies.jericho-data")
+
     if (not sa_active) then
         require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-basic")
         require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-intermediate")
@@ -27,16 +38,6 @@ if (se_active) then
         require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond-2")
         require("prototypes.recipes.ipbm-rocket-silo")
         require("prototypes.technologies.ipbms")
-
-        require("prototypes.items.rod-from-god-data")
-        require("prototypes.recipes.rod-from-god-data")
-        require("prototypes.entities.rod-from-god-data")
-        require("prototypes.technologies.rod-from-god-data")
-
-        require("prototypes.items.jericho-data")
-        require("prototypes.recipes.jericho-data")
-        require("prototypes.entities.jericho-data")
-        require("prototypes.technologies.jericho-data")
     else
         --[[ TODO: Handle this situation
             -> Don't think this is currently possible without manual changes

@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.8.1
+Date: 2025-11-13
+  Bug Fixes:
+    - Fixed startup error if quality was present but space-age was not
+    - Fixed startup error if Quality-plus-plus, by Puzz1ebox was present
+---------------------------------------------------------------------------------------------------
 Version: 0.8.0
 Date: 2025-11-08
   Minor Features:
