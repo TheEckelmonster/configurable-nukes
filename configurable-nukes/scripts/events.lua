@@ -49,7 +49,6 @@ local events = {
     [Settings_Controller.name] = Settings_Controller,
 }
 
-
 local sa_active = mods and mods["space-age"] and true
 
 --[[ TODO: Move this to its own controller/service/utils? ]]

@@ -18,3 +18,12 @@ require("prototypes.entities.atomic-warhead")
 
 require("prototypes.recipes.atomic-bomb")
 require("prototypes.recipes.atomic-warhead")
+
+if (not se_active) then
+    require("prototypes.entities.rod-from-god-data")
+    require("prototypes.entities.jericho-data")
+end
+
+if (sa_active) then
+    require("prototypes.entities.tesla-rocket-data")
+end

@@ -2,7 +2,6 @@ local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
 if (not script or not _Log or mods) then _Log = Log_Stub end
 
-
 local Anomaly_Data = require("scripts.data.space.celestial-objects.anomaly-data")
 local Asteroid_Belt_Data = require("scripts.data.space.celestial-objects.asteroid-belt-data")
 local Asteroid_Field_Data = require("scripts.data.space.celestial-objects.asteroid-field-data")
