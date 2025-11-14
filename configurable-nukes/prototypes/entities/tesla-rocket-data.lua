@@ -381,7 +381,7 @@ local function create_quality_tesla_rocket(params)
             local cn_tesla_rocket_shockwave_explosion =
             {
                 type = "explosion",
-                name = "cn-tesla-rocket-shockwave-explosion" .. k_0,
+                name = "cn-tesla-rocket-shockwave-explosion-" .. k_0,
                 icon = "__base__/graphics/icons/destroyer.png",
                 flags = { "not-on-map" },
                 hidden = true,
@@ -423,7 +423,7 @@ local function create_quality_tesla_rocket(params)
                             {
                                 {
                                     type = "create-explosion",
-                                    entity_name = "cn-tesla-rocket-shockwave-explosion" .. k_0,
+                                    entity_name = "cn-tesla-rocket-shockwave-explosion-" .. k_0,
                                     max_movement_distance = max_shockwave_movement_distance,
                                     max_movement_distance_deviation = max_shockwave_movement_distance_deviation,
                                     inherit_movement_distance_from_projectile = true,
