@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.8.2
+Date: 2025-11-16
+  Bug Fixes:
+    - Fixed startup error if K2_SO, and "basic-artillery" by Pseudonymous were present, and the nuclear weapons category setting was enabled
+---------------------------------------------------------------------------------------------------
 Version: 0.8.1
 Date: 2025-11-13
   Bug Fixes:
