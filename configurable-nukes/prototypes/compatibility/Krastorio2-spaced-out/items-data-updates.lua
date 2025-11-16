@@ -64,12 +64,14 @@ if (k2so_active) then
         for _, artillery_turret_object in pairs(data.raw["artillery-turret"]) do
             local artillery_turret_object_gun = data.raw["gun"][artillery_turret_object.gun]
 
-            if (not artillery_turret_object_gun.attack_parameters.ammo_categories) then artillery_turret_object_gun.attack_parameters.ammo_categories = {} end
-            if (artillery_turret_object_gun.attack_parameters.ammo_category) then
-                table.insert(artillery_turret_object_gun.attack_parameters.ammo_categories, artillery_turret_object_gun.attack_parameters.ammo_category)
+            if (artillery_turret_object_gun) then
+                if (not artillery_turret_object_gun.attack_parameters.ammo_categories) then artillery_turret_object_gun.attack_parameters.ammo_categories = {} end
+                if (artillery_turret_object_gun.attack_parameters.ammo_category) then
+                    table.insert(artillery_turret_object_gun.attack_parameters.ammo_categories, artillery_turret_object_gun.attack_parameters.ammo_category)
+                end
+                table.insert(artillery_turret_object_gun.attack_parameters.ammo_categories, "nuclear-artillery")
+                artillery_turret_object_gun.attack_parameters.ammo_category = nil
             end
-            table.insert(artillery_turret_object_gun.attack_parameters.ammo_categories, "nuclear-artillery")
-            artillery_turret_object_gun.attack_parameters.ammo_category = nil
         end
 
         if (sa_active) then
