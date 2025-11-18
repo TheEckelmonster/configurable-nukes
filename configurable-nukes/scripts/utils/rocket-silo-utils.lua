@@ -275,7 +275,6 @@ function rocket_silo_utils.launch_rocket(event)
             do_calc_distance = true
         end
         if (sa_active) then
-            --[[ Is this scenario even possible presently? ]]
             launched_from =     event.rocket_silo.surface.name:lower():find("platform-", 1, true)
                             and event.rocket_silo.surface.platform
                             and event.rocket_silo.surface.platform.valid

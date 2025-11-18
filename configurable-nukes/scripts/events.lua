@@ -305,6 +305,14 @@ function events.on_init()
     end
 
     Event_Handler:register_event({
+        event_name = "on_nth_tick",
+        nth_tick = Configurable_Nukes_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SURFACE_PROCESSING_RATE.name }) or 6,
+        source_name = "configurable_nukes_controller.on_nth_tick",
+        func_name = "configurable_nukes_controller.on_nth_tick",
+        func = Configurable_Nukes_Controller.on_nth_tick,
+    })
+
+    Event_Handler:register_event({
         event_name = "on_tick",
         source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
         func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
@@ -379,6 +387,14 @@ function events.on_load()
             end
         end
     end
+
+    Event_Handler:register_event({
+        event_name = "on_nth_tick",
+        nth_tick = Configurable_Nukes_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SURFACE_PROCESSING_RATE.name }) or 6,
+        source_name = "configurable_nukes_controller.on_nth_tick",
+        func_name = "configurable_nukes_controller.on_nth_tick",
+        func = Configurable_Nukes_Controller.on_nth_tick,
+    })
 
     Event_Handler:register_event({
         event_name = "on_tick",

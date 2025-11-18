@@ -59,4 +59,5 @@ end
 
 setmetatable(rocket_silo_data, Data)
 rocket_silo_data.__index = rocket_silo_data
+
 return rocket_silo_data
