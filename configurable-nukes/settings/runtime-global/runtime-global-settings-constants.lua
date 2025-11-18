@@ -408,14 +408,23 @@ runtime_global_settings_constants.settings = {
         order = "dcg",
         default_value = true,
     },
+    SURFACE_PROCESSING_RATE = {
+        type = "int-setting",
+        name = prefix .. "surface-processing-rate",
+        setting_type = "runtime-global",
+        order = "gcc",
+        default_value = 6,
+        minimum_value = 1,
+        maximum_value = 60,
+    },
     NUM_SURFACES_PROCESSED_PER_TICK = {
         type = "int-setting",
         name = prefix .. "num-surfaces-processed-per-tick",
         setting_type = "runtime-global",
         order = "gcc",
-        default_value = se_active and 12 or sa_active and 3 or 1,
+        default_value = se_active and 8 or sa_active and 3 or 1,
         minimum_value = 1,
-        maximum_value = 2 ^ 11
+        maximum_value = 2 ^ 5,
     },
     DASHBOARD_REFRESH_RATE = {
         type = "int-setting",
@@ -424,7 +433,7 @@ runtime_global_settings_constants.settings = {
         order = "",
         default_value = 6,
         minimum_value = 1,
-        maximum_value = 60
+        maximum_value = 60,
     },
 }
 

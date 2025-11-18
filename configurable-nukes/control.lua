@@ -3,6 +3,10 @@
 Log = require("__TheEckelmonster-core-library__.libs.log.log")
 Event_Handler = require("__TheEckelmonster-core-library__.scripts.event-handler")
 
+Cache = {}
+Cache_Attributes = {}
+setmetatable(Cache_Attributes, { __mode = 'k' })
+
 ---
 
 --[[ Data types and metatables ]]

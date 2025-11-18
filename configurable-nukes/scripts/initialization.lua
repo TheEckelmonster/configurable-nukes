@@ -377,9 +377,7 @@ function locals.migrate(data)
                         end
                     end
 
-                    if (    prev_version_data.minor.value <= 7
-                        and prev_version_data.bug_fix.value <= 0
-                    ) then
+                    if (prev_version_data.minor.value <= 7) then
                         if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 7
                         ) then
@@ -408,9 +406,7 @@ function locals.migrate(data)
                         end
                     end
 
-                    if (    prev_version_data.minor.value <= 7
-                        and prev_version_data.bug_fix.value <= 3
-                    ) then
+                    if (prev_version_data.minor.value <= 7) then
                         if (    new_version_data.major.value >= 0
                             and new_version_data.minor.value >= 7
                         ) then
