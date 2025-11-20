@@ -164,7 +164,11 @@ function locals.initialize(from_scratch, maintain_data)
                 end
             end
         end
+
+        if (not storage.random) then storage.random = game.create_random_generator(42) end
     end
+
+    Random = storage.random
 
     if (storage and storage.configurable_nukes) then
         storage.configurable_nukes.do_nth_tick = true
@@ -234,6 +238,8 @@ function locals.migrate(data)
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "event_handlers" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "handles" })
+
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "random" })
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "constants" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })

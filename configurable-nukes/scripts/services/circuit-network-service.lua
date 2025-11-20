@@ -52,12 +52,12 @@ function circuit_network_service.attempt_launch_silos(data)
         if (rocket_silo.rocket_silo_status == rocket_ready_status) then
             if (not cache.rocket_silos[rocket_silo.unit_number].circuit_network_red or not cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_red] or cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_red].time_to_live < game.tick) then
                 cache.rocket_silos[rocket_silo.unit_number].circuit_network_red = { circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red) }
-                cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_red] = Data:new({ time_to_live = game.tick + 30 + math.random(30), valid = true, })
+                cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_red] = Data:new({ time_to_live = game.tick + 30 + Random(30), valid = true, })
             end
 
             if (not cache.rocket_silos[rocket_silo.unit_number].circuit_network_green or not cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_green] or cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_green].time_to_live < game.tick) then
                 cache.rocket_silos[rocket_silo.unit_number].circuit_network_green = { circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green) }
-                cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_green] = Data:new({ time_to_live = game.tick + 30 + math.random(30), valid = true, })
+                cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_green] = Data:new({ time_to_live = game.tick + 30 + Random(30), valid = true, })
             end
 
             local circuit_network_red = cache.rocket_silos[rocket_silo.unit_number].circuit_network_red.circuit_network
@@ -74,7 +74,7 @@ function circuit_network_service.attempt_launch_silos(data)
                     rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
                     if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
                     cache.surfaces[rocket_silo.surface.name][rocket_silo.unit_number] = rocket_silo_data
-                    cache_attributes[rocket_silo_data] = Data:new({ time_to_live = game.tick + 1700 + math.random(100), valid = true })
+                    cache_attributes[rocket_silo_data] = Data:new({ time_to_live = game.tick + 1700 + Random(100), valid = true })
                 else
                     --[[ TODO: Make cache refresh rate configurable? ]]
                     if (not cache_attributes[rocket_silo_data] or cache_attributes[rocket_silo_data].time_to_live < game.tick) then
@@ -85,7 +85,7 @@ function circuit_network_service.attempt_launch_silos(data)
                             if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
                         end
                         cache.surfaces[rocket_silo.surface.name][rocket_silo.unit_number] = rocket_silo_data
-                        cache_attributes[rocket_silo_data] = Data:new({ time_to_live = game.tick + 1700 + math.random(100), valid = true })
+                        cache_attributes[rocket_silo_data] = Data:new({ time_to_live = game.tick + 1700 + Random(100), valid = true })
                     end
                 end
 

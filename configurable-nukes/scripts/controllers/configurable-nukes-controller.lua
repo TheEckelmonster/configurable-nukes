@@ -52,7 +52,7 @@ function configurable_nukes_controller.on_nth_tick(event)
         cache.locals.num_surfaces_to_process = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK.name, }) or 1
         cache.locals.failure_limit = math.floor((cache.locals.num_surfaces_to_process * 4) ^ 0.25 + cache.locals.num_surfaces_to_process / 2)
 
-        cache_attributes[cache.locals] = Data:new({ time_to_live = game.tick + 150 + math.random(90), valid = true })
+        cache_attributes[cache.locals] = Data:new({ time_to_live = game.tick + 150 + Random(90), valid = true })
     end
 
     local num_surfaces_to_process = cache.locals.num_surfaces_to_process or 1
@@ -70,13 +70,13 @@ function configurable_nukes_controller.on_nth_tick(event)
         if (se_active) then
             if (not cache.surfaces or not cache_attributes[cache.surfaces] or cache_attributes[cache.surfaces].time_to_live < game.tick) then
                 cache.surfaces = Constants.get_space_exploration_surfaces()
-                cache_attributes[cache.surfaces] = Data:new({ time_to_live = game.tick + 17000 + math.random(1000), valid = true })
+                cache_attributes[cache.surfaces] = Data:new({ time_to_live = game.tick + 17000 + Random(1000), valid = true })
             end
             configurable_nukes_controller.surface_name, configurable_nukes_controller.surface = next(cache.surfaces, configurable_nukes_controller.surface_name)
         else
             if (not cache.planets or not cache_attributes[cache.planets] or cache_attributes[cache.planets].time_to_live < game.tick) then
                 cache.planets = Constants.get_planets()
-                cache_attributes[cache.planets] = Data:new({ time_to_live = game.tick + 17000 + math.random(1000), valid = true })
+                cache_attributes[cache.planets] = Data:new({ time_to_live = game.tick + 17000 + Random(1000), valid = true })
             end
             configurable_nukes_controller.planet_index, configurable_nukes_controller.planet = next(cache.planets, configurable_nukes_controller.planet_index)
         end
@@ -111,7 +111,7 @@ function configurable_nukes_controller.on_nth_tick(event)
 
         if (not launch_attempts or not cache_attributes[launch_attempts] or cache_attributes[launch_attempts].time_to_live < game.tick) then
             launch_attempts = { attempts = 0, successes = 0, }
-            cache_attributes[launch_attempts] = Data:new({ time_to_live = game.tick + 30 + ((math.random(25, 100) + math.random(25, 100)) / 1.5), valid = true })
+            cache_attributes[launch_attempts] = Data:new({ time_to_live = game.tick + 30 + ((Random(25, 100) + Random(25, 100)) / 1.5), valid = true })
         end
 
         if (    cache_attributes[launch_attempts]
@@ -153,7 +153,7 @@ function configurable_nukes_controller.on_nth_tick(event)
                             or  cache_attributes[cache.surfaces[space_platform.surface.name][space_platform].rocket_silo_meta_data].time_to_live < game.tick
                         ) then
                             cache.surfaces[space_platform.surface.name][space_platform].rocket_silo_meta_data = { meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(space_platform.surface.name, { create = false }) }
-                            cache_attributes[cache.surfaces[space_platform.surface.name][space_platform].rocket_silo_meta_data] = Data:new({ time_to_live = game.tick + 2100 + math.random(600), valid = true })
+                            cache_attributes[cache.surfaces[space_platform.surface.name][space_platform].rocket_silo_meta_data] = Data:new({ time_to_live = game.tick + 2100 + Random(600), valid = true })
                         end
 
                         local rocket_silo_meta_data = cache.surfaces[space_platform.surface.name][space_platform].rocket_silo_meta_data.meta_data
@@ -184,7 +184,7 @@ function configurable_nukes_controller.on_nth_tick(event)
 
         if (not cache[space_location.surface.name].rocket_silo_meta_data or not cache_attributes[cache[space_location.surface.name].rocket_silo_meta_data] or cache_attributes[cache[space_location.surface.name].rocket_silo_meta_data].time_to_live < game.tick) then
             cache[space_location.surface.name].rocket_silo_meta_data = { meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(space_location.surface.name) }
-            cache_attributes[cache[space_location.surface.name].rocket_silo_meta_data] = Data:new({ time_to_live = game.tick + 2345 + math.random(234), valid = true })
+            cache_attributes[cache[space_location.surface.name].rocket_silo_meta_data] = Data:new({ time_to_live = game.tick + 2345 + Random(234), valid = true })
         end
 
         local rocket_silo_meta_data = cache[space_location.surface.name].rocket_silo_meta_data.meta_data
@@ -193,7 +193,7 @@ function configurable_nukes_controller.on_nth_tick(event)
             if (rocket_silo_meta_data and rocket_silo_meta_data.valid) then
                 if (not cache[space_location.surface.name].rocket_silos or not cache_attributes[cache[space_location.surface.name].rocket_silos] or cache_attributes[cache[space_location.surface.name].rocket_silos].time_to_live < game.tick) then
                     cache[space_location.surface.name].rocket_silos = {}
-                    cache_attributes[cache[space_location.surface.name].rocket_silos] = Data:new({ time_to_live = game.tick + 30 + ((math.random(25, 100) + math.random(25, 100)) / 1.5), valid = true })
+                    cache_attributes[cache[space_location.surface.name].rocket_silos] = Data:new({ time_to_live = game.tick + 30 + ((Random(25, 100) + Random(25, 100)) / 1.5), valid = true })
                 end
 
                 local attributes = cache_attributes[cache[space_location.surface.name].rocket_silos]
