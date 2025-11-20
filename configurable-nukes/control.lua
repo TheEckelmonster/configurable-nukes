@@ -7,6 +7,8 @@ Cache = {}
 Cache_Attributes = {}
 setmetatable(Cache_Attributes, { __mode = 'k' })
 
+Random = nil
+
 ---
 
 --[[ Data types and metatables ]]
