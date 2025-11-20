@@ -231,11 +231,14 @@ end)
 
 local did_init = false
 
-function events.on_singleplayer_init(event)
+-- function events.on_singleplayer_init(event)
+--     log("events.on_singleplayer_init")
 
-    Is_Singleplayer = true
-    Is_Multiplayer = false
-end
+--     storage.is_multiplayer = false
+
+--     Is_Singleplayer = true
+--     Is_Multiplayer = false
+-- end
 -- Event_Handler:register_event({
 --     event_name = "on_singleplayer_init",
 --     source_name = "events.on_singleplayer_init",
@@ -243,11 +246,14 @@ end
 --     func = events.on_singleplayer_init,
 -- })
 
-function events.on_multiplayer_init(event)
+-- function events.on_multiplayer_init(event)
+--     log("events.on_multiplayer_init")
 
-    Is_Singleplayer = false
-    Is_Multiplayer = true
-end
+--     storage.is_multiplayer = true
+
+--     Is_Singleplayer = false
+--     Is_Multiplayer = true
+-- end
 -- Event_Handler:register_event({
 --     event_name = "on_multiplayer_init",
 --     source_name = "events.on_multiplayer_init",
@@ -279,6 +285,8 @@ function events.on_init()
     Log.ready()
 
     Initialization.init({ maintain_data = false })
+
+    Random = storage.random
 
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
@@ -341,6 +349,8 @@ Event_Handler:register_event({
 local initialized_from_load = false
 
 function events.on_load()
+
+    Random = storage.random
 
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
@@ -459,6 +469,8 @@ function events.on_configuration_changed(event)
 
                 Initialization.init({ maintain_data = true })
 
+                Random = storage.random
+
                 local cn_controller_data = storage and storage.configurable_nukes_controller or {}
 
                 cn_controller_data.reinitialized = true
@@ -475,10 +487,6 @@ function events.on_configuration_changed(event)
                     space_location = cn_controller_data.space_location,
                     tick = game.tick,
                     prev_tick = cn_controller_data.tick,
-                    initialized = cn_controller_data.initialized,
-                    initialized_tick = cn_controller_data.init_tick,
-                    reinitialized = cn_controller_data.reinitialized,
-                    reinitialized_tick = cn_controller_data.reinit_tick,
                 }
             end
         end
