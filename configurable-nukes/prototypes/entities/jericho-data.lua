@@ -243,10 +243,20 @@ local create_quality_jericho = function (params)
                     radius = clamp_max_distance(12 * area_multiplier * quality_level_multiplier),
                     action_delivery =
                     {
-                        type = "projectile",
-                        projectile = "cn-jericho-shockwave-" .. k_0,
-                        starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
-                        starting_speed_deviation = nuke_shockwave_starting_speed_deviation * area_multiplier * quality_level_multiplier
+                        {
+                            type = "instant",
+                            target_effects =
+                            {
+                                type = "script",
+                                effect_id = "map-reveal"
+                            }
+                        },
+                        {
+                            type = "projectile",
+                            projectile = "cn-jericho-shockwave-" .. k_0,
+                            starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
+                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation * area_multiplier * quality_level_multiplier
+                        },
                     }
                 }
             })

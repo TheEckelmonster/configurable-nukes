@@ -26,6 +26,7 @@ local Settings_Controller = require("__TheEckelmonster-core-library__.scripts.co
 
 local valid_event_effect_ids =
 {
+    ["map-reveal"] = true,
     ["atomic-bomb-pollution"] = true,
     ["atomic-warhead-pollution"] = true,
     ["k2-nuclear-turret-rocket-pollution"] = true,
@@ -59,14 +60,25 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     if (    event and event.effect_id
         and not valid_event_effect_ids[event.effect_id]
     ) then
-        Log.debug("returning")
+        -- Log.debug("returning")
         return
     end
     if (not game or not event.surface_index or game.get_surface(event.surface_index) == nil) then return end
 
     local surface = game.get_surface(event.surface_index)
 
-    if (event.effect_id == "cn-tesla-rocket-lightning") then
+    if (event.effect_id == "map-reveal") then
+        local position = event.target_position
+
+        if (position == nil and event.target_entity and event.target_entity.valid) then
+            position = event.target_entity.position
+        end
+
+        if (position) then
+            surface.request_to_generate_chunks(position, 2)
+            surface.force_generate_chunk_requests()
+        end
+    elseif (event.effect_id == "cn-tesla-rocket-lightning") then
         if (not sa_active) then return end
 
         local target = event.target_position
