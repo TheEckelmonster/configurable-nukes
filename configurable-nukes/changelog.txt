@@ -5,6 +5,8 @@ Date: 2025-11-28
     - Atomic bombs, atomic-warheads, "Rods from God", Jerichos, and Mjölnirs will now continue their explosion even in unexplored areas of the map
       - Previously, an explosion would stop if a chunk wasn't already generated
       - Now, chunks are generated as the given explosion expands
+  Misc:
+    - Continuing to try and optimize where possible
 ---------------------------------------------------------------------------------------------------
 Version: 0.8.4
 Date: 2025-11-20
