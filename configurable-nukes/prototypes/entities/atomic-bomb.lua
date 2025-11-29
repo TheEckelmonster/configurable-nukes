@@ -393,7 +393,7 @@ local create_quality_atomic_bomb = function (params)
                                         projectile = "atomic-bomb-ground-zero-projectile-" .. k_0,
                                         starting_speed = 0.6 * 0.8 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier
-                                    }
+                                    },
                                 }
                             elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave") then
                                 v_1.action = {
@@ -404,11 +404,21 @@ local create_quality_atomic_bomb = function (params)
                                     radius = 35 * area_multiplier * quality_level_multiplier,
                                     action_delivery =
                                     {
-                                        type = "projectile",
-                                        projectile = "atomic-bomb-wave-" .. k_0,
-                                        starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
-                                        starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
-                                    }
+                                        {
+                                            type = "instant",
+                                            target_effects =
+                                            {
+                                                type = "script",
+                                                effect_id = "map-reveal"
+                                            }
+                                        },
+                                        {
+                                            type = "projectile",
+                                            projectile = "atomic-bomb-wave-" .. k_0,
+                                            starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
+                                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                        },
+                                    },
                                 }
                             elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-cluster-nuke-explosion") then
                                 v_1.action = {
@@ -424,7 +434,7 @@ local create_quality_atomic_bomb = function (params)
                                         projectile = "atomic-bomb-wave-spawns-cluster-nuke-explosion",
                                         starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
-                                    }
+                                    },
                                 }
                             elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-fire-smoke-explosion") then
                                 v_1.action = {
@@ -435,28 +445,28 @@ local create_quality_atomic_bomb = function (params)
                                     repeat_count = clamp_repeat_count(700, repeat_multiplier * quality_level_multiplier),
                                     radius = 4 * area_multiplier * quality_level_multiplier,
                                     action_delivery =
-                                        {
-                                            type = "projectile",
-                                            projectile = "atomic-bomb-wave-spawns-fire-smoke-explosion" .. "-" .. k_0,
-                                            starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
-                                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
-                                        }
-                                    }
+                                    {
+                                        type = "projectile",
+                                        projectile = "atomic-bomb-wave-spawns-fire-smoke-explosion" .. "-" .. k_0,
+                                        starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
+                                        starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                    },
+                                }
                             elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-nuke-shockwave-explosion") then
                                 v_1.action = {
-                                type = "area",
-                                show_in_tooltip = false,
-                                target_entities = false,
-                                trigger_from_target = true,
-                                repeat_count = clamp_repeat_count(1000, repeat_multiplier * quality_level_multiplier),
-                                radius = 8 * area_multiplier * quality_level_multiplier,
-                                action_delivery =
+                                    type = "area",
+                                    show_in_tooltip = false,
+                                    target_entities = false,
+                                    trigger_from_target = true,
+                                    repeat_count = clamp_repeat_count(1000, repeat_multiplier * quality_level_multiplier),
+                                    radius = 8 * area_multiplier * quality_level_multiplier,
+                                    action_delivery =
                                     {
                                         type = "projectile",
                                         projectile = "atomic-bomb-wave-spawns-nuke-shockwave-explosion" .. "-" .. k_0,
                                         starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
-                                    }
+                                    },
                                 }
                             elseif (v_1.action.action_delivery.projectile == "atomic-bomb-wave-spawns-nuclear-smoke") then
                                 v_1.action = {
@@ -472,7 +482,7 @@ local create_quality_atomic_bomb = function (params)
                                         projectile = "atomic-bomb-wave-spawns-nuclear-smoke",
                                         starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
-                                    }
+                                    },
                                 }
                             end
                         end
@@ -495,7 +505,7 @@ local create_quality_atomic_bomb = function (params)
                                 },
                                 type = "instant"
                             },
-                            radius = (26 * area_multiplier + 1) * quality_level_multiplier,
+                            radius = (35 * area_multiplier + 1) * quality_level_multiplier,
                             repeat_count = clamp_repeat_count((1000 * repeat_multiplier + 1), quality_level_multiplier),
                             repeat_count_deviation = clamp_repeat_count((42 * repeat_multiplier), quality_level_multiplier),
                             show_in_tooltip = false,

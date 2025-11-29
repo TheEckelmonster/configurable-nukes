@@ -11,6 +11,8 @@ Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-glo
 
 ---
 
+local Data = require("__TheEckelmonster-core-library__.libs.data.data")
+
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Custom_Input = require("prototypes.custom-input.custom-input")
 local Initialization = require("scripts.initialization")
@@ -26,6 +28,7 @@ local Settings_Controller = require("__TheEckelmonster-core-library__.scripts.co
 
 local valid_event_effect_ids =
 {
+    ["map-reveal"] = true,
     ["atomic-bomb-pollution"] = true,
     ["atomic-warhead-pollution"] = true,
     ["k2-nuclear-turret-rocket-pollution"] = true,
@@ -51,6 +54,13 @@ local events = {
 
 local sa_active = mods and mods["space-age"] and true
 
+local cache = {}
+local cache_attributes = {}
+setmetatable(cache_attributes, { __mode = "k" })
+
+cache.map_reveal = {}
+cache.map_reveal.chunks = {}
+
 --[[ TODO: Move this to its own controller/service/utils? ]]
 script.on_event(defines.events.on_script_trigger_effect, function (event)
     Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
@@ -59,14 +69,35 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     if (    event and event.effect_id
         and not valid_event_effect_ids[event.effect_id]
     ) then
-        Log.debug("returning")
+        -- Log.debug("returning")
         return
     end
     if (not game or not event.surface_index or game.get_surface(event.surface_index) == nil) then return end
 
     local surface = game.get_surface(event.surface_index)
 
-    if (event.effect_id == "cn-tesla-rocket-lightning") then
+    if (event.effect_id == "map-reveal") then
+        local position = event.target_position
+
+        if (position == nil and event.target_entity and event.target_entity.valid) then
+            position = event.target_entity.position
+        end
+
+        if (position) then
+            local chunk_string = math.floor(position.x / 32) .. "/" .. math.floor(position.y / 32)
+            if (not cache.map_reveal.chunks[chunk_string] or not cache_attributes[cache.map_reveal.chunks[chunk_string]] or cache_attributes[cache.map_reveal.chunks[chunk_string]].time_to_live < game.tick) then
+                cache.map_reveal.chunks[chunk_string] = { count = 0, }
+                cache_attributes[cache.map_reveal.chunks[chunk_string]] = Data:new({ time_to_live = game.tick + 75, valid = true })
+            end
+
+            if (cache.map_reveal.chunks[chunk_string].count < 2) then
+                cache.map_reveal.chunks[chunk_string].count = cache.map_reveal.chunks[chunk_string].count + 1
+
+                surface.request_to_generate_chunks(position, 3)
+                surface.force_generate_chunk_requests()
+            end
+        end
+    elseif (event.effect_id == "cn-tesla-rocket-lightning") then
         if (not sa_active) then return end
 
         local target = event.target_position
