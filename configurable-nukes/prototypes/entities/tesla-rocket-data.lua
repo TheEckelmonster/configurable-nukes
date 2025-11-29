@@ -186,18 +186,34 @@ local function create_quality_tesla_rocket(params)
                     fork_chance_increase_per_quality_level = clamp_percent_count(0.04 --[[* quality_level_multiplier]]),
                     action =
                     {
-                        type = "direct",
-                        action_delivery =
                         {
-                            type = "beam",
-                            beam = "cn-chain-tesla-rocket-beam-bounce-" .. k_0,
-                            max_length = clamp_max_distance(12 * ((area_multiplier * quality_level_multiplier) ^ 0.25)) + 0.5,
-                            duration = 30,
-                            add_to_shooter = false,
-                            destroy_with_source_or_target = false,
-                            source_offset = { 0, 0 }, -- should match beam's target_offset
+                            type = "direct",
+                            action_delivery =
+                            {
+                                type = "instant",
+                                target_effects =
+                                {
+                                    {
+                                        type = "script",
+                                        effect_id = "map-reveal"
+                                    },
+                                },
+                            },
                         },
-                    },
+                        {
+                            type = "direct",
+                            action_delivery =
+                            {
+                                type = "beam",
+                                beam = "cn-chain-tesla-rocket-beam-bounce-" .. k_0,
+                                max_length = clamp_max_distance(12 * ((area_multiplier * quality_level_multiplier) ^ 0.25)) + 0.5,
+                                duration = 30,
+                                add_to_shooter = false,
+                                destroy_with_source_or_target = false,
+                                source_offset = { 0, 0 }, -- should match beam's target_offset
+                            },
+                        },
+                    }
                 }
             })
 
@@ -270,44 +286,46 @@ local function create_quality_tesla_rocket(params)
                         ignore_collision_condition = true,
                         action_delivery =
                         {
-                            type = "instant",
-                            target_effects =
                             {
+                                type = "instant",
+                                target_effects =
                                 {
-                                    type = "nested-result",
-                                    action =
                                     {
-                                        type = "direct",
-                                        action_delivery =
+                                        type = "nested-result",
+                                        action =
                                         {
-                                            type = "chain",
-                                            chain = "cn-tesla-rocket-chain-" .. k_0,
-                                            show_in_tooltip = true,
+                                            type = "direct",
+                                            action_delivery =
+                                            {
+                                                type = "chain",
+                                                chain = "cn-tesla-rocket-chain-" .. k_0,
+                                                show_in_tooltip = true,
+                                            }
                                         }
-                                    }
-                                },
-                                {
-                                    type = "damage",
-                                    vaporize = false,
-                                    lower_distance_threshold = 0,
-                                    upper_distance_threshold = clamp_max_distance(3 * area_multiplier * quality_level_multiplier),
-                                    lower_damage_modifier = 1 * damage_multiplier * quality_level_multiplier,
-                                    upper_damage_modifier = 0.01 * damage_multiplier * quality_level_multiplier,
-                                    damage = { amount = 200 * damage_multiplier * quality_level_multiplier, type = "explosion" },
-                                    show_in_tooltip = true,
-                                },
-                                {
-                                    type = "damage",
-                                    vaporize = false,
-                                    lower_distance_threshold = 0,
-                                    upper_distance_threshold = clamp_max_distance(3 * area_multiplier * quality_level_multiplier),
-                                    lower_damage_modifier = 1 * damage_multiplier * quality_level_multiplier,
-                                    upper_damage_modifier = 0.01 * damage_multiplier * quality_level_multiplier,
-                                    damage = { amount = 200 * damage_multiplier * quality_level_multiplier, type = "electric" },
-                                    show_in_tooltip = true,
+                                    },
+                                    {
+                                        type = "damage",
+                                        vaporize = false,
+                                        lower_distance_threshold = 0,
+                                        upper_distance_threshold = clamp_max_distance(3 * area_multiplier * quality_level_multiplier),
+                                        lower_damage_modifier = 1 * damage_multiplier * quality_level_multiplier,
+                                        upper_damage_modifier = 0.01 * damage_multiplier * quality_level_multiplier,
+                                        damage = { amount = 200 * damage_multiplier * quality_level_multiplier, type = "explosion" },
+                                        show_in_tooltip = true,
+                                    },
+                                    {
+                                        type = "damage",
+                                        vaporize = false,
+                                        lower_distance_threshold = 0,
+                                        upper_distance_threshold = clamp_max_distance(3 * area_multiplier * quality_level_multiplier),
+                                        lower_damage_modifier = 1 * damage_multiplier * quality_level_multiplier,
+                                        upper_damage_modifier = 0.01 * damage_multiplier * quality_level_multiplier,
+                                        damage = { amount = 200 * damage_multiplier * quality_level_multiplier, type = "electric" },
+                                        show_in_tooltip = true,
+                                    },
                                 },
                             },
-                        },
+                        }
                     },
                 },
                 animation = nil,
@@ -428,7 +446,7 @@ local function create_quality_tesla_rocket(params)
                                     max_movement_distance_deviation = max_shockwave_movement_distance_deviation,
                                     inherit_movement_distance_from_projectile = true,
                                     cycle_while_moving = true
-                                }
+                                },
                             }
                         }
                     }
@@ -451,10 +469,12 @@ local function create_quality_tesla_rocket(params)
                     radius = clamp_max_distance(16 * ((area_multiplier * quality_level_multiplier) ^ 0.25)) + 2,
                     action_delivery =
                     {
-                        type = "projectile",
-                        projectile = "cn-tesla-rocket-wave-spawns-nuke-shockwave-explosion-" .. k_0,
-                        starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
-                        starting_speed_deviation = nuke_shockwave_starting_speed_deviation * area_multiplier * quality_level_multiplier,
+                        {
+                            type = "projectile",
+                            projectile = "cn-tesla-rocket-wave-spawns-nuke-shockwave-explosion-" .. k_0,
+                            starting_speed = 0.5 * 0.65 * area_multiplier * quality_level_multiplier,
+                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation * area_multiplier * quality_level_multiplier,
+                        },
                     }
                 }
             })
@@ -478,6 +498,10 @@ local function create_quality_tesla_rocket(params)
                             type = "instant",
                             target_effects =
                             {
+                                {
+                                    type = "script",
+                                    effect_id = "map-reveal"
+                                },
                                 {
                                     type = "damage",
                                     vaporize = false,
@@ -519,10 +543,22 @@ local function create_quality_tesla_rocket(params)
                     radius = clamp_max_distance(16 * ((area_multiplier * quality_level_multiplier) ^ 0.25)),
                     action_delivery =
                     {
-                        type = "projectile",
-                        projectile = "cn-tesla-rocket-shockwave-" .. k_0,
-                        starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
-                        starting_speed_deviation = nuke_shockwave_starting_speed_deviation * area_multiplier * quality_level_multiplier
+                        {
+                            type = "instant",
+                            target_effects =
+                            {
+                                {
+                                    type = "script",
+                                    effect_id = "map-reveal"
+                                },
+                            },
+                        },
+                        {
+                            type = "projectile",
+                            projectile = "cn-tesla-rocket-shockwave-" .. k_0,
+                            starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
+                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation * area_multiplier * quality_level_multiplier
+                        },
                     }
                 }
             })

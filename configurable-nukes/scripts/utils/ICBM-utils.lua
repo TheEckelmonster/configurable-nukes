@@ -2,6 +2,8 @@ local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
 if (not script or not _Log or mods) then _Log = Log_Stub end
 
+local Data = require("__TheEckelmonster-core-library__.libs.data.data")
+
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local ICBM_Data = require("scripts.data.ICBM-data")
@@ -10,10 +12,25 @@ local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository"
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local cache = {}
+local cache_attributes = {}
+setmetatable(cache_attributes, { __mode = "k" })
+
+cache.surfaces = {}
+cache.icbms_by_cargo_pod = {}
+
 local icbm_utils = {
     space_launches_initiated = {}
 }
 icbm_utils.name = "icbm_utils"
+icbm_utils.cache = cache
+icbm_utils.cache_attributes = cache_attributes
+
+cache.self = icbm_utils
+
+Cache[icbm_utils.name] = icbm_utils
+
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local time_to_target_message = function (params)
     local print_message = function (param_1, param_2)
@@ -33,6 +50,8 @@ local time_to_target_message = function (params)
     end
 end
 
+cache.on_cargo_pod_finished_ascending = {}
+cache.on_cargo_pod_finished_ascending.icbm_meta_data = {}
 function icbm_utils.on_cargo_pod_finished_ascending(data)
     Log.debug("icbm_utils.on_cargo_pod_finished_ascending")
     Log.info(data)
@@ -43,15 +62,54 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     if (data.cargo_pod == nil or not data.cargo_pod.valid) then return -1 end
     if (data.tick == nil or type(data.tick) ~= "number") then return -1 end
 
-    local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(data.surface.name)
+    local surface_name = data.surface.name
+    if (not cache.surfaces[surface_name] or not cache_attributes[cache.surfaces[surface_name]] or cache_attributes[cache.surfaces[surface_name]].time_to_live < game.tick) then
+        cache.surfaces[surface_name] = { surface = data.surface, name = surface_name, index = data.surface.index, }
+        cache_attributes[cache.surfaces[surface_name]] = Data:new({ time_to_live = game.tick + 23456 + Random(3456), valid = true, })
+    end
 
-    local k, icbm_data = next(icbm_meta_data.icbms, nil)
-    while k or (not k and icbm_data) do
-        if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == data.cargo_pod.unit_number) then
-            break
+    local _cache = cache.on_cargo_pod_finished_ascending
+
+    if (not _cache.icbm_meta_data[surface_name] or not cache_attributes[_cache.icbm_meta_data[surface_name]] or cache_attributes[_cache.icbm_meta_data[surface_name]].time_to_live < game.tick) then
+        _cache.icbm_meta_data[surface_name] = ICBM_Meta_Repository.get_icbm_meta_data(data.surface.name)
+        cache_attributes[_cache.icbm_meta_data[surface_name]] = Data:new({
+            time_to_live = game.tick + 3456 + Random(1234),
+            valid = true,
+        })
+    end
+
+    local icbm_meta_data = _cache.icbm_meta_data[surface_name]
+    local icbms_by_cargo_pod = cache.icbms_by_cargo_pod
+
+    local k, icbm_data = nil, nil
+
+    if (icbms_by_cargo_pod[data.cargo_pod.unit_number]) then
+        icbm_data = icbms_by_cargo_pod[data.cargo_pod.unit_number]
+    else
+        local ref = Cache["rocket_silo_service"]
+        local cache_attributes_ref = ref and ref.cache_attributes
+        if (cache_attributes_ref and cache_attributes_ref[icbm_meta_data] and cache_attributes_ref[icbm_meta_data].icbms_by_cargo_pod) then
+            if (cache_attributes_ref[icbm_meta_data].icbms_by_cargo_pod[data.cargo_pod.unit_number]) then
+                icbm_data = cache_attributes_ref[icbm_meta_data].icbms_by_cargo_pod[data.cargo_pod.unit_number]
+            end
         end
+    end
 
-        if (k) then k, icbm_data = next(icbm_meta_data.icbms, k) end
+    if (not icbm_data) then
+        local found = false
+        k, icbm_data = next(icbm_meta_data.icbms, nil)
+        while k or (not k and icbm_data) do
+            if (icbm_data and icbm_data.cargo_pod_unit_number) then
+                icbms_by_cargo_pod[icbm_data.cargo_pod_unit_number] = icbm_data
+                if (icbm_data.cargo_pod_unit_number == data.cargo_pod.unit_number) then
+                    found = true
+                    break
+                end
+            end
+
+            if (k) then k, icbm_data = next(icbm_meta_data.icbms, k) end
+        end
+        if (not found) then icbm_data = nil end
     end
 
     if (icbm_data == nil) then
@@ -86,8 +144,6 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     local destination = nil
     local from, to = nil, nil
     local origin_space_location = nil
-
-    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     --[[ Check if there is a platform attached to the given surface; and if the potential platform has a schedule with a valid destination ]]
     if (not se_active and icbm_data.source_silo and icbm_data.source_silo.valid and icbm_data.source_silo.surface.valid and icbm_data.source_silo.surface.platform and icbm_data.source_silo.surface.platform.valid) then
@@ -205,7 +261,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                 for i = 1, math.floor(target_distance / distance_divisor), 1 do
                     --[[ This shouldn't be necessary? ]]
                     if (threshold >= 1) then break end
-                    local rand = math.random()
+                    local rand = Random()
 
                     Log.warn("rand = " .. rand)
                     Log.warn("threshold = " .. threshold)
@@ -227,8 +283,8 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                             if (not se_active) then
                                 Log.warn("deviation_limit = " .. deviation_limit)
                                 icbm_data.target_position = {
-                                    x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
-                                    y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
+                                    x = icbm_data.target_position.x + Random(0 - deviation_limit, deviation_limit),
+                                    y = icbm_data.target_position.y + Random(0 - deviation_limit, deviation_limit),
                                 }
                             else
                                 local target_surface_name = icbm_data.target_surface and icbm_data.surface.valid and icbm_data.target_surface.name:lower() or icbm_data.target_surface_name
@@ -245,8 +301,8 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                                     }
 
                                     icbm_data.target_position = {
-                                        x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
-                                        y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
+                                        x = icbm_data.target_position.x + Random(0 - deviation_limit, deviation_limit),
+                                        y = icbm_data.target_position.y + Random(0 - deviation_limit, deviation_limit),
                                     }
 
                                     local delta_from_origin = ((icbm_data.target_position.x) ^ 2 + (icbm_data.target_position.y) ^ 2) ^ 0.5
@@ -691,7 +747,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     end
 
     if (not se_active and icbm_data.launched_from_space) then
-        local launch_duration_ticks = 511 + math.random(-1, 1) * math.random(32)
+        local launch_duration_ticks = 511 + Random(-1, 1) * Random(32)
         time_to_target = time_to_target + launch_duration_ticks
         icbm_utils.space_launches_initiated[icbm_data] = {
             tick = game.tick + launch_duration_ticks,
@@ -704,7 +760,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         local rand_additional_time = (math.log(2.71 + target_distance, 2.71) * (magnitude ^ 1.66))
         if (type(rand_additional_time) ~= "number" or rand_additional_time < 1 or rand_additional_time >= math.huge) then rand_additional_time = 1 end
 
-        time_to_target = time_to_target + math.random(60 * rand_additional_time) * magnitude
+        time_to_target = time_to_target + Random(60 * rand_additional_time) * magnitude
     end
 
     Log.warn("game.tick = " .. game.tick)
@@ -1034,7 +1090,12 @@ function icbm_utils.payload_arrive_event(event, event_data)
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
         if (game.forces[event_data.icbm_data.force_index] and game.forces[event_data.icbm_data.force_index].valid) then
-            local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(event_data.icbm_data.force_index)
+            if (not cache.force_launch_data[event_data.icbm_data.force_index] or not cache_attributes[cache.force_launch_data[event_data.icbm_data.force_index]] or cache_attributes[cache.force_launch_data[event_data.icbm_data.force_index].time_to_live < game.tick]) then
+                cache.force_launch_data[event_data.icbm_data.force_index] = Force_Launch_Data_Repository.get_force_launch_data(event_data.icbm_data.force_index)
+                cache_attributes[cache.force_launch_data[event_data.icbm_data.force_index]] = Data:new({ time_to_live = game.tick + 2345 + 789 })
+            end
+
+            local force_launch_data = cache.force_launch_data[event_data.icbm_data.force_index]
             if (force_launch_data and force_launch_data.valid and force_launch_data.launch_action_queue) then
                 force_launch_data.launch_action_queue:remove({ data = event_data.icbm_data.enqueued_data })
             end
@@ -1178,7 +1239,12 @@ function icbm_utils.launch_initiated(data)
 
     if (icbm_data.force_index < 0 and icbm_data.force_index > 63) then return -1 end
 
-    local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
+    if (not cache.force_launch_data[icbm_data.force_index] or not cache_attributes[cache.force_launch_data[icbm_data.force_index]] or cache_attributes[cache.force_launch_data[icbm_data.force_index].time_to_live < game.tick]) then
+        cache.force_launch_data[icbm_data.force_index] = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
+        cache_attributes[cache.force_launch_data[icbm_data.force_index]] = Data:new({ time_to_live = game.tick + 2345 + 789 })
+    end
+
+    local force_launch_data = cache.force_launch_data[icbm_data.force_index]
     local enqueued_data = force_launch_data.launch_action_queue:enqueue({
         data =
         {
@@ -1192,6 +1258,11 @@ function icbm_utils.launch_initiated(data)
 
     icbm_data = ICBM_Repository.update_icbm_data(icbm_data)
     if (not icbm_data or not icbm_data.valid) then return -1 end
+
+    local icbms_by_cargo_pod = cache.icbms_by_cargo_pod
+    if (not icbms_by_cargo_pod[icbm_data.cargo_pod_unit_number]) then
+        icbms_by_cargo_pod[icbm_data.cargo_pod_unit_number] = icbm_data
+    end
 
     Log.warn(enqueued_data)
 
@@ -1263,6 +1334,7 @@ function icbm_utils.launch_initiated(data)
 end
 
 local pos_neg = 1
+cache.spawn_jericho_event = {}
 function icbm_utils.spawn_jericho_event(event, event_data)
     Log.debug("icbm_utils.spawn_jericho_event")
     Log.info(event)
@@ -1274,34 +1346,41 @@ function icbm_utils.spawn_jericho_event(event, event_data)
         source_name = event_data.source_name,
     })
 
-    local function create_jericho_rocket(params)
-        params.payload_spawn_position.x = params.payload_spawn_position.x + math.random(2 ^ 4) * pos_neg
-        params.payload_spawn_position.y = params.payload_spawn_position.y - 2 ^ 5 - math.random(2 ^ 4)
+    if (not cache.spawn_jericho_event.create_jericho_rocket or not cache_attributes[cache.spawn_jericho_event.create_jericho_rocket] or cache_attributes[cache.spawn_jericho_event.create_jericho_rocket].time_to_live < game.tick) then
+        local function create_jericho_rocket(params)
+            params.payload_spawn_position.x = params.payload_spawn_position.x + Random(2 ^ 4) * pos_neg
+            params.payload_spawn_position.y = params.payload_spawn_position.y - 2 ^ 5 - Random(2 ^ 4)
 
-        pos_neg = pos_neg * -1
+            pos_neg = pos_neg * -1
 
-        params.icbm.target_surface.create_entity({
-            name = params.icbm.item_name .. "-" .. params.icbm.item.quality,
-            position = params.payload_spawn_position,
-            direction = defines.direction.south,
-            force = params.force,
-            target = params.target,
-            source = params.icbm.source_position,
-            --[[ TODO: Make configurable ]]
-            cause = params.icbm.same_surface and params.icbm.source_silo and params.icbm.source_silo.valid and params.icbm.source_silo or params.force,
-            speed = 0.00000025 * math.random(1000) * math.exp(1),
-            base_damage_modifiers = {
-                damage_modifier = 1,
-                damage_addition = 1,
-                radius_modifier = 1,
-            },
-            bonus_damage_modifiers = {
-                damage_modifier = 1,
-                damage_addition = 1,
-                radius_modifier = 1,
-            },
-        })
+            params.icbm.target_surface.create_entity({
+                name = params.icbm.item_name .. "-" .. params.icbm.item.quality,
+                position = params.payload_spawn_position,
+                direction = defines.direction.south,
+                force = params.force,
+                target = params.target,
+                source = params.icbm.source_position,
+                --[[ TODO: Make configurable ]]
+                cause = params.icbm.same_surface and params.icbm.source_silo and params.icbm.source_silo.valid and params.icbm.source_silo or params.force,
+                speed = 0.00000025 * Random(1000) * math.exp(1),
+                base_damage_modifiers = {
+                    damage_modifier = 1,
+                    damage_addition = 1,
+                    radius_modifier = 1,
+                },
+                bonus_damage_modifiers = {
+                    damage_modifier = 1,
+                    damage_addition = 1,
+                    radius_modifier = 1,
+                },
+            })
+        end
+
+        cache.spawn_jericho_event.create_jericho_rocket = { func = create_jericho_rocket }
+        cache_attributes[cache.spawn_jericho_event.create_jericho_rocket] = Data:new({ time_to_live = game.tick + 2345 + Random(789) })
     end
+
+    local create_jericho_rocket = cache.spawn_jericho_event.create_jericho_rocket.func
 
     create_jericho_rocket({
         icbm = event_data.icbm,
@@ -1385,7 +1464,7 @@ function icbm_utils.payload_arrived(data)
                 return { x = _target.x, y = _target.y }
             end
             local function random_scaling()
-                return math.random(10000) * .0001355
+                return Random(10000) * .0001355
             end
 
             local area_setting = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_AREA_MULTIPLIER.name, reindex = true })
@@ -1407,12 +1486,12 @@ function icbm_utils.payload_arrived(data)
                 for j = 0, loop_count, 1 do
 
                     if (threshold < 1) then do_break = true; break end
-                    if (math.random(100) <= threshold) then
+                    if (Random(100) <= threshold) then
                         threshold = threshold - 0.5
                         for k = 0, settings_modifier, 1 do
                             target = reset_target()
 
-                            local factor = ((i) * 5 + 4 * (quality_factor + 1) * area_setting) + math.random(5)
+                            local factor = ((i) * 5 + 4 * (quality_factor + 1) * area_setting) + Random(5)
 
                             if (rockets_created % 5 > 0 and rockets_created % 5 ~= 3) then
                                 target.x = target.x + random_scaling() * factor * math.cos(2 * math.pi * (j / loop_count))
@@ -1423,7 +1502,7 @@ function icbm_utils.payload_arrived(data)
                             end
 
                             if (rockets_created > 0) then
-                                random_additional_ticks = random_additional_ticks + math.random(10)
+                                random_additional_ticks = random_additional_ticks + Random(10)
                             end
 
                             local nth_tick = game.tick + random_additional_ticks
@@ -1446,7 +1525,7 @@ function icbm_utils.payload_arrived(data)
                     target = reset_target()
                 else
                     if (targets and #targets > 0) then
-                        local rand = math.random(#targets)
+                        local rand = Random(#targets)
                         target = table.remove(targets, rand)
                     else
                         target = reset_target()

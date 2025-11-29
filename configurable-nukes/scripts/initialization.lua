@@ -247,6 +247,7 @@ function locals.migrate(data)
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "icbm_data" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "nth_tick" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "tick" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "icbm_utils" })
 
     if (not data or type(data) ~= "table") then return end
     if (not data.maintain_data) then return end

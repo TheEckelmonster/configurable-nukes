@@ -2,6 +2,8 @@ local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
 if (not script or not _Log or mods) then _Log = Log_Stub end
 
+local Data = require("__TheEckelmonster-core-library__.libs.data.data")
+
 local Circuit_Network_Validations = require("scripts.validations.circuit-network-data.rocket-silo-validations")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
@@ -10,6 +12,21 @@ local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-reposit
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local cache = {}
+local cache_attributes = {}
+setmetatable(cache_attributes, { __mode = "k" })
+
+local rocket_silo_service = {}
+rocket_silo_service.name = "rocket_silo_service"
+rocket_silo_service.cache = cache
+rocket_silo_service.cache_attributes = cache_attributes
+
+cache.self = rocket_silo_service
+
+Cache[rocket_silo_service.name] = rocket_silo_service
+
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local valid_payloads =
 {
@@ -35,29 +52,62 @@ local function valid_payload(data)
     return return_val
 end
 
-local rocket_silo_service = {}
-
+cache.on_cargo_pod_finished_ascending = {}
+cache.on_cargo_pod_finished_ascending.surfaces = {}
 function rocket_silo_service.on_cargo_pod_finished_ascending(event)
     Log.debug("rocket_silo_service.on_cargo_pod_finished_ascending")
     Log.info(event)
 
     if (not event) then return end
-    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
     if (not event.launched_by_rocket) then
         if (not se_active) then
             return
         else
             if (not event.cargo_pod or not event.cargo_pod.valid) then return end
             if (not event.cargo_pod.surface or not event.cargo_pod.surface.valid) then return end
-            local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(event.cargo_pod.surface.name)
 
-            local k, icbm_data = next(icbm_meta_data.icbms, nil)
-            while k or (not k and icbm_data) do
-                if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == event.cargo_pod.unit_number) then
-                    break
+            local _cache = cache.on_cargo_pod_finished_ascending
+            if (not _cache.surfaces[event.cargo_pod.surface.name] or not cache_attributes[_cache.surfaces[event.cargo_pod.surface.name]] or cache_attributes[_cache.surfaces[event.cargo_pod.surface.name]].time_to_live < game.tick) then
+                _cache.surfaces[event.cargo_pod.surface.name] = { surface = event.cargo_pod.surface, name = event.cargo_pod.surface.name, index = event.cargo_pod.surface.index, }
+                cache_attributes[_cache.surfaces[event.cargo_pod.surface.name]] = Data:new({ time_to_live = game.tick + 23456 + Random(3600), valid = true })
+            end
+
+            local surface_name = _cache.surfaces[event.cargo_pod.surface.name].name
+
+            if (not _cache.surfaces[surface_name].icbm_meta_data or not cache_attributes[_cache.surfaces[surface_name].icbm_meta_data] or cache_attributes[_cache.surfaces[surface_name].icbm_meta_data].time_to_live < game.tick) then
+                _cache.surfaces[surface_name].icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(surface_name)
+                cache_attributes[_cache.surfaces[surface_name].icbm_meta_data] = Data:new({
+                    time_to_live = game.tick + 12345 + Random(1500),
+                    icbms_by_cargo_pod = {},
+                    valid = true,
+                })
+            end
+
+            local icbm_meta_data = _cache.surfaces[surface_name].icbm_meta_data
+
+            local icbms_by_cargo_pod = cache_attributes[icbm_meta_data].icbms_by_cargo_pod
+
+            local k, icbm_data = nil, nil
+
+            if (icbms_by_cargo_pod[event.cargo_pod.unit_number]) then
+                icbm_data = icbms_by_cargo_pod[event.cargo_pod.unit_number]
+            end
+
+            if (not icbm_data) then
+                local found = false
+                k, icbm_data = next(icbm_meta_data.icbms, nil)
+                while k or (not k and icbm_data) do
+                    if (icbm_data and icbm_data.cargo_pod_unit_number) then
+                        icbms_by_cargo_pod[icbm_data.cargo_pod_unit_number] = icbm_data
+                        if (icbm_data.cargo_pod_unit_number == event.cargo_pod.unit_number) then
+                            found = true
+                            break
+                        end
+                    end
+
+                    if (k) then k, icbm_data = next(icbm_meta_data.icbms, k) end
                 end
-
-                if (k) then k, icbm_data = next(icbm_meta_data.icbms, k) end
+                if (not found) then icbm_data = nil end
             end
 
             if (icbm_data == nil) then
@@ -71,7 +121,6 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
     Log.warn(cargo_pod)
     Log.warn(cargo_pod.cargo_pod_destination)
     if (not cargo_pod.cargo_pod_destination) then return end
-
 
     -- Check the carge; if the cargo pod doesn't have a station and has a destination type of 1
     --   -> no station implies it was sent to "orbit"
@@ -210,15 +259,32 @@ function rocket_silo_service.scrub_oldest_launch(data)
     Rocket_Silo_Utils.scrub_launch(data)
 end
 
+cache.scrub_all_launches = {}
+cache.scrub_all_launches.forces = {}
 function rocket_silo_service.scrub_all_launches(data)
     Log.debug("rocket_silo_service.scrub_all_launches")
     Log.info(event)
 
     data.order = "last"
     data.print_message = false
-    data.space_launches_initiated = ICBM_Utils.get_space_launches_initiatied()
+    local _cache = cache.scrub_all_launches
+    if (not _cache.space_launches_initiated or not cache_attributes[_cache.space_launches_initiated] or cache_attributes[_cache.space_launches_initiated].time_to_live < game.tick) then
+        _cache.space_launches_initiated = ICBM_Utils.get_space_launches_initiatied()
+        cache_attributes[_cache.space_launches_initiated] = Data:new({ time_to_live = game.tick + 34567 + Random(2345), valid = true, })
+    end
+    data.space_launches_initiated = _cache.space_launches_initiated
 
-    local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(data.player.force.index)
+    if (not _cache.forces[data.player.force.index] or not cache_attributes[_cache.forces[data.player.force.index]] or cache_attributes[_cache.forces[data.player.force.index]].time_to_live < game.tick) then
+        _cache.forces[data.player.force.index] = { force = data.player.force, name = data.player.force.name, index = data.player.force.index, }
+        cache_attributes[_cache.forces[data.player.force.index]] = Data:new({ time_to_live = game.tick + 2345 + Random(1234), valid = true, })
+    end
+
+    if (not _cache.forces[data.player.force.index].force_launch_data or not cache_attributes[_cache.forces[data.player.force.index].force_launch_data] or cache_attributes[_cache.forces[data.player.force.index].force_launch_data].time_to_live < game.tick) then
+        _cache.forces[data.player.force.index].force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(data.player.force.index)
+        cache_attributes[_cache.forces[data.player.force.index].force_launch_data] = Data:new({ time_to_live = game.tick + 2345 + Random(1234), valid = true, })
+    end
+
+    local force_launch_data = _cache.forces[data.player.force.index].force_launch_data
 
     local i = 0
     while force_launch_data.launch_action_queue.count > 0 do

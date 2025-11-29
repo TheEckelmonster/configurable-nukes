@@ -54,8 +54,8 @@ end
 local get_quality_base_multiplier = function ()
     local setting = 1.3
 
-    if (settings and settings.startup and settings.startup["configurable-nukes-quality-base-multiplier"]) then
-        setting = settings.startup["configurable-nukes-quality-base-multiplier"].value
+    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.QUALITY_BASE_MULTIPLIER.name]) then
+        setting = settings.startup[Startup_Settings_Constants.settings.QUALITY_BASE_MULTIPLIER.name].value
     end
 
     return setting
@@ -115,17 +115,27 @@ original_atomic_warhead.icon = "__base__/graphics/icons/signal/signal-radioactiv
 for k, v in pairs(original_atomic_warhead.action.action_delivery.target_effects) do
     if (v.type == "nested-result") then
         if (v.action.type == "area") then
+            local projectile_object = nil
             if (v.action.action_delivery.type == "projectile") then
-                if (v.action.action_delivery.projectile:find("atomic-bomb", 1 ,true)) then
-                    local raw_object = data.raw["projectile"][v.action.action_delivery.projectile]
-                    raw_object.name:gsub("atomic%-bomb", "atomic-warhead")
+                projectile_object = v.action.action_delivery
+            elseif (v.action.action_delivery[1] and v.action.action_delivery[1].projectile) then
+                projectile_object = v.action.action_delivery[1]
+            elseif (v.action.action_delivery[1] and v.action.action_delivery[2] and v.action.action_delivery[2].projectile) then
+                projectile_object = v.action.action_delivery[2]
+            end
 
-                    local atomic_warhead_object = Util.table.deepcopy(raw_object)
-                    atomic_warhead_object.name = string.gsub(v.action.action_delivery.projectile, "atomic%-bomb", "atomic-warhead")
+            if (projectile_object and projectile_object.projectile) then
+                if (projectile_object.projectile:find("atomic-bomb", 1, true)) then
+                    local raw_object = data.raw["projectile"][projectile_object.projectile]
 
-                    v.action.action_delivery.projectile = v.action.action_delivery.projectile:gsub("atomic%-bomb", "atomic-warhead")
+                    if (raw_object) then
+                        local atomic_warhead_object = Util.table.deepcopy(raw_object)
+                        atomic_warhead_object.name = projectile_object.projectile:gsub("atomic%-bomb", "atomic-warhead")
 
-                    data:extend({ atomic_warhead_object })
+                        projectile_object.projectile = projectile_object.projectile:gsub("atomic%-bomb", "atomic-warhead")
+
+                        data:extend({ atomic_warhead_object })
+                    end
                 end
             end
         end
@@ -163,18 +173,18 @@ local create_quality_atomic_warhead = function (params)
                             type = "direct",
                             action_delivery =
                             {
-                            type = "instant",
-                            target_effects =
-                            {
+                                type = "instant",
+                                target_effects =
                                 {
-                                type = "create-explosion",
-                                entity_name = "atomic-nuke-shockwave",
-                                max_movement_distance = max_nuke_shockwave_movement_distance * quality_level_multiplier,
-                                max_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * quality_level_multiplier,
-                                inherit_movement_distance_from_projectile = true,
-                                cycle_while_moving = true
+                                    {
+                                        type = "create-explosion",
+                                        entity_name = "atomic-nuke-shockwave",
+                                        max_movement_distance = max_nuke_shockwave_movement_distance * quality_level_multiplier,
+                                        max_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * quality_level_multiplier,
+                                        inherit_movement_distance_from_projectile = true,
+                                        cycle_while_moving = true
+                                    }
                                 }
-                            }
                             }
                         }
                     },
@@ -194,18 +204,18 @@ local create_quality_atomic_warhead = function (params)
                             type = "direct",
                             action_delivery =
                             {
-                            type = "instant",
-                            target_effects =
-                            {
+                                type = "instant",
+                                target_effects =
                                 {
-                                type = "create-explosion",
-                                entity_name = "atomic-fire-smoke",
-                                max_movement_distance = max_nuke_shockwave_movement_distance * quality_level_multiplier,
-                                max_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * quality_level_multiplier,
-                                inherit_movement_distance_from_projectile = true,
-                                cycle_while_moving = true
+                                    {
+                                        type = "create-explosion",
+                                        entity_name = "atomic-fire-smoke",
+                                        max_movement_distance = max_nuke_shockwave_movement_distance * quality_level_multiplier,
+                                        max_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * quality_level_multiplier,
+                                        inherit_movement_distance_from_projectile = true,
+                                        cycle_while_moving = true
+                                    }
                                 }
-                            }
                             }
                         }
                     },
@@ -230,7 +240,7 @@ local create_quality_atomic_warhead = function (params)
                         upper_distance_threshold = clamp_max_distance(35, area_multiplier * quality_level_multiplier),
                         lower_damage_modifier = 1 * damage_multiplier * quality_level_multiplier,
                         upper_damage_modifier = 0.01 * damage_multiplier * quality_level_multiplier,
-                        damage = {amount = 100 * damage_multiplier * quality_level_multiplier, type = "explosion"}
+                        damage = { amount = 100 * damage_multiplier * quality_level_multiplier, type = "explosion" }
                     }
                 }
             }
@@ -252,8 +262,8 @@ local create_quality_atomic_warhead = function (params)
                         lower_damage_modifier = 1 * damage_multiplier * quality_level_multiplier,
                         upper_damage_modifier = 0.1 * damage_multiplier * quality_level_multiplier,
                         damage = { amount = 400 * damage_multiplier * quality_level_multiplier, type = "explosion" }
-                    }
-                }
+                    },
+                },
             }
 
             data:extend({
@@ -280,7 +290,7 @@ local create_quality_atomic_warhead = function (params)
                     speed_modifier = { 1.0, 0.707 },
                     action =
                     {
-                        atomic_warhead_wave_action
+                        atomic_warhead_wave_action,
                     },
                     animation = nil,
                     shadow = nil
@@ -398,13 +408,56 @@ local create_quality_atomic_warhead = function (params)
                                     radius = 35 * area_multiplier * quality_level_multiplier,
                                     action_delivery =
                                     {
+                                        {
+                                            type = "instant",
+                                            target_effects =
+                                            {
+                                                type = "script",
+                                                effect_id = "map-reveal"
+                                            }
+                                        },
+                                        {
+                                            type = "projectile",
+                                            projectile = "atomic-warhead-wave-" .. k_0,
+                                            starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
+                                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                        },
+                                    },
+                                }
+                            end
+                        elseif (    v_1.action.action_delivery[1]
+                                and v_1.action.action_delivery[1].projectile
+                                and v_1.action.action_delivery[1].projectile:find("atomic-warhead-wave", 1, true)
+                                or
+                                    v_1.action.action_delivery[1]
+                                and v_1.action.action_delivery[2]
+                                and v_1.action.action_delivery[2].projectile
+                                and v_1.action.action_delivery[2].projectile:find("atomic-warhead-wave", 1, true)
+                        ) then
+                            v_1.action = {
+                                type = "area",
+                                target_entities = false,
+                                trigger_from_target = true,
+                                repeat_count = clamp_repeat_count(1000, repeat_multiplier * quality_level_multiplier),
+                                radius = 35 * area_multiplier * quality_level_multiplier,
+                                action_delivery =
+                                {
+                                    {
+                                        type = "instant",
+                                        target_effects =
+                                        {
+                                            type = "script",
+                                            effect_id = "map-reveal"
+                                        }
+                                    },
+                                    {
                                         type = "projectile",
                                         projectile = "atomic-warhead-wave-" .. k_0,
                                         starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
-                                    }
-                                }
-                            end
+                                    },
+                                },
+                            }
                         end
                     end
                 end
@@ -425,7 +478,7 @@ local create_quality_atomic_warhead = function (params)
                                 },
                                 type = "instant"
                             },
-                            radius = clamp_max_distance((26 * area_multiplier + 1), quality_level_multiplier),
+                            radius = clamp_max_distance((35 * area_multiplier + 1), quality_level_multiplier),
                             repeat_count = clamp_repeat_count((1000 * repeat_multiplier + 1), quality_level_multiplier),
                             repeat_count_deviation = clamp_repeat_count((42 * repeat_multiplier), quality_level_multiplier),
                             show_in_tooltip = false,

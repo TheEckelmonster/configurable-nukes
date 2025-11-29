@@ -124,24 +124,24 @@ local create_quality_rod_from_god = function (params)
                     speed_modifier = { 1, 0.707 },
                     action =
                     {
-                    {
-                        type = "direct",
-                        action_delivery =
                         {
-                            type = "instant",
-                            target_effects =
+                            type = "direct",
+                            action_delivery =
                             {
+                                type = "instant",
+                                target_effects =
                                 {
-                                type = "create-explosion",
-                                entity_name = "atomic-nuke-shockwave",
-                                max_movement_distance = max_nuke_shockwave_movement_distance * quality_level_multiplier,
-                                max_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * quality_level_multiplier,
-                                inherit_movement_distance_from_projectile = true,
-                                cycle_while_moving = true
+                                    {
+                                        type = "create-explosion",
+                                        entity_name = "atomic-nuke-shockwave",
+                                        max_movement_distance = max_nuke_shockwave_movement_distance * quality_level_multiplier,
+                                        max_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * quality_level_multiplier,
+                                        inherit_movement_distance_from_projectile = true,
+                                        cycle_while_moving = true
+                                    }
                                 }
                             }
                         }
-                    }
                     },
                     animation = nil,
                     shadow = nil
@@ -155,24 +155,24 @@ local create_quality_rod_from_god = function (params)
                     speed_modifier = { 1, 0.707 },
                     action =
                     {
-                    {
-                        type = "direct",
-                        action_delivery =
                         {
-                            type = "instant",
-                            target_effects =
+                            type = "direct",
+                            action_delivery =
                             {
+                                type = "instant",
+                                target_effects =
                                 {
-                                type = "create-explosion",
-                                entity_name = "atomic-fire-smoke",
-                                max_movement_distance = max_nuke_shockwave_movement_distance * quality_level_multiplier,
-                                max_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * quality_level_multiplier,
-                                inherit_movement_distance_from_projectile = true,
-                                cycle_while_moving = true
+                                    {
+                                        type = "create-explosion",
+                                        entity_name = "atomic-fire-smoke",
+                                        max_movement_distance = max_nuke_shockwave_movement_distance * quality_level_multiplier,
+                                        max_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * quality_level_multiplier,
+                                        inherit_movement_distance_from_projectile = true,
+                                        cycle_while_moving = true
+                                    }
                                 }
                             }
                         }
-                    }
                     },
                     animation = nil,
                     shadow = nil
@@ -382,13 +382,56 @@ local create_quality_rod_from_god = function (params)
                                     radius = v_1.action.radius * area_multiplier * quality_level_multiplier,
                                     action_delivery =
                                     {
+                                        {
+                                            type = "instant",
+                                            target_effects =
+                                            {
+                                                type = "script",
+                                                effect_id = "map-reveal"
+                                            }
+                                        },
+                                        {
+                                            type = "projectile",
+                                            projectile = "cn-rod-from-god-wave-" .. k_0,
+                                            starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
+                                            starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
+                                        },
+                                    }
+                                }
+                            end
+                        elseif (    v_1.action.action_delivery[1]
+                                and v_1.action.action_delivery[1].projectile
+                                and v_1.action.action_delivery[1].projectile:find("atomic-bomb-wave", 1, true)
+                                or
+                                    v_1.action.action_delivery[1]
+                                and v_1.action.action_delivery[2]
+                                and v_1.action.action_delivery[2].projectile
+                                and v_1.action.action_delivery[2].projectile:find("atomic-bomb-wave", 1, true)
+                        ) then
+                            v_1.action = {
+                                type = "area",
+                                target_entities = false,
+                                trigger_from_target = true,
+                                repeat_count = clamp_repeat_count(1000, repeat_multiplier * quality_level_multiplier),
+                                radius = 35 * area_multiplier * quality_level_multiplier,
+                                action_delivery =
+                                {
+                                    {
+                                        type = "instant",
+                                        target_effects =
+                                        {
+                                            type = "script",
+                                            effect_id = "map-reveal"
+                                        }
+                                    },
+                                    {
                                         type = "projectile",
                                         projectile = "cn-rod-from-god-wave-" .. k_0,
                                         starting_speed = 0.5 * 0.7 * area_multiplier * quality_level_multiplier,
                                         starting_speed_deviation = nuke_shockwave_starting_speed_deviation * quality_level_multiplier,
-                                    }
-                                }
-                            end
+                                    },
+                                },
+                            }
                         end
                     end
                 end
