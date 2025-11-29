@@ -11,20 +11,26 @@ local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
 local Rocket_Silo_Validations = require("scripts.validations.rocket-silo-validations")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
+local cache = {}
+local cache_attributes = {}
+setmetatable(cache_attributes, { __mode = "k" })
+
+cache.surfaces = {}
+cache.rocket_silos = {}
+
 local circuit_network_service = {}
+circuit_network_service.name = "circuit_network_service"
+circuit_network_service.cache = cache
+circuit_network_service.cache_attributes = cache_attributes
+
+cache.self = circuit_network_service
+
+Cache[circuit_network_service.name] = circuit_network_service
 
 local sa_active = script and script.active_mods and script.active_mods["space-age"]
 local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local rocket_ready_status = defines.rocket_silo_status.rocket_ready
-
-local cache_attributes = {}
-setmetatable(cache_attributes, { __mode = 'k' })
-
-local cache = {
-    surfaces = {},
-    rocket_silos = {},
-}
 
 function circuit_network_service.attempt_launch_silos(data)
     Log.debug("circuit_network_service.attempt_launch_silos")
