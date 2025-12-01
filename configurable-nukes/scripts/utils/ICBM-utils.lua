@@ -18,6 +18,7 @@ setmetatable(cache_attributes, { __mode = "k" })
 
 cache.surfaces = {}
 cache.icbms_by_cargo_pod = {}
+cache.force_launch_data = {}
 
 local icbm_utils = {
     space_launches_initiated = {}
@@ -1090,7 +1091,7 @@ function icbm_utils.payload_arrive_event(event, event_data)
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
         if (game.forces[event_data.icbm_data.force_index] and game.forces[event_data.icbm_data.force_index].valid) then
-            if (not cache.force_launch_data[event_data.icbm_data.force_index] or not cache_attributes[cache.force_launch_data[event_data.icbm_data.force_index]] or cache_attributes[cache.force_launch_data[event_data.icbm_data.force_index].time_to_live < game.tick]) then
+            if (not cache.force_launch_data[event_data.icbm_data.force_index] or not cache_attributes[cache.force_launch_data[event_data.icbm_data.force_index]] or cache_attributes[cache.force_launch_data[event_data.icbm_data.force_index]].time_to_live < game.tick) then
                 cache.force_launch_data[event_data.icbm_data.force_index] = Force_Launch_Data_Repository.get_force_launch_data(event_data.icbm_data.force_index)
                 cache_attributes[cache.force_launch_data[event_data.icbm_data.force_index]] = Data:new({ time_to_live = game.tick + 2345 + 789 })
             end
@@ -1239,7 +1240,7 @@ function icbm_utils.launch_initiated(data)
 
     if (icbm_data.force_index < 0 and icbm_data.force_index > 63) then return -1 end
 
-    if (not cache.force_launch_data[icbm_data.force_index] or not cache_attributes[cache.force_launch_data[icbm_data.force_index]] or cache_attributes[cache.force_launch_data[icbm_data.force_index].time_to_live < game.tick]) then
+    if (not cache.force_launch_data[icbm_data.force_index] or not cache_attributes[cache.force_launch_data[icbm_data.force_index]] or cache_attributes[cache.force_launch_data[icbm_data.force_index]].time_to_live < game.tick) then
         cache.force_launch_data[icbm_data.force_index] = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
         cache_attributes[cache.force_launch_data[icbm_data.force_index]] = Data:new({ time_to_live = game.tick + 2345 + 789 })
     end
