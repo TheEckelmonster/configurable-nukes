@@ -1,6 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.8.6
+Date: 2025-11-30
+  Bug Fixes:
+    - Fixed multiple runtime errors when launching a rocket/delivering a payload
+---------------------------------------------------------------------------------------------------
 Version: 0.8.5
-Date: 2025-11-28
+Date: 2025-11-29
   Features:
     - Atomic bombs, atomic-warheads, "Rods from God", Jerichos, and Mjölnirs will now continue their explosion even in unexplored areas of the map
       - Previously, an explosion would stop if a chunk wasn't already generated
