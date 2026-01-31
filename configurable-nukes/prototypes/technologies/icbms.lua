@@ -1,4 +1,4 @@
-Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
@@ -175,9 +175,32 @@ local cn_payload_vehicle_unlock =
     recipe = "cn-payload-vehicle",
 }
 
+local payloader_unlock =
+{
+    type = "unlock-recipe",
+    recipe = "payloader",
+}
+
+local payload_add_unlock =
+{
+    type = "unlock-recipe",
+    recipe = "payload-add",
+    hidden = true,
+}
+
+local payload_remove_unlock =
+{
+    type = "unlock-recipe",
+    recipe = "payload-remove",
+    hidden = true,
+}
+
 local technology_effects =
 {
     cn_payload_vehicle_unlock,
+    payloader_unlock,
+    payload_add_unlock,
+    payload_remove_unlock,
 }
 
 data:extend({

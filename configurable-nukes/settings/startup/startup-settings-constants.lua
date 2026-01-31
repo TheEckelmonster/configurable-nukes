@@ -118,10 +118,7 @@ end
 
 local rod_from_god =
 {
-    ingredients =
-    {
-        { type = "item", name = "cn-payload-vehicle", amount = 1,   },
-    },
+    ingredients = {},
     result_amount = 1,
     energy_required = 50,
     hide_from_player_crafting = false,
@@ -142,7 +139,6 @@ local jericho =
 {
     ingredients =
     {
-        { type = "item", name = "cn-payload-vehicle", amount = 1, },
         { type = "item", name = "explosive-rocket", amount = 100, },
         { type = "item", name = "advanced-circuit", amount = 100, },
 
@@ -166,10 +162,9 @@ local tesla_rocket =
 {
     ingredients =
     {
-        { type = "item", name = "cn-payload-vehicle", amount = 1, },
         { type = "item", name = "lightning-collector", amount = 1, },
         { type = "item", name = "processing-unit", amount = 10, },
-        { type = "item", name = "tesla-ammo", amount = 100, },
+        { type = "item", name = "tesla-ammo", amount = 25, },
         { type = "fluid", name = "electrolyte", amount = 1000, },
     },
     result_amount = 1,
@@ -611,6 +606,7 @@ local technology_tesla_rocket =
 local default_technology_prerequisites_nuclear_weapons = {
     "atomic-bomb",
     "space-science-pack",
+    "stronger-explosives-6"
 }
 
 local default_technology_ingredients_nuclear_weapons = {
@@ -1204,13 +1200,13 @@ startup_settings_constants.settings = {
         auto_trim = true,
     },
     --[[ cn-payload-vehicle ]]
-    PAYLOAD_VEHICLE_STACK_SIZE = {
+    PAYLOAD_VEHICLE_INVENTORY_SIZE = {
         type = "int-setting",
-        name = prefix .. "payload-vehicle-stack-size",
+        name = prefix .. "payload-vehicle-inventory-size",
         setting_type = "startup",
         order = "dcb",
-        default_value = 1,
-        maximum_value = 200,
+        default_value = 3,
+        maximum_value = 2 ^ 7,
         minimum_value = 1
     },
     PAYLOAD_VEHICLE_WEIGHT_MODIFIER = {
@@ -1218,9 +1214,9 @@ startup_settings_constants.settings = {
         name = prefix .. "payload-vehicle-weight-modifier",
         setting_type = "startup",
         order = "dcc",
-        default_value = 0.2,
-        maximum_value = 11,
-        minimum_value = 0.0005
+        default_value = 1 / 3,
+        maximum_value = 1,
+        minimum_value = 0.01
     },
     PAYLOAD_VEHICLE_CRAFTING_TIME = {
         type = "int-setting",

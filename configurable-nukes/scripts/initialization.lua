@@ -26,8 +26,8 @@ local initialization = {}
 initialization.last_version_result = nil
 
 function initialization.init(data)
-    log({ "initialization.init" })
-    Log.debug("initialization.init")
+    log({ "initialization.cn-init", Constants.mod_name })
+    Log.debug("initialization.cn-init")
     Log.info(data)
 
     if (not data or type(data) ~= "table") then data = { maintain_data = false} end
@@ -40,8 +40,8 @@ function initialization.init(data)
 end
 
 function initialization.reinit(data)
-    log({ "initialization.reinit" })
-    Log.debug("initialization.reinit")
+    log({ "initialization.cn-reinit", Constants.mod_name })
+    Log.debug("initialization.cn-reinit")
     Log.info(data)
 
     if (not data or type(data) ~= "table") then data = { maintain_data = false} end
@@ -95,8 +95,8 @@ function locals.initialize(from_scratch, maintain_data)
 
     -- Configurable Nukes
     if (from_scratch) then
-        log({ "initialization.initialization-anew", Constants.mod_name })
-        if (game) then game.print({ "initialization.initialization-anew", Constants.mod_name }) end
+        log({ "initialization.cn-initialization-anew", Constants.mod_name })
+        if (game) then game.print({ "initialization.cn-initialization-anew", Constants.mod_name }) end
 
         local _storage = storage
         _storage.storage_old = nil
@@ -166,9 +166,12 @@ function locals.initialize(from_scratch, maintain_data)
         end
 
         if (not storage.random) then storage.random = game.create_random_generator(42) end
+        if (not storage.payloads) then storage.payloads = {} end
+        if (not storage.containers) then storage.containers = {} end
     end
 
     Random = storage.random
+    Payloads = storage.payloads
 
     if (storage and storage.configurable_nukes) then
         storage.configurable_nukes.do_nth_tick = true
@@ -184,8 +187,8 @@ function locals.initialize(from_scratch, maintain_data)
         }
     )
 
-    if (from_scratch) then log({ "initialization.initialization-complete", Constants.mod_name }) end
-    if (from_scratch and game) then game.print({ "initialization.initialization-complete", Constants.mod_name }) end
+    if (from_scratch) then log({ "initialization.cn-initialization-complete", Constants.mod_name }) end
+    if (from_scratch and game) then game.print({ "initialization.cn-initialization-complete", Constants.mod_name }) end
     Log.info(storage)
 
     return configurable_nukes_data
@@ -248,6 +251,9 @@ function locals.migrate(data)
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "nth_tick" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "tick" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "icbm_utils" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "payloaders" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "containers" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "payloads" })
 
     if (not data or type(data) ~= "table") then return end
     if (not data.maintain_data) then return end
@@ -268,7 +274,7 @@ function locals.migrate(data)
                 ) then
                     Log.debug(storage_old.configurable_nukes.version_data)
                     Log.debug(Constants.mod_name .. ": Migrating existing data")
-                    game.print({ "initialization.migrate-start", Constants.mod_name})
+                    game.print({ "initialization.cn-migrate-start", Constants.mod_name})
                     migration_start_message_printed = true
                 end
             end
@@ -514,7 +520,7 @@ function locals.migrate(data)
 
         if (migration_start_message_printed) then
             Log.debug(Constants.mod_name .. ": Migration complete")
-            game.print({ "initialization.migrate-finish", Constants.mod_name})
+            game.print({ "initialization.cn-migrate-finish", Constants.mod_name})
         end
     end
 end

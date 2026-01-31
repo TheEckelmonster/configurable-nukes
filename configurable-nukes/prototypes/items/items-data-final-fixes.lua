@@ -1,18 +1,22 @@
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local quality_active = mods and mods["quality"]
+local true_nukes_contiued = mods and mods["True-Nukes_Continued"]
+
 
 if (quality_active) then
     --[[ Custom tooltips ]]
-    -- atomic-bomb
-    local atomic_bomb_item = data.raw["ammo"]["atomic-bomb"]
-    if (atomic_bomb_item) then
-        local custom_tooltip_fields = Data_Utils.create_custom_tooltip_quality_effects_atomic({
-            type = "projectile",
-            name = "atomic-rocket",
-        })
+    if (not true_nukes_contiued) then
+        -- atomic-bomb
+        local atomic_bomb_item = data.raw["ammo"]["atomic-bomb"]
+        if (atomic_bomb_item) then
+            local custom_tooltip_fields = Data_Utils.create_custom_tooltip_quality_effects_atomic({
+                type = "projectile",
+                name = "atomic-rocket",
+            })
 
-        atomic_bomb_item.custom_tooltip_fields = custom_tooltip_fields
+            atomic_bomb_item.custom_tooltip_fields = custom_tooltip_fields
+        end
     end
 
     -- atomic-warhead

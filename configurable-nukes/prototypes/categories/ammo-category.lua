@@ -50,7 +50,7 @@ data:extend({
         },
         hidden = true,
         hidden_in_factoriopedia = true,
-        subgroup = "ammo-category"
+        subgroup = "ammo-category",
     },
 })
 
@@ -60,7 +60,7 @@ data:extend({
         name = "icbm-top-speed",
         hidden = true,
         hidden_in_factoriopedia = true,
-        subgroup = "ammo-category"
+        subgroup = "ammo-category",
     },
 })
 
@@ -70,7 +70,14 @@ data:extend({
         name = "kinetic-weapon",
         hidden = true,
         hidden_in_factoriopedia = true,
-        subgroup = "ammo-category"
+        subgroup = "ammo-category",
+    },
+    {
+        type = "ammo-category",
+        name = "ballistic-missile-payload",
+        hidden = true,
+        hidden_in_factoriopedia = true,
+        subgroup = "ammo-category",
     },
 })
 
@@ -81,7 +88,7 @@ if (sa_active) then
             name = "tesla-rocket",
             hidden = true,
             hidden_in_factoriopedia = true,
-            subgroup = "ammo-category"
+            subgroup = "ammo-category",
         },
     })
 end

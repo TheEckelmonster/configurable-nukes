@@ -1,6 +1,6 @@
 -- local Item_Sounds = require("__base__.prototypes.item_sounds")
 
-Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
@@ -49,8 +49,8 @@ data:extend({
                 },
             },
         },
-        subgroup = "ammo",
-        order = "d[rocket-launcher]-e[atomic-bomb]",
+        subgroup = "payload",
+        order = "d[warhead]-e[mjolnir]",
         inventory_move_sound = Item_Sounds.mechanical_inventory_move,
         pick_sound = Item_Sounds.mechanical_inventory_pickup,
         drop_sound = Item_Sounds.mechanical_inventory_move,

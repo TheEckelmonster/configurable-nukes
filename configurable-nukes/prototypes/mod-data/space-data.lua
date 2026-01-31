@@ -1,7 +1,8 @@
+local Mod_Data = require("__TheEckelmonster-core-library__.libs.mod-data.mod-data")
 local Space_Data = require("__TheEckelmonster-core-library__.libs.mod-data.space-data")
 
 local Constants = require("scripts.constants.constants")
-Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
+local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 

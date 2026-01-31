@@ -8,6 +8,7 @@
 	"dependencies": [
 		"base >= 2.0.72",
         "TheEckelmonster-core-library >= 0.1.2",
+        "TheEckelmonster-core-library < 1.0.0",
 		"? space-age >= 2.0.72",
 		"? quality >= 2.0.72",
 		"? atan-nuclear-science >= 0.3.3",

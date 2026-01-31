@@ -19,10 +19,12 @@ function icbm_repository.save_icbm_data(icbm, optionals)
 
     if (not game) then return return_val end
     if (not icbm or not icbm.valid) then return return_val end
-    if (not icbm.item_name or type(icbm.item_name) ~= "string") then return return_val end
-    -- if (not icbm or type(icbm.type) ~= "string") then return return_val end
+    if ((not icbm.item_name or type(icbm.item_name) ~= "string") and (not icbm.items or type(icbm.items) ~= "table")) then return return_val end
+    if (not icbm.cargo or type(icbm.cargo) ~= "table") then icbm.cargo = {} end
+    if (not icbm.cargo_dictionary or type(icbm.cargo_dictionary) ~= "table") then icbm.cargo_dictionary = {} end
+    if (icbm.total_payload_items == nil or type(icbm.total_payload_items) ~= "number") then icbm.total_payload_items = Constants.BIG_INTEGER end
     if (not icbm.surface or not icbm.surface.valid) then return return_val end
-    if (not icbm.item or type(icbm.item) ~= "table") then return return_val end
+    if ((not icbm.item and not icbm.items) or (type(icbm.item) ~= "table" and type(icbm.items) ~= "table")) then return return_val end
     if (not icbm.tick_launched or type(icbm.tick_launched) ~= "number") then return return_val end
     if (not icbm.tick_to_target or type(icbm.tick_to_target) ~= "number") then return return_val end
     if (not icbm.same_surface or type(icbm.same_surface) ~= "boolean") then icbm.same_surface = false end
@@ -103,6 +105,10 @@ function icbm_repository.save_icbm_data(icbm, optionals)
     return_val.surface_name = icbm.surface.name
     return_val.item_number = icbm.item_number
     return_val.item = icbm.item
+    return_val.items = icbm.items
+    return_val.cargo = icbm.cargo
+    return_val.cargo_dictionary = icbm.cargo_dictionary
+    return_val.total_payload_items = icbm.total_payload_items
     return_val.tick_launched = icbm.tick_launched
     return_val.tick_to_target = icbm.tick_to_target
     return_val.same_surface = icbm.same_surface

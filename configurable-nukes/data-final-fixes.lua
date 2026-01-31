@@ -11,11 +11,12 @@ if (saa_s_active) then
     require("prototypes.compatibility.SimpleAtomicArtillery-S.items-data-final-fixes")
 end
 
-require("prototypes.mod-data")
+require("prototypes.mod-data.space-data")
 
 if (se_active) then
     require("prototypes.entities.rocket-silo.rocket-silo-data-final-fixes")
-    require("prototypes.collision-layers.ipbm-silo")
+    require("prototypes.compatibility.space-exploration.collision-layers.ipbm-silo")
+    require("prototypes.compatibility.space-exploration.collision-layers.payloader")
     require("prototypes.technologies.icbms")
     require("prototypes.technologies.atomic-warhead")
     require("prototypes.technologies.guidance-systems")
@@ -52,3 +53,5 @@ require("prototypes.items.items-data-final-fixes")
 if (sa_active) then
     require("prototypes.planets.planet-data")
 end
+
+require("prototypes.mod-data.projectile-placeholder-data")

@@ -7,6 +7,7 @@ local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 
 data:extend({
+    Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED,
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE,
 
     Runtime_Global_Settings_Constants.settings.POLLUTION,
@@ -47,6 +48,8 @@ data:extend({
     Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PIN_TARGETS,
 
     Runtime_Global_Settings_Constants.settings.ALLOW_LAUNCH_WHEN_NO_SURFACE_SELECTED,
+
+    Runtime_Global_Settings_Constants.settings.PAYLOAD_EXPLOSIVES_AOE_MULTIPLIER,
 
     Runtime_Global_Settings_Constants.settings.SURFACE_PROCESSING_RATE,
     Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK,
