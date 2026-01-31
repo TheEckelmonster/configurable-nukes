@@ -1,6 +1,6 @@
 local Util = require("__core__.lualib.util")
 
-Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
@@ -302,4 +302,22 @@ else
     if (jericho) then
         data:extend({jericho})
     end
+end
+
+if (mods and mods["quality"]) then
+    for k_0, quality in pairs(data.raw["quality"]) do
+        local jericho_payloader_rocket = Util.table.deepcopy(data.raw["projectile"]["rocket"])
+        if (k_0 == "normal" or not quality.hidden) then
+            jericho_payloader_rocket.name = "jericho-payloader-rocket-" .. k_0
+            table.insert(jericho_payloader_rocket.action.action_delivery.target_effects, { type = "script", effect_id = "jericho-delivered-" .. k_0,  })
+        end
+
+        data:extend({ jericho_payloader_rocket, })
+    end
+else
+    local jericho_payloader_rocket = Util.table.deepcopy(data.raw["projectile"]["rocket"])
+    jericho_payloader_rocket.name = "jericho-payloader-rocket-normal"
+    table.insert(jericho_payloader_rocket.action.action_delivery.target_effects, { type = "script", effect_id = "jericho-delivered-normal",  })
+
+    data:extend({ jericho_payloader_rocket, })
 end

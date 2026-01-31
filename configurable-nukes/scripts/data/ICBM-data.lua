@@ -2,6 +2,7 @@ local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
 if (not script or not _Log or mods) then _Log = Log_Stub end
 
+local Constants = require("scripts.constants.constants")
 local Data = require("scripts.data.data")
 
 local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
@@ -92,8 +93,12 @@ icbm_data.item_numbers = {
 
 icbm_data.item = nil
 icbm_data.item_name = nil
+icbm_data.items = nil
+icbm_data.total_payload_items = Constants.BIG_INTEGER
 icbm_data.cargo_pod = nil
 icbm_data.cargo_pod_unit_number = -1
+icbm_data.cargo = nil
+icbm_data.cargo_dictionary = nil
 icbm_data.force = nil
 icbm_data.force_index = -1
 icbm_data.tick_launched = -1
@@ -146,6 +151,8 @@ function icbm_data:new(o)
         item_name = nil,
         cargo_pod = nil,
         cargo_pod_unit_number = self.cargo_pod_unit_number,
+        cargo = {},
+        cargo_dictionary = {},
         force = nil,
         force_index = self.force_index,
         tick_launched = -1,
@@ -224,6 +231,7 @@ function icbm_data:validate_fields()
         if (not self.source_silo or not self.source_silo.valid) then self.source_silo = nil end
         if (not self.target_surface or not self.target_surface.valid) then self.target_surface = nil end
         if (not self.player_launched_by or not self.player_launched_by.valid) then self.player_launched_by = nil end
+        if (not self.total_payload_items) then self.total_payload_items = icbm_data.total_payload_items end
     end
 end
 

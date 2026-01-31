@@ -1,7 +1,7 @@
 local Util = require("__core__.lualib.util")
 -- local Item_Sounds = require("__base__.prototypes.item_sounds")
 
-Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
@@ -237,7 +237,7 @@ local atomic_warhead_item =
             },
         }
     },
-    ammo_category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }) and "nuclear" or "rocket",
+    ammo_category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.NUCLEAR_AMMO_CATEGORY.name }) and "nuclear" or "ballistic-missile-payload",
     ammo_type =
     {
         range_modifier = -1,
@@ -260,8 +260,8 @@ local atomic_warhead_item =
             }
         }
     },
-    subgroup = "ammo",
-    order = "d[rocket-launcher]-e[atomic-bomb]",
+    subgroup = "payload",
+    order = "d[warhead]-e[atomic-warhead]",
     inventory_move_sound = Item_Sounds.atomic_bomb_inventory_move,
     pick_sound = Item_Sounds.atomic_bomb_inventory_pickup,
     drop_sound = Item_Sounds.atomic_bomb_inventory_move,
