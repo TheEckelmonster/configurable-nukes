@@ -29,8 +29,8 @@ data:extend({
         pick_sound = Item_Sounds.mechanical_inventory_pickup,
         drop_sound = Item_Sounds.mechanical_inventory_move,
         place_result = "payloader",
-        stack_size = 10,
-        weight = 200 * kg,
+        stack_size = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_STACK_SIZE.name }),
+        weight = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_WEIGHT_MODIFIER.name }) * tons,
         enabled = false,
     },
 })

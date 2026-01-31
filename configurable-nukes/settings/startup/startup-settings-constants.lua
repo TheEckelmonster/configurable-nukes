@@ -106,12 +106,35 @@ cn_payload_vehicle =
     result_amount = 1,
     energy_required = 30,
     hide_from_player_crafting = false,
-    auto_recycle = false,
+    auto_recycle = true,
     requester_paste_multiplier = 1
 }
 
 if (se_active) then
-    table.insert(cn_payload_vehicle.ingredients, { type = "item", name = "se-heat-shielding",     amount = 25, })
+    table.insert(cn_payload_vehicle.ingredients, { type = "item", name = "se-heat-shielding", amount = 25, })
+end
+
+--[[ Payloader ]]
+local payloader =
+{
+    ingredients = {
+        { type = "item",  name = "assembling-machine-3",    amount = 1, },
+        { type = "item",  name = "bulk-inserter",           amount = 2, },
+        { type = "item",  name = "steel-chest",             amount = 2, },
+        { type = "item",  name = "processing-unit",         amount = 4, },
+        { type = "item",  name = "low-density-structure",   amount = 4, },
+        { type = "item",  name = "concrete",                amount = 50, },
+        { type = "fluid", name = "lubricant",               amount = 100, },
+    },
+    stack_size = 10,
+    result_amount = 1,
+    energy_required = 6,
+    hide_from_player_crafting = false,
+    auto_recycle = true,
+}
+
+if (se_active) then
+    table.insert(payloader.ingredients, { type = "item", name = "se-heat-shielding", amount = 4, })
 end
 
 --[[ Rod from God ]]
@@ -1286,6 +1309,97 @@ startup_settings_constants.settings = {
         name = prefix .. "payload-vehicle-additional-crafting-machines",
         setting_type = "startup",
         order = "dck",
+        default_value = "",
+        allow_blank = true,
+        auto_trim = true,
+    },
+    --[[ payloader ]]
+    PAYLOADER_STACK_SIZE = {
+        type = "int-setting",
+        name = prefix .. "payloader-stack-size",
+        setting_type = "startup",
+        -- order = "",
+        default_value = payloader and payloader.stack_size or 10,
+        maximum_value = 200,
+        minimum_value = 1
+    },
+    PAYLOADER_WEIGHT_MODIFIER = {
+        type = "double-setting",
+        name = prefix .. "payloader-weight-modifier",
+        setting_type = "startup",
+        -- order = "",
+        default_value = 1 / 5,
+        maximum_value = 11,
+        minimum_value = 0.0005
+    },
+    PAYLOADER_CRAFTING_TIME = {
+        type = "int-setting",
+        name = prefix .. "payloader-crafting-time",
+        setting_type = "startup",
+        -- order = "",
+        default_value = payloader and payloader.energy_required or 6,
+        maximum_value = 2 ^ 11,
+        minimum_value = 0.0001
+    },
+    PAYLOADER_INPUT_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "payloader-input-multiplier",
+        setting_type = "startup",
+        -- order = "",
+        default_value = 1,
+        maximum_value = 111,
+        minimum_value = 0.0001
+    },
+    PAYLOADER_RESULT_COUNT = {
+        type = "int-setting",
+        name = prefix .. "payloader-result-count",
+        setting_type = "startup",
+        -- order = "",
+        default_value = 1,
+        maximum_value = 2 ^ 11,
+        minimum_value = 1
+    },
+    PAYLOADER_RECIPE = {
+        type = "string-setting",
+        name = prefix .. "payloader-recipe",
+        setting_type = "startup",
+        -- order = "",
+        ingredients = payloader and payloader.ingredients or nil,
+        default_value = nil,
+        allow_blank = true,
+        auto_trim = true,
+    },
+    PAYLOADER_RECIPE_ALLOW_NONE = {
+        type = "bool-setting",
+        name = prefix .. "payloader-recipe-allow-none",
+        setting_type = "startup",
+        -- order = "",
+        default_value = false,
+    },
+    PAYLOADER_CRAFTING_MACHINE = {
+        type = "string-setting",
+        name = prefix .. "payloader-crafting-machine",
+        setting_type = "startup",
+        -- order = "",
+        default_value = "crafting-with-fluid",
+        allowed_values =
+        {
+            "crafting",
+            "advanced-crafting",
+            "smelting",
+            "chemistry",
+            "crafting-with-fluid",
+            "oil-processing",
+            "rocket-building",
+            "centrifuging",
+            "basic-crafting",
+        },
+    },
+    PAYLOADER_ADDITIONAL_CRAFTING_MACHINES = {
+        type = "string-setting",
+        name = prefix .. "payloader-additional-crafting-machines",
+        setting_type = "startup",
+        -- order = "",
         default_value = "",
         allow_blank = true,
         auto_trim = true,
@@ -2609,6 +2723,7 @@ if (sa_active) then
         table.insert(startup_settings_constants.settings.ATOMIC_WARHEAD_CRAFTING_MACHINE.allowed_values, v)
 
         table.insert(startup_settings_constants.settings.PAYLOAD_VEHICLE_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.PAYLOADER_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ROD_FROM_GOD_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.JERICHO_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.TESLA_ROCKET_CRAFTING_MACHINE.allowed_values, v)
@@ -2696,6 +2811,7 @@ if (se_active) then
         table.insert(startup_settings_constants.settings.ATOMIC_WARHEAD_CRAFTING_MACHINE.allowed_values, v)
 
         table.insert(startup_settings_constants.settings.PAYLOAD_VEHICLE_CRAFTING_MACHINE.allowed_values, v)
+        table.insert(startup_settings_constants.settings.PAYLOADER_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.ROD_FROM_GOD_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.JERICHO_CRAFTING_MACHINE.allowed_values, v)
         table.insert(startup_settings_constants.settings.TESLA_ROCKET_CRAFTING_MACHINE.allowed_values, v)
@@ -2743,6 +2859,9 @@ create_recipe_string({ ingredients = default_recipe_atomic_warhead.ingredients, 
 
 -- PAYLOAD_VEHICLE_RECIPE
 create_recipe_string({ ingredients = cn_payload_vehicle.ingredients, setting = startup_settings_constants.settings.PAYLOAD_VEHICLE_RECIPE })
+
+-- PAYLOAD_VEHICLE_RECIPE
+create_recipe_string({ ingredients = payloader.ingredients, setting = startup_settings_constants.settings.PAYLOADER_RECIPE })
 
 -- ROD_FROM_GOD_RECIPE
 create_recipe_string({ ingredients = rod_from_god.ingredients, setting = startup_settings_constants.settings.ROD_FROM_GOD_RECIPE })
