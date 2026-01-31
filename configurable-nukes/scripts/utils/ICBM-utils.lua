@@ -1400,7 +1400,8 @@ function icbm_utils.payload_arrived(data)
                     source = icbm.source_position,
                     --[[ TODO: Make configurable ]]
                     cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-                    speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * Random(100)) ^ 0.666),
+                    -- speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * Random(100)) ^ 0.666),
+                    speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (game.tick % 100) + 1) ^ 0.666),
                     -- base_damage_modifiers = {
                     --     damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
                     --     damage_addition = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
@@ -1435,7 +1436,8 @@ function icbm_utils.payload_arrived(data)
                 source = icbm.source_position,
                 --[[ TODO: Make configurable ]]
                 cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-                speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * Random(100)) ^ 0.666),
+                -- speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * Random(100)) ^ 0.666),
+                speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (game.tick % 100 + 1)) ^ 0.666),
                 -- base_damage_modifiers = {
                 --     damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
                 --     damage_addition = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,

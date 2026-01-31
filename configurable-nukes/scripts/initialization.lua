@@ -168,10 +168,12 @@ function locals.initialize(from_scratch, maintain_data)
         if (not storage.random) then storage.random = game.create_random_generator(42) end
         if (not storage.payloads) then storage.payloads = {} end
         if (not storage.containers) then storage.containers = {} end
+        if (not storage.prime_indices) then storage.prime_indices = { outer = 1, inner = 1, } end
     end
 
     Random = storage.random
     Payloads = storage.payloads
+    Prime_Indices = storage.prime_indices
 
     if (storage and storage.configurable_nukes) then
         storage.configurable_nukes.do_nth_tick = true
@@ -243,6 +245,7 @@ function locals.migrate(data)
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "handles" })
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "random" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "prime_indices" })
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "constants" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })

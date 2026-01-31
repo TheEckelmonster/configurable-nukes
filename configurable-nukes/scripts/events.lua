@@ -65,8 +65,6 @@ else
     valid_event_effect_ids["jericho-delivered-normal"] = true
 end
 
-log(serpent.block(valid_event_effect_ids))
-
 local placeholders = {
     ["atomic-bomb"] = "atomic-rocket",
     ["kr-nuclear-artillery-shell"] = "kr-atomic-artillery-projectile",
@@ -426,8 +424,8 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                                 y = target_position.y,
                             },
                             target = {
-                                x = target.x + Random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * Random(explosives + 1) or 0) * math.cos((2 * Random()) * math.pi * (i / #ticks)),
-                                y = target.y + Random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * Random(explosives + 1) or 0) * math.sin((2 * Random()) * math.pi * (i / #ticks)),
+                                x = target.x + math.random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * math.random(explosives + 1) or 0) * math.cos((2 * math.random()) * math.pi * (i / #ticks)),
+                                y = target.y + math.random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * math.random(explosives + 1) or 0) * math.sin((2 * math.random()) * math.pi * (i / #ticks)),
                             },
                         },
                         save_to_storage = true,
@@ -487,8 +485,8 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                     --[[ Not really sure what this should be named, as I don't fully understand/remember why introducing this variable fixed things ]]
                     local qwer = (((i % stage_threshold) + 1) / stage_threshold) / (stage_threshold / (stage_threshold + cargo.count))
 
-                    local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (Random(2) == 1 and 1 or -1)
-                    local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (Random(2) == 1 and 1 or -1)
+                    local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (Prime_Random(2) == 1 and 1 or -1)
+                    local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (Prime_Random(2) == 1 and 1 or -1)
 
                     local x_offset = 0
                     local y_offset = 0
@@ -511,19 +509,19 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                     while (((target_position.x - target.x) ^ 2 + (target_position.y - target.y) ^ 2) ^ 0.5) > explosives_radius_limit do
                         if (loops < 1) then break end
 
-                        local rand = Random(3)
+                        local rand = Prime_Random(3)
 
                         if (rand == 1) then
-                            target.x = target_position.x + (Random(-1 - abs_x_offset, 1 + abs_x_offset))
-                            target.y = target_position.y + (Random(-1 - abs_y_offset, 1 + abs_y_offset))
+                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset))
+                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset))
 
                             abs_x_offset = abs_x_offset ^ 0.9
                             abs_y_offset = abs_y_offset ^ 0.9
                         elseif (rand == 2) then
-                            target.x = target_position.x + (Random(-1 - abs_x_offset, 1 + abs_x_offset))
+                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset))
                             abs_x_offset = abs_x_offset ^ 0.9
                         else
-                            target.y = target_position.y + (Random(-1 - abs_y_offset, 1 + abs_y_offset))
+                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset))
                             abs_y_offset = abs_y_offset ^ 0.9
                         end
                         loops = loops - 1
@@ -538,7 +536,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         source = target_position,
                         --[[ TODO: Make configurable ]]
                         cause = payload.icbm.same_surface and payload.icbm.source_silo and payload.icbm.source_silo.valid and payload.icbm.source_silo or payload.force,
-                        speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * Random(100)) ^ 0.666),
+                        speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (Prime_Random(100))) ^ 0.666),
                         base_damage_modifiers = {
                             damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
                             damage_addition = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
@@ -627,6 +625,7 @@ function events.on_init()
     Initialization.init({ maintain_data = false })
 
     Random = storage.random
+    Prime_Indices = storage.prime_indices
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -694,6 +693,7 @@ local initialized_from_load = false
 function events.on_load()
 
     Random = storage.random
+    Prime_Indices = storage.prime_indices
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -816,6 +816,7 @@ function events.on_configuration_changed(event)
                 Initialization.init({ maintain_data = true })
 
                 Random = storage.random
+                Prime_Indices = storage.prime_indices
                 Payloads = storage.payloads
                 Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
                 Quality_Prototypes = prototypes.quality
