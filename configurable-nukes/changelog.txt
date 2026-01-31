@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.1
+Date: 2026-01-31
+  Features:
+    - Added proper configurable startup settings for the payloader
+  Bug Fixes:
+    - Fixed potential runtime errors upon payload delivery if they were in-flight at the time of updating
+    - Fixed payloads potentially not being delivered properly due to rounding issues
+    - Corrected a few mod setting descriptions being inaccurate/misleading
+  Balance:
+    - [SE] (Recipe) Payloader: added se-heat-shielding, 4
+      - Simply forgot to include this previously
+  Misc:
+    - Updated/improved the payloader-remnants graphic
+---------------------------------------------------------------------------------------------------
 Version: 0.9.0
 Date: 2026-01-31
   Minor Features:
@@ -19,7 +33,7 @@ Date: 2026-01-31
   Bug Fixes:
     - Fixed "Rod from God" stack size setting having no effect
   Balance:
-    - (Recipe) reduced tesla-ammo from 100 -> 25 for Mjölnirs
+    - (Recipe) Mjölnirs: reduced tesla-ammo from 100 -> 25
   Misc:
     - Removed "Stack size" startup setting for payload-vehicles
     - Infrastructure changes made/needed for the above are also setting the stage for the next planned feature update: MIRVS (multiple independently targetable reentry vehicles)
