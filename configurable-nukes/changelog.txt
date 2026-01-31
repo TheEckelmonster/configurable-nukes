@@ -6,6 +6,7 @@ Date: 2026-01-31
   Bug Fixes:
     - Fixed potential runtime errors upon payload delivery if they were in-flight at the time of updating
     - Fixed payloads potentially not being delivered properly due to rounding issues
+    - Added a missing existence check before accessing a variable
     - Corrected a few mod setting descriptions being inaccurate/misleading
   Balance:
     - [SE] (Recipe) Payloader: added se-heat-shielding, 4
