@@ -19,108 +19,111 @@ for _, possible_payload in pairs({ data.raw.ammo, data.raw["land-mine"], }) do
 
         local target_effects = nil
         if (ammo.type == "ammo" and ammo.ammo_type or ammo.type == "land-mine") then
-            local ammo_type = ammo.type == "ammo" and ammo.ammo_type or ammo.action.action_delivery.source_effects
-            if (ammo_type[1]) then
-                ammo_type = ammo_type[1]
-            end
+            local ammo_type = ammo.type == "ammo" and ammo.ammo_type or ammo.action.action_delivery.source_effects or {}
 
-            if (ammo_type.action) then
-                if (ammo_type.action[1]) then
-                    for _, action in ipairs(ammo_type.action) do
-                        if (action.action_delivery) then
-                            if (action.action_delivery.projectile) then
-                                target_effects = target_effects or {}
-                                table.insert(target_effects, action.action_delivery.projectile)
-                                projectile = action.action_delivery.projectile
-                            elseif (action.action_delivery.stream) then
-                                target_effects = target_effects or {}
-                                table.insert(target_effects, action.action_delivery.stream)
-                                stream = action.action_delivery.stream
-                                if (not stream_action) then stream_action = action end
-                            elseif (action.action_delivery.beam) then
-                                target_effects = target_effects or {}
-                                table.insert(target_effects, action.action_delivery.beam)
-                                beam = action.action_delivery.beam
-                                if (not beam_action) then beam_action = action end
-                            elseif (action.action_delivery.target_effects) then
-                                target_effects = target_effects or {}
-                                for _, target_effect in ipairs(action.action_delivery.target_effects) do
-                                    table.insert(target_effects, target_effect)
-                                end
-                            end
-                        elseif (action.action_delivery[1]) then
-                            for _, action_delivery in ipairs(action.action_delivery) do
+            if (ammo_type) then
+                if (ammo_type[1]) then
+                    ammo_type = ammo_type[1]
+                end
+
+                if (ammo_type.action) then
+                    if (ammo_type.action[1]) then
+                        for _, action in ipairs(ammo_type.action) do
+                            if (action.action_delivery) then
                                 if (action.action_delivery.projectile) then
                                     target_effects = target_effects or {}
                                     table.insert(target_effects, action.action_delivery.projectile)
                                     projectile = action.action_delivery.projectile
-                                elseif (action_delivery.target_effects) then
+                                elseif (action.action_delivery.stream) then
                                     target_effects = target_effects or {}
-                                    for _, target_effect in ipairs(action_delivery.target_effects) do
+                                    table.insert(target_effects, action.action_delivery.stream)
+                                    stream = action.action_delivery.stream
+                                    if (not stream_action) then stream_action = action end
+                                elseif (action.action_delivery.beam) then
+                                    target_effects = target_effects or {}
+                                    table.insert(target_effects, action.action_delivery.beam)
+                                    beam = action.action_delivery.beam
+                                    if (not beam_action) then beam_action = action end
+                                elseif (action.action_delivery.target_effects) then
+                                    target_effects = target_effects or {}
+                                    for _, target_effect in ipairs(action.action_delivery.target_effects) do
                                         table.insert(target_effects, target_effect)
                                     end
                                 end
-                            end
-                        end
-                    end
-                else
-                    if (ammo_type.action[1]) then
-                        for _, action in pairs(ammo_type.action) do
-                            if (action.action_delivery) then
-                                if (action.action_delivery[1]) then
-                                    for _, action_delivery in pairs(ammo_type.action.action_delivery) do
-                                        if (action_delivery.projectile) then
-                                            target_effects = action_delivery.target_effects
-                                        elseif (action_delivery.stream) then
-                                            target_effects = action_delivery.target_effects
-                                        elseif (ammo_type.action.action_delivery.beam) then
-                                            target_effects = action_delivery.target_effects
-                                        else
-                                            target_effects = action_delivery.target_effects
-                                        end
-                                    end
-                                else
+                            elseif (action.action_delivery[1]) then
+                                for _, action_delivery in ipairs(action.action_delivery) do
                                     if (action.action_delivery.projectile) then
-                                        target_effects = ammo_type.action.action_delivery.target_effects
-                                    elseif (ammo_type.action.action_delivery.stream) then
-                                        target_effects = ammo_type.action.action_delivery.target_effects
-                                    elseif (ammo_type.action.action_delivery.beam) then
-                                        target_effects = ammo_type.action.action_delivery.target_effects
-                                    else
-                                        target_effects = ammo.ammo_type.action.action_delivery.target_effects
+                                        target_effects = target_effects or {}
+                                        table.insert(target_effects, action.action_delivery.projectile)
+                                        projectile = action.action_delivery.projectile
+                                    elseif (action_delivery.target_effects) then
+                                        target_effects = target_effects or {}
+                                        for _, target_effect in ipairs(action_delivery.target_effects) do
+                                            table.insert(target_effects, target_effect)
+                                        end
                                     end
                                 end
                             end
                         end
                     else
-                        if (ammo_type.action.action_delivery[1]) then
-                            for _, action_delivery in pairs(ammo_type.action.action_delivery) do
-                                if (action_delivery.projectile) then
-                                    projectile = action_delivery.projectile
-                                elseif (action_delivery.stream) then
-                                    stream = action_delivery.stream
-                                    stream_action = ammo_type.action
-                                elseif (ammo_type.action.action_delivery.beam) then
-                                    beam = action.action_delivery.beam
-                                    beam_action = ammo_type.action
-                                else
-                                    target_effects = action_delivery.target_effects
+                        if (ammo_type.action[1]) then
+                            for _, action in pairs(ammo_type.action) do
+                                if (action.action_delivery) then
+                                    if (action.action_delivery[1]) then
+                                        for _, action_delivery in pairs(ammo_type.action.action_delivery) do
+                                            if (action_delivery.projectile) then
+                                                target_effects = action_delivery.target_effects
+                                            elseif (action_delivery.stream) then
+                                                target_effects = action_delivery.target_effects
+                                            elseif (ammo_type.action.action_delivery.beam) then
+                                                target_effects = action_delivery.target_effects
+                                            else
+                                                target_effects = action_delivery.target_effects
+                                            end
+                                        end
+                                    else
+                                        if (action.action_delivery.projectile) then
+                                            target_effects = ammo_type.action.action_delivery.target_effects
+                                        elseif (ammo_type.action.action_delivery.stream) then
+                                            target_effects = ammo_type.action.action_delivery.target_effects
+                                        elseif (ammo_type.action.action_delivery.beam) then
+                                            target_effects = ammo_type.action.action_delivery.target_effects
+                                        else
+                                            target_effects = ammo.ammo_type.action.action_delivery.target_effects
+                                        end
+                                    end
                                 end
                             end
                         else
-                            if (ammo_type.action.action_delivery.projectile) then
-                                projectile = ammo_type.action.action_delivery.projectile
-                            elseif (ammo_type.action.action_delivery.stream) then
-                                stream = ammo_type.action.action_delivery.stream
-                                stream_action = ammo_type.action
-                            elseif (ammo_type.action.action_delivery.beam) then
-                                beam = ammo_type.action.action_delivery.beam
-                                beam_action = ammo_type.action
+                            if (ammo_type.action.action_delivery[1]) then
+                                for _, action_delivery in pairs(ammo_type.action.action_delivery) do
+                                    if (action_delivery.projectile) then
+                                        projectile = action_delivery.projectile
+                                    elseif (action_delivery.stream) then
+                                        stream = action_delivery.stream
+                                        stream_action = ammo_type.action
+                                    elseif (ammo_type.action.action_delivery.beam) then
+                                        beam = action.action_delivery.beam
+                                        beam_action = ammo_type.action
+                                    else
+                                        target_effects = action_delivery.target_effects
+                                    end
+                                end
                             else
-                                if (ammo.type == "ammo") then
-                                    target_effects = ammo.ammo_type.action.action_delivery.target_effects
-                                elseif (ammo.type == "land-mine") then
-                                    target_effects = ammo.action.action_delivery.source_effects[1].action.action_delivery.target_effects
+                                if (ammo_type.action.action_delivery.projectile) then
+                                    projectile = ammo_type.action.action_delivery.projectile
+                                elseif (ammo_type.action.action_delivery.stream) then
+                                    stream = ammo_type.action.action_delivery.stream
+                                    stream_action = ammo_type.action
+                                elseif (ammo_type.action.action_delivery.beam) then
+                                    beam = ammo_type.action.action_delivery.beam
+                                    beam_action = ammo_type.action
+                                else
+                                    if (ammo.type == "ammo") then
+                                        target_effects = ammo.ammo_type.action.action_delivery.target_effects
+                                    elseif (ammo.type == "land-mine") then
+                                        target_effects = ammo.action.action_delivery.source_effects[1].action.action_delivery.target_effects
+                                    end
                                 end
                             end
                         end
