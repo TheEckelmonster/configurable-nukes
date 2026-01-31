@@ -61,6 +61,19 @@ data:extend({
 })
 
 data:extend({
+    --[[ payloader ]]
+    Startup_Settings_Constants.settings.PAYLOADER_STACK_SIZE,
+    Startup_Settings_Constants.settings.PAYLOADER_WEIGHT_MODIFIER,
+    Startup_Settings_Constants.settings.PAYLOADER_CRAFTING_TIME,
+    Startup_Settings_Constants.settings.PAYLOADER_INPUT_MULTIPLIER,
+    Startup_Settings_Constants.settings.PAYLOADER_RESULT_COUNT,
+    Startup_Settings_Constants.settings.PAYLOADER_RECIPE,
+    Startup_Settings_Constants.settings.PAYLOADER_RECIPE_ALLOW_NONE,
+    Startup_Settings_Constants.settings.PAYLOADER_CRAFTING_MACHINE,
+    Startup_Settings_Constants.settings.PAYLOADER_ADDITIONAL_CRAFTING_MACHINES,
+})
+
+data:extend({
     --[[ rod-from-god ]]
     Startup_Settings_Constants.settings.ROD_FROM_GOD_AREA_MULTIPLIER,
     Startup_Settings_Constants.settings.ROD_FROM_GOD_DAMAGE_MULTIPLIER,
