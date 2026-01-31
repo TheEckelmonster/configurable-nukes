@@ -435,12 +435,18 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
         end
     elseif (event.effect_id == "payload-delivered") then
         local target_position = event.target_position
+        local source_position = event.source_position
 
         if (target_position and target_position.x and target_position.y) then
-            local position_key = tostring(target_position.x) .. "/" .. tostring(target_position.y)
+            local position_key = string.format("%.2f", math.floor(target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(target_position.y * 100) / 100)
             local payload = Payloads[position_key]
+            if (not payload) then
+                position_key = string.format("%.8f", math.floor(source_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(source_position.y * 100) / 100)
+                payload = Payloads[position_key]
+            end
 
-            local payloads = payload and payload.icbm and payload.icbm.cargo and payload.icbm.cargo[1] and payload.icbm.cargo or nil
+
+            local payloads = payload and payload.icbm and payload.icbm.cargo and payload.icbm.cargo[1] and payload.icbm.cargo or payload and payload.cargo and (payload.cargo[1] and payload.cargo or { payload.cargo, }) or nil
             if (payloads and not next(payloads)) then payloads = nil end
 
             if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, })) then
@@ -449,11 +455,18 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
 
                 if (payloads ~= payload.cargo) then
                     if (payload.cargo[1]) then
-                        for _, cargo in pairs(payload.cargo) do
+                        for i, cargo in pairs(payload.cargo) do
                             table.insert(payloads, cargo)
                         end
                     else
-                        table.insert(payloads, payload.cargo)
+                        local existing = false
+                        for _, _payload in pairs(payloads) do
+                            if (_payload == payload.cargo) then existing = true; break end
+                        end
+
+                        if (not existing) then
+                            table.insert(payloads, payload.cargo)
+                        end
                     end
                 end
             end
@@ -466,7 +479,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             local explosives = 0
             local explosives_aoe_modifier = 0
             explosives_aoe_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_EXPLOSIVES_AOE_MULTIPLIER.name, })
-            if (payload.icbm.cargo_dictionary["explosives"]) then
+            if (payload.icbm and payload.icbm.cargo_dictionary and payload.icbm.cargo_dictionary["explosives"]) then
                 explosives = payload.icbm.cargo_dictionary["explosives"].count
             end
 
@@ -474,6 +487,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             if (area_setting == nil) then area_setting = 1 end
 
             for _, cargo in ipairs(payloads) do
+                cargo.count = type(cargo.count) == "number" and cargo.count > 0 and cargo.count or 1
                 local stage_threshold = math.ceil(cargo.count / 8)
 
                 for i = 1, cargo.count, 1 do

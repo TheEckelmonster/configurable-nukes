@@ -1426,6 +1426,7 @@ function icbm_utils.payload_arrived(data)
             end
         else
             local payload = icbm.cargo and icbm.cargo[1] and icbm.cargo or { name = icbm.item_name, count = 1, quality = icbm.item and icbm.item.quality or "normal" }
+            log(serpent.block(payload))
 
             local payload_entity = icbm.target_surface.create_entity({
                 name = "payloader-rocket",
@@ -1433,7 +1434,8 @@ function icbm_utils.payload_arrived(data)
                 direction = defines.direction.south,
                 force = force,
                 target = icbm.target_position,
-                source = icbm.source_position,
+                -- source = icbm.source_position,
+                source = icbm.original_target_position,
                 --[[ TODO: Make configurable ]]
                 cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
                 -- speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * Random(100)) ^ 0.666),
@@ -1451,13 +1453,25 @@ function icbm_utils.payload_arrived(data)
             })
 
             if (payload_entity and payload_entity.valid) then
-                local position_key = tostring(icbm.target_position.x) .. "/" .. tostring(icbm.target_position.y)
-                Payloads[position_key] = {
+                local payload_data = {
                     tick = game.tick,
                     cargo = payload,
                     icbm = icbm,
                     force = force,
                 }
+                local position_key = string.format("%.2f", math.floor(icbm.target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100)
+                Payloads[position_key] = payload_data
+                position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.8f", icbm.target_position.y)
+                Payloads[position_key] = payload_data
+                position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100)
+                Payloads[position_key] = payload_data
+
+                position_key = string.format("%.2f", math.floor(icbm.original_target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100)
+                Payloads[position_key] = payload_data
+                position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.8f", icbm.original_target_position.y)
+                Payloads[position_key] = payload_data
+                position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100)
+                Payloads[position_key] = payload_data
             end
         end
 
