@@ -1426,7 +1426,6 @@ function icbm_utils.payload_arrived(data)
             end
         else
             local payload = icbm.cargo and icbm.cargo[1] and icbm.cargo or { name = icbm.item_name, count = 1, quality = icbm.item and icbm.item.quality or "normal" }
-            log(serpent.block(payload))
 
             local payload_entity = icbm.target_surface.create_entity({
                 name = "payloader-rocket",
