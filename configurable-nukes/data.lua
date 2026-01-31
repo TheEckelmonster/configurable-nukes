@@ -18,6 +18,13 @@ require("prototypes.technologies.technology-data")
 require("prototypes.items.cn-payload-vehicle-data")
 require("prototypes.recipes.cn-payload-vehicle-data")
 
+require("prototypes.categories.item-group")
+require("prototypes.categories.recipe-category")
+require("prototypes.recipes.payloader-data")
+require("prototypes.items.payloader-data")
+require("prototypes.entities.payloader-data")
+require("prototypes.entities.payloader-rocket-data")
+
 if (sa_active or se_active) then
     require("prototypes.recipes.advanced-rocket-control-unit")
 end

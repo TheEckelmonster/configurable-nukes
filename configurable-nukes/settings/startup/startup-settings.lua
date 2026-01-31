@@ -49,7 +49,7 @@ data:extend({
 
 data:extend({
     --[[ payload-vehicle ]]
-    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_STACK_SIZE,
+    Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_INVENTORY_SIZE,
     Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_WEIGHT_MODIFIER,
     Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_CRAFTING_TIME,
     Startup_Settings_Constants.settings.PAYLOAD_VEHICLE_INPUT_MULTIPLIER,

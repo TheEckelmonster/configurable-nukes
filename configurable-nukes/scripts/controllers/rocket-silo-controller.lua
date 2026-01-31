@@ -7,7 +7,6 @@ local Custom_Input = require("prototypes.custom-input.custom-input")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
-local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
 local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
 local Rocket_Silo_Validations = require("scripts.validations.rocket-silo-validations")
 local Spaceship_Service = require("scripts.services.spaceship-service")
@@ -16,13 +15,7 @@ local String_Utils = require("scripts.utils.string-utils")
 local rocket_silo_controller = {}
 rocket_silo_controller.name = "rocket_silo_controller"
 
-rocket_silo_controller.filter = Rocket_Silo_Constants.event_filter
--- {
---     { filter = "type", type = "rocket-silo" },
---     { filter = "name", name = "rocket-silo", mode = "and" },
---     { filter = "type", type = "rocket-silo" },
---     { filter = "name", name = "ipbm-rocket-silo", mode = "and" },
--- }
+rocket_silo_controller.filter = Filters.rocket_silo_controller
 
 function rocket_silo_controller.rocket_silo_built(event)
     Log.debug("rocket_silo_controller.rocket_silo_built")
@@ -75,8 +68,8 @@ function rocket_silo_controller.rocket_silo_cloned(event)
     Log.info(event)
 
     if (not event) then return end
-    if (not event.source or not event.source.valid) then return end
-    if (not event.destination or not event.destination.valid) then return end
+    if (not event.source or not event.source.valid or event.source.type ~= "rocket-silo") then return end
+    if (not event.destination or not event.destination.valid or event.destination.type ~= "rocket-silo") then return end
 
     local source_silo = event.source
     if (not source_silo.surface or not source_silo.surface.valid) then return end
@@ -126,6 +119,7 @@ function rocket_silo_controller.rocket_silo_mined(event)
     if (not event.entity or not event.entity.valid) then return end
 
     local rocket_silo = event.entity
+    if (rocket_silo.type ~= "rocket-silo") then return end
     if (not rocket_silo.surface or not rocket_silo.surface.valid) then return end
     local surface = rocket_silo.surface
 

@@ -55,6 +55,8 @@ local constants = {
 
 constants["space-exploration"].spaceships = {}
 
+constants.BIG_INTEGER = (2 ^ 64) - 1
+
 constants.direction_table = {}
 
 for k, v in pairs(defines.direction) do

@@ -1,5 +1,5 @@
 $mod = "configurable-nukes"
-$version = "0.8.7"
+$version = "0.9.0"
 
 $7ZipPath = "D:/7-Zip/7z.exe"
 

@@ -210,7 +210,7 @@ function configurable_nukes_controller.on_nth_tick(event)
 
                     if (attributes.key and attributes.value) then
                         local entity = attributes.value.entity
-                        if (entity and entity.valid and entity.rocket_silo_status == rocket_ready_status) then
+                        if (entity and entity.valid and entity.type == "rocket-silo" and entity.rocket_silo_status == rocket_ready_status) then
                             attributes.added_count = attributes.added_count + 1
                             cache[space_location.surface.name].rocket_silos[attributes.key] = attributes.value
                         end

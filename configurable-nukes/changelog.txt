@@ -1,4 +1,30 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.0
+Date: 2026-01-30
+  Minor Features:
+    - Actually implemented the "payload-vehicle" properly
+      - Almost any "ammo" or "capsule" item should now be usable as a potentially deliverable payload
+        - Previously, payloads were loaded directly into the rocket-silo-rocket
+          - Prior method is still usable by enabling the "Use legacy launch system" runtime setting
+        - Now, payloads are placed either manually, or via the new "Payloader" machine, into a payload-vehicle
+        - That payload-vehicle is then placed into the rocket-silo rocket and subsequently launched via the usual means (manual/ICBM-remote, or circuit-network)
+    - Added "Inventory size" startup setting for payload-vehicles, default of 3, [1 - 128]
+    - Added "Use legacy launch system" global runtime setting, default of false
+    - Added "Payload explosives AoE multiplier" global runtime setting, default of 0.25, [0 - 1]
+      - Explosives themselves are not a payload, rather, a payload modifier; that is, the more explosives present, the greater the payload distribution
+        - i.e.
+          - no explsoives -> all payload items will target the same position
+          - more explosives -> greater payload spread
+    - Added item-subgroup for "payload" items (atomic-warheads, "Rods from God", jerichos, and mjölnirs)
+  Bug Fixes:
+    - Fixed "Rod from God" stack size setting having no effect
+  Balance:
+    - (Recipe) reduced tesla-ammo from 100 -> 25 for Mjölnirs
+  Misc:
+    - Removed "Stack size" startup setting for payload-vehicles
+    - Infrastructure changes made/needed for the above are also setting the stage for the next planned feature update: MIRVS (multiple independently targetable reentry vehicles)
+      - Presently, while multiple payload-vehicles can be loaded into a single rocket-silo rocket, they will all target the same location
+---------------------------------------------------------------------------------------------------
 Version: 0.8.7
 Date: 2026-01-17
   Bug Fixes:

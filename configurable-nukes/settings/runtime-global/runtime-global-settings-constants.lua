@@ -11,6 +11,13 @@ local prefix = "configurable-nukes-"
 local runtime_global_settings_constants = {}
 
 runtime_global_settings_constants.settings = {
+    LEGACY_LAUNCH_SYSTEM_ENABLED = {
+        type = "bool-setting",
+        name = prefix .. "legacy-launch-system-enabled",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = false,
+    },
     ATOMIC_BOMB_ROCKET_LAUNCHABLE = {
         type = "bool-setting",
         name = prefix .. "atomic-bomb-rocket-launchable",
@@ -407,6 +414,15 @@ runtime_global_settings_constants.settings = {
         setting_type = "runtime-global",
         order = "dcg",
         default_value = true,
+    },
+    PAYLOAD_EXPLOSIVES_AOE_MULTIPLIER = {
+        type = "double-setting",
+        name = prefix .. "payload-explosives-aoe-multiplier",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 0.25,
+        minimum_value = 0,
+        maximum_value = 1,
     },
     SURFACE_PROCESSING_RATE = {
         type = "int-setting",

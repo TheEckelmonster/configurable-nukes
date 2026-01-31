@@ -1,64 +1,30 @@
 local Util = require("__core__.lualib.util")
 
-Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
-
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
+
+local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 
 -- AREA_MULTIPLIER
 local get_area_multiplier = function ()
-    local setting = 1
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_AREA_MULTIPLIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_AREA_MULTIPLIER.name].value
-    end
-
-    return setting
+    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_AREA_MULTIPLIER.name })
 end
-
 -- DAMAGE_MULTIPLIER
 local get_damage_multiplier = function ()
-    local setting = 1
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_DAMAGE_MULTIPLIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_DAMAGE_MULTIPLIER.name].value
-    end
-
-    return setting
+    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_DAMAGE_MULTIPLIER.name })
 end
-
 -- REPEAT_MULTIPLIER
 local get_repeat_multiplier = function ()
-    local setting = 1
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_REPEAT_MULTIPLIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_REPEAT_MULTIPLIER.name].value
-    end
-
-    return setting
+    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_REPEAT_MULTIPLIER.name })
 end
-
 -- FIRE_WAVE
 local get_fire_wave = function ()
-    local setting = false
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_FIRE_WAVE.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.ATOMIC_WARHEAD_FIRE_WAVE.name].value
-    end
-
-    return setting
+    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_FIRE_WAVE.name })
 end
-
 -- QUALITY_BASE_MODIFIER
 local get_quality_base_multiplier = function ()
-    local setting = 1.3
-
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.QUALITY_BASE_MULTIPLIER.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.QUALITY_BASE_MULTIPLIER.name].value
-    end
-
-    return setting
+    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.QUALITY_BASE_MULTIPLIER.name })
 end
 
 local clamp_max_distance = function (value, multiplier)

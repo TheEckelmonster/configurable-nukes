@@ -29,11 +29,14 @@ end
 
 local valid_payloads =
 {
-    ["atomic-bomb"] = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }) end,
-    ["atomic-warhead"] = function () return Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }) end,
-    ["cn-rod-from-god"] = function () return true end,
-    ["cn-jericho"] = function () return true end,
-    ["cn-tesla-rocket"] = function () return true end,
+    ["atomic-bomb"]         = function () return    Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name })
+                                                and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["atomic-warhead"]      = function () return    Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })
+                                                and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["cn-rod-from-god"]     = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["cn-jericho"]          = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["cn-tesla-rocket"]     = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["cn-payload-vehicle"]  = function () return true end,
 }
 
 local function valid_payload(data)
@@ -42,13 +45,7 @@ local function valid_payload(data)
     if (not data or type(data) ~= "table") then return return_val end
     if (not data.item_name or type(data.item_name) ~= "string") then return return_val end
 
-    if (    valid_payloads[data.item_name]
-        and valid_payloads[data.item_name]()
-    ) then
-        return_val = true
-    end
-
-    return return_val
+    return valid_payloads[data.item_name] and valid_payloads[data.item_name]() and true or false
 end
 
 local rocket_silo_utils = {}
@@ -806,75 +803,121 @@ function rocket_silo_utils.launch_rocket(event)
             rocket_silo = rocket_silo_data.entity
         end
 
+        local speed =       not se_active
+                        and rocket_silo_data.launched_from_space
+                        and rocket_silo
+                        and rocket_silo.valid
+                        and rocket_silo.surface
+                        and rocket_silo.surface.valid
+                        and rocket_silo.surface.platform
+                        and rocket_silo.surface.platform.valid
+                        and rocket_silo.surface.platform.speed
+                        and 60 * rocket_silo.surface.platform.speed
+                        or 0
+
         if (rocket_silo and rocket_silo.valid) then
+            --[[ rocket silo inventory ]]
             local inventory = rocket_silo.get_inventory(defines.inventory.rocket_silo_rocket)
             if (inventory and inventory.valid) then
-                for _, item in ipairs(inventory.get_contents()) do
+                local items = {}
+                local payload_items = {}
+                local total_payload_items = 1
+                local cargo_dictionary = {}
 
-                    if (valid_payload({ item_name = item.name })) then
-                        local rocket = rocket_silo.rocket
+                --[[ Iterate through the rocket-silo's inventory slots ]]
+                for i = 1, #inventory, 1 do
+                    local item = inventory[i]
+                    if (item and item.valid and item.valid_for_read and valid_payload({ item_name = item.name })) then
+                        local _item = { name = item.name, count = item.count, quality = item.quality.name, }
+                        table.insert(items, _item)
 
-                        local cargo_pod
-                        if (rocket and rocket.valid) then
-                            cargo_pod = rocket.attached_cargo_pod
+                        if (not cargo_dictionary[item.name]) then
+                            cargo_dictionary[item.name] = { name = item.name, count = item.count, }
+                        else
+                            cargo_dictionary[item.name].count = cargo_dictionary[item.name].count + item.count
+                        end
 
-                            if (cargo_pod and cargo_pod.valid) then
-                                cargo_pod.cargo_pod_destination = { type = defines.cargo_destination.surface, surface = surface, rocket_silo_type = rocket_silo.name }
+                        --[[ Does the item have an inventroy? i.e. is it a cn-payload-vehicle? ]]
+                        local item_inventory = item.get_inventory(defines.inventory.cargo_unit)
+                        if (item_inventory and item_inventory.valid) then
+                            --[[ Get the contents of the cn-payload-vehicle ]]
+                            local contents = item_inventory.get_contents()
+                            if (contents) then
+                                for _, v in pairs(contents) do
+                                    total_payload_items = total_payload_items + v.count
+                                    table.insert(payload_items, v)
+
+                                    if (v.name == "explosives") then
+                                        if (not _item.explosives) then _item.explosives = 0 end
+                                        _item.explosives = _item.explosives + v.count
+                                    end
+
+                                    if (not cargo_dictionary[v.name]) then
+                                        cargo_dictionary[v.name] = { name = v.name, count = v.count, }
+                                    else
+                                        cargo_dictionary[v.name].count = cargo_dictionary[v.name].count + v.count
+                                    end
+                                end
                             end
                         end
+                    end
+                end
 
-                        Log.debug(rocket_silo_data)
-                        if (rocket_silo.launch_rocket(cargo_pod.cargo_pod_destination)) then
-                            Log.debug("Launched rocket_silo:")
-                            Log.info(rocket_silo)
+                if (next(items)) then
+                    local rocket = rocket_silo.rocket
 
-                            local speed =       not se_active
-                                            and rocket_silo_data.launched_from_space
-                                            and rocket_silo.surface
-                                            and rocket_silo.surface.valid
-                                            and rocket_silo.surface.platform
-                                            and rocket_silo.surface.platform.valid
-                                            and rocket_silo.surface.platform.speed
-                                            and 60 * rocket_silo.surface.platform.speed
-                                            or 0
+                    local cargo_pod
+                    if (rocket and rocket.valid) then
+                        cargo_pod = rocket.attached_cargo_pod
 
-
-                            local item_name = item.name
-                            if (item_name == "atomic-bomb") then item_name = "atomic-rocket" end
-
-                            local launch_initiated_params =
-                            {
-                                surface = rocket_silo.surface,
-                                target_surface = surface,
-                                item = item,
-                                item_name = item_name,
-                                tick = event.tick,
-                                source_silo = rocket_silo,
-                                area = event.area,
-                                cargo_pod = cargo_pod and cargo_pod.valid and cargo_pod,
-                                circuit_launch = circuit_launch,
-                                player_index = event.player_index,
-                                distance = rocket_silo_data.distance,
-                                launched_from = rocket_silo_data.launched_from,
-                                launched_from_space = rocket_silo_data.launched_from_space,
-                                base_target_distance = rocket_silo_data.base_target_distance,
-                                speed = speed,
-                                is_travelling = rocket_silo_data.is_travelling,
-                                space_origin_pos = rocket_silo_data.space_origin_pos,
-                                -- origin_system = rocket_silo_data.origin_system,
-                                -- source_target_system = rocket_silo_data.source_target_system,
-                            }
-                            Log.debug(launch_initiated_params)
-                            return_val, return_data = ICBM_Utils.launch_initiated(launch_initiated_params)
-                            launched = true
-                            break
-                        else
-                            Log.error("Failed to launch rocket_silo: ")
-                            Log.warn(rocket)
-                            Log.warn(cargo_pod)
-                            Log.warn(rocket_silo_data)
-                            Log.warn(rocket_silo)
+                        if (cargo_pod and cargo_pod.valid) then
+                            cargo_pod.cargo_pod_destination = { type = defines.cargo_destination.surface, surface = surface, rocket_silo_type = rocket_silo.name }
                         end
+                    end
+
+                    Log.debug(rocket_silo_data)
+                    if (cargo_pod and cargo_pod.valid and rocket_silo.launch_rocket(cargo_pod.cargo_pod_destination)) then
+                        Log.debug("Launched rocket_silo:")
+                        Log.info(rocket_silo)
+
+                        local item_name = #items == 1 and items[1] and items[1].count == 1 and items[1].name or nil
+                        if (item_name == "atomic-bomb") then item_name = "atomic-rocket" end
+
+                        local launch_initiated_params =
+                        {
+                            surface = rocket_silo.surface,
+                            target_surface = surface,
+                            item_name = item_name,
+                            item = item_name and items[1] or nil,
+                            items = not item_name and items or nil,
+                            cargo = payload_items,
+                            cargo_dictionary = cargo_dictionary,
+                            total_payload_items = total_payload_items,
+                            tick = event.tick,
+                            source_silo = rocket_silo,
+                            area = event.area,
+                            cargo_pod = cargo_pod and cargo_pod.valid and cargo_pod,
+                            circuit_launch = circuit_launch,
+                            player_index = event.player_index,
+                            distance = rocket_silo_data.distance,
+                            launched_from = rocket_silo_data.launched_from,
+                            launched_from_space = rocket_silo_data.launched_from_space,
+                            base_target_distance = rocket_silo_data.base_target_distance,
+                            speed = speed,
+                            is_travelling = rocket_silo_data.is_travelling,
+                            space_origin_pos = rocket_silo_data.space_origin_pos,
+                            -- origin_system = rocket_silo_data.origin_system,
+                            -- source_target_system = rocket_silo_data.source_target_system,
+                        }
+                        Log.debug(launch_initiated_params)
+                        return_val, return_data = ICBM_Utils.launch_initiated(launch_initiated_params)
+                        launched = true
+                    else
+                        Log.error("Failed to launch rocket_silo: ")
+                        Log.warn(rocket)
+                        Log.warn(cargo_pod)
+                        Log.warn(rocket_silo_data)
+                        Log.warn(rocket_silo)
                     end
                 end
             end

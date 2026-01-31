@@ -15,11 +15,14 @@ local se_active = script and script.active_mods and script.active_mods["space-ex
 
 local valid_payloads =
 {
-    ["atomic-bomb"] = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name }) end,
-    ["atomic-warhead"] = function () return Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name }) end,
-    ["cn-rod-from-god"] = function () return true end,
-    ["cn-jericho"] = function () return true end,
-    ["cn-tesla-rocket"] = function () return true end,
+    ["atomic-bomb"]         = function () return    Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name })
+                                                and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["atomic-warhead"]      = function () return    Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })
+                                                and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["cn-rod-from-god"]     = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["cn-jericho"]          = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["cn-tesla-rocket"]     = function () return Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED.name, }) end,
+    ["cn-payload-vehicle"]  = function () return true end,
 }
 
 local function valid_payload(data)
@@ -80,17 +83,27 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
         and not cargo_pod.cargo_pod_destination.station
         and cargo_pod.cargo_pod_destination.type == defines.cargo_destination.surface)
     then
-        local inventory = cargo_pod.get_inventory(defines.inventory.cargo_unit)
+        local inventory = cargo_pod.get_inventory(defines.inventory.cn_payload_vehicle)
 
-        if (inventory) then
+        if (inventory and inventory.valid) then
+            local destroy_cargo_pod = false
+            local icbm_data = nil
             for _, item in ipairs(inventory.get_contents()) do
                 if (valid_payload({ item_name = item.name })) then
-                    local return_val = ICBM_Utils.on_cargo_pod_finished_ascending({
-                        surface = cargo_pod.surface,
-                        item = item,
-                        tick = event.tick,
-                        cargo_pod = cargo_pod,
-                    })
+                    local return_val = nil
+                    if (icbm_data) then
+                        return_val, icbm_data = ICBM_Utils.on_cargo_pod_finished_ascending({
+                            tick = event.tick,
+                            icbm_data = icbm_data,
+                        })
+                    else
+                        return_val, icbm_data = ICBM_Utils.on_cargo_pod_finished_ascending({
+                            tick = event.tick,
+                            surface = cargo_pod.surface,
+                            item = item,
+                            cargo_pod = cargo_pod,
+                        })
+                    end
 
                     if (Log.get_log_level().num_val <= 3) then
                         log(serpent.block(return_val))
@@ -102,10 +115,16 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
                             Log.error("on_cargo_pod_finished_ascending failed to process successfully")
                         end
                     end
+
+                    if (not destroy_cargo_pod) then destroy_cargo_pod = true end
+
+                    if (icbm_data) then icbm_data.cargo_pod = nil end
+
                     Log.info("destroying cargo pod")
                     if (cargo_pod.destroy({ raise_destroy = true })) then
                         Log.debug("cargo pod destroyed")
                     end
+                    break
                 end
             end
         end
