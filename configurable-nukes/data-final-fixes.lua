@@ -3,6 +3,8 @@ local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
+require("prototypes.recipes.payloader-data-final-fixes")
+
 if (k2so_active) then
     require("prototypes.compatibility.Krastorio2-spaced-out.ballistic-rocket-parts-data-final-fixes")
     require("prototypes.compatibility.Krastorio2-spaced-out.items-data-final-fixes")
@@ -55,3 +57,4 @@ if (sa_active) then
 end
 
 require("prototypes.mod-data.projectile-placeholder-data")
+require("prototypes.items.cn-payload-vehicle-data-final-fixes")

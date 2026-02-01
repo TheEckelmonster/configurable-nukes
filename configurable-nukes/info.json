@@ -13,9 +13,11 @@
 		"? quality >= 2.0.73",
 		"? atan-nuclear-science >= 0.3.3",
 		"? mushroom-cloud >= 1.0.2",
-		"? Temporary_nuclear_scorchmark >= 0.0.2",
-		"? space-exploration >= 0.7.35",
+        "? RampantArsenalFork >= 1.0.4",
         "? SimpleAtomicArtillery-S >= 1.0.0",
-		"(?) Krastorio2-spaced-out >= 1.4.28"
+		"? space-exploration >= 0.7.35",
+		"? Temporary_nuclear_scorchmark >= 0.0.2",
+        "(?) crushing_industry >= 0.5.6",
+        "(?) Krastorio2-spaced-out >= 1.4.28"
 	]
 }

@@ -445,7 +445,6 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 payload = Payloads[position_key]
             end
 
-
             local payloads = payload and payload.icbm and payload.icbm.cargo and payload.icbm.cargo[1] and payload.icbm.cargo or payload and payload.cargo and (payload.cargo[1] and payload.cargo or { payload.cargo, }) or nil
             if (payloads and not next(payloads)) then payloads = nil end
 
