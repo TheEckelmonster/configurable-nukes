@@ -489,12 +489,15 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 cargo.count = type(cargo.count) == "number" and cargo.count > 0 and cargo.count or 1
                 local stage_threshold = math.ceil(cargo.count / 8)
 
+                local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
+
+                if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
+                if (name == "") then goto continue end
+
+                local tesla_munition = false
+                if (name:find("tesla")) then tesla_munition = true end
+
                 for i = 1, cargo.count, 1 do
-                    local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
-
-                    if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
-                    if (name == "") then goto continue end
-
                     --[[ Not really sure what this should be named, as I don't fully understand/remember why introducing this variable fixed things ]]
                     local qwer = (((i % stage_threshold) + 1) / stage_threshold) / (stage_threshold / (stage_threshold + cargo.count))
 
@@ -546,7 +549,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         direction = defines.direction.south,
                         force = payload.force,
                         target = target,
-                        source = target_position,
+                        source = tesla_munition and target or target_position,
                         --[[ TODO: Make configurable ]]
                         cause = payload.icbm.same_surface and payload.icbm.source_silo and payload.icbm.source_silo.valid and payload.icbm.source_silo or payload.force,
                         speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (Prime_Random(100))) ^ 0.666),
