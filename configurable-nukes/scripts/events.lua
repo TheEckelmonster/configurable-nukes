@@ -528,16 +528,16 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         local rand = Prime_Random(3)
 
                         if (rand == 1) then
-                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset))
-                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset))
+                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
+                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset)) * Rhythm.poly_sign
 
                             abs_x_offset = abs_x_offset ^ 0.9
                             abs_y_offset = abs_y_offset ^ 0.9
                         elseif (rand == 2) then
-                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset))
+                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
                             abs_x_offset = abs_x_offset ^ 0.9
                         else
-                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset))
+                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset)) * Rhythm.poly_sign
                             abs_y_offset = abs_y_offset ^ 0.9
                         end
                         loops = loops - 1
@@ -642,6 +642,7 @@ function events.on_init()
 
     Random = storage.random
     Prime_Indices = storage.prime_indices
+    Rhythm = storage.rhythm
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -710,6 +711,7 @@ function events.on_load()
 
     Random = storage.random
     Prime_Indices = storage.prime_indices
+    Rhythm = storage.rhythm
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -833,6 +835,7 @@ function events.on_configuration_changed(event)
 
                 Random = storage.random
                 Prime_Indices = storage.prime_indices
+                Rhythm = storage.rhythm
                 Payloads = storage.payloads
                 Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
                 Quality_Prototypes = prototypes.quality

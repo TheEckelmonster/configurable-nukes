@@ -138,7 +138,8 @@ local function traverse_ammo(params)
 
                             if (ammo_type.action.action_delivery.source_effects[1]) then
                                 for i_s = 1, #ammo_type.action.action_delivery.source_effects, 1 do
-                                    if (ammo_type.action.action_delivery.source_effects[i_s].action) then
+                                    local source_effect = ammo_type.action.action_delivery.source_effects[i_s]
+                                    if (source_effect.action and source_effect.action[1]) then
                                         for _, action in pairs(ammo_type.action.action_delivery.source_effects[i_s].action) do
                                             table.insert(params.target_effects, { type = "nested-result", action = action, })
                                         end
