@@ -17,7 +17,7 @@
         "? SimpleAtomicArtillery-S >= 1.0.0",
 		"? space-exploration >= 0.7.35",
 		"? Temporary_nuclear_scorchmark >= 0.0.2",
-        "(?) crushing_industry >= 0.5.6",
+        "(?) crushing-industry >= 0.5.6",
         "(?) Krastorio2-spaced-out >= 1.4.28"
 	]
 }
