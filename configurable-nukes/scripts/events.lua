@@ -445,7 +445,6 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 payload = Payloads[position_key]
             end
 
-
             local payloads = payload and payload.icbm and payload.icbm.cargo and payload.icbm.cargo[1] and payload.icbm.cargo or payload and payload.cargo and (payload.cargo[1] and payload.cargo or { payload.cargo, }) or nil
             if (payloads and not next(payloads)) then payloads = nil end
 
@@ -490,12 +489,15 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 cargo.count = type(cargo.count) == "number" and cargo.count > 0 and cargo.count or 1
                 local stage_threshold = math.ceil(cargo.count / 8)
 
+                local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
+
+                if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
+                if (name == "") then goto continue end
+
+                local tesla_munition = false
+                if (name:find("tesla")) then tesla_munition = true end
+
                 for i = 1, cargo.count, 1 do
-                    local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
-
-                    if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
-                    if (name == "") then goto continue end
-
                     --[[ Not really sure what this should be named, as I don't fully understand/remember why introducing this variable fixed things ]]
                     local qwer = (((i % stage_threshold) + 1) / stage_threshold) / (stage_threshold / (stage_threshold + cargo.count))
 
@@ -526,16 +528,16 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         local rand = Prime_Random(3)
 
                         if (rand == 1) then
-                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset))
-                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset))
+                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
+                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset)) * Rhythm.poly_sign
 
                             abs_x_offset = abs_x_offset ^ 0.9
                             abs_y_offset = abs_y_offset ^ 0.9
                         elseif (rand == 2) then
-                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset))
+                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
                             abs_x_offset = abs_x_offset ^ 0.9
                         else
-                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset))
+                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset)) * Rhythm.poly_sign
                             abs_y_offset = abs_y_offset ^ 0.9
                         end
                         loops = loops - 1
@@ -547,7 +549,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         direction = defines.direction.south,
                         force = payload.force,
                         target = target,
-                        source = target_position,
+                        source = tesla_munition and target or target_position,
                         --[[ TODO: Make configurable ]]
                         cause = payload.icbm.same_surface and payload.icbm.source_silo and payload.icbm.source_silo.valid and payload.icbm.source_silo or payload.force,
                         speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (Prime_Random(100))) ^ 0.666),
@@ -640,6 +642,7 @@ function events.on_init()
 
     Random = storage.random
     Prime_Indices = storage.prime_indices
+    Rhythm = storage.rhythm
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -708,6 +711,7 @@ function events.on_load()
 
     Random = storage.random
     Prime_Indices = storage.prime_indices
+    Rhythm = storage.rhythm
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -831,6 +835,7 @@ function events.on_configuration_changed(event)
 
                 Random = storage.random
                 Prime_Indices = storage.prime_indices
+                Rhythm = storage.rhythm
                 Payloads = storage.payloads
                 Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
                 Quality_Prototypes = prototypes.quality

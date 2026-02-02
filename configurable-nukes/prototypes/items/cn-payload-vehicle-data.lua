@@ -18,6 +18,30 @@ local Item_Sounds = {
     mechanical_inventory_pickup = item_sound("mechanical-inventory-pickup.ogg", 0.8)
 }
 
+local function mod_added()
+    local mod_added_subgroups = {
+        mods and mods["bobwarfare"] and "bob-ammo" or nil,
+        mods and mods["RampantArsenalFork"] and "launcher-capsule" or nil,
+    }
+
+    local mod_added_array = {}
+    for _, v in pairs(mod_added_subgroups) do
+        table.insert(mod_added_array, v)
+    end
+
+    local function return_list_as_params(...)
+        local return_arg = (...) and table.remove((...))
+
+        if (return_arg) then
+            return return_arg, return_list_as_params((...))
+        else
+            return
+        end
+    end
+
+    return return_list_as_params(mod_added_array)
+end
+
 data:extend({
     {
         type = "item-with-inventory",
@@ -45,7 +69,7 @@ data:extend({
             "payload",
             "ammo",
             "capsule",
-            mods and mods["bobwarfare"] and "bob-ammo" or nil,
+            mod_added(),
         },
         filter_mode = "whitelist",
         filter_message_key = "item-limitation.cn-payload-vehicle",

@@ -169,11 +169,28 @@ function locals.initialize(from_scratch, maintain_data)
         if (not storage.payloads) then storage.payloads = {} end
         if (not storage.containers) then storage.containers = {} end
         if (not storage.prime_indices) then storage.prime_indices = { outer = 1, inner = 1, } end
+        if (not storage.rhythm) then
+            storage.rhythm = {
+                count = 1,
+                poly_sign = 1,
+                poly_index = 2,
+                polyrythms = {
+                    [2]  = 1,
+                    [3]  = 1,
+                    [5]  = 1,
+                    [7]  = 1,
+                    [11] = 1,
+                    [13] = 1,
+                    [17] = 1,
+                },
+            }
+        end
     end
 
     Random = storage.random
     Payloads = storage.payloads
     Prime_Indices = storage.prime_indices
+    Rhythm = storage.rhythm
 
     if (storage and storage.configurable_nukes) then
         storage.configurable_nukes.do_nth_tick = true
@@ -246,6 +263,7 @@ function locals.migrate(data)
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "random" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "prime_indices" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "rhythm" })
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "constants" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })

@@ -33,6 +33,20 @@ Primes = {
     },
 }
 Prime_Indices = { outer = 1, inner = 1, }
+Rhythm = {
+    count = 1,
+    poly_sign = 1,
+    poly_index = 2,
+    polyrythms = {
+        [2]  = 1,
+        [3]  = 1,
+        [5]  = 1,
+        [7]  = 1,
+        [11] = 1,
+        [13] = 1,
+        [17] = 1,
+    },
+}
 Prime_Random = function (param1, param2)
     if (type(param2) ~= "number") then param2 = nil end
     local param1_valid = false
@@ -69,6 +83,28 @@ Prime_Random = function (param1, param2)
     end
 
     if (param1_valid) then return_val = return_val - return_val % 1 end
+
+    Rhythm.count = Rhythm.count + 1
+    Rhythm.polyrythms = {
+        [2]  = Rhythm.count % 2,
+        [3]  = Rhythm.count % 3,
+        [5]  = Rhythm.count % 5,
+        [7]  = Rhythm.count % 7,
+        [11] = Rhythm.count % 11,
+        [13] = Rhythm.count % 13,
+        [17] = Rhythm.count % 17,
+    }
+
+    Rhythm.poly_index = game and game.tick and game.tick % 17 or 2
+    while not Rhythm.polyrythms[Rhythm.poly_index] do
+        if (Rhythm.poly_index > 17) then
+            Rhythm.poly_index = 2
+        elseif (Rhythm.poly_index < 0) then
+            Rhythm.poly_index = 17
+        end
+        Rhythm.poly_index = Rhythm.poly_index + 1
+    end
+    Rhythm.poly_sign = (Rhythm.polyrythms[Rhythm.poly_index] and Rhythm.polyrythms[Rhythm.poly_index] % 2 > 0 and 1 or -1) or (-1 * Rhythm.poly_sign)
 
     return return_val % param1
 end
