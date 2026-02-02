@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.2
+Date: 2026-02-01
+  Bug Fixes:
+    - Fixed additional startup errors when additional mod added ammo and/or capsules were added
+    - Fixed the payloader not being craftable if there was more than 1 fluid ingredient present in its recipe
+  Compatibility:
+    - [RampantArsenalFork] should load now; atomic munitions are not affected by quality yet
+      - nuclear-landmines do function, but visually are a bit jank --[[ TODO: improve this ]]
+    - [crushing-industry] conversion of "concrete" to "concrete-mix" should now be handled properly for the payloader recipe
+  Misc:
+    - Improved the "randomness" used to distribute payload items
+      - Previously favored the north-west direction
+    - Reworked/improved how payloads items are actually delivered/fired/triggered/etc..
+      - Namely "bullet" and "stream" (e.g. flamethrower-ammo) payloads *should* be improved
+---------------------------------------------------------------------------------------------------
 Version: 0.9.1
 Date: 2026-01-31
   Features:
@@ -9,7 +24,7 @@ Date: 2026-01-31
     - Added a missing existence check before accessing a variable
     - Corrected a few mod setting descriptions being inaccurate/misleading
   Balance:
-    - [SE] (Recipe) Payloader: added se-heat-shielding, 4
+    - [space-exploration] (recipe) Payloader: added se-heat-shielding, 4
       - Simply forgot to include this previously
   Misc:
     - Updated/improved the payloader-remnants graphic
@@ -28,7 +43,7 @@ Date: 2026-01-31
     - Added "Payload explosives AoE multiplier" global runtime setting, default of 0.25, [0 - 1]
       - Explosives themselves are not a payload, rather, a payload modifier; that is, the more explosives present, the greater the payload distribution
         - i.e.
-          - no explsoives -> all payload items will target the same position
+          - no explosives -> all payload items will target the same position
           - more explosives -> greater payload spread
     - Added item-subgroup for "payload" items (atomic-warheads, "Rods from God", jerichos, and mjölnirs)
   Bug Fixes:

@@ -31,9 +31,11 @@ return function (params)
         }
     end
 
-    projectile_placeholder.animation = nil
-    projectile_placeholder.shadow = nil
-    projectile_placeholder.smoke = nil
+    if (params.type and not params.type ~= "land-mine") then
+        projectile_placeholder.animation = nil
+        projectile_placeholder.shadow = nil
+        projectile_placeholder.smoke = nil
+    end
 
     local target_effects = {}
 

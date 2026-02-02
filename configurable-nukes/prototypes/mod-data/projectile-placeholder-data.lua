@@ -8,163 +8,269 @@ local projectile_placeholder_data = Mod_Data.create({
     name = Constants.mod_name .. "-projectile-placeholder-data",
 })
 
-for _, possible_payload in pairs({ data.raw.ammo, data.raw["land-mine"], }) do
-    for k, ammo in pairs(possible_payload) do
+local projectile_placeholders = {}
+local projectile_placeholders_dictionary = {}
 
-        local projectile = nil
-        local stream = nil
-        local stream_action = nil
-        local beam = nil
-        local beam_action = nil
+local types = {
+    ["projectile"] = "projectile",
+    ["stream"] = "stream",
+    ["beam"] = "beam",
+}
 
-        local target_effects = nil
-        if (ammo.type == "ammo" and ammo.ammo_type or ammo.type == "land-mine") then
-            local ammo_type = ammo.type == "ammo" and ammo.ammo_type or ammo.action.action_delivery.source_effects or {}
+local name_mapping = {}
 
-            if (ammo_type) then
-                if (ammo_type[1]) then
-                    ammo_type = ammo_type[1]
+if (mods and mods["RampantArsenalFork"]) then
+    for name, ammo in pairs(data.raw.ammo) do
+        local i, j = ammo.name:find("-capsule-ammo-rampant-arsenal", 1, true)
+
+        if (i and j and not ammo.name:find("-landmine-capsule-ammo-rampant-arsenal")) then
+            local _name = ammo.name
+            local parsed_name = ""
+
+            local loops = 1
+            while _name and _name:gsub("%s+", "") ~= "" do
+                if (loops > 2 ^ 11) then break end
+                loops = loops + 1
+
+                local a, b = _name:find("%a+%-*")
+                local token = _name:sub(a, b)
+                _name = _name:sub(b + 1, #_name)
+
+                if (token and not token:find("ammo", 1, true)) then
+                    parsed_name = parsed_name .. token
                 end
+            end
 
-                if (ammo_type.action) then
-                    if (ammo_type.action[1]) then
-                        for _, action in ipairs(ammo_type.action) do
-                            if (action.action_delivery) then
-                                if (action.action_delivery.projectile) then
-                                    target_effects = target_effects or {}
-                                    table.insert(target_effects, action.action_delivery.projectile)
-                                    projectile = action.action_delivery.projectile
-                                elseif (action.action_delivery.stream) then
-                                    target_effects = target_effects or {}
-                                    table.insert(target_effects, action.action_delivery.stream)
-                                    stream = action.action_delivery.stream
-                                    if (not stream_action) then stream_action = action end
-                                elseif (action.action_delivery.beam) then
-                                    target_effects = target_effects or {}
-                                    table.insert(target_effects, action.action_delivery.beam)
-                                    beam = action.action_delivery.beam
-                                    if (not beam_action) then beam_action = action end
-                                elseif (action.action_delivery.target_effects) then
-                                    target_effects = target_effects or {}
-                                    for _, target_effect in ipairs(action.action_delivery.target_effects) do
-                                        table.insert(target_effects, target_effect)
-                                    end
-                                end
-                            elseif (action.action_delivery[1]) then
-                                for _, action_delivery in ipairs(action.action_delivery) do
-                                    if (action.action_delivery.projectile) then
-                                        target_effects = target_effects or {}
-                                        table.insert(target_effects, action.action_delivery.projectile)
-                                        projectile = action.action_delivery.projectile
-                                    elseif (action_delivery.target_effects) then
-                                        target_effects = target_effects or {}
-                                        for _, target_effect in ipairs(action_delivery.target_effects) do
-                                            table.insert(target_effects, target_effect)
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    else
-                        if (ammo_type.action[1]) then
-                            for _, action in pairs(ammo_type.action) do
-                                if (action.action_delivery) then
-                                    if (action.action_delivery[1]) then
-                                        for _, action_delivery in pairs(ammo_type.action.action_delivery) do
-                                            if (action_delivery.projectile) then
-                                                target_effects = action_delivery.target_effects
-                                            elseif (action_delivery.stream) then
-                                                target_effects = action_delivery.target_effects
-                                            elseif (ammo_type.action.action_delivery.beam) then
-                                                target_effects = action_delivery.target_effects
-                                            else
-                                                target_effects = action_delivery.target_effects
-                                            end
-                                        end
-                                    else
-                                        if (action.action_delivery.projectile) then
-                                            target_effects = ammo_type.action.action_delivery.target_effects
-                                        elseif (ammo_type.action.action_delivery.stream) then
-                                            target_effects = ammo_type.action.action_delivery.target_effects
-                                        elseif (ammo_type.action.action_delivery.beam) then
-                                            target_effects = ammo_type.action.action_delivery.target_effects
-                                        else
-                                            target_effects = ammo.ammo_type.action.action_delivery.target_effects
-                                        end
-                                    end
-                                end
+            if (parsed_name and parsed_name:gsub("%s+", "") ~= "") then
+                name_mapping[name] = parsed_name
+            end
+        end
+    end
+end
+
+local function name_check(params)
+    if (type(params) ~= "table") then return end
+
+    local name = params.name or nil
+    if (not name or type(name) ~= "string") then return end
+
+    return name_mapping[name] or name
+end
+
+local function traverse_ammo(params)
+
+    if (type(params) ~= "table") then return end
+
+    local ammo = params.ammo
+    if (not ammo) then return end
+
+    local ammo_type = params.ammo_type
+    if (not ammo_type) then return end
+
+    if (not type(params.target_effects) ~= "table") then params.target_effects = {} end
+
+    if (ammo_type.action) then
+        if (ammo_type.action[1]) then
+            for _, action in ipairs(ammo_type.action) do
+                if (action.action_delivery and action.action_delivery.type and types[action.action_delivery.type]) then
+                    params.type = types[action.action_delivery.type]
+                end
+                table.insert(params.target_effects, { type = "nested-result", action = action})
+            end
+        else
+            if (ammo_type.action[1]) then
+                for _, action in pairs(ammo_type.action) do
+                    if (action.action_delivery) then
+                        if (action.action_delivery[1]) then
+                            for _, action_delivery in pairs(ammo_type.action.action_delivery) do
+                                table.insert(params.target_effects, action_delivery.target_effects)
                             end
                         else
-                            if (ammo_type.action.action_delivery[1]) then
-                                for _, action_delivery in pairs(ammo_type.action.action_delivery) do
-                                    if (action_delivery.projectile) then
-                                        projectile = action_delivery.projectile
-                                    elseif (action_delivery.stream) then
-                                        stream = action_delivery.stream
-                                        stream_action = ammo_type.action
-                                    elseif (ammo_type.action.action_delivery.beam) then
-                                        beam = action.action_delivery.beam
-                                        beam_action = ammo_type.action
+                            if (action.action_delivery.projectile) then
+                                table.insert(params.target_effects, ammo_type.action)
+                            elseif (ammo_type.action.action_delivery.stream) then
+                                table.insert(params.target_effects, ammo_type.action)
+                            elseif (ammo_type.action.action_delivery.beam) then
+                                table.insert(params.target_effects, ammo_type.action)
+                            else
+                                table.insert(params.target_effects, ammo.ammo_type.action)
+                            end
+                        end
+                    end
+                end
+            else
+                if (ammo_type.action.action_delivery[1]) then
+                    for _, action_delivery in pairs(ammo_type.action.action_delivery) do
+                        if (action_delivery.projectile) then
+                            params.projectile = action_delivery.projectile
+                            table.insert(params.target_effects, action_delivery.target_effects)
+                        elseif (action_delivery.stream) then
+                            params.stream = action_delivery.stream
+                            params.stream_action = ammo_type.action
+                            table.insert(params.target_effects, ammo_type.action)
+                        elseif (ammo_type.action.action_delivery.beam) then
+                            params.beam = action.action_delivery.beam
+                            params.beam_action = ammo_type.action
+                            table.insert(params.target_effects, action_delivery.target_effects)
+                        else
+                            table.insert(params.target_effects, action_delivery.target_effects)
+                        end
+                    end
+                else
+                    if (ammo_type.action.action_delivery.projectile) then
+                        params.projectile = ammo_type.action.action_delivery.projectile
+                        table.insert(params.target_effects, { type = "nested-result", action = ammo_type.action, })
+                    elseif (ammo_type.action.action_delivery.stream) then
+                        params.stream = ammo_type.action.action_delivery.stream
+                        params.stream_action = ammo_type.action
+                        table.insert(params.target_effects, { type = "nested-result", action = ammo_type.action, })
+                    elseif (ammo_type.action.action_delivery.beam) then
+                        params.beam = ammo_type.action.action_delivery.beam
+                        params.beam_action = ammo_type.action
+                        table.insert(params.target_effects, { type = "nested-result", action = ammo_type.action, })
+                    else
+                        if (ammo.type == "ammo") then
+                            for i = 1, #ammo_type.action.action_delivery.target_effects, 1 do
+                                table.insert(params.target_effects, ammo_type.action.action_delivery.target_effects[i])
+                            end
+                        elseif (ammo.type == "land-mine") then
+                            params.type = "land-mine"
+
+                            if (ammo_type.action.action_delivery.source_effects[1]) then
+                                for i_s = 1, #ammo_type.action.action_delivery.source_effects, 1 do
+                                    local source_effect = ammo_type.action.action_delivery.source_effects[i_s]
+                                    if (source_effect.action and source_effect.action[1]) then
+                                        for _, action in pairs(ammo_type.action.action_delivery.source_effects[i_s].action) do
+                                            table.insert(params.target_effects, { type = "nested-result", action = action, })
+                                        end
                                     else
-                                        target_effects = action_delivery.target_effects
+                                        table.insert(params.target_effects, ammo_type.action.action_delivery.source_effects[i_s])
                                     end
                                 end
                             else
-                                if (ammo_type.action.action_delivery.projectile) then
-                                    projectile = ammo_type.action.action_delivery.projectile
-                                elseif (ammo_type.action.action_delivery.stream) then
-                                    stream = ammo_type.action.action_delivery.stream
-                                    stream_action = ammo_type.action
-                                elseif (ammo_type.action.action_delivery.beam) then
-                                    beam = ammo_type.action.action_delivery.beam
-                                    beam_action = ammo_type.action
-                                else
-                                    if (ammo.type == "ammo") then
-                                        target_effects = ammo.ammo_type.action.action_delivery.target_effects
-                                    elseif (ammo.type == "land-mine") then
-                                        target_effects = ammo.action.action_delivery.source_effects[1].action.action_delivery.target_effects
-                                    end
-                                end
                             end
                         end
                     end
                 end
             end
         end
+    end
 
-        local magazine_size = type(ammo.magazine_size) == "number" and ammo.magazine_size > 0 and ammo.magazine_size or nil
+    return params
+end
 
-        local projectile_placeholder = not projectile and make_projectile_placeholder({
-            name = k,
-            target_effects = target_effects,
-            magazine_size = magazine_size,
-            -- stream = stream,
-            stream_action = stream_action,
-            -- beam = beam,
-            beam_action = beam_action,
-            no_collision = stream_action and true or nil
-        })
+local function make_extend_ammo(params)
+    if (type(params) ~= "table") then return end
 
-        if (projectile_placeholder) then
-            data:extend({ projectile_placeholder, })
+    local ammo = params.ammo
+    local target_effects = params.target_effects
+    local returned_params = params.returned_params or {}
+    local k = params.k
 
-            projectile_placeholder_data.data[k] = { name = projectile_placeholder.name, speed = 1, }
+    local magazine_size = type(ammo.magazine_size) == "number" and ammo.magazine_size > 0 and ammo.magazine_size or nil
+
+    if (not target_effects or not next(target_effects)) then target_effects = nil end
+    if (returned_params and returned_params.target_effects and not next(returned_params.target_effects)) then returned_params.target_effects = nil end
+
+    if (returned_params.projectile or returned_params.stream or returned_params.beam) then
+        if (returned_params.projectile) then returned_params.type = "projectile"
+        elseif (returned_params.stream) then returned_params.type = "stream"
+        elseif (returned_params.beam) then returned_params.type = "beam"
+        end
+    end
+
+    local params = {
+        name = k,
+        type = returned_params.type or nil,
+        target_effects = returned_params.target_effects or target_effects,
+        magazine_size = magazine_size,
+        stream_action = returned_params.stream_action or nil,
+        beam_action = returned_params.beam_action or nil,
+        no_collision = returned_params.type and true or nil
+    }
+
+    local projectile_placeholder = returned_params and not returned_params.projectile and make_projectile_placeholder(params) or nil
+
+    if (projectile_placeholder) then
+        if (not projectile_placeholders_dictionary[projectile_placeholder.name]) then
+            projectile_placeholders_dictionary[projectile_placeholder.name] = projectile_placeholder
+            table.insert(projectile_placeholders, projectile_placeholder)
         else
-            if (projectile) then
-                if (not projectile_placeholder_data.data[k]) then
-                    projectile_placeholder_data.data[k] = { name = projectile, speed = 1, }
+            local existing_projectile_placeholder = projectile_placeholders_dictionary[projectile_placeholder.name]
+            for _, target_effect in pairs(projectile_placeholder.action.action_delivery.target_effects) do
+                table.insert(existing_projectile_placeholder.action.action_delivery.target_effects, target_effect)
+            end
+        end
+
+        projectile_placeholder_data.data[name_check({name = k, })] = { name = projectile_placeholder.name, speed = 1, }
+    else
+        if (returned_params and returned_params.projectile) then
+            if (not projectile_placeholder_data.data[k]) then
+                projectile_placeholder_data.data[k] = { name = returned_params.projectile, speed = 1, }
+            end
+        end
+
+        if (returned_params and returned_params.stream) then
+            if (not projectile_placeholder_data.data[k]) then
+                projectile_placeholder_data.data[k] = { name = returned_params.stream, speed = 1, }
+            end
+        end
+
+        if (returned_params and returned_params.beam) then
+            if (not projectile_placeholder_data.data[k]) then
+                projectile_placeholder_data.data[k] = { name = returned_params.beam, speed = 1, }
+            end
+        end
+    end
+end
+
+for _, possible_payload in pairs({ data.raw.ammo, data.raw["land-mine"], }) do
+    for k, ammo in pairs(possible_payload) do
+        local returned_params
+
+        local target_effects = {}
+        if (ammo.type == "ammo" and ammo.ammo_type or ammo.type == "land-mine") then
+            local ammo_type = ammo.type == "ammo" and ammo.ammo_type or nil
+
+            if (not ammo_type) then
+                if (ammo.action and ammo.action[1]) then
+                    ammo_type = { action = ammo.action, }
+                else
+                    ammo_type = { action = ammo.action, }
                 end
             end
 
-            if (stream) then
-                if (not projectile_placeholder_data.data[k]) then
-                    projectile_placeholder_data.data[k] = { name = stream, speed = 1, }
-                end
-            end
+            if (ammo_type) then
+                if (ammo_type[1]) then
+                    for i = 1, #ammo_type, 1 do
+                        local ammo_type = ammo_type[i]
 
-            if (beam) then
-                if (not projectile_placeholder_data.data[k]) then
-                    projectile_placeholder_data.data[k] = { name = beam, speed = 1, }
+                        returned_params = traverse_ammo({
+                            ammo = ammo,
+                            ammo_type = ammo_type,
+                            target_effects = target_effects,
+                        })
+
+                        make_extend_ammo({
+                            ammo = ammo,
+                            target_effects = target_effects,
+                            returned_params = returned_params,
+                            k = k,
+                        })
+                    end
+                else
+                    returned_params = traverse_ammo({
+                        ammo = ammo,
+                        ammo_type = ammo_type,
+                        target_effects = target_effects,
+                    })
+
+                    make_extend_ammo({
+                        ammo = ammo,
+                        target_effects = target_effects,
+                        returned_params = returned_params,
+                        k = k,
+                    })
                 end
             end
         end
@@ -175,6 +281,10 @@ for _, v in pairs(data.raw.projectile) do
     if (not projectile_placeholder_data.data[v.name]) then
         projectile_placeholder_data.data[v.name] = { name = v.name, speed = v.speed or 1, }
     end
+end
+
+if (next(projectile_placeholders)) then
+    data:extend(projectile_placeholders)
 end
 
 data:extend({ projectile_placeholder_data, })
