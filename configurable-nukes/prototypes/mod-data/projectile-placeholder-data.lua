@@ -1,3 +1,8 @@
+local DEBUG = false
+local debug_count = 1
+
+local true_nukes_continued = mods and mods["True-Nukes_Continued"] and true
+
 local Mod_Data = require("__TheEckelmonster-core-library__.libs.mod-data.mod-data")
 
 local Constants = require("scripts.constants.constants")
@@ -16,6 +21,23 @@ local types = {
     ["stream"] = "stream",
     ["beam"] = "beam",
 }
+
+local warhead_mapping = {}
+if (true_nukes_continued) then
+    if (type(warheads) == "table") then
+        for k, v in pairs(warheads) do
+            warhead_mapping[v.appendName] = {
+                key = k,
+                k = k,
+                value = v,
+                v = v,
+                final_effect = v.final_effect
+            }
+        end
+    end
+end
+
+if (DEBUG) then log(serpent.block(warhead_mapping)) end
 
 local name_mapping = {}
 
@@ -71,83 +93,119 @@ local function traverse_ammo(params)
 
     if (ammo_type.action) then
         if (ammo_type.action[1]) then
+            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
             for _, action in ipairs(ammo_type.action) do
+                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                 if (action.action_delivery and action.action_delivery.type and types[action.action_delivery.type]) then
+                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                     params.type = types[action.action_delivery.type]
                 end
                 table.insert(params.target_effects, { type = "nested-result", action = action})
             end
         else
+            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
             if (ammo_type.action[1]) then
+                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                 for _, action in pairs(ammo_type.action) do
+                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                     if (action.action_delivery) then
+                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                         if (action.action_delivery[1]) then
+                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             for _, action_delivery in pairs(ammo_type.action.action_delivery) do
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                 table.insert(params.target_effects, action_delivery.target_effects)
                             end
                         else
+                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             if (action.action_delivery.projectile) then
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                 table.insert(params.target_effects, ammo_type.action)
                             elseif (ammo_type.action.action_delivery.stream) then
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                 table.insert(params.target_effects, ammo_type.action)
                             elseif (ammo_type.action.action_delivery.beam) then
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                 table.insert(params.target_effects, ammo_type.action)
                             else
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                 table.insert(params.target_effects, ammo.ammo_type.action)
                             end
                         end
                     end
                 end
             else
+                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                 if (ammo_type.action.action_delivery[1]) then
+                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                     for _, action_delivery in pairs(ammo_type.action.action_delivery) do
+                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                         if (action_delivery.projectile) then
+                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             params.projectile = action_delivery.projectile
-                            table.insert(params.target_effects, action_delivery.target_effects)
+                            table.insert(params.target_effects, { type = "nested-result", action = action_delivery.target_effects, })
                         elseif (action_delivery.stream) then
+                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             params.stream = action_delivery.stream
                             params.stream_action = ammo_type.action
-                            table.insert(params.target_effects, ammo_type.action)
+                            table.insert(params.target_effects, { type = "nested-result", action = ammo_type.action, })
                         elseif (ammo_type.action.action_delivery.beam) then
+                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             params.beam = action.action_delivery.beam
                             params.beam_action = ammo_type.action
-                            table.insert(params.target_effects, action_delivery.target_effects)
+                            table.insert(params.target_effects, { type = "nested-result", action = action_delivery.target_effects, })
                         else
-                            table.insert(params.target_effects, action_delivery.target_effects)
+                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                            for  i  =  1,  #action_delivery.target_effects, 1  do
+                                table.insert(params.target_effects, action_delivery.target_effects[i])
+                            end
                         end
                     end
                 else
                     if (ammo_type.action.action_delivery.projectile) then
+                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                         params.projectile = ammo_type.action.action_delivery.projectile
                         table.insert(params.target_effects, { type = "nested-result", action = ammo_type.action, })
                     elseif (ammo_type.action.action_delivery.stream) then
+                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                         params.stream = ammo_type.action.action_delivery.stream
                         params.stream_action = ammo_type.action
                         table.insert(params.target_effects, { type = "nested-result", action = ammo_type.action, })
                     elseif (ammo_type.action.action_delivery.beam) then
+                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                         params.beam = ammo_type.action.action_delivery.beam
                         params.beam_action = ammo_type.action
                         table.insert(params.target_effects, { type = "nested-result", action = ammo_type.action, })
                     else
+                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                         if (ammo.type == "ammo") then
+                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             for i = 1, #ammo_type.action.action_delivery.target_effects, 1 do
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                 table.insert(params.target_effects, ammo_type.action.action_delivery.target_effects[i])
                             end
                         elseif (ammo.type == "land-mine") then
+                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             params.type = "land-mine"
 
                             if (ammo_type.action.action_delivery.source_effects[1]) then
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                 for i_s = 1, #ammo_type.action.action_delivery.source_effects, 1 do
+                                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                     local source_effect = ammo_type.action.action_delivery.source_effects[i_s]
                                     if (source_effect.action and source_effect.action[1]) then
+                                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                         for _, action in pairs(ammo_type.action.action_delivery.source_effects[i_s].action) do
+                                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                             table.insert(params.target_effects, { type = "nested-result", action = action, })
                                         end
                                     else
+                                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                         table.insert(params.target_effects, ammo_type.action.action_delivery.source_effects[i_s])
                                     end
                                 end
                             else
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             end
                         end
                     end
@@ -189,7 +247,32 @@ local function make_extend_ammo(params)
         no_collision = returned_params.type and true or nil
     }
 
-    local projectile_placeholder = returned_params and not returned_params.projectile and make_projectile_placeholder(params) or nil
+    if (DEBUG) then log(serpent.block(params)) end
+
+    local warhead_projectile = false
+    if (true_nukes_continued and (k == "atomic-bomb" or k:find("%-atomic%-"))) then
+        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+        if (DEBUG) then log(serpent.block(k)) end
+        if (k:find("artillery%-shell%-atomic%-")) then
+            for key, v in pairs(warhead_mapping) do
+                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                if (DEBUG) then log(serpent.block(key)) end
+                if (k:find(key, 1, true)) then
+                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                    for i = 1, #v.final_effect, 1 do
+                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                        if (DEBUG) then log(serpent.block(v.final_effect[i])) end
+                        table.insert(params.target_effects, v.final_effect[i])
+                    end
+                end
+            end
+        end
+        warhead_projectile = true
+    end
+
+    local projectile_placeholder = returned_params and (not returned_params.projectile or warhead_projectile) and make_projectile_placeholder(params) or nil
+
+    if (DEBUG) then log(serpent.block(projectile_placeholder or "nil")) end
 
     if (projectile_placeholder) then
         if (not projectile_placeholders_dictionary[projectile_placeholder.name]) then
@@ -202,7 +285,7 @@ local function make_extend_ammo(params)
             end
         end
 
-        projectile_placeholder_data.data[name_check({name = k, })] = { name = projectile_placeholder.name, speed = 1, }
+        projectile_placeholder_data.data[name_check({name = k, })] = { name = projectile_placeholder.name, speed = 1, warhead_projectile = warhead_projectile, }
     else
         if (returned_params and returned_params.projectile) then
             if (not projectile_placeholder_data.data[k]) then
@@ -225,7 +308,12 @@ local function make_extend_ammo(params)
 end
 
 for _, possible_payload in pairs({ data.raw.ammo, data.raw["land-mine"], }) do
+    if (DEBUG) then log(serpent.block(_)) end
+    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
     for k, ammo in pairs(possible_payload) do
+        if (DEBUG) then log(serpent.block(k)) end
+        if (DEBUG) then log(serpent.block(ammo)) end
+        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
         local returned_params
 
         local target_effects = {}
@@ -288,3 +376,5 @@ if (next(projectile_placeholders)) then
 end
 
 data:extend({ projectile_placeholder_data, })
+
+if (DEBUG) then log(serpent.block(projectile_placeholder_data)) end

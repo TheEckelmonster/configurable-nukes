@@ -20,6 +20,8 @@ defines.inventory.payloader = 1
 
 ---
 
+local true_nukes_contiued = script and script.active_mods and script.active_mods["True-Nukes_Continued"]
+
 local Data = require("__TheEckelmonster-core-library__.libs.data.data")
 
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
@@ -53,9 +55,11 @@ local valid_event_effect_ids =
     ["kr-atomic-artillery-projectile-fired"] = true,
     ["saa-s-atomic-artillery-projectile-fired"] = true,
     ["cn-tesla-rocket-lightning"] = true,
+
+    ["Atomic Weapon hit 20t"] = true_nukes_contiued and true or nil
 }
 
-if (scripts and scripts.active_mods and scripts.active_mods["quality"]) then
+if (script and script.active_mods and script.active_mods["quality"]) then
     for k, quality in pairs(prototypes.quality) do
         if (not quality.hidden) then
             valid_event_effect_ids["jericho-delivered-" .. k] = true
@@ -66,14 +70,15 @@ else
 end
 
 local placeholders = {
-    ["atomic-bomb"] = "atomic-rocket",
+    ["atomic-bomb"] = true_nukes_contiued and "atomic-bomb" or "atomic-rocket",
     ["kr-nuclear-artillery-shell"] = "kr-atomic-artillery-projectile",
     ["atomic-artillery-shell"] = "atomic-artillery-projectile",
     ["cn-jericho"] = "jericho-payloader-rocket",
+    ["Atomic Weapon hit 20t"] = true_nukes_contiued and "atomic-bomb" or nil,
 }
 
 local quality_affected_prototypes = {
-    ["atomic-bomb"] = true,
+    ["atomic-bomb"] = not true_nukes_contiued and true or false,
 
     ["atomic-warhead"] = true,
     ["cn-rod-from-god"] = true,
@@ -84,6 +89,8 @@ local quality_affected_prototypes = {
     ["kr-nuclear-artillery-shell"] = true,
 
     ["atomic-artillery-shell"] = true,
+
+    ["Atomic Weapon hit 20t"] = true_nukes_contiued and true or nil
 }
 
 local Quality_Prototypes = nil
@@ -192,6 +199,38 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 },
             })
             if (entity and entity.valid and event.source_entity.type == "spider-vehicle") then entity.orientation = _orientation end
+        end
+    elseif (event.effect_id == "Atomic Weapon hit 20t") then
+        local target = event.target_position
+        local quality = event.quality
+        quality = quality and Quality_Prototypes[quality] and quality or "normal"
+
+        if (quality == "normal") then return end
+
+        if (target == nil and event.target_entity and event.target_entity.valid) then
+            target = event.target_entity.position
+        end
+
+        if (target ~= nil) then
+            local entity = surface.create_entity({
+                name = "atomic-rocket" .. "-" .. quality,
+                position = target,
+                force = event.cause_entity and event.cause_entity.valid and event.cause_entity.force or "player",
+                target = target,
+                source = target,
+                cause = event.cause_entity and event.cause_entity.valid and event.cause_entity,
+                speed = 1,
+                base_damage_modifiers = {
+                    damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }),
+                    damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }),
+                    radius_modifier = 1,
+                },
+                bonus_damage_modifiers = {
+                    damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name }),
+                    damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name }),
+                    radius_modifier = 1,
+                },
+            })
         end
     elseif (event.effect_id == "kr-nuclear-turret-rocket-projectile-fired") then
         local source, target = event.source_position, event.target_position
@@ -501,8 +540,8 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                     --[[ Not really sure what this should be named, as I don't fully understand/remember why introducing this variable fixed things ]]
                     local qwer = (((i % stage_threshold) + 1) / stage_threshold) / (stage_threshold / (stage_threshold + cargo.count))
 
-                    local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (Prime_Random(2) == 1 and 1 or -1)
-                    local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (Prime_Random(2) == 1 and 1 or -1)
+                    local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
+                    local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
 
                     local x_offset = 0
                     local y_offset = 0
@@ -525,7 +564,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                     while (((target_position.x - target.x) ^ 2 + (target_position.y - target.y) ^ 2) ^ 0.5) > explosives_radius_limit do
                         if (loops < 1) then break end
 
-                        local rand = Prime_Random(3)
+                        local rand = (Prime_Random(3) + Rhythm.poly_index) % 3
 
                         if (rand == 1) then
                             target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
@@ -543,13 +582,26 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         loops = loops - 1
                     end
 
-                    payload.icbm.target_surface.create_entity({
+                    local asdf = payload.icbm.target_surface.create_entity({
                         name = not quality_affected_prototypes[cargo.name] and name or name .. "-" .. (cargo.quality or "normal"),
-                        position = target_position,
+                        position =  true_nukes_contiued
+                                and Projectile_Placeholders[cargo.name]
+                                and Projectile_Placeholders[cargo.name].warhead_projectile
+                                and target
+                                or
+                                    target_position,
                         direction = defines.direction.south,
                         force = payload.force,
                         target = target,
-                        source = tesla_munition and target or target_position,
+                        source =    tesla_munition
+                                and target
+                                or
+                                    true_nukes_contiued
+                                and Projectile_Placeholders[cargo.name]
+                                and Projectile_Placeholders[cargo.name].warhead_projectile
+                                and target
+                                or
+                                    target_position,
                         --[[ TODO: Make configurable ]]
                         cause = payload.icbm.same_surface and payload.icbm.source_silo and payload.icbm.source_silo.valid and payload.icbm.source_silo or payload.force,
                         speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (Prime_Random(100))) ^ 0.666),

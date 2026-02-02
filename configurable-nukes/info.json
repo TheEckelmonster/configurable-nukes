@@ -12,11 +12,14 @@
 		"? space-age >= 2.0.73",
 		"? quality >= 2.0.73",
 		"? atan-nuclear-science >= 0.3.3",
+		"? bobwarfare >= 2.0.5",
+		"? strategy-mortar-turret >= 1.3.2",
 		"? mushroom-cloud >= 1.0.2",
         "? RampantArsenalFork >= 1.0.4",
         "? SimpleAtomicArtillery-S >= 1.0.0",
 		"? space-exploration >= 0.7.35",
 		"? Temporary_nuclear_scorchmark >= 0.0.2",
+		"? True-Nukes_Continued >= 0.3.36",
         "(?) crushing-industry >= 0.5.6",
         "(?) Krastorio2-spaced-out >= 1.4.28"
 	]
