@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.3
+Date: 2026-02-02
+  Bug Fixes:
+    - Fixed startup error when improperly creating some trigger effects
+    - Fixed startup error(s) related to capsules and streams
+    - Fixed runtime error if True-Nukes_Continued was present, and a 20t atomic-bomb (vanilla atomic-bomb) was delivered via payload-vehicle
+  Compatibility:
+    - [Krastorio2-spaced-out] should load now; added additional payload-vehicle support for "kr-railgun-turret" ammo, and "kr-rocket-turret" ammo
+    - [strategy-mortar-turret] should load now; added payload support for "mortar-ammo" ammo
+    - [True-Nukes_Continued] added/tested basic payload-vehicle support
+      - Atomic munitions not affected by quality yet --[[ TODO: implement this ]]
+---------------------------------------------------------------------------------------------------
 Version: 0.9.2
 Date: 2026-02-01
   Bug Fixes:

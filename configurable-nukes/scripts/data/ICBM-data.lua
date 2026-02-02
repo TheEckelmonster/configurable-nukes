@@ -5,8 +5,8 @@ if (not script or not _Log or mods) then _Log = Log_Stub end
 local Constants = require("scripts.constants.constants")
 local Data = require("scripts.data.data")
 
-local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
-local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
+local sa_active = mods and mods["space-age"] and true or script and script.active_mods and script.active_mods["space-age"]
+local se_active = mods and mods["space-exploration"] and true or script and script.active_mods and script.active_mods["space-exploration"]
 
 local icbm_data = {}
 

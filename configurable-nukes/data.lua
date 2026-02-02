@@ -1,5 +1,6 @@
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
+local true_nukes_contiued = mods and mods["True-Nukes_Continued"] and true
 
 require("prototypes.custom-events.custom-events")
 require("prototypes.sprites")
@@ -60,4 +61,11 @@ if (sa_active) then
     require("prototypes.items.tesla-rocket-data")
     require("prototypes.recipes.tesla-rocket-data")
     require("prototypes.technologies.tesla-rocket-data")
+end
+
+if (true_nukes_contiued) then
+    local __stage = __STAGE
+    __STAGE = "data"
+    require("prototypes.entities.atomic-bomb")
+    __STAGE = __stage
 end

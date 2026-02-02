@@ -1,4 +1,4 @@
-if (mods and mods["True-Nukes_Continued"]) then return end
+local __stage = __STAGE or nil
 
 local Util = require("__core__.lualib.util")
 
@@ -7,6 +7,7 @@ local Startup_Settings_Constants = require("settings.startup.startup-settings-co
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
+local true_nukes_contiued = mods and mods["True-Nukes_Continued"] and true
 
 -- AREA_MULTIPLIER
 local get_area_multiplier = function ()
@@ -97,6 +98,11 @@ local area_multiplier = get_area_multiplier()
 local damage_multiplier = get_damage_multiplier()
 local repeat_multiplier = get_repeat_multiplier()
 
+if (true_nukes_contiued) then
+    area_multiplier = area_multiplier * 6.66
+    repeat_multiplier = repeat_multiplier * 6.66
+end
+
 local max_nuke_shockwave_movement_distance_deviation = 2
 max_nuke_shockwave_movement_distance_deviation = max_nuke_shockwave_movement_distance_deviation * area_multiplier
 
@@ -147,6 +153,10 @@ end
 -- Rocket PROJECTILE
 -----------------------------------------------------------------------
 local original_atomic_bomb = Util.table.deepcopy(data.raw["projectile"]["atomic-rocket"])
+
+if (not original_atomic_bomb) then
+    original_atomic_bomb = Util.table.deepcopy(data.raw["projectile"]["atomic-bomb"])
+end
 
 local damage =
 {
@@ -561,7 +571,7 @@ local create_quality_atomic_bomb = function (params)
         end
 
         if (quality_atomic_bomb ~= nil) then
-            if (k_0 == "normal") then
+            if (k_0 == "normal" and (type(__stage) ~= "string" or __stage ~= "data")) then
                 atomic_bomb = Util.table.deepcopy(quality_atomic_bomb)
 
                 local atomic_bomb_ammo_item = data.raw["ammo"]["atomic-bomb"]
@@ -624,64 +634,67 @@ atomic_bomb_placeholder.animation = nil
 atomic_bomb_placeholder.shadow = nil
 atomic_bomb_placeholder.smoke = nil
 
+
+local atomic_bomb_placeholder_map = {
+    {
+        type = "damage",
+        damage = { amount = 400 * damage_multiplier, type = "explosion" }
+    },
+    {
+        type = "destroy-cliffs",
+        radius = 9 * area_multiplier,
+        explosion_at_trigger = "explosion"
+        -- show_in_tooltip = mods and mods["quality"] ~= nil,
+    },
+    {
+        type = "nested-result",
+        action =
+        {
+            type = "area",
+            target_entities = false,
+            trigger_from_target = true,
+            repeat_count = 1000 * repeat_multiplier,
+            radius = 7 * area_multiplier,
+            action_delivery =
+            {
+                type = "projectile",
+                projectile = "atomic-bomb-ground-zero-projectile",
+                starting_speed = 0.6 * 0.8 * area_multiplier,
+                starting_speed_deviation = nuke_shockwave_starting_speed_deviation
+            },
+        }
+    },
+    {
+        type = "nested-result",
+        action =
+        {
+            type = "area",
+            target_entities = false,
+            trigger_from_target = true,
+            repeat_count = 1000 * repeat_multiplier,
+            radius = 35 * area_multiplier,
+            action_delivery =
+            {
+                type = "projectile",
+                projectile = "atomic-bomb-wave",
+                starting_speed = 0.5 * 0.7 * area_multiplier,
+                starting_speed_deviation = nuke_shockwave_starting_speed_deviation
+            },
+        }
+    },
+    atomic_bomb_fire_action,
+}
+local atomic_bomb_placeholder_target_effects = {}
+
+for _, v in pairs(atomic_bomb_placeholder_map) do table.insert(atomic_bomb_placeholder_target_effects, v) end
+
 atomic_bomb_placeholder.action =
 {
     type = "direct",
     action_delivery =
     {
         type = "instant",
-        target_effects =
-        {
-            {
-                type = "destroy-cliffs",
-                radius = 9 * area_multiplier,
-                explosion_at_trigger = "explosion"
-                -- show_in_tooltip = mods and mods["quality"] ~= nil,
-            },
-            {
-                type = "damage",
-                damage = { amount = 400 * damage_multiplier, type = "explosion" }
-            },
-            {
-                type = "nested-result",
-                action =
-                {
-                    type = "area",
-                    target_entities = false,
-                    trigger_from_target = true,
-                    repeat_count = 1000 * repeat_multiplier,
-                    radius = 7 * area_multiplier,
-                    action_delivery =
-                    {
-                        type = "projectile",
-                        projectile = "atomic-bomb-ground-zero-projectile-normal",
-                        starting_speed = 0.6 * 0.8 * area_multiplier,
-                        starting_speed_deviation = nuke_shockwave_starting_speed_deviation
-                    },
-                    -- show_in_tooltip = mods and mods["quality"] ~= nil,
-                }
-            },
-            {
-                type = "nested-result",
-                action =
-                {
-                    type = "area",
-                    target_entities = false,
-                    trigger_from_target = true,
-                    repeat_count = 1000 * repeat_multiplier,
-                    radius = 35 * area_multiplier,
-                    action_delivery =
-                    {
-                        type = "projectile",
-                        projectile = "atomic-bomb-wave-normal",
-                        starting_speed = 0.5 * 0.7 * area_multiplier,
-                        starting_speed_deviation = nuke_shockwave_starting_speed_deviation
-                    },
-                    -- show_in_tooltip = mods and mods["quality"] ~= nil,
-                }
-            },
-            atomic_bomb_fire_action,
-        }
+        target_effects = atomic_bomb_placeholder_target_effects
     }
 }
 

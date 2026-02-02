@@ -19,16 +19,6 @@ local Item_Sounds = {
 }
 
 local function mod_added()
-    local mod_added_subgroups = {
-        mods and mods["bobwarfare"] and "bob-ammo" or nil,
-        mods and mods["RampantArsenalFork"] and "launcher-capsule" or nil,
-    }
-
-    local mod_added_array = {}
-    for _, v in pairs(mod_added_subgroups) do
-        table.insert(mod_added_array, v)
-    end
-
     local function return_list_as_params(...)
         local return_arg = (...) and table.remove((...))
 
@@ -36,6 +26,29 @@ local function mod_added()
             return return_arg, return_list_as_params((...))
         else
             return
+        end
+    end
+
+    local mod_added_subgroups = {
+        mods and mods["bobwarfare"] and "bob-ammo" or nil,
+        mods and mods["Krastorio2-spaced-out"] and {
+            "kr-railgun-turret",
+            "kr-rocket-turret",
+        } or nil,
+        mods and mods["RampantArsenalFork"] and "launcher-capsule" or nil,
+        mods and mods["strategy-mortar-turret"] and "mortar-ammo" or nil,
+    }
+
+    local mod_added_array = {}
+    for _, v in pairs(mod_added_subgroups) do
+        if (type(v) == "table") then
+            if (v[1]) then
+                for __, _v in pairs(v) do
+                    table.insert(mod_added_array, _v)
+                end
+            end
+        else
+            table.insert(mod_added_array, v)
         end
     end
 
