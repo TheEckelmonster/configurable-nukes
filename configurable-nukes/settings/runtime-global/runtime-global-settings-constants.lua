@@ -1,10 +1,10 @@
 
 local Settings_Utils = require("__TheEckelmonster-core-library__.libs.utils.settings-utils")
 
-local k2so_active = mods and mods["Krastorio2-spaced-out"] and true or scripts and scripts.active_mods and scripts.active_mods["Krastorio2-spaced-out"]
-local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true or scripts and scripts.active_mods and scripts.active_mods["SimpleAtomicArtillery-S"]
-local sa_active = mods and mods["space-age"] and true or scripts and scripts.active_mods and scripts.active_mods["space-age"]
-local se_active = mods and mods["space-exploration"] and true or scripts and scripts.active_mods and scripts.active_mods["space-exploration"]
+local k2so_active = mods and mods["Krastorio2-spaced-out"] and true or script and script.active_mods and script.active_mods["Krastorio2-spaced-out"]
+local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true or script and script.active_mods and script.active_mods["SimpleAtomicArtillery-S"]
+local sa_active = mods and mods["space-age"] and true or script and script.active_mods and script.active_mods["space-age"]
+local se_active = mods and mods["space-exploration"] and true or script and script.active_mods and script.active_mods["space-exploration"]
 
 local prefix = "configurable-nukes-"
 
