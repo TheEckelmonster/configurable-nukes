@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.5
+Date: 2026-02-03
+  Bug Fixes:
+    - Fixed another startup error stemming from trying to access a nil value
+      - Not sure which mod caused this issue to surface (have not been able to replicate the issue; logic fault is valid though)
+      - This is to say, the error should be prevented/fixed now, but not knowing that actual circumstances, some payload items may not function properly (i.e. land-mines)
+  Misc:
+    - Payloader "add" and "remove" recipes should now both be selectable from the signal GUI
+      - Can ~technically~ "set" the recipe via a connected circuit-network signal, but is a bit awkward --[[ TODO: look into/improve this ]]
+    - Added "Debug payload startup processing"
+      - If enabled, will log debug information when processing/creating potential payloads from existing ammo, capsules, and/or landmines
+      - Namely intended for development purposes; that being, narrowing down/tracing potential compatibility issues/errors
+      - No need to enable under normal circumstances - feel free to be curious, if you'd like
+---------------------------------------------------------------------------------------------------
 Version: 0.9.4
 Date: 2026-02-02
   Bug Fixes:
