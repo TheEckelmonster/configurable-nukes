@@ -547,6 +547,9 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 end
             end
 
+            -- log(serpent.block(payload))
+            -- log(serpent.block(payloads))
+
             if (not payload or not payloads) then return end
 
             if (payload) then
@@ -585,6 +588,9 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 local stage_threshold = math.ceil(cargo.count / 8)
 
                 local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
+
+                -- log(serpent.block(cargo))
+                -- log(serpent.block(name))
 
                 if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
                 if (name == "") then goto continue end

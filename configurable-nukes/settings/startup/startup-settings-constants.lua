@@ -2689,6 +2689,13 @@ startup_settings_constants.settings = {
         minimum_value = 1,
         maximum_value = 2 ^ 42,
     },
+    DEBUG_PAYLOAD_STARTUP_PROCESSING = {
+        type = "bool-setting",
+        name = prefix .. "debug-payload-startup-processing",
+        setting_type = "startup",
+        order = "",
+        default_value = false,
+    },
 }
 
 local order_settings = Settings_Utils.order_settings({ settings = startup_settings_constants.settings })

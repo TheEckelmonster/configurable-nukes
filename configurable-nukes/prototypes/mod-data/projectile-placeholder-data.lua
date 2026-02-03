@@ -1,4 +1,9 @@
-local DEBUG = false
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
+
+local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local __debug = DEBUG
+DEBUG = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.DEBUG_PAYLOAD_STARTUP_PROCESSING.name })
 local debug_count = 1
 
 local true_nukes_continued = mods and mods["True-Nukes_Continued"] and true
@@ -187,6 +192,8 @@ local function traverse_ammo(params)
                                         if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                         table.insert(params.source_effects, action_delivery.source_effect)
                                     end
+                                else
+                                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                                 end
                             end
                         end
@@ -215,21 +222,17 @@ local function traverse_ammo(params)
                             if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             params.type = "land-mine"
 
-                            if (ammo_type.action.action_delivery.source_effects[1]) then
-                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                                for i_s = 1, #ammo_type.action.action_delivery.source_effects, 1 do
+                            if (ammo_type.action.action_delivery.source_effects) then
+                                if (ammo_type.action.action_delivery.source_effects[1]) then
                                     if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                                    local source_effect = ammo_type.action.action_delivery.source_effects[i_s]
-                                    if (source_effect.action and source_effect.action[1]) then
+                                    for i_s = 1, #ammo_type.action.action_delivery.source_effects, 1 do
                                         if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                                        for _, action in pairs(ammo_type.action.action_delivery.source_effects[i_s].action) do
-                                            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                                            table.insert(params.target_effects, { type = "nested-result", action = action, })
-                                        end
-                                    else
-                                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                                        table.insert(params.target_effects, ammo_type.action.action_delivery.source_effects[i_s])
+                                        local source_effect = ammo_type.action.action_delivery.source_effects[i_s]
+                                        table.insert(params.source_effects, source_effect)
                                     end
+                                else
+                                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                                    table.insert(params.source_effects, ammo_type.action.action_delivery.source_effects)
                                 end
                             else
                                 if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
@@ -406,3 +409,5 @@ end
 data:extend({ projectile_placeholder_data, })
 
 if (DEBUG) then log(serpent.block(projectile_placeholder_data)) end
+
+DEBUG = __debug
