@@ -55,6 +55,8 @@ data:extend({
     Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK,
 
     Runtime_Global_Settings_Constants.settings.DASHBOARD_REFRESH_RATE,
+
+    Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE,
 })
 
 if (k2so_active) then

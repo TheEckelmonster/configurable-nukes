@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.4
+Date: 2026-02-02
+  Bug Fixes:
+    - Fixed startup error when accessing a nil value
+    - Fixed railgun-ammo having no effect when used as a payload
+    - Fixed payloads not delivering properly when fired at precisely the same position repeatedly
+      - Namely, n+1 ready to launch circuit-controlled rocket-silos targeting the same position
+  Compatibility:
+    - [lily's-mm] (Lily's Micromissiles) should now load, if present, and added ammo available for payloads
+  Misc:
+    - Added configurable custom-input for giving an ICBM-remote
+      - Default: SHIFT + ALT + T
+    - Added configurable setting for controlling the background payload cleaning rate, default of 300 ticks (5 seconds)
+      - Payloads should now properly clean up after themselves immediately upon payload delivery
+      - This handles the off chance that a payload fails to remove itself properly
+      - Also removes orphaned payload data from previous versions (reduces bloat)
+---------------------------------------------------------------------------------------------------
 Version: 0.9.3
 Date: 2026-02-02
   Bug Fixes:

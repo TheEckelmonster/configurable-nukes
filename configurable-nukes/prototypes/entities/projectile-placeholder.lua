@@ -38,6 +38,7 @@ return function (params)
     end
 
     local target_effects = {}
+    local source_effects = nil
 
     if (params.target_effects) then
         if (params.target_effects[1]) then
@@ -53,6 +54,16 @@ return function (params)
         projectile_placeholder.action = params.stream_action
     elseif (params.beam_action) then
         projectile_placeholder.action = params.beam_action
+    end
+
+    if (params.source_effects) then
+        source_effects = {}
+        for _, source_effect in ipairs(params.source_effects) do
+            table.insert(source_effects, source_effect)
+        end
+
+        if (not next(source_effects)) then source_effects = nil end
+        if (source_effects) then projectile_placeholder.action.action_delivery.source_effects = source_effects end
     end
 
     if (params.magazine_size) then
