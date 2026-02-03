@@ -39,7 +39,12 @@ Rhythms = {}
 local _rhythm_pulse =  nil
 
 function Rhythms.increment_count()
-    if (_rhythm_pulse and _rhythm_pulse.count) then _rhythm_pulse.count = _rhythm_pulse.count + 1 end
+    if (_rhythm_pulse and _rhythm_pulse.count) then
+        if (_rhythm_pulse.count >= game.tick) then
+            _rhythm_pulse.count = math.floor(_rhythm_pulse.count / 2)
+        end
+        _rhythm_pulse.count = _rhythm_pulse.count + 1
+    end
 end
 
 function Rhythms.get_count(param)

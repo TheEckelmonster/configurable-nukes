@@ -177,7 +177,7 @@ function locals.initialize(from_scratch, maintain_data)
     Random = storage.random
     Payloads = storage.payloads
     Prime_Indices = storage.prime_indices
-    Rhythms.init_rhythm(from_scratch)
+    Rhythms.init_rhythm("reset")
 
     if (storage and storage.configurable_nukes) then
         storage.configurable_nukes.do_nth_tick = true
