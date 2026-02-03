@@ -33,21 +33,53 @@ Primes = {
     },
 }
 Prime_Indices = { outer = 1, inner = 1, }
-Rhythm = {
-    count = 1,
-    poly_sign = 1,
-    poly_index = 2,
-    polyrythms = {
-        [2]  = 1,
-        [3]  = 1,
-        [5]  = 1,
-        [7]  = 1,
-        [11] = 1,
-        [13] = 1,
-        [17] = 1,
-    },
-}
-Prime_Random = function (param1, param2)
+
+Rhythms = {}
+
+local _rhythm_pulse =  nil
+
+function Rhythms.increment_count()
+    if (_rhythm_pulse and _rhythm_pulse.count) then
+        if (_rhythm_pulse.count >= game.tick) then
+            _rhythm_pulse.count = math.floor(_rhythm_pulse.count / 2)
+        end
+        _rhythm_pulse.count = _rhythm_pulse.count + 1
+    end
+end
+
+function Rhythms.get_count(param)
+    if (not _rhythm_pulse or _rhythm_pulse.count == nil) then _rhythm_pulse = storage.rhythm_pulse end
+
+    return
+            _rhythm_pulse
+        and _rhythm_pulse.count
+        and _rhythm_pulse.count
+        or  1,
+            param
+        and Rhythms.increment_count()
+        or  nil
+end
+
+function Rhythms.init_rhythm(param)
+    local __rhythm = {
+        current_tick = nil,
+        current_tick_count = nil,
+        poly_sign = 1,
+        poly_index = 2,
+        polyrythms = {},
+    }
+
+    storage.rhythm = param and __rhythm or storage.rhythm or __rhythm
+    Rhythm = __rhythm
+
+    return __rhythm
+end
+
+Rhythm = nil
+
+local max_poly_index = 37
+
+function Prime_Random(param1, param2)
     if (type(param2) ~= "number") then param2 = nil end
     local param1_valid = false
     if (type(param1) ~= "number") then
@@ -62,6 +94,18 @@ Prime_Random = function (param1, param2)
     end
     if (param2 and param2 > param1) then param2 = param1 end
     if (param2 and param1 < param2) then param1 = param2 end
+
+    Rhythm = Rhythm or Rhythms.init_rhythm()
+
+    if (not Rhythm.current_tick) then
+        Rhythm.current_tick, Rhythm.current_tick_count = game.tick, 0
+    else
+        if (Rhythm.current_tick < game.tick) then
+            Rhythm.current_tick, Rhythm.current_tick_count = game.tick, 0
+        else
+            Rhythm.current_tick_count = Rhythm.current_tick_count + 1
+        end
+    end
 
     local indices = storage.prime_indices or Prime_Indices
     indices.outer = indices.outer % #Primes + 1
@@ -84,27 +128,40 @@ Prime_Random = function (param1, param2)
 
     if (param1_valid) then return_val = return_val - return_val % 1 end
 
-    Rhythm.count = Rhythm.count + 1
+    local count = Rhythms.get_count("increment")
+    Rhythm.count = count
     Rhythm.polyrythms = {
-        [2]  = Rhythm.count % 2,
-        [3]  = Rhythm.count % 3,
-        [5]  = Rhythm.count % 5,
-        [7]  = Rhythm.count % 7,
-        [11] = Rhythm.count % 11,
-        [13] = Rhythm.count % 13,
-        [17] = Rhythm.count % 17,
+        [2]  = Rhythm.count % 2 + 1,
+        [3]  = Rhythm.count % 3 + 1,
+        [5]  = Rhythm.count % 5 + 1,
+        [7]  = Rhythm.count % 7 + 1,
+        [11] = Rhythm.count % 11 + 1,
+        [13] = Rhythm.count % 13 + 1,
+        [17] = Rhythm.count % 17 + 1,
+        [19] = Rhythm.count % 19 + 1,
+        [23] = Rhythm.count % 23 + 1,
+        [29] = Rhythm.count % 29 + 1,
+        [31] = Rhythm.count % 31 + 1,
+        [37] = Rhythm.count % 37 + 1,
     }
 
-    Rhythm.poly_index = game and game.tick and game.tick % 17 or 2
-    while not Rhythm.polyrythms[Rhythm.poly_index] do
-        if (Rhythm.poly_index > 17) then
+    if (not Rhythm.poly_index) then Rhythm.poly_index = 2 end
+    Rhythm.poly_index = game and game.tick and (((game.tick + Rhythm.current_tick_count + count) % max_poly_index)) or 2
+    local v = nil
+    while Rhythm.poly_index and not Rhythm.polyrythms[Rhythm.poly_index] do
+        if (Rhythm.poly_index > max_poly_index) then
             Rhythm.poly_index = 2
-        elseif (Rhythm.poly_index < 0) then
-            Rhythm.poly_index = 17
+        elseif (Rhythm.poly_index < 2) then
+            Rhythm.poly_index = 2
         end
-        Rhythm.poly_index = Rhythm.poly_index + 1
+        Rhythm.poly_index, v = next(Rhythm.polyrythms, Rhythm.poly_index)
     end
-    Rhythm.poly_sign = (Rhythm.polyrythms[Rhythm.poly_index] and Rhythm.polyrythms[Rhythm.poly_index] % 2 > 0 and 1 or -1) or (-1 * Rhythm.poly_sign)
+    if (not Rhythm.poly_index) then Rhythm.poly_index = 2 end
+
+    local i = Rhythm.poly_index or 2
+    if (not v) then v = 2 end
+
+    Rhythm.poly_sign = ((Rhythm.polyrythms[i] / 1) > 0.5 and 1 or -1) or (-1 * Rhythm.poly_sign)
 
     return return_val % param1
 end
