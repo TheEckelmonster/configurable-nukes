@@ -24,8 +24,9 @@ local true_nukes_contiued = script and script.active_mods and script.active_mods
 
 local Data = require("__TheEckelmonster-core-library__.libs.data.data")
 
-local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Custom_Input = require("prototypes.custom-input.custom-input")
+
+local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Initialization = require("scripts.initialization")
 local Rocket_Silo_Gui_Controller = require("scripts.controllers.guis.rocket-silo-gui-controller")
 local Rocket_Dashboard_Gui_Controller = require("scripts.controllers.guis.rocket-dashboard-gui-controller")
@@ -38,6 +39,9 @@ local Runtime_Global_Settings_Constants = require("settings.runtime-global.runti
 
 local Log_Settings = require("__TheEckelmonster-core-library__.libs.log.log-settings")
 local Settings_Controller = require("__TheEckelmonster-core-library__.scripts.controllers.settings-controller")
+
+local locals = {}
+locals.name = "locals"
 
 local valid_event_effect_ids =
 {
@@ -96,6 +100,7 @@ local quality_affected_prototypes = {
 local Quality_Prototypes = nil
 
 local events = {
+    [locals.name] = locals,
     [Configurable_Nukes_Controller.name] = Configurable_Nukes_Controller,
     [Custom_Input.name] = Custom_Input,
     [Rocket_Silo_Gui_Controller.name] = Rocket_Silo_Gui_Controller,
@@ -478,10 +483,43 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
 
         if (target_position and target_position.x and target_position.y) then
             local position_key = string.format("%.2f", math.floor(target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(target_position.y * 100) / 100)
-            local payload = Payloads[position_key]
-            if (not payload) then
-                position_key = string.format("%.8f", math.floor(source_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(source_position.y * 100) / 100)
-                payload = Payloads[position_key]
+            local position_key_target = string.format("%.2f", math.floor(target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(target_position.y * 100) / 100)
+            local position_key_source = string.format("%.2f", math.floor(source_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(source_position.y * 100) / 100)
+            local payload = nil
+            local removed = false
+            local i = 1
+            while payload == nil and i <= 6 do
+                position_key_target = string.format("%.2f", math.floor(target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(target_position.y * 100) / 100) .. "-" .. i
+                if (Payloads[position_key_target] and Payloads[position_key_target][1]) then
+                    payload = table.remove(Payloads[position_key_target], 1)
+                    removed = true
+                    position_key = position_key_target
+                end
+                payload = payload or Payloads[position_key_target] or nil
+
+                if (not payload) then
+                    position_key_source = string.format("%.8f", math.floor(source_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(source_position.y * 100) / 100) ..  "-" ..i
+                    if (Payloads[position_key_source]) then
+                        if (Payloads[position_key_source][1]) then
+                            payload = table.remove(Payloads[position_key_source], 1)
+                            removed = payload and true or false
+                            if (removed) then
+                                position_key = position_key_source
+                            end
+                        else
+                            payload = Payloads[position_key_source]
+                        end
+                    end
+                end
+
+                if (payload and payload[1]) then
+                    payload = table.remove(payload, 1)
+                    removed = true
+                end
+
+                if (Payloads[position_key] and #Payloads[position_key] and not removed) then Payloads[position_key] = Payloads[position_key][1] end
+
+                i = i + 1
             end
 
             local payloads = payload and payload.icbm and payload.icbm.cargo and payload.icbm.cargo[1] and payload.icbm.cargo or payload and payload.cargo and (payload.cargo[1] and payload.cargo or { payload.cargo, }) or nil
@@ -492,7 +530,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 payloads = payloads or {}
 
                 if (payloads ~= payload.cargo) then
-                    if (payload.cargo[1]) then
+                    if (payload.cargo and payload.cargo[1]) then
                         for i, cargo in pairs(payload.cargo) do
                             table.insert(payloads, cargo)
                         end
@@ -510,6 +548,24 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             end
 
             if (not payload or not payloads) then return end
+
+            if (payload) then
+                if (payload.delivered and game.tick - payload.updated > 150) then
+                    return
+                elseif (
+                        not payload.tick
+                    or
+                        payload.icbm
+                    and payload.icbm.tick_to_target
+                    and payload.icbm.tick_to_target <= game.tick
+                    and game.tick - payload.icbm.tick_to_target >= 150
+                    or
+                        game.tick > payload.tick
+                    and game.tick - payload.tick >= 150
+                ) then
+                    return
+                end
+            end
 
             local delivered = 0
             local total_delivered = 0
@@ -631,6 +687,38 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
 
             if (not payload.delivered) then payload.delivered = game.tick end
             payload.updated = game.tick
+
+            for k, v in pairs(payload.keys) do
+                if (Payloads[k]) then
+                    if (Payloads[k][1]) then
+                        local to_remove_indices = {}
+                        for _i, _v in pairs(Payloads[k]) do
+                            if (_v.rhythm_count and _v.rhythm_count == v) then
+                                table.insert(to_remove_indices, _i)
+                            end
+                        end
+                        if (#to_remove_indices > 0) then
+                            for index = to_remove_indices[#to_remove_indices], 1, -1 do
+                                local dgfs = table.remove(Payloads[k], index)
+                            end
+                        end
+
+                        if (Payloads[k][1]) then
+                            if (#Payloads[k] == 1) then
+                                Payloads[k] = Payloads[k][1]
+                            end
+                        else
+                            if (not next(Payloads[k])) then
+                                Payloads[k] = nil
+                            end
+                        end
+                    else
+                        if (Payloads[k].rhythm_count and Payloads[k].rhythm_count == v) then
+                            Payloads[k] = nil
+                        end
+                    end
+                end
+            end
         end
     end
 end)
@@ -694,7 +782,7 @@ function events.on_init()
 
     Random = storage.random
     Prime_Indices = storage.prime_indices
-    Rhythm = storage.rhythm
+    Rhythms.init_rhythm()
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -746,6 +834,14 @@ function events.on_init()
         func = Rocket_Dashboard_Gui_Controller.on_nth_tick,
     })
 
+    Event_Handler:register_event({
+        event_name = "on_nth_tick",
+        nth_tick = Payload_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE.name }) or (15 * 60),
+        source_name = "payload_controller.on_nth_tick",
+        func_name = "payload_controller.on_nth_tick",
+        func = Payload_Controller.on_nth_tick,
+    })
+
     Constants.get_mod_data(true, { on_load = true })
 
     Did_Init = true
@@ -759,11 +855,35 @@ Event_Handler:register_event({
 
 local initialized_from_load = false
 
+function locals.init_rhythm(event)
+    Log.debug(event)
+
+    Event_Handler:unregister_event({
+        event_name = "on_tick",
+        source_name = "locals.init_rhythm",
+    })
+
+    Rhythms.init_rhythm()
+end
+
 function events.on_load()
 
     Random = storage.random
     Prime_Indices = storage.prime_indices
-    Rhythm = storage.rhythm
+
+    Event_Handler:register_event({
+        event_name = "on_tick",
+        source_name = "locals.init_rhythm",
+        func_name = "locals.init_rhythm",
+        func = locals.init_rhythm,
+    })
+
+    Event_Handler:set_event_position({
+        event_name = "on_tick",
+        source_name = "locals.init_rhythm",
+        new_position = 1,
+    })
+
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -837,6 +957,14 @@ function events.on_load()
         func = Rocket_Dashboard_Gui_Controller.on_nth_tick,
     })
 
+    Event_Handler:register_event({
+        event_name = "on_nth_tick",
+        nth_tick = Payload_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE.name }) or (15 * 60),
+        source_name = "payload_controller.on_nth_tick",
+        func_name = "payload_controller.on_nth_tick",
+        func = Payload_Controller.on_nth_tick,
+    })
+
     Constants.get_mod_data(true, { on_load = true })
 
     Event_Handler:on_load_restore({ events = events })
@@ -887,7 +1015,7 @@ function events.on_configuration_changed(event)
 
                 Random = storage.random
                 Prime_Indices = storage.prime_indices
-                Rhythm = storage.rhythm
+                Rhythms.init_rhythm()
                 Payloads = storage.payloads
                 Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
                 Quality_Prototypes = prototypes.quality

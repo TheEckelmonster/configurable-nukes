@@ -1415,13 +1415,86 @@ function icbm_utils.payload_arrived(data)
                 })
 
                 if (payload_entity and payload_entity.valid) then
-                    local position_key = tostring(icbm.target_position.x) .. "/" .. tostring(icbm.target_position.y)
-                    Payloads[position_key] = {
+                    local payload_data = {
                         tick = game.tick,
                         cargo = payloads,
                         icbm = icbm,
                         force = force,
+                        keys = {},
+                        rhythm_count = Rhythms.get_count("increment"),
                     }
+
+                    local position_key = string.format("%.2f", math.floor(icbm.target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100)  .. "-1"
+                    payload_data.keys[position_key] = payload_data.rhythm_count
+                    if (not Payloads[position_key]) then
+                        Payloads[position_key] = payload_data
+                    else
+                        if (Payloads[position_key][1]) then
+                            table.insert(Payloads[position_key], payload_data)
+                        else
+                            Payloads[position_key] = { Payloads[position_key], payload_data, }
+                        end
+                    end
+
+                    position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.8f", icbm.target_position.y) .. "-2"
+                    payload_data.keys[position_key] = payload_data.rhythm_count
+                    if (not Payloads[position_key]) then
+                        Payloads[position_key] = payload_data
+                    else
+                        if (Payloads[position_key][1]) then
+                            table.insert(Payloads[position_key], payload_data)
+                        else
+                            Payloads[position_key] = { Payloads[position_key], payload_data, }
+                        end
+                    end
+
+                    position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100) .. "-3"
+                    payload_data.keys[position_key] = payload_data.rhythm_count
+                    if (not Payloads[position_key]) then
+                        Payloads[position_key] = payload_data
+                    else
+                        if (Payloads[position_key][1]) then
+                            table.insert(Payloads[position_key], payload_data)
+                        else
+                            Payloads[position_key] = { Payloads[position_key], payload_data, }
+                        end
+                    end
+
+                    position_key = string.format("%.2f", math.floor(icbm.original_target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100) .. "-4"
+                    payload_data.keys[position_key] = payload_data.rhythm_count
+                    if (not Payloads[position_key]) then
+                        Payloads[position_key] = payload_data
+                    else
+                        if (Payloads[position_key][1]) then
+                            table.insert(Payloads[position_key], payload_data)
+                        else
+                            Payloads[position_key] = { Payloads[position_key], payload_data, }
+                        end
+                    end
+
+                    position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.8f", icbm.original_target_position.y) .. "-5"
+                    payload_data.keys[position_key] = payload_data.rhythm_count
+                    if (not Payloads[position_key]) then
+                        Payloads[position_key] = payload_data
+                    else
+                        if (Payloads[position_key][1]) then
+                            table.insert(Payloads[position_key], payload_data)
+                        else
+                            Payloads[position_key] = { Payloads[position_key], payload_data, }
+                        end
+                    end
+
+                    position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100) .. "-6"
+                    payload_data.keys[position_key] = payload_data.rhythm_count
+                    if (not Payloads[position_key]) then
+                        Payloads[position_key] = payload_data
+                    else
+                        if (Payloads[position_key][1]) then
+                            table.insert(Payloads[position_key], payload_data)
+                        else
+                            Payloads[position_key] = { Payloads[position_key], payload_data, }
+                        end
+                    end
                 end
             end
         else
@@ -1457,20 +1530,81 @@ function icbm_utils.payload_arrived(data)
                     cargo = payload,
                     icbm = icbm,
                     force = force,
+                    keys = {},
+                    rhythm_count = Rhythms.get_count("increment"),
                 }
-                local position_key = string.format("%.2f", math.floor(icbm.target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100)
-                Payloads[position_key] = payload_data
-                position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.8f", icbm.target_position.y)
-                Payloads[position_key] = payload_data
-                position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100)
-                Payloads[position_key] = payload_data
 
-                position_key = string.format("%.2f", math.floor(icbm.original_target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100)
-                Payloads[position_key] = payload_data
-                position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.8f", icbm.original_target_position.y)
-                Payloads[position_key] = payload_data
-                position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100)
-                Payloads[position_key] = payload_data
+                local position_key = string.format("%.2f", math.floor(icbm.target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100) .. "-1"
+                payload_data.keys[position_key] = payload_data.rhythm_count
+                if (not Payloads[position_key]) then
+                    Payloads[position_key] = payload_data
+                else
+                    if (Payloads[position_key][1]) then
+                        table.insert(Payloads[position_key], payload_data)
+                    else
+                        Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    end
+                end
+
+                position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.8f", icbm.target_position.y) .. "-2"
+                payload_data.keys[position_key] = payload_data.rhythm_count
+                if (not Payloads[position_key]) then
+                    Payloads[position_key] = payload_data
+                else
+                    if (Payloads[position_key][1]) then
+                        table.insert(Payloads[position_key], payload_data)
+                    else
+                        Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    end
+                end
+
+                position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100) .. "-3"
+                payload_data.keys[position_key] = payload_data.rhythm_count
+                if (not Payloads[position_key]) then
+                    Payloads[position_key] = payload_data
+                else
+                    if (Payloads[position_key][1]) then
+                        table.insert(Payloads[position_key], payload_data)
+                    else
+                        Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    end
+                end
+
+                position_key = string.format("%.2f", math.floor(icbm.original_target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100) .. "-4"
+                payload_data.keys[position_key] = payload_data.rhythm_count
+                if (not Payloads[position_key]) then
+                    Payloads[position_key] = payload_data
+                else
+                    if (Payloads[position_key][1]) then
+                        table.insert(Payloads[position_key], payload_data)
+                    else
+                        Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    end
+                end
+
+                position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.8f", icbm.original_target_position.y) .. "-5"
+                payload_data.keys[position_key] = payload_data.rhythm_count
+                if (not Payloads[position_key]) then
+                    Payloads[position_key] = payload_data
+                else
+                    if (Payloads[position_key][1]) then
+                        table.insert(Payloads[position_key], payload_data)
+                    else
+                        Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    end
+                end
+
+                position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100) .. "-6"
+                payload_data.keys[position_key] = payload_data.rhythm_count
+                if (not Payloads[position_key]) then
+                    Payloads[position_key] = payload_data
+                else
+                    if (Payloads[position_key][1]) then
+                        table.insert(Payloads[position_key], payload_data)
+                    else
+                        Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    end
+                end
             end
         end
 

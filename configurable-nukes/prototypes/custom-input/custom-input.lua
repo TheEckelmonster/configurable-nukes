@@ -32,6 +32,15 @@ local custom_input =
         localised_name = { "custom-input.toggle-dashboard", },
         action = "lua",
     },
+    CREATE_ICBM_REMOTE = {
+        type = "custom-input",
+        name = "configurable-nukes-create-icbm-remote",
+        key_sequence = "SHIFT + ALT + T",
+        consuming = "none",
+        localised_name = { "custom-input.create-icbm-remote", },
+        action = "spawn-item",
+        item_to_spawn = "ICBM-remote"
+    },
 }
 
 if (mods and not script) then
@@ -40,6 +49,7 @@ if (mods and not script) then
         custom_input.SCRUB_OLDEST_LAUNCH,
         custom_input.SCRUB_ALL_LAUNCHES,
         custom_input.TOGGLE_DASHBOARD,
+        custom_input.CREATE_ICBM_REMOTE,
     })
 end
 

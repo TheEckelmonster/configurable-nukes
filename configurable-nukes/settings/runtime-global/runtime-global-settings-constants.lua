@@ -451,6 +451,15 @@ runtime_global_settings_constants.settings = {
         minimum_value = 1,
         maximum_value = 60,
     },
+    PAYLOAD_BACKGROUND_CLEANING_RATE = {
+        type = "int-setting",
+        name = prefix .. "payload-background-cleaning-rate",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 5 * 60,
+        minimum_value = 60,
+        maximum_value = 60 * 60,
+    },
 }
 
 local order_settings = Settings_Utils.order_settings({ settings = runtime_global_settings_constants.settings })

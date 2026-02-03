@@ -89,6 +89,10 @@ local function traverse_ammo(params)
     local ammo_type = params.ammo_type
     if (not ammo_type) then return end
 
+    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+    if (DEBUG) then log(serpent.block(ammo)) end
+    if (DEBUG) then log(serpent.block(ammo_type)) end
+
     if (not type(params.target_effects) ~= "table") then params.target_effects = {} end
 
     if (ammo_type.action) then
@@ -156,8 +160,20 @@ local function traverse_ammo(params)
                             table.insert(params.target_effects, { type = "nested-result", action = action_delivery.target_effects, })
                         else
                             if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                            for  i  =  1,  #action_delivery.target_effects, 1  do
-                                table.insert(params.target_effects, action_delivery.target_effects[i])
+                            if (action_delivery.target_effects) then
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                                if (action_delivery.target_effects[1]) then
+                                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                                    for  i  =  1,  #action_delivery.target_effects, 1  do
+                                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                                        table.insert(params.target_effects, action_delivery.target_effects[i])
+                                    end
+                                else
+                                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+                                    table.insert(params.target_effects, action_delivery.target_effects)
+                                end
+                            else
+                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             end
                         end
                     end
@@ -180,10 +196,7 @@ local function traverse_ammo(params)
                         if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                         if (ammo.type == "ammo") then
                             if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                            for i = 1, #ammo_type.action.action_delivery.target_effects, 1 do
-                                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                                table.insert(params.target_effects, ammo_type.action.action_delivery.target_effects[i])
-                            end
+                            table.insert(params.target_effects, { type = "nested-result", action = ammo_type.action, })
                         elseif (ammo.type == "land-mine") then
                             if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
                             params.type = "land-mine"
