@@ -161,7 +161,7 @@ function Prime_Random(param1, param2)
     local i = Rhythm.poly_index or 2
     if (not v) then v = 2 end
 
-    Rhythm.poly_sign = ((Rhythm.polyrythms[i] / 1) > 0.5 and 1 or -1) or (-1 * Rhythm.poly_sign)
+    Rhythm.poly_sign = ((Rhythm.polyrythms[i] / i) > 0.5 and 1 or -1) or (-1 * Rhythm.poly_sign)
 
     return return_val % param1
 end

@@ -55,61 +55,24 @@ payloader.resistances =
 payloader.fluid_boxes_off_when_no_fluid_recipe = false
 
 for _, pipe_connections in ipairs(payloader.fluid_boxes) do
-    for _, pipe_covers in pairs(pipe_connections.pipe_covers) do
-        if (pipe_covers.layers) then
-            for _, layer in ipairs(pipe_covers.layers) do
-                layer.filename = "__configurable-nukes__/graphics/icons/empty.png"
-                pipe_covers.height = 64
-                pipe_covers.width = 64
-            end
-        else
-            pipe_covers.filename = "__configurable-nukes__/graphics/icons/empty.png"
-            pipe_covers.height = 64
-            pipe_covers.width = 64
-        end
-    end
-
-    if (pipe_connections.pipe_covers_frozen) then
-        for _, pipe_covers in pairs(pipe_connections.pipe_covers_frozen) do
-            if (pipe_covers.layers) then
-                for _, layer in ipairs(pipe_covers.layers) do
+    for _, t in pairs({
+        pipe_connections.pipe_covers or {},
+        pipe_connections.pipe_covers_frozen or {},
+        pipe_connections.pipe_picture or {},
+        pipe_connections.pipe_picture_frozen or {},
+    }) do
+        for _, pipe_connection in pairs(t) do
+            if (pipe_connection.layers) then
+                for _, layer in ipairs(pipe_connection.layers) do
                     layer.filename = "__configurable-nukes__/graphics/icons/empty.png"
-                    pipe_covers.height = 64
-                    pipe_covers.width = 64
+                    layer.height = 64
+                    layer.width = 64
                 end
             else
-                pipe_covers.filename = "__configurable-nukes__/graphics/icons/empty.png"
-                pipe_covers.height = 64
-                pipe_covers.width = 64
+                pipe_connection.filename = "__configurable-nukes__/graphics/icons/empty.png"
+                pipe_connection.height = 64
+                pipe_connection.width = 64
             end
-        end
-
-        for _, pipe_picture in pairs(pipe_connections.pipe_picture_frozen) do
-            if (pipe_picture.layers) then
-                for _, layer in ipairs(pipe_picture.layers) do
-                    layer.filename = "__configurable-nukes__/graphics/icons/empty.png"
-                    pipe_picture.height = 64
-                    pipe_picture.width = 64
-                end
-            else
-                pipe_picture.filename = "__configurable-nukes__/graphics/icons/empty.png"
-                pipe_picture.height = 64
-                pipe_picture.width = 64
-            end
-        end
-    end
-
-    for _, pipe_picture in pairs(pipe_connections.pipe_picture) do
-        if (pipe_picture.layers) then
-            for _, layer in ipairs(pipe_picture.layers) do
-                layer.filename = "__configurable-nukes__/graphics/icons/empty.png"
-                pipe_picture.height = 64
-                pipe_picture.width = 64
-            end
-        else
-            pipe_picture.filename = "__configurable-nukes__/graphics/icons/empty.png"
-            pipe_picture.height = 64
-            pipe_picture.width = 64
         end
     end
 end

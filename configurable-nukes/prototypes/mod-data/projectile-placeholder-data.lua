@@ -84,6 +84,9 @@ local function name_check(params)
     return name_mapping[name] or name
 end
 
+local subgroup_order = 1
+local subgroups = {}
+
 local function traverse_ammo(params)
 
     if (type(params) ~= "table") then return end
@@ -242,6 +245,20 @@ local function traverse_ammo(params)
                 end
             end
         end
+    end
+
+    if (ammo.subgroup) then
+        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+        if (ammo.subgroup and not subgroups[ammo.subgroup]) then
+            if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+            subgroups[ammo.subgroup] = subgroup_order
+            subgroup_order = subgroup_order + 1
+        end
+    end
+
+    if (not next(params.source_effects)) then
+        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
+        params.source_effects = nil
     end
 
     return params
@@ -404,6 +421,10 @@ end
 
 if (next(projectile_placeholders)) then
     data:extend(projectile_placeholders)
+end
+
+if (next(subgroups)) then
+    projectile_placeholder_data.data.subgroups = subgroups
 end
 
 data:extend({ projectile_placeholder_data, })

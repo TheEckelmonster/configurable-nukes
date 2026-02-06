@@ -175,6 +175,7 @@ ipbm_rocket_part_beyond.overload_multiplier = 2
 ipbm_rocket_part_beyond.allow_inserter_overload = true
 ipbm_rocket_part_beyond.results = {{ type = "item", name = name_prefix .. "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
 ipbm_rocket_part_beyond.enabled = false
+ipbm_rocket_part_beyond.subgroup = "ipbm-rocket-parts"
 ipbm_rocket_part_beyond.order = "yzzz[ipbm-rocket-part-beyond]-yzzz[ipbm-rocket-part-beyond]"
 ipbm_rocket_part_beyond.localised_name = { "recipe-name." .. name_prefix .. "ipbm-rocket-part-beyond" }
 
