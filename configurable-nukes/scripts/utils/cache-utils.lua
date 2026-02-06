@@ -22,14 +22,14 @@ function cache_utils.reqister_cache(params)
     setmetatable(self.cache_attributes, { __mode = "k", })
 
     function self.reset_cache(params)
-        for k, v in pairs(self.cache) do
-            log(serpent.block(self.name .. " -> " .. k))
-            log(serpent.block(v))
-        end
-        for k, v in pairs(self.cache_attributes) do
-            log(serpent.block(k))
-            log(serpent.block(v))
-        end
+        -- for k, v in pairs(self.cache) do
+        --     log(serpent.block(self.name .. " -> " .. k))
+        --     log(serpent.block(v))
+        -- end
+        -- for k, v in pairs(self.cache_attributes) do
+        --     log(serpent.block(k))
+        --     log(serpent.block(v))
+        -- end
 
         self.cache = {}
         self.cache_attributes = {}

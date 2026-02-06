@@ -82,19 +82,19 @@ local placeholders = {
 }
 
 local quality_affected_prototypes = {
-    ["atomic-bomb"] = not true_nukes_contiued and true or false,
+    ["atomic-bomb"] = not true_nukes_contiued and "atomic-rocket" or nil,
 
-    ["atomic-warhead"] = true,
-    ["cn-rod-from-god"] = true,
-    ["cn-jericho"] = true,
-    ["cn-tesla-rocket"] = true,
-    ["cn-payload-vehicle"] = true,
+    ["atomic-warhead"] = "atomic-warhead",
+    ["cn-rod-from-god"] = "cn-rod-from-god",
+    ["cn-jericho"] = "cn-jericho",
+    ["cn-tesla-rocket"] = "cn-tesla-rocket",
+    -- ["cn-payload-vehicle"] = true,
 
-    ["kr-nuclear-artillery-shell"] = true,
+    ["kr-nuclear-artillery-shell"] = "kr-nuclear-artillery-shell",
 
-    ["atomic-artillery-shell"] = true,
+    ["atomic-artillery-shell"] = "atomic-artillery-shell",
 
-    ["Atomic Weapon hit 20t"] = true_nukes_contiued and true or nil
+    ["Atomic Weapon hit 20t"] = true_nukes_contiued and "atomic-rocket" or nil
 }
 
 local Quality_Prototypes = nil
@@ -148,14 +148,14 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             local chunk_string = math.floor(position.x / 32) .. "/" .. math.floor(position.y / 32)
             if (not cache.map_reveal.chunks[chunk_string] or not cache_attributes[cache.map_reveal.chunks[chunk_string]] or cache_attributes[cache.map_reveal.chunks[chunk_string]].time_to_live < game.tick) then
                 cache.map_reveal.chunks[chunk_string] = { count = 0, }
-                cache_attributes[cache.map_reveal.chunks[chunk_string]] = Data:new({ time_to_live = game.tick + 75, valid = true })
+                cache_attributes[cache.map_reveal.chunks[chunk_string]] = Data:new({ time_to_live = game.tick + 12, valid = true })
             end
 
             if (cache.map_reveal.chunks[chunk_string].count < 2) then
-                cache.map_reveal.chunks[chunk_string].count = cache.map_reveal.chunks[chunk_string].count + 1
-
-                surface.request_to_generate_chunks(position, 3)
+                surface.request_to_generate_chunks(position, 3 + cache.map_reveal.chunks[chunk_string].count)
                 surface.force_generate_chunk_requests()
+
+                cache.map_reveal.chunks[chunk_string].count = cache.map_reveal.chunks[chunk_string].count + 1
             end
         end
     elseif (event.effect_id == "cn-tesla-rocket-lightning") then
@@ -644,8 +644,18 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         loops = loops - 1
                     end
 
+                    local final_name = not quality_affected_prototypes[cargo.name] and name or nil
+                    if (not final_name) then
+                        if (quality_affected_prototypes[cargo.name]) then
+                            final_name = quality_affected_prototypes[cargo.name] .. "-" .. cargo.quality
+                        else
+                            final_name = name
+                        end
+                    end
+                    -- log(serpent.block(final_name))
+
                     local asdf = payload.icbm.target_surface.create_entity({
-                        name = not quality_affected_prototypes[cargo.name] and name or name .. "-" .. (cargo.quality or "normal"),
+                        name = final_name,
                         position =  true_nukes_contiued
                                 and Projectile_Placeholders[cargo.name]
                                 and Projectile_Placeholders[cargo.name].warhead_projectile
