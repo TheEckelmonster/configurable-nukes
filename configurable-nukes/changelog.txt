@@ -1,17 +1,30 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.9.5
-Date: 2026-02-03
+Date: 2026-02-06
   Bug Fixes:
-    - Fixed another startup error stemming from trying to access a nil value
-      - Not sure which mod caused this issue to surface (have not been able to replicate the issue; logic fault is valid though)
-      - This is to say, the error should be prevented/fixed now, but not knowing that actual circumstances, some payload items may not function properly (i.e. land-mines)
+    - Fixed startup error when aai-loaders was present and the "Fit assembling machines" startup setting was enabled
+  Compatibility:
+    - [space-exploration] meteor-defense-ammos can now be used as payload items
+      - Neither of the meteor-defense-ammos are particularly good payload item selections, but they do function now
+    - [space-exploration] Payloader item/recipe and payload-vehicle item/recipe should now be organized more appropriately
+      - i.e. changed their subgroup when space-exploration is present
+        - payloader: "production-machine" -> "assembling"
+        - payload-vehicle: "space-related" -> "rocket-logistics"
+  Balance:
+    - (recipe) Payloader: increased default bulk-inserter amount, 2 -> 4
+    - [space-exploration] (recipe) Payloader:
+      - changed assembling-machine-3 to space-assembling-machine
+      - changed concrete to refined-concrete
+      - increased default processing-unit amount, 4 -> 12
+      - increased default low-density-structure amount, 4 -> 12
+      - increased default se-heat-shielding amount, 4 -> 12
   Misc:
+    - Ammo "subgroups" are now programatically found/added
+      - i.e. the "filter" of which items are allowed in a payload-vehicle
+      - Should allow for additional non "ammo"|"capsule" type ammo or capsules to be allowed as payload items without manual updates
+        - Previously was hard-coded per mod, as compatibility issues were found
     - Payloader "add" and "remove" recipes should now both be selectable from the signal GUI
       - Can ~technically~ "set" the recipe via a connected circuit-network signal, but is a bit awkward --[[ TODO: look into/improve this ]]
-    - Added "Debug payload startup processing"
-      - If enabled, will log debug information when processing/creating potential payloads from existing ammo, capsules, and/or landmines
-      - Namely intended for development purposes; that being, narrowing down/tracing potential compatibility issues/errors
-      - No need to enable under normal circumstances - feel free to be curious, if you'd like
 ---------------------------------------------------------------------------------------------------
 Version: 0.9.4
 Date: 2026-02-02
