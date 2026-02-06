@@ -2,6 +2,9 @@ local Startup_Settings_Constants = require("settings.startup.startup-settings-co
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
+local sa_active = mods and mods["space-age"]
+local se_active = mods and mods["space-exploration"]
+
 -- INPUT_MULTIPLIER
 local get_input_multiplier = function ()
     return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_INPUT_MULTIPLIER.name })
@@ -180,8 +183,10 @@ local rocket_control_unit_recipe =
     -- results = {{ type = "item", name = "cn-rocket-control-unit", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_RESULT_COUNT.name }) }},
     category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.name }),
     additional_categories = get_rocket_control_unit_additional_crafting_machines(),
+    subgroup = not se_active and "intermediate-product" or "rocket-part",
+    order = "n[rocket-control-unit]",
 }
 
-if (mods and (mods["space-age"] or mods["space-exploration"]) or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })) then
+if (sa_active or se_active or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })) then
     data:extend({rocket_control_unit_recipe})
 end

@@ -115,16 +115,23 @@ if (se_active) then
 end
 
 --[[ Payloader ]]
+local payloader_ingredient_multiplier = se_active and 3 or 1
 local payloader =
 {
     ingredients = {
-        { type = "item",  name = "assembling-machine-3",    amount = 1, },
-        { type = "item",  name = "bulk-inserter",           amount = 2, },
-        { type = "item",  name = "steel-chest",             amount = 2, },
-        { type = "item",  name = "processing-unit",         amount = 4, },
-        { type = "item",  name = "low-density-structure",   amount = 4, },
-        { type = "item",  name = "concrete",                amount = 50, },
-        { type = "fluid", name = "lubricant",               amount = 100, },
+            not se_active
+        and { type = "item",  name = "assembling-machine-3",     amount = 1, }
+        or
+            { type = "item",  name = "space-assembling-machine", amount = 1, },
+            { type = "item",  name = "bulk-inserter",            amount = 4, },
+            { type = "item",  name = "steel-chest",              amount = 2, },
+            { type = "item",  name = "processing-unit",          amount = 4 * payloader_ingredient_multiplier, },
+            { type = "item",  name = "low-density-structure",    amount = 4 * payloader_ingredient_multiplier, },
+            not se_active
+            and { type = "item",  name = "concrete",             amount = 50, }
+        or
+            { type = "item",  name = "refined-concrete",         amount = 50, },
+            { type = "fluid", name = "lubricant",                amount = 100, },
     },
     stack_size = 10,
     result_amount = 1,
@@ -134,7 +141,7 @@ local payloader =
 }
 
 if (se_active) then
-    table.insert(payloader.ingredients, { type = "item", name = "se-heat-shielding", amount = 4, })
+    table.insert(payloader.ingredients, { type = "item", name = "se-heat-shielding", amount = 4 * payloader_ingredient_multiplier, })
 end
 
 --[[ Rod from God ]]
