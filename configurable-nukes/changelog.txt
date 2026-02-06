@@ -3,6 +3,9 @@ Version: 0.9.5
 Date: 2026-02-06
   Bug Fixes:
     - Fixed startup error when aai-loaders was present and the "Fit assembling machines" startup setting was enabled
+    - Fixed additional startup error when accessing a nil value
+    - Fixed potential runtime error following sometime after `/configurable_nukes.init false` is executed
+    - --[[ TODO: Fix jerichos not delivering properly (sub-rockets don't instantiate)]]
   Compatibility:
     - [space-exploration] meteor-defense-ammos can now be used as payload items
       - Neither of the meteor-defense-ammos are particularly good payload item selections, but they do function now
@@ -19,6 +22,8 @@ Date: 2026-02-06
       - increased default low-density-structure amount, 4 -> 12
       - increased default se-heat-shielding amount, 4 -> 12
   Misc:
+    - Fixed payload delivery "randomness" favoring the north-west, again..
+      - Payload distribution should feel more random/even
     - Ammo "subgroups" are now programatically found/added
       - i.e. the "filter" of which items are allowed in a payload-vehicle
       - Should allow for additional non "ammo"|"capsule" type ammo or capsules to be allowed as payload items without manual updates
