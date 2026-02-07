@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.6
+Date: 2026-02-07
+  Misc:
+    - Payloaders are now tintable via startup setting(s), defaults to disabled (i.e. use default graphic, no tint)
+    - Payload-vehicle items are now tintable via startup setting(s), defaults to disabled (i.e. use default graphic, no tint)
+    - Idea is so that they can be more easily identifiable/distinguishable when other mods are present (namely other mods also making use of the hidden, but vanilla, rocket-part item)
+    - Improved the default graphics of the payloder icon
+---------------------------------------------------------------------------------------------------
 Version: 0.9.5
 Date: 2026-02-06
   Bug Fixes:

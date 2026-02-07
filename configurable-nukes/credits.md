@@ -8,7 +8,7 @@ This file specifies assets used in Configurable Nukes & ICBMS (configurable-nuke
 
 ### GUI grapics for: effect
 
-#### Icon graphics for: rocket-control-unit, payload-vehicle, payloader, object-to-object-arrow
+#### Icon graphics for: ipbm-rocket-part, rocket-control-unit, payload-vehicle, payloader, object-to-object-arrow
 
 ### Technology graphics for: rocket-control-unit
 
