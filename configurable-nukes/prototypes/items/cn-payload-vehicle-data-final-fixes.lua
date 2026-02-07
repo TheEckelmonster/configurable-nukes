@@ -14,7 +14,7 @@ for k, v in pairs(cn_payload_vehicle.item_filters) do
 end
 
 for k, v in pairs(data.raw["land-mine"]) do
-    if (projectile_placeholder_data[v.name]) then
+    if (not v.hidden and projectile_placeholder_data[v.name]) then
         if (not existing_item_filters[v.name]) then
             table.insert(cn_payload_vehicle.item_filters, v.name)
         end
