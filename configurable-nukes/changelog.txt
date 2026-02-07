@@ -1,4 +1,40 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.5
+Date: 2026-02-06
+  Bug Fixes:
+    - Fixed startup error when aai-loaders was present and the "Fit assembling machines" startup setting was enabled
+    - Fixed additional startup error when accessing a nil value
+    - Fixed potential runtime error following sometime after `/configurable_nukes.init false` is executed
+    - Fixed startup error if tesla_legacy was present
+    - Fixed startup error if teleporters was present
+    - --[[ TODO: Fix jerichos not delivering properly (sub-rockets don't instantiate) ]]
+  Compatibility:
+    - [space-exploration] meteor-defense-ammos can now be used as payload items
+      - Neither of the meteor-defense-ammos are particularly good payload item selections, but they do function now
+    - [space-exploration] Payloader item/recipe and payload-vehicle item/recipe should now be organized more appropriately
+      - i.e. changed their subgroup when space-exploration is present
+        - payloader: "production-machine" -> "assembling"
+        - payload-vehicle: "space-related" -> "rocket-logistics"
+  Balance:
+    - (recipe) Payloader: increased default bulk-inserter amount, 2 -> 4
+    - [space-exploration] (recipe) Payloader:
+      - changed assembling-machine-3 to space-assembling-machine
+      - changed concrete to refined-concrete
+      - increased default processing-unit amount, 4 -> 12
+      - increased default low-density-structure amount, 4 -> 12
+      - increased default se-heat-shielding amount, 4 -> 12
+  Misc:
+    - Migration logic should hopefully, finally, possibly, maybe be applying properly
+    - Added 'item-with-label', 'item-with-tags', 'item-with-inventory', and 'armor' types as valid item types for user defined configurable recipes (the startup setting recipes)
+    - Fixed payload delivery "randomness" favoring the north-west, again..
+      - Payload distribution should feel more random/even
+    - Ammo "subgroups" are now programatically found/added
+      - i.e. the "filter" of which items are allowed in a payload-vehicle
+      - Should allow for additional non "ammo"|"capsule" type ammo or capsules to be allowed as payload items without manual updates
+        - Previously was hard-coded per mod, as compatibility issues were found
+    - Payloader "add" and "remove" recipes should now both be selectable from the signal GUI
+      - Can ~technically~ "set" the recipe via a connected circuit-network signal, but is a bit awkward --[[ TODO: look into/improve this ]]
+---------------------------------------------------------------------------------------------------
 Version: 0.9.4
 Date: 2026-02-02
   Bug Fixes:

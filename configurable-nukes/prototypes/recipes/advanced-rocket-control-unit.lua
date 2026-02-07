@@ -2,6 +2,9 @@ local Startup_Settings_Constants = require("settings.startup.startup-settings-co
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
+local sa_active = mods and mods["space-age"]
+local se_active = mods and mods["space-exploration"]
+
 -- -- INPUT_MULTIPLIER
 -- local get_input_multiplier = function ()
 --     local setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_INPUT_MULTIPLIER.default_value
@@ -122,12 +125,16 @@ while param ~= nil and param_val ~= nil do
         elseif (k == "capsule") then found_func(param, param_val, v, "capsule")
         elseif (k == "gun") then found_func(param, param_val, v, "gun")
         elseif (k == "item")  then found_func(param, param_val, v, "item")
+        elseif (k == "item-with-label")  then found_func(param, param_val, v, "item-with-label")
+        elseif (k == "item-with-tags")  then found_func(param, param_val, v, "item-with-tags")
+        elseif (k == "item-with-inventory")  then found_func(param, param_val, v, "item-with-inventory")
         elseif (k == "item-with-entity-data") then found_func(param, param_val, v, "item-with-entity-data")
         elseif (k == "fluid")  then found_func(param, param_val, v, "fluid")
         elseif (k == "module") then found_func(param, param_val, v, "module")
         elseif (k == "rail-planner") then found_func(param, param_val, v, "rail-planner")
         elseif (k == "repair-tool") then found_func(param, param_val, v, "repair-tool")
         elseif (k == "spidertron-remote") then found_func(param, param_val, v, "spidertron-remote")
+        elseif (k == "armor") then found_func(param, param_val, v, "armor")
         elseif (k == "tool") then found_func(param, param_val, v, "tool")
         elseif (k == "upgrade-item") then found_func(param, param_val, v, "upgrade-item")
         end
@@ -181,17 +188,17 @@ local advanced_rocket_control_unit_recipe =
 {
     type = "recipe",
     name = "advanced-rocket-control-unit",
-    -- name = "cn-rocket-control-unit",
     enabled = false,
     energy_required = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_TIME.name }),
     ingredients = ingredients,
     results = {{ type = "item", name = "rocket-control-unit", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT.name }) }},
-    -- results = {{ type = "item", name = "cn-rocket-control-unit", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_RESULT_COUNT.name }) }},
     category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ADVANCED_ROCKET_CONTROL_UNIT_CRAFTING_MACHINE.name }),
     additional_categories = get_rocket_control_unit_additional_crafting_machines(),
     auto_recycle = false,
+    subgroup = not se_active and "intermediate-product" or "rocket-part",
+    order = "n[rocket-control-unit]-a[advanced]",
 }
 
-if (mods and (mods["space-age"] or mods["space-exploration"])) then
+if (sa_active or se_active) then
     data:extend({advanced_rocket_control_unit_recipe})
 end

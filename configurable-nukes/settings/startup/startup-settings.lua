@@ -308,3 +308,8 @@ data:extend({
     Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_INGREDIENTS,
     Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TIME,
 })
+
+--[[ misc / debug ]]
+data:extend({
+    Startup_Settings_Constants.settings.DEBUG_PAYLOAD_STARTUP_PROCESSING,
+})

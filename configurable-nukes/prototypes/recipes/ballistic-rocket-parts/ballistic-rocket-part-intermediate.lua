@@ -125,12 +125,16 @@ while param ~= nil and param_val ~= nil do
         elseif (k == "capsule") then found_func(param, param_val, v, "capsule")
         elseif (k == "gun") then found_func(param, param_val, v, "gun")
         elseif (k == "item")  then found_func(param, param_val, v, "item")
+        elseif (k == "item-with-label")  then found_func(param, param_val, v, "item-with-label")
+        elseif (k == "item-with-tags")  then found_func(param, param_val, v, "item-with-tags")
+        elseif (k == "item-with-inventory")  then found_func(param, param_val, v, "item-with-inventory")
         elseif (k == "item-with-entity-data") then found_func(param, param_val, v, "item-with-entity-data")
         elseif (k == "fluid")  then found_func(param, param_val, v, "fluid")
         elseif (k == "module") then found_func(param, param_val, v, "module")
         elseif (k == "rail-planner") then found_func(param, param_val, v, "rail-planner")
         elseif (k == "repair-tool") then found_func(param, param_val, v, "repair-tool")
         elseif (k == "spidertron-remote") then found_func(param, param_val, v, "spidertron-remote")
+        elseif (k == "armor") then found_func(param, param_val, v, "armor")
         elseif (k == "tool") then found_func(param, param_val, v, "tool")
         elseif (k == "upgrade-item") then found_func(param, param_val, v, "upgrade-item")
         end
@@ -175,6 +179,7 @@ ipbm_rocket_part_intermediate.overload_multiplier = 2
 ipbm_rocket_part_intermediate.allow_inserter_overload = true
 ipbm_rocket_part_intermediate.results = {{ type = "item", name = name_prefix .. "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
 ipbm_rocket_part_intermediate.enabled = false
+ipbm_rocket_part_intermediate.subgroup = "ipbm-rocket-parts"
 ipbm_rocket_part_intermediate.order = "wzzz[ipbm-rocket-part-intermediate]-wzzz[ipbm-rocket-part-intermediate]"
 ipbm_rocket_part_intermediate.localised_name = { "recipe-name." .. name_prefix .. "ipbm-rocket-part-intermediate" }
 
