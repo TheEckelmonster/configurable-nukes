@@ -177,10 +177,10 @@ ipbm_rocket_part_intermediate.hide_from_player_crafting = false
 ipbm_rocket_part_intermediate.auto_recycle = false
 ipbm_rocket_part_intermediate.overload_multiplier = 2
 ipbm_rocket_part_intermediate.allow_inserter_overload = true
-ipbm_rocket_part_intermediate.results = {{ type = "item", name = name_prefix .. "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
+ipbm_rocket_part_intermediate.results = {{ type = "item", name = "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.INTERMEDIATE_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
 ipbm_rocket_part_intermediate.enabled = false
 ipbm_rocket_part_intermediate.subgroup = "ipbm-rocket-parts"
 ipbm_rocket_part_intermediate.order = "wzzz[ipbm-rocket-part-intermediate]-wzzz[ipbm-rocket-part-intermediate]"
-ipbm_rocket_part_intermediate.localised_name = { "recipe-name." .. name_prefix .. "ipbm-rocket-part-intermediate" }
+ipbm_rocket_part_intermediate.localised_name = { "recipe-name.ipbm-rocket-part-intermediate" }
 
 data:extend({ipbm_rocket_part_intermediate})

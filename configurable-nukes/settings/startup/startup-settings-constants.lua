@@ -1321,6 +1321,18 @@ startup_settings_constants.settings = {
         auto_trim = true,
     },
     --[[ payloader ]]
+    PAYLOADER_DO_TINT = {
+        type = "bool-setting",
+        setting_type = "startup",
+        name = prefix .. "payloader-do-tint",
+        default_value = false,
+    },
+    PAYLOADER_BASE_TINT = {
+        type = "color-setting",
+        setting_type = "startup",
+        name = prefix .. "payloader-tint-base",
+        default_value = { r = 1.0, g = 0.0, b = 0.0, a = 1, },
+    },
     PAYLOADER_STACK_SIZE = {
         type = "int-setting",
         name = prefix .. "payloader-stack-size",
@@ -1914,6 +1926,36 @@ startup_settings_constants.settings = {
         hidden = not sa_active and not se_active,
     },
     --[[ Ballistic-rocket-part ]]
+    BALLISTIC_ROCKET_PART_DO_TINT = {
+        type = "bool-setting",
+        setting_type = "startup",
+        name = prefix .. "ballistic-rocket-part-do-tint",
+        default_value = false,
+    },
+    BALLISTIC_ROCKET_PART_BASE_TINT = {
+        type = "color-setting",
+        setting_type = "startup",
+        name = prefix .. "ballistic-rocket-part-tint-base",
+        default_value = { r = 0.875, g = 0.859, b = 0.82, a = 1, },
+    },
+    BALLISTIC_ROCKET_PART_PRIMARY_TINT = {
+        type = "color-setting",
+        setting_type = "startup",
+        name = prefix .. "ballistic-rocket-part-tint-primary",
+        default_value = { r = 0.773, g = 0.698, b = 0.576, a = 1, },
+    },
+    BALLISTIC_ROCKET_PART_SECONDARY_TINT = {
+        type = "color-setting",
+        setting_type = "startup",
+        name = prefix .. "ballistic-rocket-part-tint-secondary",
+        default_value = { r = 0.31, g = 0.173, b = 0.59, a = 1, },
+    },
+    BALLISTIC_ROCKET_PART_TERTIARY_TINT = {
+        type = "color-setting",
+        setting_type = "startup",
+        name = prefix .. "ballistic-rocket-part-tint-tertiary",
+        default_value = { r = 0.545, g = 0.639, b = 0.267, a = 1, },
+    },
     BALLISTIC_ROCKET_PART_STACK_SIZE = {
         type = "int-setting",
         name = prefix .. "ballistic-rocket-part-stack-size",
