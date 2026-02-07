@@ -5,7 +5,9 @@ Date: 2026-02-06
     - Fixed startup error when aai-loaders was present and the "Fit assembling machines" startup setting was enabled
     - Fixed additional startup error when accessing a nil value
     - Fixed potential runtime error following sometime after `/configurable_nukes.init false` is executed
-    - --[[ TODO: Fix jerichos not delivering properly (sub-rockets don't instantiate)]]
+    - Fixed startup error if tesla_legacy was present
+    - Fixed startup error if teleporters was present
+    - --[[ TODO: Fix jerichos not delivering properly (sub-rockets don't instantiate) ]]
   Compatibility:
     - [space-exploration] meteor-defense-ammos can now be used as payload items
       - Neither of the meteor-defense-ammos are particularly good payload item selections, but they do function now
