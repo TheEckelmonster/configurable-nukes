@@ -398,7 +398,7 @@ local create_quality_nuclear_turret_rocket = function (params)
                                 action_delivery =
                                 {
                                     type = "instant",
-                                    radius = (2.5 * area_multiplier + 1), quality_level_multiplier,
+                                    radius = clamp_max_distance((2.5 * area_multiplier + 1), quality_level_multiplier),
                                     repeat_count = clamp_repeat_count((10 * repeat_multiplier + 1), quality_level_multiplier),
                                     target_effects =
                                     {

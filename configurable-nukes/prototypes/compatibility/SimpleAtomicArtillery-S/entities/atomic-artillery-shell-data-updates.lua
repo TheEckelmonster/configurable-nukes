@@ -398,7 +398,7 @@ local create_quality_nuclear_artillery_shell = function (params)
                                 action_delivery =
                                 {
                                     type = "instant",
-                                    radius = (2.5 * area_multiplier + 1), quality_level_multiplier,
+                                    radius = clamp_max_distance((2.5 * area_multiplier + 1), quality_level_multiplier),
                                     repeat_count = clamp_repeat_count((10 * repeat_multiplier + 1), quality_level_multiplier),
                                     target_effects =
                                     {
@@ -414,10 +414,10 @@ local create_quality_nuclear_artillery_shell = function (params)
                                             repeat_count_deviation = clamp_repeat_count((42 * repeat_multiplier), quality_level_multiplier),
                                             show_in_tooltip = true,
                                             initial_ground_flame_count = clamp_initial_ground_ground_flame_count(3, quality_level_multiplier)
-                                        }
-                                    }
-                                }
-                            }
+                                        },
+                                    },
+                                },
+                            },
                         },
                     }
                 )

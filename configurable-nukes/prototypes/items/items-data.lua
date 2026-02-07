@@ -313,10 +313,9 @@ local rocket_control_unit =
 {
     type = "item",
     name = "rocket-control-unit",
-    -- name = "cn-rocket-control-unit",
     icon = "__configurable-nukes__/graphics/icons/rocket-control-unit.png",
     icon_size = 64, icon_mipmaps = 4,
-    subgroup = "intermediate-product",
+    subgroup = not se_active and "intermediate-product" or "rocket-part",
     order = "n[rocket-control-unit]",
     stack_size = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_STACK_SIZE.name }),
     weight = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_WEIGHT_MODIFIER.name }) * tons,
@@ -330,7 +329,7 @@ if (sa_active or se_active) then
     --[[ ipbm-rocket-silo ]]
     local ipbm_rocket_silo = Util.table.deepcopy(data.raw["item"]["rocket-silo"])
     ipbm_rocket_silo.name = "ipbm-rocket-silo"
-    ipbm_rocket_silo.name = "ipbm-rocket-silo"
+    ipbm_rocket_silo.subgroup = "inter-ballistic-missile"
     ipbm_rocket_silo.order = "b[icbm-rocket-silo]"
     ipbm_rocket_silo.place_result = "ipbm-rocket-silo"
 
@@ -342,8 +341,11 @@ if (sa_active or se_active) then
     --[[ ipbm-rocket-part ]]
     local ipbm_rocket_part = Util.table.deepcopy(data.raw["item"]["rocket-part"])
     ipbm_rocket_part.name = name_prefix .. "ipbm-rocket-part"
+    ipbm_rocket_part.subgroup = "ipbm-rocket-parts"
+    ipbm_rocket_part.order = ipbm_rocket_part.order .. "-ipbm-rocket-part"
 
     ipbm_rocket_part.hidden = false
+    ipbm_rocket_part.hide_from_player_crafting = true
     ipbm_rocket_part.stack_size = get_ballistic_rocket_part_stack_size()
     ipbm_rocket_part.weight = get_ballistic_rocket_part_weight_modifier() * tons
 

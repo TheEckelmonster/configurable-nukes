@@ -206,7 +206,9 @@ function configurable_nukes_controller.on_nth_tick(event)
 
                 for count = 0, 2, 1 do
                     attributes.add_attempts = attributes.add_attempts + 1
-                    attributes.key, attributes.value = next(rocket_silo_meta_data.rocket_silos, attributes.key)
+                    if (attributes.key == nil or rocket_silo_meta_data.rocket_silos[attributes.key]) then
+                        attributes.key, attributes.value = next(rocket_silo_meta_data.rocket_silos, attributes.key)
+                    end
 
                     if (attributes.key and attributes.value) then
                         local entity = attributes.value.entity

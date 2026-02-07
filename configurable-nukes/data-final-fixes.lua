@@ -1,3 +1,8 @@
+local __debug = DEBUG
+DEBUG = false
+
+local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
+
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 local sa_active = mods and mods["space-age"] and true
@@ -58,3 +63,109 @@ end
 
 require("prototypes.mod-data.projectile-placeholder-data")
 require("prototypes.items.cn-payload-vehicle-data-final-fixes")
+
+---
+
+--[[ Fix/organize categorization ]]
+if (sa_active or se_active) then
+    if (se_active) then
+        local payloader = data.raw.recipe.payloader
+        if (payloader) then
+            payloader.subgroup = "assembling"
+            payloader.order = "z-a-space-assembling-machine[payloader]"
+        end
+
+        local payload_vehicle = data.raw["item-with-inventory"]["cn-payload-vehicle"]
+        if (payload_vehicle) then
+            payload_vehicle.subgroup = "inter-ballistic-missile"
+        end
+    end
+
+    local payload_vehicle = data.raw["item-with-inventory"]["cn-payload-vehicle"]
+    if (payload_vehicle) then
+        payload_vehicle.subgroup = "inter-ballistic-missile"
+    end
+end
+
+---
+
+if (DEBUG) then
+    local counts = {}
+    local category = {}
+    local subgroup = {}
+    local order = {}
+
+    for key, value in pairs(data.raw) do
+        for k, v in pairs(value) do
+            if (v.category) then
+                if (not category[v.category]) then
+                    if (not counts[category]) then counts[category] = { count = 0, recipes = {}, } end
+                    counts[category].count = counts[category].count + 1
+                    category[v.category] = counts[category].count
+                    table.insert(counts[category].recipes, v)
+                else
+                    counts[category].count = counts[category].count + 1
+                    table.insert(counts[category].recipes, v)
+                end
+            end
+            if (v.subgroup) then
+                if (not subgroup[v.subgroup]) then
+                    if (not counts[subgroup]) then counts[subgroup] = { count = 0, recipes = {}, } end
+                    counts[subgroup].count = counts[subgroup].count + 1
+                    subgroup[v.subgroup] = counts[subgroup].count
+                    table.insert(counts[subgroup].recipes, v)
+                else
+                    counts[subgroup].count = counts[subgroup].count + 1
+                    table.insert(counts[subgroup].recipes, v)
+                end
+            end
+            if (v.order) then
+                if (not order[v.order]) then
+                    if (not counts[order]) then counts[order] = { count = 0, recipes = {}, } end
+                    counts[order].count = counts[order].count + 1
+                    order[v.order] = counts[order].count
+                    table.insert(counts[order].recipes, v)
+                else
+                    counts[order].count = counts[order].count + 1
+                    table.insert(counts[order].recipes, v)
+                end
+            end
+        end
+    end
+
+    local item_group = {}
+
+    for k, v in pairs(data.raw["item-group"]) do
+        if (not item_group[v.name]) then
+            if (not counts[item_group]) then counts[item_group] = { type = "item-group", count = 0, item_group = {}, subgroups = {} } end
+        end
+        counts[item_group].count = counts[item_group].count + 1
+        item_group[v.name] = counts[item_group].count
+        table.insert(counts[item_group].item_group, v)
+    end
+
+    for k, v in pairs(data.raw["item-subgroup"]) do
+        if (not counts[v.group]) then counts[v.group] = { type = "item-subgroup", count = 0, item_group = {}, subgroups = {}, } end
+        if (not counts[v.group].name) then counts[v.group].name = v.group end
+        counts[v.group].count = counts[v.group].count + 1
+        item_group[v.group] = counts[v.group].count
+        table.insert(counts[v.group].subgroups, v.name)
+    end
+
+    for k, v in pairs(counts) do
+        if (type(v.item_group) ~= "table" or not next(v.item_group)) then v.item_group = nil end
+        if (type(v.subgroups) ~= "table" or not next(v.subgroups)) then v.subgroups = nil end
+    end
+
+    local _subgroups = {}
+
+    for k, v in pairs(counts) do
+        if (v.type == "item-subgroup" and v.name) then _subgroups[v.name] = v end
+    end
+
+    if (DEBUG) then log(serpent.block(_subgroups)) end
+    if (DEBUG) then log(serpent.block(order)) end
+    if (DEBUG) then log(serpent.block(item_group)) end
+end
+
+DEBUG = __debug
