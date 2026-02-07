@@ -13,6 +13,8 @@ Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-glo
 Payloads = {}
 Projectile_Placeholders = {}
 
+Instantiatable = {}
+
 ---
 
 defines.inventory.cn_payload_vehicle = 1
@@ -164,6 +166,7 @@ local function init_instantitable()
         instantiatable[k] = v.mod_data.name
     end
 
+    Instantiatable = instantiatable
     instantiatable_instantiated = true
 end
 
@@ -445,9 +448,6 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             local function reset_target()
                 return { x = _target.x, y = _target.y }
             end
-            local function random_scaling()
-                return math.random(10000) * .0001355
-            end
 
             local area_setting = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_AREA_MULTIPLIER.name, reindex = true })
             if (area_setting == nil) then area_setting = 1 end
@@ -472,7 +472,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 for j = 0, loop_count, 1 do
 
                     if (threshold < 1) then do_break = true; break end
-                    if (math.random(100) <= threshold) then
+                    if (Prime_Random(100) <= threshold) then
                         threshold = threshold - 0.5
                         for k = 0, settings_modifier, 1 do
                             target = reset_target()
@@ -480,15 +480,32 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                             local factor = ((i) * 5 + 4 * (quality_factor + 1) * area_setting) + math.random(5)
 
                             if (rockets_created % 5 > 0 and rockets_created % 5 ~= 3) then
-                                target.x = target.x + random_scaling() * factor * math.cos(2 * math.pi * (j / loop_count))
-                                target.y = target.y + random_scaling() * factor * math.sin(2 * math.pi * (j / loop_count))
+                                local stage_threshold = math.ceil(j / 8)
+
+                                local qwer = (((j % stage_threshold) + 1) / stage_threshold) / (stage_threshold / (stage_threshold + loop_count))
+
+                                local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
+                                local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
+
+                                local x_offset = 0
+                                local y_offset = 0
+
+                                if (j > 1) then
+                                    x_offset = rand_x * math.cos(2 * math.pi * ((((j % 32) + 0) / 1) / (loop_count / 32)))
+                                    y_offset = rand_y * math.sin(2 * math.pi * ((((j % 32) + 0) / 1) / (loop_count / 32)))
+                                end
+
+                                target = {
+                                    x = target_position.x + x_offset,
+                                    y = target_position.y + y_offset,
+                                }
                             else
                                 target.x = target.x + factor * math.cos(2 * math.pi * (j / loop_count))
                                 target.y = target.y + factor * math.sin(2 * math.pi * (j / loop_count))
                             end
 
                             if (rockets_created > 0) then
-                                random_additional_ticks = random_additional_ticks + math.random(10)
+                                random_additional_ticks = random_additional_ticks + Prime_Random(10)
                             end
 
                             local nth_tick = game.tick + random_additional_ticks
@@ -540,10 +557,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                                 x = target_position.x,
                                 y = target_position.y,
                             },
-                            target = {
-                                x = target.x + math.random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * math.random(explosives + 1) or 0) * math.cos((2 * math.random()) * math.pi * (i / #ticks)),
-                                y = target.y + math.random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * math.random(explosives + 1) or 0) * math.sin((2 * math.random()) * math.pi * (i / #ticks)),
-                            },
+                            target = target,
                         },
                         save_to_storage = true,
                     })

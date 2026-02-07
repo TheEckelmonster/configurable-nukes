@@ -1288,43 +1288,46 @@ function icbm_utils.spawn_jericho_event(event, event_data)
         source_name = event_data.source_name,
     })
 
-    local function create_jericho_rocket(params)
-        pos_neg = pos_neg * -1
+    if (type(event_data) ~= "table") then return end
 
-        local surface = params.surface or params.icbm and params.icbm.target_surface
-        if (not surface or not surface.valid) then return end
+    local payload_item = event_data.payload_item
+    local icbm = event_data.icbm
+    local payload_spawn_position = event_data.payload_spawn_position
+    local force = event_data.force
+    local target = event_data.target
+    local source_position = event_data.source_position
 
-        surface.create_entity({
-            name = params.payload_item or params.icbm.item_name .. "-" .. params.icbm.item.quality,
-            position = params.payload_spawn_position,
-            direction = defines.direction.south,
-            force = params.force,
-            target = params.target,
-            source = params.source_position or params.icbm.source_position,
-            --[[ TODO: Make configurable ]]
-            cause = params.icbm and params.icbm.same_surface and params.icbm.source_silo and params.icbm.source_silo.valid and params.icbm.source_silo or params.force,
-            speed = 0.00000025 * math.random(1000) * math.exp(1),
-            base_damage_modifiers = {
-                damage_modifier = 1,
-                damage_addition = 1,
-                radius_modifier = 1,
-            },
-            bonus_damage_modifiers = {
-                damage_modifier = 1,
-                damage_addition = 1,
-                radius_modifier = 1,
-            },
-        })
-    end
+    if (not force or not force.valid) then force = nil end
 
-    create_jericho_rocket({
-        payload_item = event_data.payload_item,
-        icbm = event_data.icbm,
-        payload_spawn_position = event_data.payload_spawn_position,
-        force = event_data.force,
-        target = event_data.target,
-        source_position = event_data.source_position,
-        surface = event_data.surface,
+    pos_neg = pos_neg * -1
+
+    local surface = event_data.surface or icbm and icbm.target_surface
+    if (not surface or not surface.valid) then return end
+
+    if (    not Instantiatable[payload_item]
+        and not Instantiatable[icbm.item_name .. "-" .. icbm.item.quality]
+    ) then return end
+
+    surface.create_entity({
+        name = payload_item or icbm.item_name .. "-" .. icbm.item.quality,
+        position = payload_spawn_position,
+        direction = defines.direction.south,
+        force = force,
+        target = target,
+        source = source_position or icbm.source_position,
+        --[[ TODO: Make configurable ]]
+        cause = icbm and icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
+        speed = 0.00000025 * Prime_Random(1000) * math.exp(1),
+        base_damage_modifiers = {
+            damage_modifier = 1,
+            damage_addition = 1,
+            radius_modifier = 1,
+        },
+        bonus_damage_modifiers = {
+            damage_modifier = 1,
+            damage_addition = 1,
+            radius_modifier = 1,
+        },
     })
 end
 
