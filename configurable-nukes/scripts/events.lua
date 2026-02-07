@@ -86,16 +86,86 @@ local quality_affected_prototypes = {
 
     ["atomic-warhead"] = "atomic-warhead",
     ["cn-rod-from-god"] = "cn-rod-from-god",
-    ["cn-jericho"] = "cn-jericho",
+    ["cn-jericho"] = "jericho-payloader-rocket",
+    ["jericho-payloader-rocket"] = "jericho-payloader-rocket",
     ["cn-tesla-rocket"] = "cn-tesla-rocket",
-    -- ["cn-payload-vehicle"] = true,
 
     ["kr-nuclear-artillery-shell"] = "kr-nuclear-artillery-shell",
-
     ["atomic-artillery-shell"] = "atomic-artillery-shell",
 
     ["Atomic Weapon hit 20t"] = true_nukes_contiued and "atomic-rocket" or nil
 }
+
+local instantiatable = {}
+local instantiatable_instantiated = false
+
+local function init_instantitable()
+    if (instantiatable_instantiated) then return end
+    local possible_payloads = prototypes.get_entity_filtered({
+        {
+            filter = "type",
+            type = "projectile",
+        },
+        {
+            filter = "type",
+            type = "land-mine",
+        },
+        {
+            filter = "type",
+            type = "beam",
+        },
+        {
+            filter = "type",
+            type = "stream",
+        },
+        {
+            filter = "type",
+            type = "capsule",
+        },
+    })
+
+    local matching_possible_payloads = {}
+    local mod_data = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
+    local matching_mod_data = {}
+
+    for k, v in pairs(possible_payloads) do
+        if (mod_data[k]) then matching_possible_payloads[k] = possible_payloads[k] end
+        if (mod_data[k]) then matching_mod_data[k] = mod_data[k] end
+    end
+
+    local same, difference = {}, {}
+    for k, v in pairs (matching_possible_payloads) do
+        if (matching_mod_data[k]) then
+            same[k] = same[k] or {}
+            same[k].possible_payload = v
+        elseif (matching_mod_data[v.name]) then
+            same[v.name] = same[v.name] or {}
+            same[v.name].possible_payload = v
+        else
+            difference[k] = difference[k] or {}
+            difference[k].possible_payload = v
+        end
+    end
+
+    for k, v in pairs (matching_mod_data) do
+        if (matching_possible_payloads[k]) then
+            same[k] = same[k] or {}
+            same[k].mod_data = v
+        elseif (matching_possible_payloads[v.name]) then
+            same[v.name] = same[v.name] or {}
+            same[v.name].mod_data = v
+        else
+            difference[k] = difference[k] or {}
+            difference[k].mod_data = v
+        end
+    end
+
+    for k, v in pairs(same) do
+        instantiatable[k] = v.mod_data.name
+    end
+
+    instantiatable_instantiated = true
+end
 
 local Quality_Prototypes = nil
 
@@ -134,8 +204,11 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
         return
     end
     if (not game or not event.surface_index or game.get_surface(event.surface_index) == nil) then return end
+    local log_level = Log.get_log_level().num_val
+    if (log_level <= 3) then log(serpent.block(event)) end
 
     local surface = game.get_surface(event.surface_index)
+    if (not surface or not surface.valid) then return end
 
     if (event.effect_id == "map-reveal") then
         local position = event.target_position
@@ -478,6 +551,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             end
         end
     elseif (event.effect_id == "payload-delivered") then
+        if (log_level <= 3) then log(serpent.block(event)) end
         local target_position = event.target_position
         local source_position = event.source_position
 
@@ -547,8 +621,10 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 end
             end
 
-            -- log(serpent.block(payload))
-            -- log(serpent.block(payloads))
+            if (Log.get_log_level().num_val <= 3) then
+                log(serpent.block(payload))
+                log(serpent.block(payloads))
+            end
 
             if (not payload or not payloads) then return end
 
@@ -589,14 +665,42 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
 
                 local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
 
-                -- log(serpent.block(cargo))
-                -- log(serpent.block(name))
-
                 if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
+                if (log_level <= 3) then
+                    log(serpent.block(cargo))
+                    log(serpent.block(name))
+                end
                 if (name == "") then goto continue end
 
                 local tesla_munition = false
                 if (name:find("tesla")) then tesla_munition = true end
+
+                local final_name = not quality_affected_prototypes[cargo.name] and name or nil
+                if (not final_name) then
+                    if (quality_affected_prototypes[cargo.name]) then
+                        final_name = quality_affected_prototypes[cargo.name] .. "-" .. cargo.quality
+                    elseif (quality_affected_prototypes[name]) then
+                        final_name = quality_affected_prototypes[name] .. "-" .. cargo.quality
+                    else
+                        final_name = name
+                    end
+                end
+                if (log_level <= 3) then
+                    log(serpent.block("cargo.name = " .. cargo.name))
+                    log(serpent.block("final_name = " .. final_name))
+                    log(serpent.block("instantiatable[final_name] = " .. instantiatable[final_name]))
+                end
+
+                if (not instantiatable[final_name]) then
+                    goto continue
+                else
+                    if (final_name ~= instantiatable[final_name]) then
+                        final_name = instantiatable[final_name]
+                        if (log_level <= 3) then
+                            log(serpent.block("final_name = " .. final_name))
+                        end
+                    end
+                end
 
                 for i = 1, cargo.count, 1 do
                     --[[ Not really sure what this should be named, as I don't fully understand/remember why introducing this variable fixed things ]]
@@ -643,16 +747,6 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         end
                         loops = loops - 1
                     end
-
-                    local final_name = not quality_affected_prototypes[cargo.name] and name or nil
-                    if (not final_name) then
-                        if (quality_affected_prototypes[cargo.name]) then
-                            final_name = quality_affected_prototypes[cargo.name] .. "-" .. cargo.quality
-                        else
-                            final_name = name
-                        end
-                    end
-                    -- log(serpent.block(final_name))
 
                     local asdf = payload.icbm.target_surface.create_entity({
                         name = final_name,
@@ -739,38 +833,6 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     end
 end)
 
-local did_init = false
-
--- function events.on_singleplayer_init(event)
---     log("events.on_singleplayer_init")
-
---     storage.is_multiplayer = false
-
---     Is_Singleplayer = true
---     Is_Multiplayer = false
--- end
--- Event_Handler:register_event({
---     event_name = "on_singleplayer_init",
---     source_name = "events.on_singleplayer_init",
---     func_name = "events.on_singleplayer_init",
---     func = events.on_singleplayer_init,
--- })
-
--- function events.on_multiplayer_init(event)
---     log("events.on_multiplayer_init")
-
---     storage.is_multiplayer = true
-
---     Is_Singleplayer = false
---     Is_Multiplayer = true
--- end
--- Event_Handler:register_event({
---     event_name = "on_multiplayer_init",
---     source_name = "events.on_multiplayer_init",
---     func_name = "events.on_multiplayer_init",
---     func = events.on_multiplayer_init,
--- })
-
 function events.on_init()
     if (type(storage) ~= "table") then return end
 
@@ -802,6 +864,8 @@ function events.on_init()
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
+
+    init_instantitable()
 
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
@@ -903,6 +967,8 @@ function events.on_load()
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
+
+    init_instantitable()
 
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
@@ -1035,6 +1101,8 @@ function events.on_configuration_changed(event)
                 Payloads = storage.payloads
                 Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
                 Quality_Prototypes = prototypes.quality
+
+                init_instantitable()
 
                 local cn_controller_data = storage and storage.configurable_nukes_controller or {}
 
