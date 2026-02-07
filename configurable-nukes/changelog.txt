@@ -22,6 +22,7 @@ Date: 2026-02-06
       - increased default low-density-structure amount, 4 -> 12
       - increased default se-heat-shielding amount, 4 -> 12
   Misc:
+    - Added 'item-with-label', 'item-with-tags', 'item-with-inventory', and 'armor' types as valid item types for user defined configurable recipes (the startup setting recipes)
     - Fixed payload delivery "randomness" favoring the north-west, again..
       - Payload distribution should feel more random/even
     - Ammo "subgroups" are now programatically found/added
