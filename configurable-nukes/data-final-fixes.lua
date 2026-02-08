@@ -61,6 +61,7 @@ if (sa_active) then
     require("prototypes.planets.planet-data")
 end
 
+require("prototypes.entities.payloader-rocket-data-final-fixes")
 require("prototypes.mod-data.projectile-placeholder-data")
 require("prototypes.items.cn-payload-vehicle-data-final-fixes")
 

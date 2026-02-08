@@ -21,6 +21,7 @@
 		"? space-exploration >= 0.7.35",
 		"? Temporary_nuclear_scorchmark >= 0.0.2",
 		"? True-Nukes_Continued >= 0.3.36",
+        "(?) combat-mechanics-overhaul >= 0.7.2",
         "(?) crushing-industry >= 0.5.6",
         "(?) Krastorio2-spaced-out >= 1.4.28"
 	]
