@@ -11,6 +11,11 @@ data:extend({
 })
 
 data:extend({
+    --[[ payload related ]]
+    Startup_Settings_Constants.settings.PROJECTILE_PLACEHOLDER_COLLISION,
+})
+
+data:extend({
     --[[ atomic-bomb ]]
     Startup_Settings_Constants.settings.AREA_MULTIPLIER,
     Startup_Settings_Constants.settings.DAMAGE_MULTIPLIER,

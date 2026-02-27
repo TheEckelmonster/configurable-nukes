@@ -438,9 +438,9 @@ runtime_global_settings_constants.settings = {
         name = prefix .. "num-surfaces-processed-per-tick",
         setting_type = "runtime-global",
         order = "gcc",
-        default_value = se_active and 8 or sa_active and 3 or 1,
+        default_value = (se_active or sa_active) and 3 or 1,
         minimum_value = 1,
-        maximum_value = 2 ^ 5,
+        maximum_value = 2 ^ 3,
     },
     DASHBOARD_REFRESH_RATE = {
         type = "int-setting",
@@ -458,6 +458,15 @@ runtime_global_settings_constants.settings = {
         order = "",
         default_value = 5 * 60,
         minimum_value = 60,
+        maximum_value = 60 * 60,
+    },
+    CACHE_BACKGROUND_CLEANING_RATE = {
+        type = "int-setting",
+        name = prefix .. "cache-background-cleaning-rate",
+        setting_type = "runtime-global",
+        order = "",
+        default_value = 20,
+        minimum_value = 0,
         maximum_value = 60 * 60,
     },
 }

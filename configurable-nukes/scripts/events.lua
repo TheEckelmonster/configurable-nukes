@@ -13,7 +13,7 @@ Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-glo
 Payloads = {}
 Projectile_Placeholders = {}
 
-Instantiatable = {}
+Instantiable = {}
 
 ---
 
@@ -24,11 +24,16 @@ defines.inventory.payloader = 1
 
 local true_nukes_contiued = script and script.active_mods and script.active_mods["True-Nukes_Continued"]
 
-local Data = require("__TheEckelmonster-core-library__.libs.data.data")
-
 local Custom_Input = require("prototypes.custom-input.custom-input")
 
+local Cache_Controller = require("scripts.controllers.cache_controller")
+local Cache_Attributes_Data = require("scripts.data.cache.cache-attribute-data")
+local CU = require("scripts.utils.cache-utils")
+local Cache_Utils, Reinit_Cache = CU[1], CU[2]
+local Circuit_Network_Service = require("scripts.services.circuit-network-service")
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
+local Custom_Events = require("prototypes.custom-events.custom-events")
+local Hash_Key_Data = require("scripts.data.hash-key-data")
 local Initialization = require("scripts.initialization")
 local Rocket_Silo_Gui_Controller = require("scripts.controllers.guis.rocket-silo-gui-controller")
 local Rocket_Dashboard_Gui_Controller = require("scripts.controllers.guis.rocket-dashboard-gui-controller")
@@ -36,6 +41,7 @@ local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Payload_Controller = require("scripts.controllers.payload-controller")
 local Payloader_Controller = require("scripts.controllers.payloader-controller")
 local Planet_Controller = require("scripts.controllers.planet-controller")
+local Rhythm = require("scripts.rhythm")
 local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
@@ -98,82 +104,13 @@ local quality_affected_prototypes = {
     ["Atomic Weapon hit 20t"] = true_nukes_contiued and "atomic-rocket" or nil
 }
 
-local instantiatable = {}
-local instantiatable_instantiated = false
-
-local function init_instantitable()
-    if (instantiatable_instantiated) then return end
-    local possible_payloads = prototypes.get_entity_filtered({
-        {
-            filter = "type",
-            type = "projectile",
-        },
-        {
-            filter = "type",
-            type = "land-mine",
-        },
-        {
-            filter = "type",
-            type = "beam",
-        },
-        {
-            filter = "type",
-            type = "stream",
-        },
-        {
-            filter = "type",
-            type = "capsule",
-        },
-    })
-
-    local matching_possible_payloads = {}
-    local mod_data = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
-    local matching_mod_data = {}
-
-    for k, v in pairs(possible_payloads) do
-        if (mod_data[k]) then matching_possible_payloads[k] = possible_payloads[k] end
-        if (mod_data[k]) then matching_mod_data[k] = mod_data[k] end
-    end
-
-    local same, difference = {}, {}
-    for k, v in pairs (matching_possible_payloads) do
-        if (matching_mod_data[k]) then
-            same[k] = same[k] or {}
-            same[k].possible_payload = v
-        elseif (matching_mod_data[v.name]) then
-            same[v.name] = same[v.name] or {}
-            same[v.name].possible_payload = v
-        else
-            difference[k] = difference[k] or {}
-            difference[k].possible_payload = v
-        end
-    end
-
-    for k, v in pairs (matching_mod_data) do
-        if (matching_possible_payloads[k]) then
-            same[k] = same[k] or {}
-            same[k].mod_data = v
-        elseif (matching_possible_payloads[v.name]) then
-            same[v.name] = same[v.name] or {}
-            same[v.name].mod_data = v
-        else
-            difference[k] = difference[k] or {}
-            difference[k].mod_data = v
-        end
-    end
-
-    for k, v in pairs(same) do
-        instantiatable[k] = v.mod_data.name
-    end
-
-    Instantiatable = instantiatable
-    instantiatable_instantiated = true
-end
-
 local Quality_Prototypes = nil
 
 local events = {
+    name = "events",
     [locals.name] = locals,
+    [Cache_Controller.name] = Cache_Controller.name,
+    [Circuit_Network_Service.name] = Circuit_Network_Service,
     [Configurable_Nukes_Controller.name] = Configurable_Nukes_Controller,
     [Custom_Input.name] = Custom_Input,
     [Rocket_Silo_Gui_Controller.name] = Rocket_Silo_Gui_Controller,
@@ -186,19 +123,107 @@ local events = {
     [Settings_Controller.name] = Settings_Controller,
 }
 
+events.__rhythm = { name = events.name, }
+local __rhythm = Rhythm.new(events.__rhythm, events.__rhythm)
+local Prime_Random = __rhythm.prime_random
+
+local rhythm = nil
+
 local sa_active = mods and mods["space-age"] and true
 
-local cache = {}
-local cache_attributes = {}
-setmetatable(cache_attributes, { __mode = "k" })
+events.rhythm = { name = events.name, }
+local rhythm = Rhythm.new(events.rhythm, events.rhythm)
+local Prime_Random = Rhythm.prime_random
 
-cache.map_reveal = {}
-cache.map_reveal.chunks = {}
+Event_Handler:register_events({
+    {
+        event_name = Custom_Events.cn_on_init_complete.name,
+        source_name = events.name .. ".init_rhythm",
+        func_name = rhythm.name .. ".init_rhythm",
+        func = rhythm.init_rhythm,
+        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
+    },
+    {
+        event_name = Custom_Events.cn_reset_cache.name,
+        source_name = events.name .. ".init_rhythm",
+        func_name = rhythm.name .. ".init_rhythm",
+        func = rhythm.init_rhythm,
+        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
+    },
+    {
+        event_name = Custom_Events.cn_on_init_complete.name,
+        source_name = events.name .. ".init_rhythm",
+        func_name = events.name .. ".init_rhythm",
+        func = rhythm.init_rhythm,
+        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
+    },
+    {
+        event_name = Custom_Events.cn_reset_cache.name,
+        source_name = events.name .. ".init_rhythm",
+        func_name = events.name .. ".init_rhythm",
+        func = rhythm.init_rhythm,
+        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
+    },
+    {
+        event_name = Custom_Events.cn_init_cache.name,
+        source_name = events.name .. ".init_rhythm",
+        func_name = events.name .. ".init_rhythm",
+        func = rhythm.init_rhythm,
+    },
+})
+
+local cache_handle = Cache_Utils.register_cache({ name = events.name, })
+events.cache_handle = cache_handle
+Event_Handler:register_events({
+    {
+        event_name = Custom_Events.cn_init_cache.name,
+        source_name = events.name .. ".reinit_cache",
+        func_name = events.name .. ".reinit_cache",
+        func = events.reinit_cache,
+    },
+})
+
+local hash_keys = nil
+local cache, cache_attributes = nil, nil
+
+function events.reinit_cache()
+    cache_handle.__reinit_cache()
+    cache, cache_attributes = Reinit_Cache(cache_handle, cache_handle.name)
+
+    storage.hash_keys = storage.hash_keys or Hash_Key_Data:new({})
+    Hash.keys = Hash.keys or storage.hash_keys
+
+    storage.hash_keys[cache_handle.name] = storage.hash_keys[cache_handle.name] or Hash_Key_Data:new({ name = cache_handle.name, })
+    hash_keys = storage.hash_keys[cache_handle.name]
+
+    hash_keys["map_reveal"] = Hash.keys[hash_keys["map_reveal"] or false] and hash_keys or Hash.hash("map_reveal", { persist = true, })
+    cache[hash_keys["map_reveal"]] = cache[hash_keys["map_reveal"]] or {}
+    cache_attributes[cache[hash_keys["map_reveal"]]] = cache_attributes[cache[hash_keys["map_reveal"]]] or Cache_Attributes_Data:new({ cas = cache_attributes, k = cache[hash_keys["map_reveal"]], })
+
+    hash_keys["map_reveal.chunks"] = Hash.keys[hash_keys["map_reveal.chunks"] or false] and hash_keys or Hash.hash("map_reveal.chunks", { persist = true, })
+    cache[hash_keys["map_reveal.chunks"]] = cache[hash_keys["map_reveal.chunks"]] or {}
+    cache_attributes[cache[hash_keys["map_reveal.chunks"]]] = cache_attributes[cache[hash_keys["map_reveal.chunks"]]] or Cache_Attributes_Data:new({ cas = cache_attributes, k = cache[hash_keys["map_reveal.chunks"]], })
+end
+cache_handle.reinit_cache = events.reinit_cache
+
+cache_handle[events.name] = events.cache_handle
+for k, v in pairs(events) do
+    if (k ~= "name") then
+        if (type(v) == "table" and v.add_to_cache_list) then
+            Cache_Controller.cache_list[v.name] = { name = v.name, }
+        end
+    end
+end
+Cache_Controller.cache_list["events"] = { name = "events", }
+-- log(serpent.block(Cache_Controller.cache_list))
+
+-- events.add_to_cache_list = true
+--[[ Registerd in/during on_load event handler ]]
 
 --[[ TODO: Move this to its own controller/service/utils? ]]
 script.on_event(defines.events.on_script_trigger_effect, function (event)
-    Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
-    Log.info(event)
+    -- Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
+    -- Log.info(event)
 
     if (    event and event.effect_id
         and not valid_event_effect_ids[event.effect_id]
@@ -208,10 +233,17 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     end
     if (not game or not event.surface_index or game.get_surface(event.surface_index) == nil) then return end
     local log_level = Log.get_log_level().num_val
-    if (log_level <= 3) then log(serpent.block(event)) end
+    if (log_level <= 2) then log(serpent.block(event)) end
 
     local surface = game.get_surface(event.surface_index)
     if (not surface or not surface.valid) then return end
+
+    local cache, cache_attributes = Cache(cache_handle.name), Cache_Attributes(cache_handle.name)
+    local hash_string = nil
+
+    storage.hash_keys = storage.hash_keys or {}
+    storage.hash_keys[cache_handle.name] = storage.hash_keys[cache_handle.name] or {}
+    hash_keys = storage.hash_keys[cache_handle.name]
 
     if (event.effect_id == "map-reveal") then
         local position = event.target_position
@@ -222,16 +254,21 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
 
         if (position) then
             local chunk_string = math.floor(position.x / 32) .. "/" .. math.floor(position.y / 32)
-            if (not cache.map_reveal.chunks[chunk_string] or not cache_attributes[cache.map_reveal.chunks[chunk_string]] or cache_attributes[cache.map_reveal.chunks[chunk_string]].time_to_live < game.tick) then
-                cache.map_reveal.chunks[chunk_string] = { count = 0, }
-                cache_attributes[cache.map_reveal.chunks[chunk_string]] = Data:new({ time_to_live = game.tick + 12, valid = true })
-            end
 
-            if (cache.map_reveal.chunks[chunk_string].count < 2) then
-                surface.request_to_generate_chunks(position, 3 + cache.map_reveal.chunks[chunk_string].count)
+            hash_string = "map_reveal.chunks-" .. chunk_string
+            cache[hash_string] = cache_handle.get_or_instantiate({
+                tbl = cache,
+                key = hash_string,
+                val = cache[hash_string] or { count = 0, },
+                ttl = game.tick + 45
+            })
+            local chunk = cache[hash_string]
+
+            if ((chunk.count or 2) < 2) then
+                surface.request_to_generate_chunks(position, 3 + chunk.count)
                 surface.force_generate_chunk_requests()
 
-                cache.map_reveal.chunks[chunk_string].count = cache.map_reveal.chunks[chunk_string].count + 1
+                chunk.count = chunk.count + 1
             end
         end
     elseif (event.effect_id == "cn-tesla-rocket-lightning") then
@@ -464,6 +501,8 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             local rockets_created = 0
             local random_additional_ticks = 1
 
+            rhythm = rhythm or Rhythm.init_rhythm(rhythm)
+
             local do_break = false
             for i = 0, repititions, 1 do
                 if (do_break) then break end
@@ -472,20 +511,20 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 for j = 0, loop_count, 1 do
 
                     if (threshold < 1) then do_break = true; break end
-                    if (Prime_Random(100) <= threshold) then
+                    if (Prime_Random(rhythm, 100) <= threshold) then
                         threshold = threshold - 0.5
                         for k = 0, settings_modifier, 1 do
                             target = reset_target()
 
-                            local factor = ((i) * 5 + 4 * (quality_factor + 1) * area_setting) + math.random(5)
+                            local factor = ((i) * 5 + 4 * (quality_factor + 1) * area_setting) + Prime_Random(rhythm, 5)
 
                             if (rockets_created % 5 > 0 and rockets_created % 5 ~= 3) then
                                 local stage_threshold = math.ceil(j / 8)
 
                                 local qwer = (((j % stage_threshold) + 1) / stage_threshold) / (stage_threshold / (stage_threshold + loop_count))
 
-                                local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
-                                local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
+                                local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(rhythm, 2) + rhythm.poly_index) % 2) == 1 and 1 or -1)
+                                local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(rhythm, 2) + rhythm.poly_index) % 2) == 1 and 1 or -1)
 
                                 local x_offset = 0
                                 local y_offset = 0
@@ -505,7 +544,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                             end
 
                             if (rockets_created > 0) then
-                                random_additional_ticks = random_additional_ticks + Prime_Random(10)
+                                random_additional_ticks = random_additional_ticks + Prime_Random(rhythm, 10)
                             end
 
                             local nth_tick = game.tick + random_additional_ticks
@@ -528,7 +567,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                     target = reset_target()
                 else
                     if (targets and #targets > 0) then
-                        local rand = math.random(#targets)
+                        local rand = Prime_Random(rhythm, #targets)
                         target = table.remove(targets, rand)
                     else
                         target = reset_target()
@@ -673,13 +712,17 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             local area_setting = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_AREA_MULTIPLIER.name, reindex = true })
             if (area_setting == nil) then area_setting = 1 end
 
+            rhythm = rhythm or Rhythm.init_rhythm(rhythm)
+
             for _, cargo in ipairs(payloads) do
                 cargo.count = type(cargo.count) == "number" and cargo.count > 0 and cargo.count or 1
                 local stage_threshold = math.ceil(cargo.count / 8)
 
                 local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
+                log(serpent.block(name))
 
                 if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
+                log(serpent.block(name))
                 if (log_level <= 3) then
                     log(serpent.block(cargo))
                     log(serpent.block(name))
@@ -702,26 +745,14 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 if (log_level <= 3) then
                     log(serpent.block("cargo.name = " .. cargo.name))
                     log(serpent.block("final_name = " .. final_name))
-                    log(serpent.block("instantiatable[final_name] = " .. instantiatable[final_name]))
-                end
-
-                if (not instantiatable[final_name]) then
-                    goto continue
-                else
-                    if (final_name ~= instantiatable[final_name]) then
-                        final_name = instantiatable[final_name]
-                        if (log_level <= 3) then
-                            log(serpent.block("final_name = " .. final_name))
-                        end
-                    end
                 end
 
                 for i = 1, cargo.count, 1 do
                     --[[ Not really sure what this should be named, as I don't fully understand/remember why introducing this variable fixed things ]]
                     local qwer = (((i % stage_threshold) + 1) / stage_threshold) / (stage_threshold / (stage_threshold + cargo.count))
 
-                    local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
-                    local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
+                    local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(rhythm, 2) + rhythm.poly_index) % 2) == 1 and 1 or -1)
+                    local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(rhythm, 2) + rhythm.poly_index) % 2) == 1 and 1 or -1)
 
                     local x_offset = 0
                     local y_offset = 0
@@ -744,23 +775,25 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                     while (((target_position.x - target.x) ^ 2 + (target_position.y - target.y) ^ 2) ^ 0.5) > explosives_radius_limit do
                         if (loops < 1) then break end
 
-                        local rand = (Prime_Random(3) + Rhythm.poly_index) % 3
+                        local rand = (Prime_Random(rhythm, 3) + rhythm.poly_index) % 3
 
                         if (rand == 1) then
-                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
-                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset)) * Rhythm.poly_sign
+                            target.x = target_position.x + (Prime_Random(rhythm, -1 - abs_x_offset, 1 + abs_x_offset)) * rhythm.poly_sign
+                            target.y = target_position.y + (Prime_Random(rhythm, -1 - abs_y_offset, 1 + abs_y_offset)) * rhythm.poly_sign
 
                             abs_x_offset = abs_x_offset ^ 0.9
                             abs_y_offset = abs_y_offset ^ 0.9
                         elseif (rand == 2) then
-                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
+                            target.x = target_position.x + (Prime_Random(rhythm, -1 - abs_x_offset, 1 + abs_x_offset)) * rhythm.poly_sign
                             abs_x_offset = abs_x_offset ^ 0.9
                         else
-                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset)) * Rhythm.poly_sign
+                            target.y = target_position.y + (Prime_Random(rhythm, -1 - abs_y_offset, 1 + abs_y_offset)) * rhythm.poly_sign
                             abs_y_offset = abs_y_offset ^ 0.9
                         end
                         loops = loops - 1
                     end
+
+                    log(serpent.block(final_name))
 
                     local asdf = payload.icbm.target_surface.create_entity({
                         name = final_name,
@@ -784,7 +817,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                                     target_position,
                         --[[ TODO: Make configurable ]]
                         cause = payload.icbm.same_surface and payload.icbm.source_silo and payload.icbm.source_silo.valid and payload.icbm.source_silo or payload.force,
-                        speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (Prime_Random(100))) ^ 0.666),
+                        speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (Prime_Random(rhythm, 100))) ^ 0.666),
                         base_damage_modifiers = {
                             damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
                             damage_addition = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
@@ -847,7 +880,41 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     end
 end)
 
+-- function events.on_multiplayer_init(event)
+--     log(serpent.block(event))
+--     storage.cache = storage.cache or {}
+--     storage.cache.on_multiplayer_init = true
+-- end
+-- Event_Handler:register_event({
+--     event_name = "on_multiplayer_init",
+--     source_name = "events.on_multiplayer_init",
+--     func_name = "events.on_multiplayer_init",
+--     func = events.on_multiplayer_init,
+-- })
+
+function events.on_player_joined_game(event)
+    if (not storage.initialized_anew) then
+        script.raise_event(
+            Custom_Events.cn_init_cache.name,
+            {
+                name = defines.events[Custom_Events.cn_init_cache.name],
+                tick = game.tick,
+            }
+        )
+    else
+        storage.initialized_anew = nil
+    end
+end
+Event_Handler:register_event({
+    event_name = "on_player_joined_game",
+    source_name = "events.on_player_joined_game",
+    func_name = "events.on_player_joined_game",
+    func = events.on_player_joined_game,
+})
+
 function events.on_init()
+    -- log("events.on_init")
+
     if (type(storage) ~= "table") then return end
 
     local return_val = 0
@@ -872,14 +939,10 @@ function events.on_init()
 
     Initialization.init({ maintain_data = false })
 
-    Random = storage.random
-    Prime_Indices = storage.prime_indices
-    Rhythms.init_rhythm()
+    Hash.keys = storage.hash_keys
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
-
-    init_instantitable()
 
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
@@ -914,8 +977,9 @@ function events.on_init()
     })
 
     Event_Handler:register_event({
-        event_name = "on_tick",
-        source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+        event_name = "on_nth_tick",
+        nth_tick = 1,
+        source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
         func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
         func = Rocket_Dashboard_Gui_Controller.instantiate_if_not_exists,
     })
@@ -936,6 +1000,35 @@ function events.on_init()
         func = Payload_Controller.on_nth_tick,
     })
 
+    do
+        (function (nth_tick)
+            if (nth_tick and nth_tick >= 0) then
+                Event_Handler:register_event({
+                    event_name = "on_nth_tick",
+                    nth_tick = (nth_tick and nth_tick > 0 and nth_tick or 1),
+                    source_name = "cache_controller.on_nth_tick",
+                    func_name = "cache_controller.on_nth_tick",
+                    func = Cache_Controller.on_nth_tick,
+                })
+            end
+        end)(Cache_Controller.nth_tick_cache_processing or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.CACHE_BACKGROUND_CLEANING_RATE_TARGET.name }) or 150)
+    end
+
+    Event_Handler:register_event({
+        event_name = "on_nth_tick",
+        nth_tick = 1,
+        source_name = "locals.init_cache",
+        func_name = "locals.init_cache",
+        func = locals.init_cache,
+    })
+
+    Event_Handler:set_event_position({
+        event_name = "on_nth_tick",
+        on_nth_tick = 1,
+        source_name = "locals.init_cache",
+        new_position = 1,
+    })
+
     Constants.get_mod_data(true, { on_load = true })
 
     Did_Init = true
@@ -949,40 +1042,55 @@ Event_Handler:register_event({
 
 local initialized_from_load = false
 
-function locals.init_rhythm(event)
-    Log.debug(event)
-
+function locals.init_cache(event)
     Event_Handler:unregister_event({
-        event_name = "on_tick",
-        source_name = "locals.init_rhythm",
+        event_name = "on_nth_tick",
+        nth_tick = 1,
+        source_name = "locals.init_cache",
     })
 
-    Rhythms.init_rhythm()
+    if (not storage.initialized_anew) then
+        script.raise_event(
+            Custom_Events.cn_init_cache.name,
+            {
+                name = defines.events[Custom_Events.cn_init_cache.name],
+                tick = game.tick,
+            }
+        )
+    else
+        storage.initialized_anew = nil
+    end
+    storage.cache_attributes = setmetatable(storage.cache_attributes or {}, { __mode = "k", })
 end
 
 function events.on_load()
+    -- log("events.on_load()")
 
-    Random = storage.random
-    Prime_Indices = storage.prime_indices
+    if (not Event_Handler:get_event_position({
+        event_name = "on_nth_tick",
+        nth_tick = 1,
+        source_name = "locals.init_cache",
+    })) then
+        Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = 1,
+            source_name = "locals.init_cache",
+            func_name = "locals.init_cache",
+            func = locals.init_cache,
+        })
 
-    Event_Handler:register_event({
-        event_name = "on_tick",
-        source_name = "locals.init_rhythm",
-        func_name = "locals.init_rhythm",
-        func = locals.init_rhythm,
-    })
+        Event_Handler:set_event_position({
+            event_name = "on_nth_tick",
+            nth_tick = 1,
+            source_name = "locals.init_cache",
+            new_position = 1,
+        })
+    end
 
-    Event_Handler:set_event_position({
-        event_name = "on_tick",
-        source_name = "locals.init_rhythm",
-        new_position = 1,
-    })
-
+    Hash.keys = storage.hash_keys
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
-
-    init_instantitable()
 
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
@@ -1032,15 +1140,16 @@ function events.on_load()
 
     Event_Handler:register_event({
         event_name = "on_nth_tick",
-        nth_tick = Configurable_Nukes_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SURFACE_PROCESSING_RATE.name }) or 6,
+        nth_tick = Configurable_Nukes_Controller.nth_tick_surface_processing or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SURFACE_PROCESSING_RATE.name }) or 6,
         source_name = "configurable_nukes_controller.on_nth_tick",
         func_name = "configurable_nukes_controller.on_nth_tick",
         func = Configurable_Nukes_Controller.on_nth_tick,
     })
 
     Event_Handler:register_event({
-        event_name = "on_tick",
-        source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+        event_name = "on_nth_tick",
+        nth_tick = 1,
+        source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
         func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
         func = Rocket_Dashboard_Gui_Controller.instantiate_if_not_exists,
     })
@@ -1055,11 +1164,25 @@ function events.on_load()
 
     Event_Handler:register_event({
         event_name = "on_nth_tick",
-        nth_tick = Payload_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE.name }) or (15 * 60),
+        nth_tick = Payload_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE.name }) or (5 * 60),
         source_name = "payload_controller.on_nth_tick",
         func_name = "payload_controller.on_nth_tick",
         func = Payload_Controller.on_nth_tick,
     })
+
+    do
+        (function (nth_tick)
+            if (nth_tick and nth_tick >= 0) then
+                Event_Handler:register_event({
+                    event_name = "on_nth_tick",
+                    nth_tick = (nth_tick and nth_tick > 0 and nth_tick or 1),
+                    source_name = "cache_controller.on_nth_tick",
+                    func_name = "cache_controller.on_nth_tick",
+                    func = Cache_Controller.on_nth_tick,
+                })
+            end
+        end)(Cache_Controller.nth_tick_cache_processing or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.CACHE_BACKGROUND_CLEANING_RATE_TARGET.name }) or 150)
+    end
 
     Constants.get_mod_data(true, { on_load = true })
 
@@ -1073,11 +1196,35 @@ Event_Handler:register_event({
 })
 
 function events.on_configuration_changed(event)
+    -- log(serpent.block("events.on_configuration_changed"))
+    -- log(serpent.block(event))
+
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
     storage.sa_active = sa_active
     storage.se_active = se_active
+
+    if (not Event_Handler:get_event_position({
+        event_name = "on_nth_tick",
+        nth_tick = 1,
+        source_name = "locals.init_cache",
+    })) then
+        Event_Handler:register_event({
+            event_name = "on_nth_tick",
+            nth_tick = 1,
+            source_name = "locals.init_cache",
+            func_name = "locals.init_cache",
+            func = locals.init_cache,
+        })
+
+        Event_Handler:set_event_position({
+            event_name = "on_nth_tick",
+            nth_tick = 1,
+            source_name = "locals.init_cache",
+            new_position = 1,
+        })
+    end
 
     if (event.mod_changes) then
         --[[ Check if our mod updated ]]
@@ -1108,15 +1255,12 @@ function events.on_configuration_changed(event)
                 end
 
                 Initialization.init({ maintain_data = true })
+                storage.initialized_anew = game.tick
 
-                Random = storage.random
-                Prime_Indices = storage.prime_indices
-                Rhythms.init_rhythm()
+                Hash.keys = storage.hash_keys
                 Payloads = storage.payloads
                 Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
                 Quality_Prototypes = prototypes.quality
-
-                init_instantitable()
 
                 local cn_controller_data = storage and storage.configurable_nukes_controller or {}
 

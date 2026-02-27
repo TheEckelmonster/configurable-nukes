@@ -22,7 +22,7 @@ function rocket_dashboard_gui_service.intstantiate_if_not_exists(data)
     if (not data or type(data) ~= "table") then return end
     if (not data.player or not data.player.valid) then return end
 
-    Rocket_Dashboard_Gui_Service.instantiate_guis({ player_index = data.player.index, })
+    rocket_dashboard_gui_service.instantiate_guis({ player_index = data.player.index, })
 end
 
 function rocket_dashboard_gui_service.instantiate_guis(data)

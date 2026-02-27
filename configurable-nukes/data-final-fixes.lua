@@ -1,8 +1,6 @@
 local __debug = DEBUG
 DEBUG = false
 
-local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
-
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 local sa_active = mods and mods["space-age"] and true
@@ -167,6 +165,27 @@ if (DEBUG) then
     if (DEBUG) then log(serpent.block(_subgroups)) end
     if (DEBUG) then log(serpent.block(order)) end
     if (DEBUG) then log(serpent.block(item_group)) end
+
+    local ammo_categories = {}
+    local ammo_names = {}
+    local ammo_subgroups = {}
+    local count = 1
+
+    for k, v in pairs(data.raw.ammo) do
+        ammo_names[k] = count; count = count + 1
+        if (v.ammo_category) then
+            ammo_categories[v.ammo_category] = ammo_categories[v.ammo_category] or {}
+            ammo_categories[v.ammo_category][k] = count; count = count + 1
+        end
+        if (v.subgroup) then
+            ammo_subgroups[v.subgroup] = ammo_subgroups[v.subgroup] or {}
+            ammo_subgroups[v.subgroup][k] = count; count = count + 1
+        end
+    end
+
+    if (DEBUG) then log(serpent.block({ __name = "name", data = ammo_names })) end
+    if (DEBUG) then log(serpent.block({ __name = "ammo_categories", data = ammo_categories })) end
+    if (DEBUG) then log(serpent.block({ __name = "ammo_subgroups", data = ammo_subgroups })) end
 end
 
 DEBUG = __debug

@@ -25,6 +25,7 @@ require("prototypes.recipes.payloader-data")
 require("prototypes.items.payloader-data")
 require("prototypes.entities.payloader-data")
 require("prototypes.entities.payloader-rocket-data")
+require("prototypes.entities.payloader-dummy-rocket-data")
 
 if (sa_active or se_active) then
     require("prototypes.recipes.advanced-rocket-control-unit")

@@ -4,6 +4,7 @@ if (not script or not _Log or mods) then _Log = Log_Stub end
 
 local Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
+local Custom_Events = require("prototypes.custom-events.custom-events")
 local Initialization = require("scripts.initialization")
 
 local locals = {}
@@ -88,7 +89,7 @@ function configurable_nukes_commands.print_mod_data(event)
         end
 
         local file_name = "Constants.mod_data_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.mod_data, file_name, _, { max_depth = 4,  })
+        Core_Utils.table.traversal.traverse_print(Constants.mod_data, file_name, _, { max_depth = 4,  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -103,7 +104,7 @@ function configurable_nukes_commands.print_mod_data_dictionary(event)
         end
 
         local file_name = "Constants.mod_data_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.mod_data_dictionary, file_name, _, { max_depth = 3,  })
+        Core_Utils.table.traversal.traverse_print(Constants.mod_data_dictionary, file_name, _, { max_depth = 3,  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -118,7 +119,7 @@ function configurable_nukes_commands.print_planets(event)
         end
 
         local file_name = "Constants.planets_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.get_planets(), file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.get_planets(), file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -133,7 +134,7 @@ function configurable_nukes_commands.print_planets_dictionary(event)
         end
 
         local file_name = "Constants.planets_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.planets_dictionary, file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.planets_dictionary, file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -148,7 +149,7 @@ function configurable_nukes_commands.print_space_locations(event)
         end
 
         local file_name = "Constants.space_locations_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.get_space_locations(), file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.get_space_locations(), file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -163,7 +164,7 @@ function configurable_nukes_commands.print_space_locations_dictionary(event)
         end
 
         local file_name = "Constants.space_locations_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.space_locations_dictionary, file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.space_locations_dictionary, file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -178,7 +179,7 @@ function configurable_nukes_commands.print_space_connections(event)
         end
 
         local file_name = "Constants.space_connections_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.get_space_connections(), file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.get_space_connections(), file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -193,7 +194,7 @@ function configurable_nukes_commands.print_space_connections_dictionary(event)
         end
 
         local file_name = "Constants.space_connections_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.space_connections_dictionary, file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.space_connections_dictionary, file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
@@ -209,7 +210,7 @@ if (mods and mods["space-exploration"] or script and script.active_mods and scri
             end
 
             local file_name = "Constants.print_space_exploration_universe_" .. game.tick
-            Core_Utils.table.traverse_print(Constants.get_space_exploration_universe(), file_name, _, { full = true  })
+            Core_Utils.table.traversal.traverse_print(Constants.get_space_exploration_universe(), file_name, _, { full = true  })
             player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
         end)
     end
@@ -224,7 +225,7 @@ if (mods and mods["space-exploration"] or script and script.active_mods and scri
             end
 
             local file_name = "Constants.print_space_exploration_dictionary_" .. game.tick
-            Core_Utils.table.traverse_print(Constants.space_exploration_dictionary, file_name, _, { full = true  })
+            Core_Utils.table.traversal.traverse_print(Constants.space_exploration_dictionary, file_name, _, { full = true  })
             player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
         end)
     end
@@ -247,6 +248,178 @@ function configurable_nukes_commands.print_event_handlers(event)
     end)
 end
 
+local function recurse_tbl(params)
+    local found = {}
+    local func = params.func or function (...) return end
+    local function recurse(tbl)
+        if (type(tbl) ~= "table") then return end
+
+        for k, v in pairs(tbl) do
+            if (type(v) == "table") then
+                if (not found[v]) then
+                    found[v] = { tbl = tbl, k = k, v = v, }
+                    func(v, k, tbl)
+                    if (next(v)) then
+                        recurse(v)
+                    end
+                end
+            end
+        end
+
+    end
+    local tbl = params and params.tbl or {}
+
+    recurse(tbl)
+end
+
+local function print_cache_sizes_recursive(params)
+    params = params or {}
+    local tbl_counts = {}
+    local tbl_sizes = {}
+
+    for k, v in pairs({storage and storage.cache or {}, storage and storage.cache_attributes or {}}) do
+        if (v and next(v)) then
+            recurse_tbl({
+                tbl = v,
+                func = function (...)
+                    local argv = {...}
+                    if (type(argv[1]) ~= "table") then
+                        log("not a table")
+                    else
+                        tbl_counts[k] = (tbl_counts[k] or 0) + 1
+                        if (next(argv[1])) then
+                            local tbl_size = table_size(argv[1])
+                            tbl_size = (tbl_size or 0) + tbl_size
+                            tbl_sizes[k] = (tbl_sizes[k] or 0) + tbl_size
+                            -- log("<K>: `" .. tostring(argv[2]) ..  "` -> tbl of size " .. tostring(tbl_size))
+                        end
+                    end
+                end
+            })
+        end
+    end
+
+    if (params.stage) then
+        log(params.stage)
+        game.print(params.stage)
+        for k, v in pairs(tbl_counts) do
+            log("    tbl count = " .. tostring(tbl_counts[k]))
+            log("    total tbl size = " .. tostring(tbl_sizes[k]))
+            game.print("    tbl count = " .. tostring(tbl_counts[k]))
+            game.print("    total tbl size = " .. tostring(tbl_sizes[k]))
+        end
+    end
+end
+
+function configurable_nukes_commands.reinit_cache(event)
+    _Log.debug("configurable_nukes_commands.reinit_cache")
+    locals.validate_command(event, function (player)
+        _Log.info("commands.reinit_cache")
+        print_cache_sizes_recursive({ stage = "Before reinit:", })
+        script.raise_event(
+            Custom_Events.cn_init_cache.name,
+            {
+                name = defines.events[Custom_Events.cn_init_cache.name],
+                tick = game.tick,
+            }
+        )
+        print_cache_sizes_recursive({ stage = "After reinit",  })
+    end)
+end
+
+function configurable_nukes_commands.reset_cache(event)
+    _Log.debug("configurable_nukes_commands.reset_cache")
+    locals.validate_command(event, function (player)
+        _Log.info("commands.reset_cache")
+        print_cache_sizes_recursive({ stage = "Before reset:", })
+        script.raise_event(
+            Custom_Events.cn_reset_cache.name,
+            {
+                name = defines.events[Custom_Events.cn_reset_cache.name],
+                tick = game.tick,
+            }
+        )
+        print_cache_sizes_recursive({ stage = "After reset:",  })
+    end)
+end
+
+function configurable_nukes_commands.print_cache_counts(event)
+    _Log.debug("configurable_nukes_commands.print_cache_counts")
+    locals.validate_command(event, function (player)
+        _Log.info("commands.print_cache_counts")
+        print_cache_sizes_recursive({ stage = "Counts:", })
+    end)
+end
+
+function configurable_nukes_commands.print_projectile_placeholders(event)
+    _Log.debug("configurable_nukes_commands.print_projectile_placeholders")
+    locals.validate_command(event, function (player)
+        _Log.info("commands.print_projectile_placeholders")
+
+        local file_name = "mod_data.configurable_nukes_projectile_placeholders_" .. game.tick
+        Core_Utils.table.traversal.traverse_print(prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"], file_name, _, { full = true  })
+        player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
+    end)
+end
+
+function configurable_nukes_commands.find_functions_in_storage(event)
+    _Log.debug("configurable_nukes_commands.find_functions_in_storage")
+    locals.validate_command(event, function (player)
+        _Log.info("commands.find_functions_in_storage")
+
+
+        local function find_functions(_tbl)
+
+            local found = {}
+            local depth, order = 0, 0
+
+            local funcs_found = false
+
+            local function r(tbl, depth, path)
+                if (type(tbl) ~= "table") then return end
+                depth = depth or 1
+                path = path or "storage"
+
+                for k, v in pairs(tbl) do
+                    if (type(k) == "table") then
+                        if (not found[k]) then
+                            found[k] = { order = order, depth = depth, }
+                            r(k, depth + 1)
+                        end
+                    elseif (type(k) == "function") then
+                        local file_name = "" .. game.tick
+                        Core_Utils.table.traversal.traverse_print(tbl, file_name, _, { full = true  })
+                        player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
+                        funcs_found = true
+                    else
+                        log(serpent.line("traversing "..tostring(k)))
+                    end
+
+                    if (type(v) == "table") then
+                        if (not found[v]) then
+                            found[v] = { order = order, depth = depth, }
+                            r(v, depth + 1)
+                        end
+                    elseif (type(v) == "function") then
+                        local file_name = "" .. game.tick
+                        Core_Utils.table.traversal.traverse_print(tbl, file_name, _, { full = true  })
+                        player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
+                        funcs_found = true
+                    else
+                        log(serpent.line("traversing "..tostring(v)))
+                    end
+                end
+            end
+
+            r(_tbl)
+
+            if (funcs_found) then error("Found functions in storage") end
+        end
+
+        find_functions(storage)
+    end)
+end
+
 function locals.validate_command(event, fun)
     if (not _Log or not _Log.valid or not _Log._ready) then _Log = Log_Stub end
     _Log.debug(event)
@@ -264,6 +437,11 @@ commands.add_command("configurable_nukes.reinit", "Tries to reinitialize, attemp
 commands.add_command("configurable_nukes.print_table", "", configurable_nukes_commands.print_table)
 commands.add_command("configurable_nukes.print_event_handlers", "", configurable_nukes_commands.print_event_handlers)
 commands.add_command("configurable_nukes.print_storage", "", configurable_nukes_commands.print_storage)
+commands.add_command("configurable_nukes.reinit_cache", "", configurable_nukes_commands.reinit_cache)
+commands.add_command("configurable_nukes.reset_cache", "", configurable_nukes_commands.reset_cache)
+commands.add_command("configurable_nukes.print_cache_counts", "", configurable_nukes_commands.print_cache_counts)
+-- commands.add_command("configurable_nukes.print_projectile_placeholders", "", configurable_nukes_commands.print_projectile_placeholders)
+-- commands.add_command("configurable_nukes.find_functions_in_storage", "", configurable_nukes_commands.find_functions_in_storage)
 -- commands.add_command("configurable_nukes.print_mod_data", "Exports to a .json file the currently available mod-data.", configurable_nukes_commands.print_mod_data)
 -- commands.add_command("configurable_nukes.print_mod_data_dictionary", "Exports to a .json file the mod-data dictionary.", configurable_nukes_commands.print_mod_data_dictionary)
 -- commands.add_command("configurable_nukes.print_planets", "Exports to a .json file the currently available planet-data.", configurable_nukes_commands.print_planets)

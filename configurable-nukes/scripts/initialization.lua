@@ -5,8 +5,8 @@ if (not script or not _Log or mods) then _Log = Log_Stub end
 local TECL_Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
-local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Custom_Events = require("prototypes.custom-events.custom-events")
+local Hash_Key_Data = require("scripts.data.hash-key-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Migrations = require("scripts.migrations")
 local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
@@ -60,10 +60,8 @@ function locals.initialize(from_scratch, maintain_data)
     Log.info(from_scratch)
     Log.info(maintain_data)
 
-    local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
+    local configurable_nukes_data = storage.configurable_nukes_data or Configurable_Nukes_Data:new()
     Log.info(configurable_nukes_data)
-
-    configurable_nukes_data.do_nth_tick = false
 
     from_scratch = from_scratch or false
     maintain_data = maintain_data or false
@@ -171,23 +169,15 @@ function locals.initialize(from_scratch, maintain_data)
             end
         end
 
-        if (not storage.random) then storage.random = game.create_random_generator(42) end
         if (not storage.payloads) then storage.payloads = {} end
         if (not storage.containers) then storage.containers = {} end
-        if (not storage.prime_indices) then storage.prime_indices = { outer = 1, inner = 1, } end
-        if (not storage.rhythm_pulse) then
-            storage.rhythm_pulse = { count = 1, }
-        end
+        storage.cache = {}
+        storage.cache_attributes = setmetatable({}, { __mode = "k", })
+        storage.hash_keys = Hash_Key_Data:new({})
     end
 
-    Random = storage.random
+    Hash.keys = storage.hash_keys
     Payloads = storage.payloads
-    Prime_Indices = storage.prime_indices
-    Rhythms.init_rhythm("reset")
-
-    if (storage and storage.configurable_nukes) then
-        storage.configurable_nukes.do_nth_tick = true
-    end
 
     storage.configurable_nukes.valid = true
 
@@ -195,6 +185,13 @@ function locals.initialize(from_scratch, maintain_data)
         Custom_Events.cn_on_init_complete.name,
         {
             name = defines.events[Custom_Events.cn_on_init_complete.name],
+            tick = game.tick,
+        }
+    )
+    script.raise_event(
+        Custom_Events.cn_reset_cache.name,
+        {
+            name = defines.events[Custom_Events.cn_reset_cache.name],
             tick = game.tick,
         }
     )
@@ -254,10 +251,8 @@ function locals.migrate(data)
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "event_handlers" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "handles" })
 
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "random" })
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "prime_indices" })
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "rhythm" })
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "rhythm_pulse" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "cache" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "cache_attributes" })
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "constants" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })

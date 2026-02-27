@@ -702,17 +702,26 @@ startup_settings_constants.settings = {
         type = "bool-setting",
         name = prefix .. "nuclear-ammo-category",
         setting_type = "startup",
-        order = "aaa",
+        order = "",
         default_value = false,
     },
     QUALITY_BASE_MULTIPLIER = {
         type = "double-setting",
         name = prefix .. "quality-base-multiplier",
         setting_type = "startup",
-        order = "aab",
+        order = "",
         default_value = 1.3,
         maximum_value = 11,
         minimum_value = 1,
+    },
+    --[[ Payload modifiers ]]
+    PROJECTILE_PLACEHOLDER_COLLISION = {
+        type = "string-setting",
+        name = prefix .. "projectile-placeholder-collision",
+        setting_type = "startup",
+        order = "",
+        allowed_values = { "default", "all", "none", },
+        default_value = "default",
     },
     --[[ Bomb ]]
     AREA_MULTIPLIER = {
