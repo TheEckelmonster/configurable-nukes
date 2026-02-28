@@ -814,7 +814,6 @@ return function (params)
             keys["source_effects"] = key
 
             local function _recurse(t, __k, __t)
-                log(serpent.line({ "depth", depth, "effects_depth", effects_depth, }))
                 -- if (depth > limit) then return end
                 if (type(t) ~= "table") then return end
                 depth = depth + 1
