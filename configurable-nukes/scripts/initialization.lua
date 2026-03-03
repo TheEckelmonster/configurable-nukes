@@ -252,9 +252,6 @@ function locals.migrate(data)
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "event_handlers" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "handles" })
 
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "cache" })
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "cache_attributes" })
-
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "constants" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "gui_data" })

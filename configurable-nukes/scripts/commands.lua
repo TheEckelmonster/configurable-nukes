@@ -1,10 +1,5 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
-
 local Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
-local Custom_Events = require("prototypes.custom-events.custom-events")
 local Initialization = require("scripts.initialization")
 
 local locals = {}
