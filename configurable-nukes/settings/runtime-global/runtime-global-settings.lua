@@ -7,11 +7,17 @@ local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 
 data:extend({
+    Runtime_Global_Settings_Constants.settings.DO_MAP_REVEAL,
     Runtime_Global_Settings_Constants.settings.LEGACY_LAUNCH_SYSTEM_ENABLED,
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE,
 
     Runtime_Global_Settings_Constants.settings.POLLUTION,
     Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_POLLUTION,
+
+    Runtime_Global_Settings_Constants.settings.PAYLOAD_BASE_DAMAGE_MODIFIER,
+    Runtime_Global_Settings_Constants.settings.PAYLOAD_BASE_DAMAGE_ADDITION,
+    Runtime_Global_Settings_Constants.settings.PAYLOAD_BONUS_DAMAGE_MODIFIER,
+    Runtime_Global_Settings_Constants.settings.PAYLOAD_BONUS_DAMAGE_ADDITION,
 
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER,
     Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION,
@@ -51,14 +57,12 @@ data:extend({
 
     Runtime_Global_Settings_Constants.settings.PAYLOAD_EXPLOSIVES_AOE_MULTIPLIER,
 
-    Runtime_Global_Settings_Constants.settings.SURFACE_PROCESSING_RATE,
-    Runtime_Global_Settings_Constants.settings.NUM_SURFACES_PROCESSED_PER_TICK,
+    Runtime_Global_Settings_Constants.settings.ROCKET_SILO_PROCESSING_RATE,
+    Runtime_Global_Settings_Constants.settings.NUM_ROCKET_SILOS_PROCESSED_PER_TICK,
 
     Runtime_Global_Settings_Constants.settings.DASHBOARD_REFRESH_RATE,
 
     Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE,
-
-    Runtime_Global_Settings_Constants.settings.CACHE_BACKGROUND_CLEANING_RATE,
 })
 
 if (k2so_active) then

@@ -20,14 +20,6 @@ local custom_events =
         type = "custom-event",
         name = "cn-on-rocket-launch-scrubbed"
     },
-    {
-        type = "custom-event",
-        name = "cn-init-cache"
-    },
-    {
-        type = "custom-event",
-        name = "cn-reset-cache"
-    },
 }
 
 if (mods and not script) then

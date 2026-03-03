@@ -1,10 +1,4 @@
-local Cache_Attributes_Data = require("scripts.data.cache.cache-attribute-data")
-local CU = require("scripts.utils.cache-utils")
-local Cache_Utils, Reinit_Cache = CU[1], CU[2]
-local Custom_Events = require("prototypes.custom-events.custom-events")
-local Hash_Key_Data = require("scripts.data.hash-key-data")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
-local Rhythm = require("scripts.rhythm")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
@@ -14,99 +8,16 @@ local Runtime_Global_Settings_Constants = require("settings.runtime-global.runti
 local circuit_network_service = {}
 circuit_network_service.name = "circuit_network_service"
 
-circuit_network_service.rhythm = { name = circuit_network_service.name, }
-local rhythm = Rhythm.new(circuit_network_service.rhythm, circuit_network_service.rhythm)
-local Prime_Random = Rhythm.prime_random
-
-Event_Handler:register_events({
-    {
-        event_name = Custom_Events.cn_on_init_complete.name,
-        source_name = circuit_network_service.name .. ".init_rhythm",
-        func_name = rhythm.name .. ".init_rhythm",
-        func = rhythm.init_rhythm,
-        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
-    },
-    {
-        event_name = Custom_Events.cn_reset_cache.name,
-        source_name = circuit_network_service.name .. ".init_rhythm",
-        func_name = rhythm.name .. ".init_rhythm",
-        func = rhythm.init_rhythm,
-        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
-    },
-    {
-        event_name = Custom_Events.cn_on_init_complete.name,
-        source_name = circuit_network_service.name .. ".init_rhythm",
-        func_name = circuit_network_service.name .. ".init_rhythm",
-        func = rhythm.init_rhythm,
-        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
-    },
-    {
-        event_name = Custom_Events.cn_reset_cache.name,
-        source_name = circuit_network_service.name .. ".init_rhythm",
-        func_name = circuit_network_service.name .. ".init_rhythm",
-        func = rhythm.init_rhythm,
-        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
-    },
-    {
-        event_name = Custom_Events.cn_init_cache.name,
-        source_name = circuit_network_service.name .. ".init_rhythm",
-        func_name = circuit_network_service.name .. ".init_rhythm",
-        func = rhythm.init_rhythm,
-    },
-})
-
-local cache_handle = Cache_Utils.register_cache({ name = circuit_network_service.name, })
-circuit_network_service.cache_handle = cache_handle
-Event_Handler:register_events(
-{
-    event_name = Custom_Events.cn_init_cache.name,
-    source_name = circuit_network_service.name .. ".reinit_cache",
-    func_name = circuit_network_service.name .. ".reinit_cache",
-    func = circuit_network_service.reinit_cache,
-})
-
-local hash_keys = nil
-local cache, cache_attributes = nil, nil
-
-circuit_network_service.__reinit_cache = Reinit_Cache
-function circuit_network_service.reinit_cache()
-    cache_handle.__reinit_cache()
-    cache, cache_attributes = circuit_network_service:__reinit_cache()
-
-    storage.hash_keys = storage.hash_keys or Hash_Key_Data:new({})
-    Hash.keys = Hash.keys or storage.hash_keys
-
-    storage.hash_keys[cache_handle.name] = storage.hash_keys[cache_handle.name] or Hash_Key_Data:new({ name = cache_handle.name, })
-    hash_keys = storage.hash_keys[cache_handle.name]
-
-    hash_keys["surfaces"] = Hash.keys[hash_keys["surfaces"] or false] and hash_keys[hash_string] or Hash.hash("surfaces", { persist = true, })
-    cache[hash_keys["surfaces"]] = cache[hash_keys["surfaces"]] or {}
-    cache_attributes[cache[hash_keys["surfaces"]]] = cache_attributes[cache[hash_keys["surfaces"]]] or Cache_Attributes_Data:new({ cas = cache_attributes, k = cache[hash_keys["surfaces"]], })
-
-    hash_keys["rocket_silos"] = Hash.keys[hash_keys["rocket_silos"] or false] and hash_keys[hash_string] or Hash.hash("rocket_silos", { persist = true, })
-    cache[hash_keys["rocket_silos"]] = cache[hash_keys["rocket_silos"]] or {}
-    cache_attributes[cache[hash_keys["rocket_silos"]]] = cache_attributes[cache[hash_keys["rocket_silos"]]] or Cache_Attributes_Data:new({ cas = cache_attributes, k = cache[hash_keys["rocket_silos"]], })
-end
-cache_handle.reinit_cache = circuit_network_service.reinit_cache
-
 local sa_active = script and script.active_mods and script.active_mods["space-age"]
 local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local rocket_ready_status = defines.rocket_silo_status.rocket_ready
 
 function circuit_network_service.attempt_launch_silos(data)
-    Log.debug("circuit_network_service.attempt_launch_silos")
-    Log.info(data)
-
+    -- Log.debug("circuit_network_service.attempt_launch_silos")
+    -- Log.info(data)
     if (not data or type(data) ~= "table") then return end
     if (type(data.rocket_silos) ~= "table" or not next(data.rocket_silos)) then return end
-
-    local cache, cache_attributes = Cache(cache_handle.name), Cache_Attributes(cache_handle.name)
-
-    storage.hash_keys = storage.hash_keys or {}
-    storage.hash_keys[cache_handle.name] = storage.hash_keys[cache_handle.name] or {}
-    hash_keys = storage.hash_keys[cache_handle.name]
-    local hash_string = nil
 
     local return_val = 0
 
@@ -114,116 +25,37 @@ function circuit_network_service.attempt_launch_silos(data)
     local allow_launch_when_no_surface_selected = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALLOW_LAUNCH_WHEN_NO_SURFACE_SELECTED.name })
     local allow_icbm_multisurface = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
 
-    local _, v = next(data.rocket_silos)
-    if (v and v.entity and v.entity.valid) then
-        local key = "unit_number=" .. tostring(v.entity.unit_number)
+    local k, v = next(data.rocket_silos)
+    while (v and v.entity and v.entity.valid) do
+        local rocket_silo = v.entity
 
-        hash_string = "rocket_silos"
-        hash_keys[hash_string] = Hash.keys[hash_keys[hash_string] or false] and hash_keys[hash_string] or Hash.hash(hash_string, { persist = true, })
-        cache[hash_keys[hash_string]] = cache_handle.get_or_instantiate({
-            tbl = cache,
-            key = hash_keys[hash_string],
-            val = cache[hash_keys[hash_string]] or {},
-        })
-        local rocket_silos = cache[hash_keys["rocket_silos"]]
-
-        hash_string = "rocket_silos." .. key
-        hash_keys[hash_string] = Hash.keys[hash_keys[hash_string] or false] and hash_keys[hash_string] or Hash.hash(hash_string, { persist = true, })
-        cache[hash_keys[hash_string]], _ = cache_handle.get_or_instantiate({
-            tbl = cache,
-            key = hash_keys[hash_string],
-            val =   cache[hash_keys[hash_string]]
-                or
-                    rocket_silos
-                and (function ()
-                    local k, v = next(rocket_silos)
-                    return k and { v, } or nil
-                end)()
-                or
-                    v.entity.valid
-                and { v.entity, }
-                or  {},
-        })
-        local rocket_silo = cache[hash_keys[hash_string]]
-        rocket_silo = rocket_silo and rocket_silo[1]
-
-        if (rocket_silo and not rocket_silo.valid) then
-            cache[hash_keys[hash_string]] = nil
-            if (type(_) == "table" and _.type and _.type == "cache-attribute") then
-                _.valid = false
-                _.ttl = game.tick - 1
-                _.updated = game.tick
-                cache_attributes[_.k or false] = nil
-            end
-        end
-        if (_) then _ = nil end
-
-        if (rocket_silo and rocket_silo.rocket_silo_status == rocket_ready_status) then
-            hash_string = "rocket_silos." .. key .. ".circuit_network_red"
-            hash_keys[hash_string] = Hash.keys[hash_keys[hash_string] or false] and hash_keys[hash_string] or Hash.hash(hash_string, { persist = true, })
-            cache[hash_keys[hash_string]] = cache_handle.get_or_instantiate({
-                tbl = cache,
-                key = hash_keys[hash_string],
-                val =   cache[hash_keys[hash_string]] or { circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red) },
-            })
-
-            hash_string = "rocket_silos." .. key .. ".circuit_network_green"
-            hash_keys[hash_string] = Hash.keys[hash_keys[hash_string] or false] and hash_keys[hash_string] or Hash.hash(hash_string, { persist = true, })
-            cache[hash_keys[hash_string]] = cache_handle.get_or_instantiate({
-                tbl = cache,
-                key = hash_keys[hash_string],
-                val =   cache[hash_keys[hash_string]] or { circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green) },
-            })
-
-            local circuit_network_red = cache[hash_keys["rocket_silos." .. key .. ".circuit_network_red"]].circuit_network
-            local circuit_network_green = cache[hash_keys["rocket_silos." .. key .. ".circuit_network_green"]].circuit_network
+        if (rocket_silo and rocket_silo.valid and rocket_silo.rocket_silo_status == rocket_ready_status) then
+            local circuit_network_red = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red)
+            local circuit_network_green = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green)
 
             if (not circuit_network_red and not circuit_network_green) then goto continue end
             if (   (circuit_network_red and circuit_network_red.valid and circuit_network_red.entity and circuit_network_red.entity.valid)
                 or (circuit_network_green and circuit_network_green.valid and circuit_network_green.entity and circuit_network_green.entity.valid))
             then
-                hash_string = "surfaces." .. rocket_silo.surface.name .. "." .. key
-                hash_keys[hash_string] = Hash.keys[hash_keys[hash_string] or false] and hash_keys[hash_string] or Hash.hash(hash_string, { persist = true, })
-                if (_) then _ = nil end
-                cache[hash_keys[hash_string]], _ = cache_handle.get_or_instantiate({
-                    tbl = cache,
-                    key = hash_keys[hash_string],
-                    val =   cache[hash_keys[hash_string]]
-                        or  function ()
-                            local ret = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
-                            if (not ret or not ret.valid) then
-                                ret = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
-                                ret = ret and ret.valid and ret or nil
-                            end
-                            return ret
-                        end,
-                    ttl =  game.tick + 200 + Prime_Random(rhythm, 100),
-                })
 
-                local rocket_silo_data, rsd_attr = cache[hash_keys["surfaces." .. rocket_silo.surface.name .. "." .. key]], _
-                if (_) then _ = nil end
-                if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
-                if (not rsd_attr) then
-                    rsd_attr = cache_attributes[rocket_silo_data]
-                    if (not rsd_attr) then
-                        goto continue
+                local rocket_silo_data = v
+                if (not rocket_silo_data or not rocket_silo_data.valid) then
+                    rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
+                    if (not rocket_silo_data or not rocket_silo_data.valid) then
+                        rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+                        rocket_silo_data = rocket_silo_data and rocket_silo_data.valid and rocket_silo_data or nil
+                        if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
                     end
                 end
 
                 local is_orbit_surface = false
                 if (rocket_silo_data.surface and rocket_silo_data.surface.valid) then
-                    is_orbit_surface = rsd_attr.is_orbit_surface
                     if (is_orbit_surface == nil) then
                         is_orbit_surface = rocket_silo_data.surface.name:lower():find(" orbit", 1, true) ~= nil
                     end
-                    rsd_attr.is_orbit_surface = is_orbit_surface
                 end
 
-                if (rsd_attr.is_ipbm_silo == nil) then
-                    rsd_attr.is_ipbm_silo = rocket_silo_data:is_ipbm_silo()
-                end
-
-                local is_ipbm_silo = rsd_attr.is_ipbm_silo
+                local is_ipbm_silo = rocket_silo_data:is_ipbm_silo()
 
                 local space_location_gui_available =   allow_icbm_multisurface
                                                     or is_ipbm_silo
@@ -476,12 +308,12 @@ function circuit_network_service.attempt_launch_silos(data)
                 end
             end
         end
+        ::continue::
+
+        k, v = next(data.rocket_silos, k)
     end
-    ::continue::
 
     return return_val
 end
-
-circuit_network_service.add_to_cache_list = true
 
 return circuit_network_service

@@ -4,7 +4,6 @@
 --     ["anomaly-data"] = require("scripts.data.space.celestial-objects.anomaly-data"),
 --     ["asteroid-belt-data"] = require("scripts.data.space.celestial-objects.asteroid-belt-data"),
 --     ["asteroid-field-data"] = require("scripts.data.space.celestial-objects.asteroid-field-data"),
---     ["cache-attribute-data"] = require("scripts.data.cache.cache-attribute-data"),
 --     ["configurable-nukes-data"] = require("scripts.data.configurable-nukes-data"),
 --     ["data"] = require("scripts.data.data"),
 --     ["force-launch-data"] = require("scripts.data.force-launch-data"),

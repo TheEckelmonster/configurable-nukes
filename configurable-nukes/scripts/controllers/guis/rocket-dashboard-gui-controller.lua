@@ -349,7 +349,7 @@ function rocket_dashboard_gui_controller.instantiate_if_not_exists(event)
     Log.info(event)
 
     if (event) then
-        if (event.name == defines.events.on_tick) then
+        if (event.name == defines.events.on_nth_tick) then
             if (game and game.forces) then
                 for k, force in pairs(game.forces) do
                     if (force.valid and force.players) then
@@ -363,8 +363,9 @@ function rocket_dashboard_gui_controller.instantiate_if_not_exists(event)
             end
 
             Event_Handler:unregister_event({
-                event_name = "on_tick",
-                source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+                event_name = "on_nth_tick",
+                nth_tick = 20,
+                source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
             })
         elseif (event.name == defines.events.on_player_joined_game) then
 

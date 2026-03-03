@@ -6,8 +6,8 @@ payload_controller.name = "payload_controller"
 payload_controller.nth_tick = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE.name }) or (60 * 5)
 
 function payload_controller.on_nth_tick(event)
-    Log.debug("payloader_controller.on_nth_tick")
-    Log.info(event)
+    -- Log.debug("payloader_controller.on_nth_tick")
+    -- Log.info(event)
 
     local payloads = storage.payloads or {}
 

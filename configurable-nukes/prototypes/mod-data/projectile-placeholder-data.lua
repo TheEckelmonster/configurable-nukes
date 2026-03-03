@@ -190,9 +190,6 @@ local function make_extend_ammo(params)
 
     if (DEBUG) then log(serpent.block(projectile_placeholder or "nil")) end
 
-    -- log(serpent.block(projectile_placeholder or "nil"))
-    -- log(serpent.block(dummy_projectile or "nil"))
-
     if (projectile_placeholder) then
         local data = { name = projectile_placeholder.name, speed = 1, projectile_placeholder = projectile_placeholder, dummy_projectile = dummy_projectile, warhead_projectile = warhead_projectile, }
 
@@ -202,17 +199,8 @@ local function make_extend_ammo(params)
         else
             local existing_projectile_placeholder = projectile_placeholders_dictionary[projectile_placeholder.name]
 
-            -- log(serpent.block(existing_projectile_placeholder.projectile_placeholder))
-            -- log(serpent.block(existing_projectile_placeholder.projectile_placeholder.action))
-
             existing_projectile_placeholder.projectile_placeholder.action = __Data_Utils.table.merge(existing_projectile_placeholder.projectile_placeholder.action, projectile_placeholder.action)
-
-            -- log(serpent.block(existing_projectile_placeholder.projectile_placeholder))
-            -- log(serpent.block(existing_projectile_placeholder.projectile_placeholder.action))
-
         end
-        -- log(serpent.block(dummy_projectile))
-        -- data:extend({ dummy_projectile, })
 
         projectile_placeholder_data.data[name_check({name = k, })] = data
 

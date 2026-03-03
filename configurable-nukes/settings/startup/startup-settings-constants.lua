@@ -723,6 +723,13 @@ startup_settings_constants.settings = {
         allowed_values = { "default", "all", "none", },
         default_value = "default",
     },
+    DO_MAP_REVEAL = {
+        type = "bool-setting",
+        name = prefix .. "do-map-reveal-startup",
+        setting_type = "startup",
+        order = "",
+        default_value = true,
+    },
     --[[ Bomb ]]
     AREA_MULTIPLIER = {
         type = "double-setting",

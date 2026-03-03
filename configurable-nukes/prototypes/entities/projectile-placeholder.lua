@@ -10,9 +10,11 @@ local __Data_Utils = require("data-utils")
 
 local PROJECTILE_PLACEHOLDER_COLLISION = __cn.PROJECTILE_PLACEHOLDER_COLLISION or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PROJECTILE_PLACEHOLDER_COLLISION.name })
 local QUALITY_BASE_MULTIPLIER = __cn.QUALITY_BASE_MULTIPLIER or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.QUALITY_BASE_MULTIPLIER.name, })
+local DO_MAP_REVEAL = __cn.DO_MAP_REVEAL or Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.DO_MAP_REVEAL.name, })
 
 __cn.PROJECTILE_PLACEHOLDER_COLLISION = PROJECTILE_PLACEHOLDER_COLLISION
 __cn.QUALITY_BASE_MULTIPLIER = QUALITY_BASE_MULTIPLIER
+__cn.DO_MAP_REVEAL = DO_MAP_REVEAL
 
 local lilys_mm_active = mods and mods["lilys-mm"]
 
@@ -274,26 +276,30 @@ local progression = {
 }
 
 local function map_reveal_action()
-    return
-    {
-        type = "nested-result",
-        action = {
-            {
-                type = "direct",
-                action_delivery =
+    if (DO_MAP_REVEAL) then
+        return
+        {
+            type = "nested-result",
+            action = {
                 {
+                    type = "direct",
+                    action_delivery =
                     {
-                        type = "instant",
-                        target_effects =
                         {
-                            type = "script",
-                            effect_id = "map-reveal"
-                        }
+                            type = "instant",
+                            target_effects =
+                            {
+                                type = "script",
+                                effect_id = "map-reveal"
+                            }
+                        },
                     },
                 },
             },
-        },
-    }
+        }
+    else
+        return
+    end
 end
 
 --[[ make_projectile_placeholder ]]
@@ -848,8 +854,14 @@ return function (params)
         end
 
         projectile_placeholder.action = __Data_Utils.table.unbox(params_action, 1)
-        -- table.insert(projectile_placeholder.action, __Data_Utils.table.unbox(action, 1))
-        table.insert(projectile_placeholder.action, 1, __Data_Utils.table.unbox(action, 1))
+        action =__Data_Utils.table.unbox(action, 1)
+        if (not next(action.action_delivery.target_effects)) then action.action_delivery.target_effects = nil end
+        if (not next(action.action_delivery.source_effects)) then action.action_delivery.source_effects = nil end
+        if (action.action_delivery.target_effects or action.action_delivery.source_effects) then
+            -- table.insert(projectile_placeholder.action, __Data_Utils.table.unbox(action, 1))
+            table.insert(projectile_placeholder.action, 1, action)
+        end
+
 
         --[[
             >>

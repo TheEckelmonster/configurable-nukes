@@ -1,6 +1,4 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local __Data_Utils = require("data-utils")
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
@@ -30,7 +28,7 @@ function rocket_silo_repository.save_rocket_silo_data(rocket_silo, optionals)
     if (not storage.configurable_nukes.rocket_silo_meta_data) then storage.configurable_nukes.rocket_silo_meta_data = {} end
     if (not storage.configurable_nukes.rocket_silo_meta_data[planet_name]) then
         -- If it doesn't exist, generate it
-        local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(planet_name, { update_data = update_data })
+        local rocket_silo_meta_data = Rocket_Silo_Meta_Repository.save_rocket_silo_meta_data(planet_name)
         if (not rocket_silo_meta_data or not rocket_silo_meta_data.valid) then
             return return_val
         end
@@ -57,7 +55,7 @@ function rocket_silo_repository.save_rocket_silo_data(rocket_silo, optionals)
 
     rocket_silos[return_val.unit_number] = return_val
 
-    return rocket_silo_repository.update_rocket_silo_data(return_val.entity, return_val)
+    return rocket_silo_repository.update_rocket_silo_data(return_val.entity, return_val, optionals)
 end
 
 function rocket_silo_repository.update_rocket_silo_data(source_silo, update_data, optionals)
@@ -103,7 +101,15 @@ function rocket_silo_repository.update_rocket_silo_data(source_silo, update_data
     end
 
     for k, v in pairs(update_data) do
-        return_val[k] = v
+        if (return_val[k]) then
+            if (type(return_val[k]) == "table") then
+                return_val[k] = __Data_Utils.table.merge(v, return_val[k])
+            else
+                return_val[k] = v
+            end
+        else
+            return_val[k] = v
+        end
     end
 
     return_val.updated = game.tick

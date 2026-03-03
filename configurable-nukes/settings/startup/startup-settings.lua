@@ -13,6 +13,7 @@ data:extend({
 data:extend({
     --[[ payload related ]]
     Startup_Settings_Constants.settings.PROJECTILE_PLACEHOLDER_COLLISION,
+    Startup_Settings_Constants.settings.DO_MAP_REVEAL,
 })
 
 data:extend({

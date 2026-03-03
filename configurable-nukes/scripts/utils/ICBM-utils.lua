@@ -1,7 +1,3 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
-
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local ICBM_Data = require("scripts.data.ICBM-data")
@@ -18,7 +14,6 @@ icbm_utils.name = "icbm_utils"
 
 icbm_utils.rhythm = { name = icbm_utils.name, }
 local rhythm = Rhythm.new(icbm_utils.rhythm, icbm_utils.rhythm)
-local Prime_Random = Rhythm.prime_random
 
 Event_Handler:register_events({
     {
@@ -29,31 +24,11 @@ Event_Handler:register_events({
         func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
     },
     {
-        event_name = Custom_Events.cn_reset_cache.name,
-        source_name = icbm_utils.name .. ".init_rhythm",
-        func_name = rhythm.name .. ".init_rhythm",
-        func = rhythm.init_rhythm,
-        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
-    },
-    {
         event_name = Custom_Events.cn_on_init_complete.name,
         source_name = icbm_utils.name .. ".init_rhythm",
         func_name = icbm_utils.name .. ".init_rhythm",
         func = rhythm.init_rhythm,
         func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
-    },
-    {
-        event_name = Custom_Events.cn_reset_cache.name,
-        source_name = icbm_utils.name .. ".init_rhythm",
-        func_name = icbm_utils.name .. ".init_rhythm",
-        func = rhythm.init_rhythm,
-        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
-    },
-    {
-        event_name = Custom_Events.cn_init_cache.name,
-        source_name = icbm_utils.name .. ".init_rhythm",
-        func_name = icbm_utils.name .. ".init_rhythm",
-        func = rhythm.init_rhythm,
     },
 })
 
@@ -256,7 +231,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                 for i = 1, math.floor(target_distance / distance_divisor), 1 do
                     --[[ This shouldn't be necessary? ]]
                     if (threshold >= 1) then break end
-                    local rand = Prime_Random(rhythm)
+                    local rand = math.random()
 
                     Log.warn("rand = " .. rand)
                     Log.warn("threshold = " .. threshold)
@@ -278,8 +253,8 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                             if (not se_active) then
                                 Log.warn("deviation_limit = " .. deviation_limit)
                                 icbm_data.target_position = {
-                                    x = icbm_data.target_position.x + Prime_Random(rhythm, 0 - deviation_limit, deviation_limit),
-                                    y = icbm_data.target_position.y + Prime_Random(rhythm, 0 - deviation_limit, deviation_limit),
+                                    x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
+                                    y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
                                 }
                             else
                                 local target_surface_name = icbm_data.target_surface and icbm_data.surface.valid and icbm_data.target_surface.name:lower() or icbm_data.target_surface_name
@@ -296,8 +271,8 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                                     }
 
                                     icbm_data.target_position = {
-                                        x = icbm_data.target_position.x + Prime_Random(rhythm, 0 - deviation_limit, deviation_limit),
-                                        y = icbm_data.target_position.y + Prime_Random(rhythm, 0 - deviation_limit, deviation_limit),
+                                        x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
+                                        y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
                                     }
 
                                     local delta_from_origin = ((icbm_data.target_position.x) ^ 2 + (icbm_data.target_position.y) ^ 2) ^ 0.5
@@ -742,20 +717,20 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     end
 
     if (not se_active and icbm_data.launched_from_space) then
-        local launch_duration_ticks = 511 + Prime_Random(rhythm, -1, 1) * Prime_Random(rhythm, 32)
+        local launch_duration_ticks = 511 + math.random(-1, 1) * math.random(32)
         time_to_target = time_to_target + launch_duration_ticks
         icbm_utils.space_launches_initiated[icbm_data] = {
             tick = game.tick + launch_duration_ticks,
             time_to_target = time_to_target - launch_duration_ticks,
         }
 
-        if (not storage.icbm_utils) then storage.icbm_utils = {} end
+        storage.icbm_utils = storage.icbm_utils or {}
         storage.icbm_utils.space_launches_initiated = icbm_utils.space_launches_initiated
     else
         local rand_additional_time = (math.log(2.71 + target_distance, 2.71) * (magnitude ^ 1.66))
         if (type(rand_additional_time) ~= "number" or rand_additional_time < 1 or rand_additional_time >= math.huge) then rand_additional_time = 1 end
 
-        time_to_target = time_to_target + Prime_Random(rhythm, 60 * rand_additional_time) * magnitude
+        time_to_target = time_to_target + math.random(60 * rand_additional_time) * magnitude
     end
 
     Log.warn("game.tick = " .. game.tick)
@@ -1318,7 +1293,6 @@ function icbm_utils.launch_initiated(data)
     return 1, icbm_data
 end
 
-local pos_neg = 1
 function icbm_utils.spawn_jericho_event(event, event_data)
     Log.debug("icbm_utils.spawn_jericho_event")
     Log.info(event)
@@ -1341,14 +1315,8 @@ function icbm_utils.spawn_jericho_event(event, event_data)
 
     if (not force or not force.valid) then force = nil end
 
-    pos_neg = pos_neg * -1
-
     local surface = event_data.surface or icbm and icbm.target_surface
     if (not surface or not surface.valid) then return end
-
-    -- if (    not Instantiable[payload_item]
-    --     and not Instantiable[icbm.item_name .. "-" .. icbm.item.quality]
-    -- ) then return end
 
     surface.create_entity({
         name = payload_item or icbm.item_name .. "-" .. icbm.item.quality,
@@ -1359,7 +1327,7 @@ function icbm_utils.spawn_jericho_event(event, event_data)
         source = source_position or icbm.source_position,
         --[[ TODO: Make configurable ]]
         cause = icbm and icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-        speed = 0.00000025 * Prime_Random(rhythm, 1000) * math.exp(1),
+        speed = 0.00000025 * math.random(1000) * math.exp(1),
         base_damage_modifiers = {
             damage_modifier = 1,
             damage_addition = 1,
@@ -1673,8 +1641,8 @@ function icbm_utils.payload_arrived(data)
 end
 
 function icbm_utils.print_space_launched_time_to_target_message(data)
-    Log.debug("icbm_utils.print_space_launched_time_to_target_message")
-    Log.info(data)
+    -- Log.debug("icbm_utils.print_space_launched_time_to_target_message")
+    -- Log.info(data)
 
     if (storage.icbm_utils and storage.icbm_utils.space_launches_initiated) then
         for k, v in pairs(storage.icbm_utils.space_launches_initiated) do
