@@ -7,9 +7,9 @@ local locals = {}
 local configurable_nukes_commands = {}
 
 function configurable_nukes_commands.init(event)
-    _Log.debug("configurable_nukes_commands.init")
+    Log.debug("configurable_nukes_commands.init")
     locals.validate_command(event, function (player)
-        _Log.info("commands.init")
+        Log.info("commands.init")
         player.print("Initializing anew")
         local maintain_data = true
 
@@ -31,9 +31,9 @@ function configurable_nukes_commands.init(event)
 end
 
 function configurable_nukes_commands.reinit(event)
-    _Log.debug("configurable_nukes_commands.reinit")
+    Log.debug("configurable_nukes_commands.reinit")
     locals.validate_command(event, function (player)
-        _Log.info("commands.reinit")
+        Log.info("commands.reinit")
         player.print("Reinitializing")
         local maintain_data = true
 
@@ -55,18 +55,18 @@ function configurable_nukes_commands.reinit(event)
 end
 
 function configurable_nukes_commands.print_table(event)
-    _Log.debug("configurable_nukes_commands.print_table")
+    Log.debug("configurable_nukes_commands.print_table")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_table")
+        Log.info("commands.print_table")
 
         Core_Utils.commands.print_table({ player = player, event = event })
     end)
 end
 
 function configurable_nukes_commands.print_storage(event)
-    _Log.debug("configurable_nukes_commands.print_storage")
+    Log.debug("configurable_nukes_commands.print_storage")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_storage")
+        Log.info("commands.print_storage")
 
         local file_name = "storage_" .. game.tick
         local exported_file_name = Core_Utils.table.traversal.traverse_print(storage, file_name, _, { max_depth = 4,  })
@@ -75,9 +75,9 @@ function configurable_nukes_commands.print_storage(event)
 end
 
 function configurable_nukes_commands.print_mod_data(event)
-    _Log.debug("configurable_nukes_commands.print_mod_data")
+    Log.debug("configurable_nukes_commands.print_mod_data")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_mod_data")
+        Log.info("commands.print_mod_data")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_mod_data(true)
@@ -90,9 +90,9 @@ function configurable_nukes_commands.print_mod_data(event)
 end
 
 function configurable_nukes_commands.print_mod_data_dictionary(event)
-    _Log.debug("configurable_nukes_commands.print_mod_data_dictionary")
+    Log.debug("configurable_nukes_commands.print_mod_data_dictionary")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_mod_data_dictionary")
+        Log.info("commands.print_mod_data_dictionary")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_mod_data(true)
@@ -105,9 +105,9 @@ function configurable_nukes_commands.print_mod_data_dictionary(event)
 end
 
 function configurable_nukes_commands.print_planets(event)
-    _Log.debug("configurable_nukes_commands.print_planets")
+    Log.debug("configurable_nukes_commands.print_planets")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_planets")
+        Log.info("commands.print_planets")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_planets(true)
@@ -120,9 +120,9 @@ function configurable_nukes_commands.print_planets(event)
 end
 
 function configurable_nukes_commands.print_planets_dictionary(event)
-    _Log.debug("configurable_nukes_commands.print_planets_dictionary")
+    Log.debug("configurable_nukes_commands.print_planets_dictionary")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_planets_dictionary")
+        Log.info("commands.print_planets_dictionary")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_planets(true)
@@ -135,9 +135,9 @@ function configurable_nukes_commands.print_planets_dictionary(event)
 end
 
 function configurable_nukes_commands.print_space_locations(event)
-    _Log.debug("configurable_nukes_commands.print_space_locations")
+    Log.debug("configurable_nukes_commands.print_space_locations")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_space_locations")
+        Log.info("commands.print_space_locations")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_space_locations(true)
@@ -150,9 +150,9 @@ function configurable_nukes_commands.print_space_locations(event)
 end
 
 function configurable_nukes_commands.print_space_locations_dictionary(event)
-    _Log.debug("configurable_nukes_commands.print_space_locations_dictionary")
+    Log.debug("configurable_nukes_commands.print_space_locations_dictionary")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_space_locations_dictionary")
+        Log.info("commands.print_space_locations_dictionary")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_space_locations(true)
@@ -165,9 +165,9 @@ function configurable_nukes_commands.print_space_locations_dictionary(event)
 end
 
 function configurable_nukes_commands.print_space_connections(event)
-    _Log.debug("configurable_nukes_commands.print_space_connections")
+    Log.debug("configurable_nukes_commands.print_space_connections")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_space_connections")
+        Log.info("commands.print_space_connections")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_space_connections(true)
@@ -180,9 +180,9 @@ function configurable_nukes_commands.print_space_connections(event)
 end
 
 function configurable_nukes_commands.print_space_connections_dictionary(event)
-    _Log.debug("configurable_nukes_commands.print_space_connections_dictionary")
+    Log.debug("configurable_nukes_commands.print_space_connections_dictionary")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_space_connections_dictionary")
+        Log.info("commands.print_space_connections_dictionary")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_space_connections(true)
@@ -196,9 +196,9 @@ end
 
 if (mods and mods["space-exploration"] or script and script.active_mods and script.active_mods["space-exploration"]) then
     function configurable_nukes_commands.print_space_exploration_universe(event)
-        _Log.debug("configurable_nukes_commands.print_space_exploration_universe")
+        Log.debug("configurable_nukes_commands.print_space_exploration_universe")
         locals.validate_command(event, function (player)
-            _Log.info("commands.print_space_exploration_universe")
+            Log.info("commands.print_space_exploration_universe")
 
             if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
                 Constants.get_space_exploration_universe(true)
@@ -211,9 +211,9 @@ if (mods and mods["space-exploration"] or script and script.active_mods and scri
     end
 
     function configurable_nukes_commands.print_space_exploration_dictionary(event)
-        _Log.debug("configurable_nukes_commands.print_space_exploration_dictionary")
+        Log.debug("configurable_nukes_commands.print_space_exploration_dictionary")
         locals.validate_command(event, function (player)
-            _Log.info("commands.print_space_exploration_dictionary")
+            Log.info("commands.print_space_exploration_dictionary")
 
             if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
                 Constants.get_space_exploration_universe(true)
@@ -227,9 +227,9 @@ if (mods and mods["space-exploration"] or script and script.active_mods and scri
 end
 
 function configurable_nukes_commands.print_event_handlers(event)
-    _Log.debug("configurable_nukes_commands.print_event_handlers")
+    Log.debug("configurable_nukes_commands.print_event_handlers")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_event_handlers")
+        Log.info("commands.print_event_handlers")
 
         if (Event_Handler) then
             local file_name = "Event_Handler.event_names_" .. game.tick
@@ -244,9 +244,9 @@ function configurable_nukes_commands.print_event_handlers(event)
 end
 
 function configurable_nukes_commands.print_projectile_placeholders(event)
-    _Log.debug("configurable_nukes_commands.print_projectile_placeholders")
+    Log.debug("configurable_nukes_commands.print_projectile_placeholders")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_projectile_placeholders")
+        Log.info("commands.print_projectile_placeholders")
 
         local file_name = "mod_data.configurable_nukes_projectile_placeholders_" .. game.tick
         Core_Utils.table.traversal.traverse_print(prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"], file_name, _, { full = true  })
@@ -255,9 +255,9 @@ function configurable_nukes_commands.print_projectile_placeholders(event)
 end
 
 function configurable_nukes_commands.find_functions_in_storage(event)
-    _Log.debug("configurable_nukes_commands.find_functions_in_storage")
+    Log.debug("configurable_nukes_commands.find_functions_in_storage")
     locals.validate_command(event, function (player)
-        _Log.info("commands.find_functions_in_storage")
+        Log.info("commands.find_functions_in_storage")
 
 
         local function find_functions(_tbl)
@@ -313,8 +313,7 @@ function configurable_nukes_commands.find_functions_in_storage(event)
 end
 
 function locals.validate_command(event, fun)
-    if (not _Log or not _Log.valid or not _Log._ready) then _Log = Log_Stub end
-    _Log.debug(event)
+    Log.debug(event)
     if (event) then
         local player = nil
 
