@@ -153,8 +153,6 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
 
     if (    event and event.effect_id
         and not valid_event_effect_ids[event.effect_id]
-        or
-            not events.DO_MAP_REVEAL
     ) then
         -- Log.debug("returning")
         return
@@ -165,6 +163,8 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     if (not surface or not surface.valid) then return end
 
     if (event.effect_id == "map-reveal") then
+        if (not events.DO_MAP_REVEAL) then return end
+
         local position = event.target_position
 
         if (position == nil and event.target_entity and event.target_entity.valid) then

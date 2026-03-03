@@ -166,20 +166,6 @@ local function make_extend_ammo(params)
     if (true_nukes_continued and (k == "atomic-bomb" or k:find("%-atomic%-"))) then
         if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
         if (DEBUG) then log(serpent.block(k)) end
-        if (k:find("artillery%-shell%-atomic%-")) then
-            for key, v in pairs(warhead_mapping) do
-                if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                if (DEBUG) then log(serpent.block(key)) end
-                if (k:find(key, 1, true)) then
-                    if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                    for i = 1, #v.final_effect, 1 do
-                        if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
-                        if (DEBUG) then log(serpent.block(v.final_effect[i])) end
-                        table.insert(params.target_effects, v.final_effect[i])
-                    end
-                end
-            end
-        end
         warhead_projectile = true
     end
 
