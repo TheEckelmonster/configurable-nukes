@@ -24,7 +24,7 @@ Date: 2026-03-03
       - These settings can be used to increase the amount of damage dealt by payload delivered items (affects all possible payloads)
   Bug Fixes:
     - Fixed consistent UPS drops due to improper caching logic related to space-platforms (thanks to UPD-8)
-    - Fixed circuit connected rocket-silos not firing in some unknown circumstances (thanks to Loose_Caboose)
+    - Fixed circuit connected rocket-silos not firing in some unknown circumstances (thanks to _Loose_Caboose_)
     - Fixed desyncs when circuit launching a rocket in a single-player save opened to multiplayer (non-dedicated host)
     - Fixed jerichos not delivering properly (sub-rockets previously weren't instantiating)
     - [combat-mechanics-overhaul] Fixed the payload projectile (the actual rocket that drops upon delivery) colliding prematurely/not delivering properly when the "Rockets blockable" setting is enabled
