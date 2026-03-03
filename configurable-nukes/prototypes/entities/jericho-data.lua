@@ -45,13 +45,13 @@ local repeat_multiplier = get_repeat_multiplier()
 -- Rocket PROJECTILE
 -----------------------------------------------------------------------
 
-local original_jericho = Util.table.deepcopy(data.raw["projectile"]["explosive-rocket"])
+local original_jericho = require("prototypes.entities.jericho-explosive-rocket")
 
 original_jericho.name = "cn-jericho"
 
 local jericho = nil
 
-local create_quality_jericho = function (params)
+local function create_quality_jericho(params)
 
     local quality = params.quality
     local k_0 = params.quality_level
