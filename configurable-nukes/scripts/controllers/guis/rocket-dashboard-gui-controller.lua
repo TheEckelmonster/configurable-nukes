@@ -11,7 +11,6 @@ local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashb
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
 local rocket_dashboard_gui_controller = {}
-
 rocket_dashboard_gui_controller.name = "rocket_dashboard_gui_controller"
 
 rocket_dashboard_gui_controller.nth_tick = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DASHBOARD_REFRESH_RATE.name })
@@ -350,7 +349,7 @@ function rocket_dashboard_gui_controller.instantiate_if_not_exists(event)
     Log.info(event)
 
     if (event) then
-        if (event.name == defines.events.on_tick) then
+        if (event.name == defines.events.on_nth_tick) then
             if (game and game.forces) then
                 for k, force in pairs(game.forces) do
                     if (force.valid and force.players) then
@@ -364,8 +363,9 @@ function rocket_dashboard_gui_controller.instantiate_if_not_exists(event)
             end
 
             Event_Handler:unregister_event({
-                event_name = "on_tick",
-                source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+                event_name = "on_nth_tick",
+                nth_tick = 20,
+                source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
             })
         elseif (event.name == defines.events.on_player_joined_game) then
 

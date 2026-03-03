@@ -11,6 +11,12 @@ data:extend({
 })
 
 data:extend({
+    --[[ payload related ]]
+    Startup_Settings_Constants.settings.PROJECTILE_PLACEHOLDER_COLLISION,
+    Startup_Settings_Constants.settings.DO_MAP_REVEAL,
+})
+
+data:extend({
     --[[ atomic-bomb ]]
     Startup_Settings_Constants.settings.AREA_MULTIPLIER,
     Startup_Settings_Constants.settings.DAMAGE_MULTIPLIER,
@@ -62,6 +68,8 @@ data:extend({
 
 data:extend({
     --[[ payloader ]]
+    Startup_Settings_Constants.settings.PAYLOADER_DO_TINT,
+    Startup_Settings_Constants.settings.PAYLOADER_BASE_TINT,
     Startup_Settings_Constants.settings.PAYLOADER_STACK_SIZE,
     Startup_Settings_Constants.settings.PAYLOADER_WEIGHT_MODIFIER,
     Startup_Settings_Constants.settings.PAYLOADER_CRAFTING_TIME,
@@ -224,7 +232,11 @@ if (sa_active or se_active) then
     })
 
     data:extend({
-        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_STACK_SIZE,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_DO_TINT,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_BASE_TINT,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_PRIMARY_TINT,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_SECONDARY_TINT,
+        Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_TERTIARY_TINT,
         Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_WEIGHT_MODIFIER,
         Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_CRAFTING_TIME,
         Startup_Settings_Constants.settings.BALLISTIC_ROCKET_SILO_INPUT_MULTIPLIER,

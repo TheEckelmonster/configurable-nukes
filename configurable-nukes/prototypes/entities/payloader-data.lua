@@ -6,28 +6,116 @@ local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-uti
 
 local se_active = mods and mods["space-exploration"] and true
 
+local do_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_DO_TINT.name, })
+local payloader_base_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_BASE_TINT.name, }) or { r = 1.0, g = 0.0, b = 0.0, a = 1.0, }
+
+local corpse_icon_path = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants.png"
+local corpse_icon = { icon = corpse_icon_path, size = 64, scale = 1, }
+local corpse_icons = { corpse_icon, }
+
+if (do_tint) then
+    corpse_icon.icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-grayscale.png"
+    corpse_icon.tint = payloader_base_tint
+
+    corpse_icons =
+    {
+        corpse_icon,
+        {
+            icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-alpha.png",
+            size = 64,
+            scale = 1,
+        },
+        {
+            icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-final-overlay.png",
+            size = 64,
+            scale = 1,
+        },
+    }
+end
+
 --[[ payloader-corpse ]]
 local payloader_corpse = Util.table.deepcopy(data.raw["corpse"]["assembling-machine-3-remnants"])
 payloader_corpse.name = "payloader-remnants"
-payloader_corpse.icon = "__configurable-nukes__/graphics/icons/payloader.png"
-payloader_corpse.animation = make_rotated_animation_variations_from_sheet(3,
-{
-    filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants.png",
-    line_length = 1,
-    width = 328,
-    height = 282,
-    direction_count = 1,
-    shift = Util.by_pixel(0, 9.5),
-    scale = 0.5
-})
+payloader_corpse.icons = corpse_icons
+
+local animations = {
+    grayscale = make_rotated_animation_variations_from_sheet(3,
+    {
+        filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-grayscale.png",
+        line_length = 1,
+        width = 328,
+        height = 282,
+        direction_count = 1,
+        shift = Util.by_pixel(0, 9.5),
+        scale = 0.5,
+        tint = payloader_base_tint,
+    }),
+    alpha = make_rotated_animation_variations_from_sheet(3,
+    {
+        filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-alpha.png",
+        line_length = 1,
+        width = 328,
+        height = 282,
+        direction_count = 1,
+        shift = Util.by_pixel(0, 9.5),
+        scale = 0.5,
+        tint = payloader_base_tint,
+    }),
+    overlay = make_rotated_animation_variations_from_sheet(3,
+    {
+        filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-final-overlay.png",
+        line_length = 1,
+        width = 328,
+        height = 282,
+        direction_count = 1,
+        shift = Util.by_pixel(0, 9.5),
+        scale = 0.5,
+        tint = payloader_base_tint,
+    }),
+}
+
+local animation = {}
+local num_animations = #animations
+for i = 1, 3, 1 do
+    table.insert(animation, animations.grayscale[i])
+    table.insert(animation, animations.alpha[i])
+    table.insert(animation, animations.overlay[i])
+end
+
+payloader_corpse.animation = animation
 
 data:extend({ payloader_corpse, })
 
 --[[ payloader ]]
 local payloader = Util.table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 
+local icon_path = "__configurable-nukes__/graphics/icons/payloader/payloader.png"
+local icon = { icon = icon_path, size = 64, scale = 1, }
+local icons = { icon, }
+
+if (do_tint) then
+    icon.icon = "__configurable-nukes__/graphics/icons/payloader/payloader-base-grayscale.png"
+    icon.tint = payloader_base_tint
+
+    icons =
+    {
+        icon,
+        {
+            icon = "__configurable-nukes__/graphics/icons/payloader/payloader-base-alpha.png",
+            size = 64,
+            scale = 1,
+        },
+        {
+            icon = "__configurable-nukes__/graphics/icons/payloader/payloader-final-overlay.png",
+            size = 64,
+            scale = 1,
+        },
+    }
+end
+
 payloader.name = "payloader"
-payloader.icon = "__configurable-nukes__/graphics/icons/payloader.png"
+payloader.icon = nil
+payloader.icons = icons
 payloader.flags = { "placeable-neutral", "placeable-player", "player-creation", "no-automated-item-removal", "no-automated-item-insertion", }
 payloader.minable.result = "payloader"
 payloader.max_health = payloader.max_health * 1.25
@@ -105,6 +193,64 @@ local layers =
     },
 }
 
+if (do_tint) then
+    layers =
+    {
+        {
+            filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-grayscale.png",
+            priority = "high",
+            width = 214,
+            height = 237,
+            frame_count = 32,
+            line_length = 8,
+            shift = Util.by_pixel(0, -0.75),
+            scale = 0.5,
+        },
+        {
+            filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-grayscale.png",
+            priority = "high",
+            width = 214,
+            height = 237,
+            frame_count = 32,
+            line_length = 8,
+            shift = Util.by_pixel(0, -0.75),
+            scale = 0.5,
+            tint = { r = payloader_base_tint.r, g = payloader_base_tint.g, b = payloader_base_tint.b, a = payloader_base_tint.a * 0.85},
+        },
+        {
+            filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-alpha.png",
+            priority = "high",
+            width = 214,
+            height = 237,
+            frame_count = 32,
+            line_length = 8,
+            shift = Util.by_pixel(0, -0.75),
+            scale = 0.5,
+        },
+        {
+            filename = "__configurable-nukes__/graphics/entity/payloader/payloader-final-overlay.png",
+            priority = "high",
+            width = 214,
+            height = 237,
+            frame_count = 32,
+            line_length = 8,
+            shift = Util.by_pixel(0, -0.75),
+            scale = 0.5,
+        },
+        {
+            filename = "__base__/graphics/entity/assembling-machine-3/assembling-machine-3-shadow.png",
+            priority = "high",
+            width = 260,
+            height = 162,
+            frame_count = 32,
+            line_length = 8,
+            draw_as_shadow = true,
+            shift = Util.by_pixel(28, 4),
+            scale = 0.5,
+        },
+    }
+end
+
 payloader.graphics_set =
 {
     animation_progress = 0.5,
@@ -140,7 +286,7 @@ data:extend({
     {
         type = "container",
         name = "payloader-container-input",
-        icon = "__configurable-nukes__/graphics/icons/payloader.png",
+        icon = "__configurable-nukes__/graphics/icons/payloader/payloader.png",
         icon_size = 64,
         flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map" },
         hidden = true,
@@ -167,7 +313,7 @@ data:extend({
     {
         type = "container",
         name = "payloader-container-output",
-        icon = "__configurable-nukes__/graphics/icons/payloader.png",
+        icon = "__configurable-nukes__/graphics/icons/payloader/payloader.png",
         icon_size = 64,
         flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map" },
         hidden = true,
@@ -194,7 +340,7 @@ data:extend({
     {
         type = "container",
         name = "payloader-container-input-vertical",
-        icon = "__configurable-nukes__/graphics/icons/payloader.png",
+        icon = "__configurable-nukes__/graphics/icons/payloader/payloader.png",
         icon_size = 64,
         flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map" },
         hidden = true,
@@ -221,7 +367,7 @@ data:extend({
     {
         type = "container",
         name = "payloader-container-output-vertical",
-        icon = "__configurable-nukes__/graphics/icons/payloader.png",
+        icon = "__configurable-nukes__/graphics/icons/payloader/payloader.png",
         icon_size = 64,
         flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map" },
         hidden = true,

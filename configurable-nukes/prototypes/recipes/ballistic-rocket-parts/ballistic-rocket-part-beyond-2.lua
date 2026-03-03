@@ -177,11 +177,11 @@ ipbm_rocket_part_beyond_2.hide_from_player_crafting = false
 ipbm_rocket_part_beyond_2.auto_recycle = false
 ipbm_rocket_part_beyond_2.overload_multiplier = 2
 ipbm_rocket_part_beyond_2.allow_inserter_overload = true
-ipbm_rocket_part_beyond_2.results = {{ type = "item", name = name_prefix .. "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
+ipbm_rocket_part_beyond_2.results = {{ type = "item", name = "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_2_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
 ipbm_rocket_part_beyond_2.enabled = false
 ipbm_rocket_part_beyond_2.subgroup = "ipbm-rocket-parts"
 ipbm_rocket_part_beyond_2.order = "zzzz[ipbm-rocket-part-beyond-2]-zzzz[ipbm-rocket-part-beyond-2]"
-ipbm_rocket_part_beyond_2.localised_name = { "recipe-name." .. name_prefix .. "ipbm-rocket-part-beyond-2" }
+ipbm_rocket_part_beyond_2.localised_name = { "recipe-name.ipbm-rocket-part-beyond-2" }
 
 ipbm_rocket_part_beyond_2.hidden = not sa_active or se_active
 ipbm_rocket_part_beyond_2.hidden_in_factoriopedia = not sa_active or se_active

@@ -50,8 +50,8 @@ function circuit_network_rocket_silo_data:new_space_location_gui_selection(data)
 end
 
 function circuit_network_rocket_silo_data:new(o)
-    _Log.debug("circuit_network_rocket_silo_data:new")
-    _Log.info(o)
+    -- _Log.debug("circuit_network_rocket_silo_data:new")
+    -- _Log.info(o)
 
     local defaults = {
         type = self.type,

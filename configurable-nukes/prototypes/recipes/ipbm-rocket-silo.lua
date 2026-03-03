@@ -200,7 +200,7 @@ ipbm_rocket_part_dummy.energy_required = 4
 ipbm_rocket_part_dummy.ingredients =
 {
     --[[ TODO: Make configurable ]]
-    { type = "item", name = name_prefix .. "ipbm-rocket-part", amount = 1, },
+    { type = "item", name = "ipbm-rocket-part", amount = 1, },
 }
 
 ipbm_rocket_part_dummy.enabled = false
@@ -209,7 +209,7 @@ ipbm_rocket_part_dummy.hidden = true
 ipbm_rocket_part_dummy.auto_recycle = false
 
 -- This doesn't actually matter I believe; could be any number as the craft count is what's considered, not the results of the crafts
-ipbm_rocket_part_dummy.results = {{ type = "item", name = name_prefix .. "ipbm-rocket-part", amount = 1 }}
+ipbm_rocket_part_dummy.results = {{ type = "item", name = "ipbm-rocket-part", amount = 1 }}
 
 data:extend({
     ipbm_rocket_part_dummy,

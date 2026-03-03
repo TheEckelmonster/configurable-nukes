@@ -198,7 +198,7 @@ end
 
 function rocket_silo_service.scrub_newest_launch(data)
     Log.debug("rocket_silo_service.scrub_newest_launch")
-    Log.info(event)
+    Log.info(data)
 
     if (not data) then return end
     if (not data.tick) then return end
@@ -214,7 +214,7 @@ end
 
 function rocket_silo_service.scrub_oldest_launch(data)
     Log.debug("rocket_silo_service.scrub_oldest_launch")
-    Log.info(event)
+    Log.info(data)
 
 
     if (not data) then return end
@@ -231,7 +231,7 @@ end
 
 function rocket_silo_service.scrub_all_launches(data)
     Log.debug("rocket_silo_service.scrub_all_launches")
-    Log.info(event)
+    Log.info(data)
 
     data.order = "last"
     data.print_message = false
