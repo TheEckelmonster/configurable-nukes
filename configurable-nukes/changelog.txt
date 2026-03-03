@@ -1,4 +1,39 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.6
+Date: 2026-03-03
+  Features:
+    - Payloaders are now tintable via startup setting(s), defaults to disabled (i.e. use default graphic, no tint)
+    - The ipbm-rocket-part item is now tintable via startup setting(s), defaults to disabled (i.e. use default graphic, no tint)
+      - Idea is so that they can be more easily identifiable/distinguishable when other mods are present (namely other mods also making use of the hidden, but vanilla, rocket-part item)
+    - Reworked/overhauled payload projectile creation to be (hopefully) a closer 1:1 of an actual player/turret firing the payload
+      - Added toggleable payload collision setting ("all", "default", "none"; defaults to "default")
+        - Controls whether the actual payload projectile(s) that are instantiated will collide with other entities on the way to their target or not
+        - Default means that the payload projectile(s) will inherit the collision box of the item it is derived from (not all items/ammos have a defined collision box)
+      - Added toggleable payload map reveal startup and runtime settings
+        - Startup: controls whether to add a "script-effect" trigger to generated payloads
+        - Runtime: controls whether to actually generate undiscovered chunks or not when the above "script-effect" is triggered
+    - Improved background performance (no active launches or in-flight payloads)
+      - Reworked how circuit connected rocket-silos are launched
+        - Should be relatively more responsive
+        - Responsiveness may/will decline incrementally as the number of rocket-silos increases
+          - --[[ TODO: improve the above logic; is simply a queue of all rocket-silos at present ]]
+      - Renamed the "Surface processing" settings:
+        - "Surface processing rate" -> "Rocket-silo processing rate"
+        - "Number of surfaces processed per tick" -> "Number of rocket-silos processed per tick"
+    - Added runtime settings for payload base damage and bonus damage modifier and addition
+      - These settings can be used to increase the amount of damage dealt by payload delivered items (affects all possible payloads)
+  Bug Fixes:
+    - Fixed consistent UPS drops due to improper caching logic related to space-platforms (thanks to UPD-8)
+    - Fixed circuit connected rocket-silos not firing in some unknown circumstances (thanks to _Loose_Caboose_)
+    - Fixed desyncs when circuit launching a rocket in a single-player save opened to multiplayer (non-dedicated host)
+    - Fixed jerichos not delivering properly (sub-rockets previously weren't instantiating)
+    - [combat-mechanics-overhaul] Fixed the payload projectile (the actual rocket that drops upon delivery) colliding prematurely/not delivering properly when the "Rockets blockable" setting is enabled (thanks to dragocheese)
+    - Fixed lightning bolts not instantiating when a Mjölnir is delivered
+  Misc:
+    - Reduced the default value for the rocket-silos processed per tick setting when Space-Exploration is present (8 -> 3)
+    - Reduced the maximum value for the rocket-silos processed per tick setting (32 -> 10)
+    - Improved the default graphics of the payloader icon
+---------------------------------------------------------------------------------------------------
 Version: 0.9.5
 Date: 2026-02-06
   Bug Fixes:
@@ -24,7 +59,7 @@ Date: 2026-02-06
       - increased default low-density-structure amount, 4 -> 12
       - increased default se-heat-shielding amount, 4 -> 12
   Misc:
-    - Migration logic should hopefully, finally, possibly, maybe be applying properly
+    - Migration logic should hopefully, finally, possibly, maybe apply properly (?)
     - Added 'item-with-label', 'item-with-tags', 'item-with-inventory', and 'armor' types as valid item types for user defined configurable recipes (the startup setting recipes)
     - Fixed payload delivery "randomness" favoring the north-west, again..
       - Payload distribution should feel more random/even

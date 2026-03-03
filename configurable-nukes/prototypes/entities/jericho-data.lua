@@ -305,16 +305,27 @@ else
 end
 
 if (mods and mods["quality"]) then
+    local jericho_payloader_rocket = Util.table.deepcopy(data.raw["projectile"]["rocket"])
+    jericho_payloader_rocket.name = "jericho-payloader-rocket"
+    table.insert(jericho_payloader_rocket.action.action_delivery.target_effects, { type = "script", effect_id = "jericho-delivered-" .. "normal",  })
+
+    data:extend({ jericho_payloader_rocket, })
     for k_0, quality in pairs(data.raw["quality"]) do
-        local jericho_payloader_rocket = Util.table.deepcopy(data.raw["projectile"]["rocket"])
-        if (k_0 == "normal" or not quality.hidden) then
+        if (not quality.hidden) then
+            local jericho_payloader_rocket = Util.table.deepcopy(data.raw["projectile"]["rocket"])
             jericho_payloader_rocket.name = "jericho-payloader-rocket-" .. k_0
             table.insert(jericho_payloader_rocket.action.action_delivery.target_effects, { type = "script", effect_id = "jericho-delivered-" .. k_0,  })
-        end
 
-        data:extend({ jericho_payloader_rocket, })
+            data:extend({ jericho_payloader_rocket, })
+        end
     end
 else
+    local jericho_payloader_rocket = Util.table.deepcopy(data.raw["projectile"]["rocket"])
+    jericho_payloader_rocket.name = "jericho-payloader-rocket"
+    table.insert(jericho_payloader_rocket.action.action_delivery.target_effects, { type = "script", effect_id = "jericho-delivered-normal",  })
+
+    data:extend({ jericho_payloader_rocket, })
+
     local jericho_payloader_rocket = Util.table.deepcopy(data.raw["projectile"]["rocket"])
     jericho_payloader_rocket.name = "jericho-payloader-rocket-normal"
     table.insert(jericho_payloader_rocket.action.action_delivery.target_effects, { type = "script", effect_id = "jericho-delivered-normal",  })

@@ -1,9 +1,3 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
-
-local Data = require("__TheEckelmonster-core-library__.libs.data.data")
-
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
@@ -11,21 +5,8 @@ local Rocket_Silo_Service = require("scripts.services.rocket-silo-service")
 local Rocket_Silo_Validations = require("scripts.validations.rocket-silo-validations")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
-local cache = {}
-local cache_attributes = {}
-setmetatable(cache_attributes, { __mode = "k" })
-
-cache.surfaces = {}
-cache.rocket_silos = {}
-
 local circuit_network_service = {}
 circuit_network_service.name = "circuit_network_service"
-circuit_network_service.cache = cache
-circuit_network_service.cache_attributes = cache_attributes
-
-cache.self = circuit_network_service
-
-Cache[circuit_network_service.name] = circuit_network_service
 
 local sa_active = script and script.active_mods and script.active_mods["space-age"]
 local se_active = script and script.active_mods and script.active_mods["space-exploration"]
@@ -33,82 +14,48 @@ local se_active = script and script.active_mods and script.active_mods["space-ex
 local rocket_ready_status = defines.rocket_silo_status.rocket_ready
 
 function circuit_network_service.attempt_launch_silos(data)
-    Log.debug("circuit_network_service.attempt_launch_silos")
-    Log.info(data)
-
+    -- Log.debug("circuit_network_service.attempt_launch_silos")
+    -- Log.info(data)
     if (not data or type(data) ~= "table") then return end
     if (type(data.rocket_silos) ~= "table" or not next(data.rocket_silos)) then return end
 
     local return_val = 0
 
-    local rocket_silos = data.rocket_silos
-
     local allow_targeting_origin = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_ALLOW_TARGETING_ORIGIN.name })
     local allow_launch_when_no_surface_selected = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALLOW_LAUNCH_WHEN_NO_SURFACE_SELECTED.name })
     local allow_icbm_multisurface = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
 
-    local _, v = next(rocket_silos)
-    if (v and v.entity and v.entity.valid) then
+    local k, v = next(data.rocket_silos)
+    while (v and v.entity and v.entity.valid) do
         local rocket_silo = v.entity
-        if (not cache.rocket_silos[rocket_silo.unit_number] or not cache_attributes[cache.rocket_silos[rocket_silo.unit_number]] or cache_attributes[cache.rocket_silos[rocket_silo.unit_number]].time_to_live < game.tick) then
-            cache.rocket_silos[rocket_silo.unit_number] = { rocket_silo = rocket_silo }
-            cache_attributes[cache.rocket_silos[rocket_silo.unit_number]] = Data:new({ time_to_live = game.tick + 1800, valid = true})
-        end
 
-        if (rocket_silo.rocket_silo_status == rocket_ready_status) then
-            if (not cache.rocket_silos[rocket_silo.unit_number].circuit_network_red or not cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_red] or cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_red].time_to_live < game.tick) then
-                cache.rocket_silos[rocket_silo.unit_number].circuit_network_red = { circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red) }
-                cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_red] = Data:new({ time_to_live = game.tick + 30 + Random(30), valid = true, })
-            end
+        if (rocket_silo and rocket_silo.valid and rocket_silo.rocket_silo_status == rocket_ready_status) then
+            local circuit_network_red = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red)
+            local circuit_network_green = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green)
 
-            if (not cache.rocket_silos[rocket_silo.unit_number].circuit_network_green or not cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_green] or cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_green].time_to_live < game.tick) then
-                cache.rocket_silos[rocket_silo.unit_number].circuit_network_green = { circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green) }
-                cache_attributes[cache.rocket_silos[rocket_silo.unit_number].circuit_network_green] = Data:new({ time_to_live = game.tick + 30 + Random(30), valid = true, })
-            end
-
-            local circuit_network_red = cache.rocket_silos[rocket_silo.unit_number].circuit_network_red.circuit_network
-            local circuit_network_green = cache.rocket_silos[rocket_silo.unit_number].circuit_network_green.circuit_network
             if (not circuit_network_red and not circuit_network_green) then goto continue end
             if (   (circuit_network_red and circuit_network_red.valid and circuit_network_red.entity and circuit_network_red.entity.valid)
                 or (circuit_network_green and circuit_network_green.valid and circuit_network_green.entity and circuit_network_green.entity.valid))
             then
-                if (not cache.surfaces[rocket_silo.surface.name]) then cache.surfaces[rocket_silo.surface.name] = {} end
 
-                -- Check if the rocket silo has signals different from default
-                local rocket_silo_data = cache.surfaces[rocket_silo.surface.name][rocket_silo.unit_number] or Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
+                local rocket_silo_data = v
                 if (not rocket_silo_data or not rocket_silo_data.valid) then
-                    rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
-                    if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
-                    cache.surfaces[rocket_silo.surface.name][rocket_silo.unit_number] = rocket_silo_data
-                    cache_attributes[rocket_silo_data] = Data:new({ time_to_live = game.tick + 1700 + Random(100), valid = true })
-                else
-                    --[[ TODO: Make cache refresh rate configurable? ]]
-                    if (not cache_attributes[rocket_silo_data] or cache_attributes[rocket_silo_data].time_to_live < game.tick) then
-                        rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
-
-                        if (not rocket_silo_data or not rocket_silo_data.valid) then
-                            rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
-                            if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
-                        end
-                        cache.surfaces[rocket_silo.surface.name][rocket_silo.unit_number] = rocket_silo_data
-                        cache_attributes[rocket_silo_data] = Data:new({ time_to_live = game.tick + 1700 + Random(100), valid = true })
+                    rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
+                    if (not rocket_silo_data or not rocket_silo_data.valid) then
+                        rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+                        rocket_silo_data = rocket_silo_data and rocket_silo_data.valid and rocket_silo_data or nil
+                        if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
                     end
                 end
 
                 local is_orbit_surface = false
                 if (rocket_silo_data.surface and rocket_silo_data.surface.valid) then
-                    is_orbit_surface = cache_attributes[rocket_silo_data].is_orbit_surface
                     if (is_orbit_surface == nil) then
                         is_orbit_surface = rocket_silo_data.surface.name:lower():find(" orbit", 1, true) ~= nil
                     end
-                    cache_attributes[rocket_silo_data].is_orbit_surface = is_orbit_surface
                 end
 
-                if (cache_attributes[rocket_silo_data].is_ipbm_silo == nil) then
-                    cache_attributes[rocket_silo_data].is_ipbm_silo = rocket_silo_data:is_ipbm_silo()
-                end
-
-                local is_ipbm_silo = cache_attributes[rocket_silo_data].is_ipbm_silo
+                local is_ipbm_silo = rocket_silo_data:is_ipbm_silo()
 
                 local space_location_gui_available =   allow_icbm_multisurface
                                                     or is_ipbm_silo
@@ -361,8 +308,10 @@ function circuit_network_service.attempt_launch_silos(data)
                 end
             end
         end
+        ::continue::
+
+        k, v = next(data.rocket_silos, k)
     end
-    ::continue::
 
     return return_val
 end

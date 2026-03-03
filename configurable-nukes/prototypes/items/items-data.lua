@@ -340,9 +340,60 @@ if (sa_active or se_active) then
 
     --[[ ipbm-rocket-part ]]
     local ipbm_rocket_part = Util.table.deepcopy(data.raw["item"]["rocket-part"])
-    ipbm_rocket_part.name = name_prefix .. "ipbm-rocket-part"
+    ipbm_rocket_part.name = "ipbm-rocket-part"
     ipbm_rocket_part.subgroup = "ipbm-rocket-parts"
     ipbm_rocket_part.order = ipbm_rocket_part.order .. "-ipbm-rocket-part"
+
+    local do_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_DO_TINT.name, })
+
+    if (do_tint) then
+        local tint_base      = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_BASE_TINT.name, })
+        local tint_primary   = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_PRIMARY_TINT.name, })
+        local tint_secondary = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_SECONDARY_TINT.name, })
+        local tint_tertiary  = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BALLISTIC_ROCKET_PART_TERTIARY_TINT.name, })
+
+        ipbm_rocket_part.icons = {
+            {
+                icon = "__configurable-nukes__/graphics/icons/ballistic-rocket-part/ballistic-rocket-part-base-grayscale.png",
+                size = 64,
+                scale = 0.5,
+                tint = tint_base,
+            },
+            {
+                icon = "__configurable-nukes__/graphics/icons/ballistic-rocket-part/ballistic-rocket-part-base-alpha.png",
+                size = 64,
+                scale = 0.5,
+            },
+            {
+                icon = "__configurable-nukes__/graphics/icons/ballistic-rocket-part/ballistic-rocket-part-base-overlay-1-grayscale.png",
+                size = 64,
+                scale = 0.5,
+                tint = tint_primary,
+            },
+            {
+                icon = "__configurable-nukes__/graphics/icons/ballistic-rocket-part/ballistic-rocket-part-base-overlay-2-grayscale.png",
+                size = 64,
+                scale = 0.5,
+                tint = tint_secondary,
+            },
+            {
+                icon = "__configurable-nukes__/graphics/icons/ballistic-rocket-part/ballistic-rocket-part-base-overlay-2-alpha.png",
+                size = 64,
+                scale = 0.5,
+            },
+            {
+                icon = "__configurable-nukes__/graphics/icons/ballistic-rocket-part/ballistic-rocket-part-base-overlay-3-grayscale.png",
+                size = 64,
+                scale = 0.5,
+                tint = tint_tertiary,
+            },
+            {
+                icon = "__configurable-nukes__/graphics/icons/ballistic-rocket-part/ballistic-rocket-part-base-overlay-final.png",
+                size = 64,
+                scale = 0.5,
+            },
+        }
+    end
 
     ipbm_rocket_part.hidden = false
     ipbm_rocket_part.hide_from_player_crafting = true

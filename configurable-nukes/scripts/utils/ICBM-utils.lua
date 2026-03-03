@@ -1,12 +1,9 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
-
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
+local Rhythm = require("scripts.rhythm")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
@@ -14,6 +11,26 @@ local icbm_utils = {
     space_launches_initiated = {}
 }
 icbm_utils.name = "icbm_utils"
+
+icbm_utils.rhythm = { name = icbm_utils.name, }
+local rhythm = Rhythm.new(icbm_utils.rhythm, icbm_utils.rhythm)
+
+Event_Handler:register_events({
+    {
+        event_name = Custom_Events.cn_on_init_complete.name,
+        source_name = icbm_utils.name .. ".init_rhythm",
+        func_name = rhythm.name .. ".init_rhythm",
+        func = rhythm.init_rhythm,
+        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
+    },
+    {
+        event_name = Custom_Events.cn_on_init_complete.name,
+        source_name = icbm_utils.name .. ".init_rhythm",
+        func_name = icbm_utils.name .. ".init_rhythm",
+        func = rhythm.init_rhythm,
+        func_data = { --[[ Passing any non-nil value resets the rhythm (?) ]] }
+    },
+})
 
 local time_to_target_message = function (params)
     local print_message = function (param_1, param_2)
@@ -707,7 +724,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             time_to_target = time_to_target - launch_duration_ticks,
         }
 
-        if (not storage.icbm_utils) then storage.icbm_utils = {} end
+        storage.icbm_utils = storage.icbm_utils or {}
         storage.icbm_utils.space_launches_initiated = icbm_utils.space_launches_initiated
     else
         local rand_additional_time = (math.log(2.71 + target_distance, 2.71) * (magnitude ^ 1.66))
@@ -1276,7 +1293,6 @@ function icbm_utils.launch_initiated(data)
     return 1, icbm_data
 end
 
-local pos_neg = 1
 function icbm_utils.spawn_jericho_event(event, event_data)
     Log.debug("icbm_utils.spawn_jericho_event")
     Log.info(event)
@@ -1288,43 +1304,40 @@ function icbm_utils.spawn_jericho_event(event, event_data)
         source_name = event_data.source_name,
     })
 
-    local function create_jericho_rocket(params)
-        pos_neg = pos_neg * -1
+    if (type(event_data) ~= "table") then return end
 
-        local surface = params.surface or params.icbm and params.icbm.target_surface
-        if (not surface or not surface.valid) then return end
+    local payload_item = event_data.payload_item
+    local icbm = event_data.icbm
+    local payload_spawn_position = event_data.payload_spawn_position
+    local force = event_data.force
+    local target = event_data.target
+    local source_position = event_data.source_position
 
-        surface.create_entity({
-            name = params.payload_item or params.icbm.item_name .. "-" .. params.icbm.item.quality,
-            position = params.payload_spawn_position,
-            direction = defines.direction.south,
-            force = params.force,
-            target = params.target,
-            source = params.source_position or params.icbm.source_position,
-            --[[ TODO: Make configurable ]]
-            cause = params.icbm and params.icbm.same_surface and params.icbm.source_silo and params.icbm.source_silo.valid and params.icbm.source_silo or params.force,
-            speed = 0.00000025 * math.random(1000) * math.exp(1),
-            base_damage_modifiers = {
-                damage_modifier = 1,
-                damage_addition = 1,
-                radius_modifier = 1,
-            },
-            bonus_damage_modifiers = {
-                damage_modifier = 1,
-                damage_addition = 1,
-                radius_modifier = 1,
-            },
-        })
-    end
+    if (not force or not force.valid) then force = nil end
 
-    create_jericho_rocket({
-        payload_item = event_data.payload_item,
-        icbm = event_data.icbm,
-        payload_spawn_position = event_data.payload_spawn_position,
-        force = event_data.force,
-        target = event_data.target,
-        source_position = event_data.source_position,
-        surface = event_data.surface,
+    local surface = event_data.surface or icbm and icbm.target_surface
+    if (not surface or not surface.valid) then return end
+
+    surface.create_entity({
+        name = payload_item or icbm.item_name .. "-" .. icbm.item.quality,
+        position = payload_spawn_position,
+        direction = defines.direction.south,
+        force = force,
+        target = target,
+        source = source_position or icbm.source_position,
+        --[[ TODO: Make configurable ]]
+        cause = icbm and icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
+        speed = 0.00000025 * math.random(1000) * math.exp(1),
+        base_damage_modifiers = {
+            damage_modifier = 1,
+            damage_addition = 1,
+            radius_modifier = 1,
+        },
+        bonus_damage_modifiers = {
+            damage_modifier = 1,
+            damage_addition = 1,
+            radius_modifier = 1,
+        },
     })
 end
 
@@ -1400,7 +1413,6 @@ function icbm_utils.payload_arrived(data)
                     source = icbm.source_position,
                     --[[ TODO: Make configurable ]]
                     cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-                    -- speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * Random(100)) ^ 0.666),
                     speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (game.tick % 100) + 1) ^ 0.666),
                     -- base_damage_modifiers = {
                     --     damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
@@ -1421,7 +1433,7 @@ function icbm_utils.payload_arrived(data)
                         icbm = icbm,
                         force = force,
                         keys = {},
-                        rhythm_count = Rhythms.get_count("increment"),
+                        rhythm_count = Rhythm.get_count(rhythm, "increment"),
                     }
 
                     local position_key = string.format("%.2f", math.floor(icbm.target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100)  .. "-1"
@@ -1510,7 +1522,6 @@ function icbm_utils.payload_arrived(data)
                 source = icbm.original_target_position,
                 --[[ TODO: Make configurable ]]
                 cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-                -- speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * Random(100)) ^ 0.666),
                 speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (game.tick % 100 + 1)) ^ 0.666),
                 -- base_damage_modifiers = {
                 --     damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
@@ -1531,7 +1542,7 @@ function icbm_utils.payload_arrived(data)
                     icbm = icbm,
                     force = force,
                     keys = {},
-                    rhythm_count = Rhythms.get_count("increment"),
+                    rhythm_count = Rhythm.get_count(rhythm, "increment"),
                 }
 
                 local position_key = string.format("%.2f", math.floor(icbm.target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100) .. "-1"
@@ -1630,8 +1641,8 @@ function icbm_utils.payload_arrived(data)
 end
 
 function icbm_utils.print_space_launched_time_to_target_message(data)
-    Log.debug("icbm_utils.print_space_launched_time_to_target_message")
-    Log.info(data)
+    -- Log.debug("icbm_utils.print_space_launched_time_to_target_message")
+    -- Log.info(data)
 
     if (storage.icbm_utils and storage.icbm_utils.space_launches_initiated) then
         for k, v in pairs(storage.icbm_utils.space_launches_initiated) do

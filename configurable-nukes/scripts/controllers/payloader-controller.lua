@@ -423,8 +423,6 @@ function payloader_controller.on_entity_cloned(event)
     Log.debug("payloader_controller.on_entity_cloned")
     Log.info(event)
 
-    log(serpent.block(event))
-
     if (not event) then return end
     if (not event.source or not event.source.valid or (event.source.name ~= "payloader" and not valid_cloned[event.source.name])) then return end
     if (not event.destination or not event.destination.valid or (event.destination.name ~= "payloader" and not valid_cloned[event.destination.name])) then return end

@@ -13,6 +13,8 @@ Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-glo
 Payloads = {}
 Projectile_Placeholders = {}
 
+Instantiable = {}
+
 ---
 
 defines.inventory.cn_payload_vehicle = 1
@@ -21,8 +23,6 @@ defines.inventory.payloader = 1
 ---
 
 local true_nukes_contiued = script and script.active_mods and script.active_mods["True-Nukes_Continued"]
-
-local Data = require("__TheEckelmonster-core-library__.libs.data.data")
 
 local Custom_Input = require("prototypes.custom-input.custom-input")
 
@@ -34,6 +34,7 @@ local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Payload_Controller = require("scripts.controllers.payload-controller")
 local Payloader_Controller = require("scripts.controllers.payloader-controller")
 local Planet_Controller = require("scripts.controllers.planet-controller")
+-- local Rhythm = require("scripts.rhythm")
 local Rocket_Silo_Controller = require("scripts.controllers.rocket-silo-controller")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
@@ -86,13 +87,12 @@ local quality_affected_prototypes = {
 
     ["atomic-warhead"] = "atomic-warhead",
     ["cn-rod-from-god"] = "cn-rod-from-god",
-    ["cn-jericho"] = "cn-jericho",
+    ["cn-jericho"] = "jericho-payloader-rocket",
+    ["jericho-payloader-rocket"] = "jericho-payloader-rocket",
     ["cn-tesla-rocket"] = "cn-tesla-rocket",
-    -- ["cn-payload-vehicle"] = true,
 
     ["kr-nuclear-artillery-shell"] = "kr-nuclear-artillery-shell",
-
-    ["atomic-artillery-shell"] = "atomic-artillery-shell",
+    ["atomic-artillery-shell"] = "atomic-artillery-projectile",
 
     ["Atomic Weapon hit 20t"] = true_nukes_contiued and "atomic-rocket" or nil
 }
@@ -100,6 +100,7 @@ local quality_affected_prototypes = {
 local Quality_Prototypes = nil
 
 local events = {
+    name = "events",
     [locals.name] = locals,
     [Configurable_Nukes_Controller.name] = Configurable_Nukes_Controller,
     [Custom_Input.name] = Custom_Input,
@@ -113,7 +114,7 @@ local events = {
     [Settings_Controller.name] = Settings_Controller,
 }
 
-local sa_active = mods and mods["space-age"] and true
+local sa_active = script and script.active_mods and script.active_mods["space-age"] and true
 
 local cache = {}
 local cache_attributes = {}
@@ -122,10 +123,33 @@ setmetatable(cache_attributes, { __mode = "k" })
 cache.map_reveal = {}
 cache.map_reveal.chunks = {}
 
+events.DO_MAP_REVEAL = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DO_MAP_REVEAL.name }) or true
+
+function events.on_runtime_mod_setting_changed(event)
+    Log.debug("events.on_runtime_mod_setting_changed")
+    Log.info(event)
+
+    if (not event.setting or type(event.setting) ~= "string") then return end
+    if (not event.setting_type or type(event.setting_type) ~= "string") then return end
+
+    if (not (event.setting:find("configurable-nukes-", 1, true) == 1)) then return end
+
+    if (    event.setting == Runtime_Global_Settings_Constants.settings.DO_MAP_REVEAL.name
+    ) then
+        events.DO_MAP_REVEAL = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.DO_MAP_REVEAL.name })
+    end
+end
+Event_Handler:register_event({
+    event_name = "on_runtime_mod_setting_changed",
+    source_name = "events.on_runtime_mod_setting_changed",
+    func_name = "events.on_runtime_mod_setting_changed",
+    func = events.on_runtime_mod_setting_changed,
+})
+
 --[[ TODO: Move this to its own controller/service/utils? ]]
 script.on_event(defines.events.on_script_trigger_effect, function (event)
-    Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
-    Log.info(event)
+    -- Log.debug("script.on_event(defines.events.on_script_trigger_effect,...)")
+    -- Log.info(event)
 
     if (    event and event.effect_id
         and not valid_event_effect_ids[event.effect_id]
@@ -136,8 +160,11 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     if (not game or not event.surface_index or game.get_surface(event.surface_index) == nil) then return end
 
     local surface = game.get_surface(event.surface_index)
+    if (not surface or not surface.valid) then return end
 
     if (event.effect_id == "map-reveal") then
+        if (not events.DO_MAP_REVEAL) then return end
+
         local position = event.target_position
 
         if (position == nil and event.target_entity and event.target_entity.valid) then
@@ -148,14 +175,14 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             local chunk_string = math.floor(position.x / 32) .. "/" .. math.floor(position.y / 32)
             if (not cache.map_reveal.chunks[chunk_string] or not cache_attributes[cache.map_reveal.chunks[chunk_string]] or cache_attributes[cache.map_reveal.chunks[chunk_string]].time_to_live < game.tick) then
                 cache.map_reveal.chunks[chunk_string] = { count = 0, }
-                cache_attributes[cache.map_reveal.chunks[chunk_string]] = Data:new({ time_to_live = game.tick + 12, valid = true })
+                cache_attributes[cache.map_reveal.chunks[chunk_string]] = { time_to_live = game.tick + 75, valid = true }
             end
 
             if (cache.map_reveal.chunks[chunk_string].count < 2) then
-                surface.request_to_generate_chunks(position, 3 + cache.map_reveal.chunks[chunk_string].count)
-                surface.force_generate_chunk_requests()
-
                 cache.map_reveal.chunks[chunk_string].count = cache.map_reveal.chunks[chunk_string].count + 1
+
+                surface.request_to_generate_chunks(position, 3)
+                surface.force_generate_chunk_requests()
             end
         end
     elseif (event.effect_id == "cn-tesla-rocket-lightning") then
@@ -547,8 +574,10 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 end
             end
 
-            -- log(serpent.block(payload))
-            -- log(serpent.block(payloads))
+            if (Log.get_log_level().num_val <= 3) then
+                log(serpent.block(payload))
+                log(serpent.block(payloads))
+            end
 
             if (not payload or not payloads) then return end
 
@@ -588,22 +617,32 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 local stage_threshold = math.ceil(cargo.count / 8)
 
                 local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
-
-                -- log(serpent.block(cargo))
                 -- log(serpent.block(name))
 
                 if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
+                -- log(serpent.block(name))
                 if (name == "") then goto continue end
 
                 local tesla_munition = false
                 if (name:find("tesla")) then tesla_munition = true end
 
+                local final_name = not quality_affected_prototypes[cargo.name] and name or nil
+                if (not final_name) then
+                    if (quality_affected_prototypes[cargo.name]) then
+                        final_name = quality_affected_prototypes[cargo.name] .. "-" .. cargo.quality
+                    elseif (quality_affected_prototypes[name]) then
+                        final_name = quality_affected_prototypes[name] .. "-" .. cargo.quality
+                    else
+                        final_name = name
+                    end
+                end
+
                 for i = 1, cargo.count, 1 do
                     --[[ Not really sure what this should be named, as I don't fully understand/remember why introducing this variable fixed things ]]
                     local qwer = (((i % stage_threshold) + 1) / stage_threshold) / (stage_threshold / (stage_threshold + cargo.count))
 
-                    local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
-                    local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (((Prime_Random(2) + Rhythm.poly_index) % 2) == 1 and 1 or -1)
+                    local rand_x = qwer * (0 + explosives_aoe_modifier * explosives) * (math.random() > 0.5 and 1 or -1)
+                    local rand_y = qwer * (0 + explosives_aoe_modifier * explosives) * (math.random() > 0.5 and 1 or -1)
 
                     local x_offset = 0
                     local y_offset = 0
@@ -626,32 +665,24 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                     while (((target_position.x - target.x) ^ 2 + (target_position.y - target.y) ^ 2) ^ 0.5) > explosives_radius_limit do
                         if (loops < 1) then break end
 
-                        local rand = (Prime_Random(3) + Rhythm.poly_index) % 3
+                        local rand = math.random(3)
 
                         if (rand == 1) then
-                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
-                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset)) * Rhythm.poly_sign
+                            target.x = target_position.x + (math.random(-1 - abs_x_offset, 1 + abs_x_offset))
+                            target.y = target_position.y + (math.random(-1 - abs_y_offset, 1 + abs_y_offset))
 
                             abs_x_offset = abs_x_offset ^ 0.9
                             abs_y_offset = abs_y_offset ^ 0.9
                         elseif (rand == 2) then
-                            target.x = target_position.x + (Prime_Random(-1 - abs_x_offset, 1 + abs_x_offset)) * Rhythm.poly_sign
+                            target.x = target_position.x + (math.random(-1 - abs_x_offset, 1 + abs_x_offset))
                             abs_x_offset = abs_x_offset ^ 0.9
                         else
-                            target.y = target_position.y + (Prime_Random(-1 - abs_y_offset, 1 + abs_y_offset)) * Rhythm.poly_sign
+                            target.y = target_position.y + (math.random(-1 - abs_y_offset, 1 + abs_y_offset))
                             abs_y_offset = abs_y_offset ^ 0.9
                         end
                         loops = loops - 1
                     end
 
-                    local final_name = not quality_affected_prototypes[cargo.name] and name or nil
-                    if (not final_name) then
-                        if (quality_affected_prototypes[cargo.name]) then
-                            final_name = quality_affected_prototypes[cargo.name] .. "-" .. cargo.quality
-                        else
-                            final_name = name
-                        end
-                    end
                     -- log(serpent.block(final_name))
 
                     local asdf = payload.icbm.target_surface.create_entity({
@@ -676,15 +707,15 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                                     target_position,
                         --[[ TODO: Make configurable ]]
                         cause = payload.icbm.same_surface and payload.icbm.source_silo and payload.icbm.source_silo.valid and payload.icbm.source_silo or payload.force,
-                        speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (Prime_Random(100))) ^ 0.666),
+                        speed = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].speed or 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (math.random(100))) ^ 0.666),
                         base_damage_modifiers = {
-                            damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
-                            damage_addition = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
+                            damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BASE_DAMAGE_MODIFIER.name }) or 1,
+                            damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BASE_DAMAGE_ADDITION.name }) or 1,
                             radius_modifier = 1,
                         },
                         bonus_damage_modifiers = {
-                            damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_MODIFIER.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_MODIFIER.name }) or 1,
-                            damage_addition = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BONUS_DAMAGE_ADDITION.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BONUS_DAMAGE_ADDITION.name }) or 1,
+                            damage_modifier = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BONUS_DAMAGE_MODIFIER.name }) or 1,
+                            damage_addition = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BONUS_DAMAGE_ADDITION.name }) or 1,
                             radius_modifier = 1,
                         },
                     })
@@ -739,39 +770,9 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
     end
 end)
 
-local did_init = false
-
--- function events.on_singleplayer_init(event)
---     log("events.on_singleplayer_init")
-
---     storage.is_multiplayer = false
-
---     Is_Singleplayer = true
---     Is_Multiplayer = false
--- end
--- Event_Handler:register_event({
---     event_name = "on_singleplayer_init",
---     source_name = "events.on_singleplayer_init",
---     func_name = "events.on_singleplayer_init",
---     func = events.on_singleplayer_init,
--- })
-
--- function events.on_multiplayer_init(event)
---     log("events.on_multiplayer_init")
-
---     storage.is_multiplayer = true
-
---     Is_Singleplayer = false
---     Is_Multiplayer = true
--- end
--- Event_Handler:register_event({
---     event_name = "on_multiplayer_init",
---     source_name = "events.on_multiplayer_init",
---     func_name = "events.on_multiplayer_init",
---     func = events.on_multiplayer_init,
--- })
-
 function events.on_init()
+    -- log("events.on_init")
+
     if (type(storage) ~= "table") then return end
 
     local return_val = 0
@@ -796,9 +797,6 @@ function events.on_init()
 
     Initialization.init({ maintain_data = false })
 
-    Random = storage.random
-    Prime_Indices = storage.prime_indices
-    Rhythms.init_rhythm()
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
@@ -829,15 +827,16 @@ function events.on_init()
 
     Event_Handler:register_event({
         event_name = "on_nth_tick",
-        nth_tick = Configurable_Nukes_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SURFACE_PROCESSING_RATE.name }) or 6,
+        nth_tick = Configurable_Nukes_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ROCKET_SILO_PROCESSING_RATE.name }) or 6,
         source_name = "configurable_nukes_controller.on_nth_tick",
         func_name = "configurable_nukes_controller.on_nth_tick",
         func = Configurable_Nukes_Controller.on_nth_tick,
     })
 
     Event_Handler:register_event({
-        event_name = "on_tick",
-        source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+        event_name = "on_nth_tick",
+        nth_tick = 20,
+        source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
         func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
         func = Rocket_Dashboard_Gui_Controller.instantiate_if_not_exists,
     })
@@ -871,34 +870,9 @@ Event_Handler:register_event({
 
 local initialized_from_load = false
 
-function locals.init_rhythm(event)
-    Log.debug(event)
-
-    Event_Handler:unregister_event({
-        event_name = "on_tick",
-        source_name = "locals.init_rhythm",
-    })
-
-    Rhythms.init_rhythm()
-end
-
+--[[ on_load ]]
 function events.on_load()
-
-    Random = storage.random
-    Prime_Indices = storage.prime_indices
-
-    Event_Handler:register_event({
-        event_name = "on_tick",
-        source_name = "locals.init_rhythm",
-        func_name = "locals.init_rhythm",
-        func = locals.init_rhythm,
-    })
-
-    Event_Handler:set_event_position({
-        event_name = "on_tick",
-        source_name = "locals.init_rhythm",
-        new_position = 1,
-    })
+    -- log("events.on_load()")
 
     Payloads = storage.payloads
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
@@ -952,15 +926,16 @@ function events.on_load()
 
     Event_Handler:register_event({
         event_name = "on_nth_tick",
-        nth_tick = Configurable_Nukes_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.SURFACE_PROCESSING_RATE.name }) or 6,
+        nth_tick = Configurable_Nukes_Controller.nth_tick_rocket_silo_processing or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ROCKET_SILO_PROCESSING_RATE.name }) or 6,
         source_name = "configurable_nukes_controller.on_nth_tick",
         func_name = "configurable_nukes_controller.on_nth_tick",
         func = Configurable_Nukes_Controller.on_nth_tick,
     })
 
     Event_Handler:register_event({
-        event_name = "on_tick",
-        source_name = "rocket_dashboard_gui_controller.on_tick.instantiate_if_not_exists",
+        event_name = "on_nth_tick",
+        nth_tick = 20,
+        source_name = "rocket_dashboard_gui_controller.on_nth_tick.instantiate_if_not_exists",
         func_name = "rocket_dashboard_gui_controller.instantiate_if_not_exists",
         func = Rocket_Dashboard_Gui_Controller.instantiate_if_not_exists,
     })
@@ -975,7 +950,7 @@ function events.on_load()
 
     Event_Handler:register_event({
         event_name = "on_nth_tick",
-        nth_tick = Payload_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE.name }) or (15 * 60),
+        nth_tick = Payload_Controller.nth_tick or Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOAD_BACKGROUND_CLEANING_RATE.name }) or (5 * 60),
         source_name = "payload_controller.on_nth_tick",
         func_name = "payload_controller.on_nth_tick",
         func = Payload_Controller.on_nth_tick,
@@ -993,6 +968,9 @@ Event_Handler:register_event({
 })
 
 function events.on_configuration_changed(event)
+    -- log(serpent.block("events.on_configuration_changed"))
+    -- log(serpent.block(event))
+
     local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
@@ -1028,10 +1006,8 @@ function events.on_configuration_changed(event)
                 end
 
                 Initialization.init({ maintain_data = true })
+                storage.initialized_anew = game.tick
 
-                Random = storage.random
-                Prime_Indices = storage.prime_indices
-                Rhythms.init_rhythm()
                 Payloads = storage.payloads
                 Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
                 Quality_Prototypes = prototypes.quality
@@ -1047,11 +1023,7 @@ function events.on_configuration_changed(event)
                 -- Constants.get_mod_data(true)
 
                 storage.configurable_nukes_controller = {
-                    planet_index = cn_controller_data.planet_index,
-                    surface_name = cn_controller_data.surface_name,
-                    space_location = cn_controller_data.space_location,
                     tick = game.tick,
-                    prev_tick = cn_controller_data.tick,
                 }
             end
         end

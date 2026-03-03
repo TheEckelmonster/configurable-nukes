@@ -1,7 +1,3 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
-
 local Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
 local Initialization = require("scripts.initialization")
@@ -11,9 +7,9 @@ local locals = {}
 local configurable_nukes_commands = {}
 
 function configurable_nukes_commands.init(event)
-    _Log.debug("configurable_nukes_commands.init")
+    Log.debug("configurable_nukes_commands.init")
     locals.validate_command(event, function (player)
-        _Log.info("commands.init")
+        Log.info("commands.init")
         player.print("Initializing anew")
         local maintain_data = true
 
@@ -35,9 +31,9 @@ function configurable_nukes_commands.init(event)
 end
 
 function configurable_nukes_commands.reinit(event)
-    _Log.debug("configurable_nukes_commands.reinit")
+    Log.debug("configurable_nukes_commands.reinit")
     locals.validate_command(event, function (player)
-        _Log.info("commands.reinit")
+        Log.info("commands.reinit")
         player.print("Reinitializing")
         local maintain_data = true
 
@@ -59,18 +55,18 @@ function configurable_nukes_commands.reinit(event)
 end
 
 function configurable_nukes_commands.print_table(event)
-    _Log.debug("configurable_nukes_commands.print_table")
+    Log.debug("configurable_nukes_commands.print_table")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_table")
+        Log.info("commands.print_table")
 
         Core_Utils.commands.print_table({ player = player, event = event })
     end)
 end
 
 function configurable_nukes_commands.print_storage(event)
-    _Log.debug("configurable_nukes_commands.print_storage")
+    Log.debug("configurable_nukes_commands.print_storage")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_storage")
+        Log.info("commands.print_storage")
 
         local file_name = "storage_" .. game.tick
         local exported_file_name = Core_Utils.table.traversal.traverse_print(storage, file_name, _, { max_depth = 4,  })
@@ -79,161 +75,161 @@ function configurable_nukes_commands.print_storage(event)
 end
 
 function configurable_nukes_commands.print_mod_data(event)
-    _Log.debug("configurable_nukes_commands.print_mod_data")
+    Log.debug("configurable_nukes_commands.print_mod_data")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_mod_data")
+        Log.info("commands.print_mod_data")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_mod_data(true)
         end
 
         local file_name = "Constants.mod_data_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.mod_data, file_name, _, { max_depth = 4,  })
+        Core_Utils.table.traversal.traverse_print(Constants.mod_data, file_name, _, { max_depth = 4,  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
 
 function configurable_nukes_commands.print_mod_data_dictionary(event)
-    _Log.debug("configurable_nukes_commands.print_mod_data_dictionary")
+    Log.debug("configurable_nukes_commands.print_mod_data_dictionary")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_mod_data_dictionary")
+        Log.info("commands.print_mod_data_dictionary")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_mod_data(true)
         end
 
         local file_name = "Constants.mod_data_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.mod_data_dictionary, file_name, _, { max_depth = 3,  })
+        Core_Utils.table.traversal.traverse_print(Constants.mod_data_dictionary, file_name, _, { max_depth = 3,  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
 
 function configurable_nukes_commands.print_planets(event)
-    _Log.debug("configurable_nukes_commands.print_planets")
+    Log.debug("configurable_nukes_commands.print_planets")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_planets")
+        Log.info("commands.print_planets")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_planets(true)
         end
 
         local file_name = "Constants.planets_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.get_planets(), file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.get_planets(), file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
 
 function configurable_nukes_commands.print_planets_dictionary(event)
-    _Log.debug("configurable_nukes_commands.print_planets_dictionary")
+    Log.debug("configurable_nukes_commands.print_planets_dictionary")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_planets_dictionary")
+        Log.info("commands.print_planets_dictionary")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_planets(true)
         end
 
         local file_name = "Constants.planets_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.planets_dictionary, file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.planets_dictionary, file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
 
 function configurable_nukes_commands.print_space_locations(event)
-    _Log.debug("configurable_nukes_commands.print_space_locations")
+    Log.debug("configurable_nukes_commands.print_space_locations")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_space_locations")
+        Log.info("commands.print_space_locations")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_space_locations(true)
         end
 
         local file_name = "Constants.space_locations_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.get_space_locations(), file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.get_space_locations(), file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
 
 function configurable_nukes_commands.print_space_locations_dictionary(event)
-    _Log.debug("configurable_nukes_commands.print_space_locations_dictionary")
+    Log.debug("configurable_nukes_commands.print_space_locations_dictionary")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_space_locations_dictionary")
+        Log.info("commands.print_space_locations_dictionary")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_space_locations(true)
         end
 
         local file_name = "Constants.space_locations_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.space_locations_dictionary, file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.space_locations_dictionary, file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
 
 function configurable_nukes_commands.print_space_connections(event)
-    _Log.debug("configurable_nukes_commands.print_space_connections")
+    Log.debug("configurable_nukes_commands.print_space_connections")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_space_connections")
+        Log.info("commands.print_space_connections")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_space_connections(true)
         end
 
         local file_name = "Constants.space_connections_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.get_space_connections(), file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.get_space_connections(), file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
 
 function configurable_nukes_commands.print_space_connections_dictionary(event)
-    _Log.debug("configurable_nukes_commands.print_space_connections_dictionary")
+    Log.debug("configurable_nukes_commands.print_space_connections_dictionary")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_space_connections_dictionary")
+        Log.info("commands.print_space_connections_dictionary")
 
         if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
             Constants.get_space_connections(true)
         end
 
         local file_name = "Constants.space_connections_dictionary_" .. game.tick
-        Core_Utils.table.traverse_print(Constants.space_connections_dictionary, file_name, _, { full = true  })
+        Core_Utils.table.traversal.traverse_print(Constants.space_connections_dictionary, file_name, _, { full = true  })
         player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
     end)
 end
 
 if (mods and mods["space-exploration"] or script and script.active_mods and script.active_mods["space-exploration"]) then
     function configurable_nukes_commands.print_space_exploration_universe(event)
-        _Log.debug("configurable_nukes_commands.print_space_exploration_universe")
+        Log.debug("configurable_nukes_commands.print_space_exploration_universe")
         locals.validate_command(event, function (player)
-            _Log.info("commands.print_space_exploration_universe")
+            Log.info("commands.print_space_exploration_universe")
 
             if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
                 Constants.get_space_exploration_universe(true)
             end
 
             local file_name = "Constants.print_space_exploration_universe_" .. game.tick
-            Core_Utils.table.traverse_print(Constants.get_space_exploration_universe(), file_name, _, { full = true  })
+            Core_Utils.table.traversal.traverse_print(Constants.get_space_exploration_universe(), file_name, _, { full = true  })
             player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
         end)
     end
 
     function configurable_nukes_commands.print_space_exploration_dictionary(event)
-        _Log.debug("configurable_nukes_commands.print_space_exploration_dictionary")
+        Log.debug("configurable_nukes_commands.print_space_exploration_dictionary")
         locals.validate_command(event, function (player)
-            _Log.info("commands.print_space_exploration_dictionary")
+            Log.info("commands.print_space_exploration_dictionary")
 
             if (event.parameter ~= nil and type(event.parameter) == "string" and (#string.gsub(event.parameter, " ", "") > 0)) then
                 Constants.get_space_exploration_universe(true)
             end
 
             local file_name = "Constants.print_space_exploration_dictionary_" .. game.tick
-            Core_Utils.table.traverse_print(Constants.space_exploration_dictionary, file_name, _, { full = true  })
+            Core_Utils.table.traversal.traverse_print(Constants.space_exploration_dictionary, file_name, _, { full = true  })
             player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
         end)
     end
 end
 
 function configurable_nukes_commands.print_event_handlers(event)
-    _Log.debug("configurable_nukes_commands.print_event_handlers")
+    Log.debug("configurable_nukes_commands.print_event_handlers")
     locals.validate_command(event, function (player)
-        _Log.info("commands.print_event_handlers")
+        Log.info("commands.print_event_handlers")
 
         if (Event_Handler) then
             local file_name = "Event_Handler.event_names_" .. game.tick
@@ -247,9 +243,77 @@ function configurable_nukes_commands.print_event_handlers(event)
     end)
 end
 
+function configurable_nukes_commands.print_projectile_placeholders(event)
+    Log.debug("configurable_nukes_commands.print_projectile_placeholders")
+    locals.validate_command(event, function (player)
+        Log.info("commands.print_projectile_placeholders")
+
+        local file_name = "mod_data.configurable_nukes_projectile_placeholders_" .. game.tick
+        Core_Utils.table.traversal.traverse_print(prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"], file_name, _, { full = true  })
+        player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
+    end)
+end
+
+function configurable_nukes_commands.find_functions_in_storage(event)
+    Log.debug("configurable_nukes_commands.find_functions_in_storage")
+    locals.validate_command(event, function (player)
+        Log.info("commands.find_functions_in_storage")
+
+
+        local function find_functions(_tbl)
+
+            local found = {}
+            local depth, order = 0, 0
+
+            local funcs_found = false
+
+            local function r(tbl, depth, path)
+                if (type(tbl) ~= "table") then return end
+                depth = depth or 1
+                path = path or "storage"
+
+                for k, v in pairs(tbl) do
+                    if (type(k) == "table") then
+                        if (not found[k]) then
+                            found[k] = { order = order, depth = depth, }
+                            r(k, depth + 1)
+                        end
+                    elseif (type(k) == "function") then
+                        local file_name = "" .. game.tick
+                        Core_Utils.table.traversal.traverse_print(tbl, file_name, _, { full = true  })
+                        player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
+                        funcs_found = true
+                    else
+                        log(serpent.line("traversing "..tostring(k)))
+                    end
+
+                    if (type(v) == "table") then
+                        if (not found[v]) then
+                            found[v] = { order = order, depth = depth, }
+                            r(v, depth + 1)
+                        end
+                    elseif (type(v) == "function") then
+                        local file_name = "" .. game.tick
+                        Core_Utils.table.traversal.traverse_print(tbl, file_name, _, { full = true  })
+                        player.print("Exported table to file: ../Factorio/script-output/" .. file_name)
+                        funcs_found = true
+                    else
+                        log(serpent.line("traversing "..tostring(v)))
+                    end
+                end
+            end
+
+            r(_tbl)
+
+            if (funcs_found) then error("Found functions in storage") end
+        end
+
+        find_functions(storage)
+    end)
+end
+
 function locals.validate_command(event, fun)
-    if (not _Log or not _Log.valid or not _Log._ready) then _Log = Log_Stub end
-    _Log.debug(event)
+    Log.debug(event)
     if (event) then
         local player = nil
 
@@ -264,6 +328,8 @@ commands.add_command("configurable_nukes.reinit", "Tries to reinitialize, attemp
 commands.add_command("configurable_nukes.print_table", "", configurable_nukes_commands.print_table)
 commands.add_command("configurable_nukes.print_event_handlers", "", configurable_nukes_commands.print_event_handlers)
 commands.add_command("configurable_nukes.print_storage", "", configurable_nukes_commands.print_storage)
+-- commands.add_command("configurable_nukes.print_projectile_placeholders", "", configurable_nukes_commands.print_projectile_placeholders)
+-- commands.add_command("configurable_nukes.find_functions_in_storage", "", configurable_nukes_commands.find_functions_in_storage)
 -- commands.add_command("configurable_nukes.print_mod_data", "Exports to a .json file the currently available mod-data.", configurable_nukes_commands.print_mod_data)
 -- commands.add_command("configurable_nukes.print_mod_data_dictionary", "Exports to a .json file the mod-data dictionary.", configurable_nukes_commands.print_mod_data_dictionary)
 -- commands.add_command("configurable_nukes.print_planets", "Exports to a .json file the currently available planet-data.", configurable_nukes_commands.print_planets)

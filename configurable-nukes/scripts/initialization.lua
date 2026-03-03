@@ -1,11 +1,6 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
-
 local TECL_Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
-local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Migrations = require("scripts.migrations")
@@ -60,10 +55,8 @@ function locals.initialize(from_scratch, maintain_data)
     Log.info(from_scratch)
     Log.info(maintain_data)
 
-    local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
+    local configurable_nukes_data = storage.configurable_nukes_data or Configurable_Nukes_Data:new()
     Log.info(configurable_nukes_data)
-
-    configurable_nukes_data.do_nth_tick = false
 
     from_scratch = from_scratch or false
     maintain_data = maintain_data or false
@@ -171,23 +164,14 @@ function locals.initialize(from_scratch, maintain_data)
             end
         end
 
-        if (not storage.random) then storage.random = game.create_random_generator(42) end
-        if (not storage.payloads) then storage.payloads = {} end
-        if (not storage.containers) then storage.containers = {} end
-        if (not storage.prime_indices) then storage.prime_indices = { outer = 1, inner = 1, } end
-        if (not storage.rhythm_pulse) then
-            storage.rhythm_pulse = { count = 1, }
-        end
+        storage.payloads = storage.payloads or {}
+        storage.containers = storage.containers or {}
+        storage.rocket_silos = storage.rocket_silos or {}
     end
 
-    Random = storage.random
     Payloads = storage.payloads
-    Prime_Indices = storage.prime_indices
-    Rhythms.init_rhythm("reset")
 
-    if (storage and storage.configurable_nukes) then
-        storage.configurable_nukes.do_nth_tick = true
-    end
+    storage.cache = {}
 
     storage.configurable_nukes.valid = true
 
@@ -234,12 +218,26 @@ function locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
             surface = rocket_silo.valid and rocket_silo.surface and rocket_silo.surface.valid and rocket_silo.surface or nil,
             surface_name = rocket_silo.valid and rocket_silo.surface and rocket_silo.surface.valid and rocket_silo.surface.name or nil,
             surface_index = rocket_silo.valid and rocket_silo.surface and rocket_silo.surface.valid and rocket_silo.surface.index or -1,
+            circuit_network_data = {
+                unit_number = rocket_silo.unit_number,
+                entity = rocket_silo,
+                surface = rocket_silo.valid and rocket_silo.surface and rocket_silo.surface.valid and rocket_silo.surface or nil,
+                surface_name = rocket_silo.valid and rocket_silo.surface and rocket_silo.surface.valid and rocket_silo.surface.name or nil,
+            }
         }
 
-        Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo, update_data, { reinitialize_soft = true } )
+        local ret_silo = Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo, update_data, { reinitialize_soft = true } )
+        if (ret_silo and ret_silo.valid) then
+            storage.rocket_silos = storage.rocket_silos or {}
+            storage.rocket_silos[ret_silo.unit_number] = ret_silo
+        end
     else
         Log.debug("saving rocket silo")
-        Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+        local ret_silo = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
+        if (ret_silo and ret_silo.valid) then
+            storage.rocket_silos = storage.rocket_silos or {}
+            storage.rocket_silos[ret_silo.unit_number] = ret_silo
+        end
     end
 end
 
@@ -253,11 +251,6 @@ function locals.migrate(data)
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "event_handlers" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "handles" })
-
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "random" })
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "prime_indices" })
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "rhythm" })
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "rhythm_pulse" })
 
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "constants" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })
