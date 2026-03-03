@@ -124,8 +124,6 @@ local function traverse_ammo(params)
         params.source_effects = nil
     end
 
-    -- params.ammo_category = ammo.category
-
     return params
 end
 
@@ -133,7 +131,6 @@ local function make_extend_ammo(params)
     if (type(params) ~= "table") then return end
 
     local ammo = params.ammo
-    -- local ammo_category = params.ammo_category
     local target_effects = params.target_effects
     local returned_params = params.returned_params or {}
     local k = params.k

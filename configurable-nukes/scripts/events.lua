@@ -26,7 +26,6 @@ local true_nukes_contiued = script and script.active_mods and script.active_mods
 
 local Custom_Input = require("prototypes.custom-input.custom-input")
 
-local Circuit_Network_Service = require("scripts.services.circuit-network-service")
 local Configurable_Nukes_Controller = require("scripts.controllers.configurable-nukes-controller")
 local Initialization = require("scripts.initialization")
 local Rocket_Silo_Gui_Controller = require("scripts.controllers.guis.rocket-silo-gui-controller")
@@ -103,7 +102,6 @@ local Quality_Prototypes = nil
 local events = {
     name = "events",
     [locals.name] = locals,
-    [Circuit_Network_Service.name] = Circuit_Network_Service,
     [Configurable_Nukes_Controller.name] = Configurable_Nukes_Controller,
     [Custom_Input.name] = Custom_Input,
     [Rocket_Silo_Gui_Controller.name] = Rocket_Silo_Gui_Controller,
@@ -619,10 +617,10 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                 local stage_threshold = math.ceil(cargo.count / 8)
 
                 local name = Projectile_Placeholders[cargo.name] and Projectile_Placeholders[cargo.name].name or ""
-                log(serpent.block(name))
+                -- log(serpent.block(name))
 
                 if (placeholders[cargo.name]) then name = placeholders[cargo.name] end
-                log(serpent.block(name))
+                -- log(serpent.block(name))
                 if (name == "") then goto continue end
 
                 local tesla_munition = false
@@ -685,7 +683,7 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
                         loops = loops - 1
                     end
 
-                    log(serpent.block(final_name))
+                    -- log(serpent.block(final_name))
 
                     local asdf = payload.icbm.target_surface.create_entity({
                         name = final_name,

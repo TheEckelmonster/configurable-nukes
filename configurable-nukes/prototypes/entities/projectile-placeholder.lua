@@ -23,7 +23,6 @@ local debug = DEBUG or __SEEBUG
 
 local debug_count = 0
 local function get_debug_count(params)
-    -- return debug.get_debug_count(params)
     if (params) then debug_count = debug_count + 1 end
     return debug_count
 end

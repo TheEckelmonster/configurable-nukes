@@ -1,7 +1,3 @@
-local Util = require("__core__.lualib.util")
-
-local Constants = require("scripts.constants.constants")
-
 local tab = "    "
 local source_pattern = "@__([%a%-]+)__"
 local no_source = "__no-src__/"

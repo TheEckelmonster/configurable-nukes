@@ -1,7 +1,3 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
-
 local Custom_Input = require("prototypes.custom-input.custom-input")
 
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")

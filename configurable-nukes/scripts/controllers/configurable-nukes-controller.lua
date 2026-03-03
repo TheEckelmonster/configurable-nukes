@@ -100,6 +100,4 @@ Event_Handler:register_event({
     func = configurable_nukes_controller.on_runtime_mod_setting_changed,
 })
 
-configurable_nukes_controller.add_to_cache_list = true
-
 return configurable_nukes_controller
