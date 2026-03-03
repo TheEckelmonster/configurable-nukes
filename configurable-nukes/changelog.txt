@@ -27,7 +27,7 @@ Date: 2026-03-03
     - Fixed circuit connected rocket-silos not firing in some unknown circumstances (thanks to _Loose_Caboose_)
     - Fixed desyncs when circuit launching a rocket in a single-player save opened to multiplayer (non-dedicated host)
     - Fixed jerichos not delivering properly (sub-rockets previously weren't instantiating)
-    - [combat-mechanics-overhaul] Fixed the payload projectile (the actual rocket that drops upon delivery) colliding prematurely/not delivering properly when the "Rockets blockable" setting is enabled
+    - [combat-mechanics-overhaul] Fixed the payload projectile (the actual rocket that drops upon delivery) colliding prematurely/not delivering properly when the "Rockets blockable" setting is enabled (thanks to dragocheese)
     - Fixed lightning bolts not instantiating when a Mjölnir is delivered
   Misc:
     - Reduced the default value for the rocket-silos processed per tick setting when Space-Exploration is present (8 -> 3)
