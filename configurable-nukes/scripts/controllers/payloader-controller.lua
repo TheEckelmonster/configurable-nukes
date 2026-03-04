@@ -170,6 +170,19 @@ Event_Handler:register_events({
     },
 })
 
+function payloader_controller.PickerDollies_event(event)
+    Log.debug("payloader_controller.PickerDollies_event")
+    Log.info(event)
+
+    if (not event) then return end
+
+    local moved_entity = event.moved_entity
+    if (not moved_entity or not moved_entity.valid) then return end
+
+    payloader_controller.on_player_rotated_entity({ entity = moved_entity, })
+end
+--[[ Registered in events.lua ]]
+
 function payloader_controller.on_player_rotated_entity(event)
     Log.debug("payloader_controller.on_player_rotated_entity")
     Log.info(event)
@@ -272,10 +285,12 @@ function payloader_controller.on_player_rotated_entity(event)
             if (output_inventory and output_inventory.valid) then
                 local new_output_inventory = new_output_container.get_inventory(defines.inventory.payloader)
                 if (new_output_inventory and new_output_inventory.valid) then
-                    local item_stack = output_inventory[1]
-                    if (item_stack and item_stack.valid) then
-                        if (new_output_inventory.can_insert(item_stack)) then
-                            new_output_inventory.insert(item_stack)
+                    for i = 1, 2, 1 do
+                        local item_stack = output_inventory[i]
+                        if (item_stack and item_stack.valid) then
+                            if (new_output_inventory.can_insert(item_stack)) then
+                                new_output_inventory.insert(item_stack)
+                            end
                         end
                     end
                 end
@@ -393,14 +408,18 @@ function payloader_controller.on_player_flipped_entity(event)
                 unit_number = new_output_container.unit_number
             }
 
-            local output_inventory = output_container.entity.get_inventory(defines.inventory.payloader)
-            if (output_inventory and output_inventory.valid) then
-                local new_output_inventory = new_output_container.get_inventory(defines.inventory.payloader)
-                if (new_output_inventory and new_output_inventory.valid) then
-                    local item_stack = output_inventory[1]
-                    if (item_stack and item_stack.valid) then
-                        if (new_output_inventory.can_insert(item_stack)) then
-                            new_output_inventory.insert(item_stack)
+            if (output_container.entity and output_container.entity.valid) then
+                local output_inventory = output_container.entity.get_inventory(defines.inventory.payloader)
+                if (output_inventory and output_inventory.valid) then
+                    local new_output_inventory = new_output_container.get_inventory(defines.inventory.payloader)
+                    if (new_output_inventory and new_output_inventory.valid) then
+                        for i = 1, 2, 1 do
+                            local item_stack = output_inventory[i]
+                            if (item_stack and item_stack.valid) then
+                                if (new_output_inventory.can_insert(item_stack)) then
+                                    new_output_inventory.insert(item_stack)
+                                end
+                            end
                         end
                     end
                 end
@@ -417,7 +436,6 @@ Event_Handler:register_event({
     func_name = "payloader_controller.on_player_flipped_entity",
     func = payloader_controller.on_player_flipped_entity,
 })
-
 
 function payloader_controller.on_entity_cloned(event)
     Log.debug("payloader_controller.on_entity_cloned")

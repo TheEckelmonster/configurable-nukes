@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.8
+Date: 2026-03-03
+  Bug Fixes:
+    - Fixed payloaders not retaining their inventories properly when rotated/flipped
+  Compatibility:
+    - [even-pickier-dollies] Payloader input and output chests should now properly move when the parent payloader is moved (thanks to NOiZE for the report)
+---------------------------------------------------------------------------------------------------
 Version: 0.9.7
 Date: 2026-03-03
   Bug Fixes:
