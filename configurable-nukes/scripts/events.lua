@@ -114,7 +114,9 @@ local events = {
     [Settings_Controller.name] = Settings_Controller,
 }
 
+local epd_active = script and script.active_mods and script.active_mods["even-pickier-dollies"] and true
 local sa_active = script and script.active_mods and script.active_mods["space-age"] and true
+local se_active = script and script.active_mods and script.active_mods["space-exploration"] and true
 
 local cache = {}
 local cache_attributes = {}
@@ -801,8 +803,26 @@ function events.on_init()
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
 
-    local sa_active = script and script.active_mods and script.active_mods["space-age"]
-    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+    if (epd_active) then
+        local event_num = remote.call("PickerDollies", "dolly_moved_entity_id")
+
+        if (event_num ~= nil and type(event_num) == "number") then
+            local event_position = Event_Handler:get_event_position({
+                event_name = event_num,
+                source_name = "payloader_controller.PickerDollies_event",
+            })
+
+            if (event_position == nil) then
+                Event_Handler:register_event({
+                    event_num = event_num,
+                    fallback_event_name = "dolly_moved_entity_id",
+                    source_name = "payloader_controller.PickerDollies_event",
+                    func_name = "payloader_controller.PickerDollies_event",
+                    func = Payloader_Controller.PickerDollies_event,
+                })
+            end
+        end
+    end
 
     if (se_active) then
         local event_num = remote.call("space-exploration", "get_on_zone_surface_created_event")
@@ -810,15 +830,15 @@ function events.on_init()
         if (event_num ~= nil and type(event_num) == "number") then
             local event_position = Event_Handler:get_event_position({
                 event_name = event_num,
-                source_name = "Planet_Controller.on_surface_created",
+                source_name = "planet_Controller.on_surface_created",
             })
 
             if (event_position == nil) then
                 Event_Handler:register_event({
                     event_num = event_num,
                     fallback_event_name = "on_zone_surface_created",
-                    source_name = "Planet_Controller.on_surface_created",
-                    func_name = "Planet_Controller.on_surface_created",
+                    source_name = "planet_Controller.on_surface_created",
+                    func_name = "planet_Controller.on_surface_created",
                     func = Planet_Controller.on_surface_created,
                 })
             end
@@ -878,7 +898,6 @@ function events.on_load()
     Projectile_Placeholders = prototypes.mod_data[Constants.mod_name .. "-projectile-placeholder-data"].data
     Quality_Prototypes = prototypes.quality
 
-    local sa_active = script and script.active_mods and script.active_mods["space-age"]
     local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
     local return_val = 0
@@ -903,21 +922,42 @@ function events.on_load()
         if (initialized_from_load) then Log.ready() end
     end
 
+    if (epd_active) then
+        local event_num = remote.call("PickerDollies", "dolly_moved_entity_id")
+
+        if (event_num ~= nil and type(event_num) == "number") then
+            local event_position = Event_Handler:get_event_position({
+                event_name = event_num,
+                source_name = "payloader_controller.PickerDollies_event",
+            })
+
+            if (event_position == nil) then
+                Event_Handler:register_event({
+                    event_num = event_num,
+                    fallback_event_name = "dolly_moved_entity_id",
+                    source_name = "payloader_controller.PickerDollies_event",
+                    func_name = "payloader_controller.PickerDollies_event",
+                    func = Payloader_Controller.PickerDollies_event,
+                })
+            end
+        end
+    end
+
     if (se_active) then
         local event_num = remote.call("space-exploration", "get_on_zone_surface_created_event")
 
         if (type(event_num) == "number") then
             local event_position = Event_Handler:get_event_position({
                 event_name = event_num,
-                source_name = "Planet_Controller.on_surface_created",
+                source_name = "planet_Controller.on_surface_created",
             })
 
             if (event_position == nil) then
                 Event_Handler:register_event({
                     event_num = event_num,
                     fallback_event_name = "on_zone_surface_created",
-                    source_name = "Planet_Controller.on_surface_created",
-                    func_name = "Planet_Controller.on_surface_created",
+                    source_name = "planet_Controller.on_surface_created",
+                    func_name = "planet_Controller.on_surface_created",
                     func = Planet_Controller.on_surface_created,
                 })
             end
