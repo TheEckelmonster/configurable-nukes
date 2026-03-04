@@ -5,8 +5,13 @@ local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
+local StopgapNukes_active = mods and mods["StopgapNukes"] and true
 
 require("prototypes.recipes.payloader-data-final-fixes")
+
+if (StopgapNukes_active) then
+    require("prototypes.recipes.atomic-bomb")
+end
 
 if (k2so_active) then
     require("prototypes.compatibility.Krastorio2-spaced-out.ballistic-rocket-parts-data-final-fixes")
