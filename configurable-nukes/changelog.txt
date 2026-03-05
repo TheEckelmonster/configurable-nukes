@@ -1,4 +1,54 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.9
+Date: 2026-03-05
+  Features:
+    - Added "Rocket-silo processing mode" runtime setting
+      - Controls the manner in which rocket-silos are selected for potential circuit launches
+      - Possible valus: "responsive" | "balance" | "performance"
+        - responsive: least performant, but nominally fastest to recognize a launch signal
+        - performance: most performant, but nominally slowest to recognize a launch signal
+        - balance: nominally a balance between "responsive" and "performance"
+  Compatibility:
+    - [StopgapNukes] Added basic compatibility (custom atomic-bomb recipe is no longer overwritten)
+      - All added munitions appear to function as payloads
+  Misc:
+    - Improved the responsiveness of circuit-connected rocket-silos
+      - Most responsive when the above newly added setting is set to "responsive"
+        - Nearly 600 hour save, 100 - 200 rocket-silos accross 5 planets, and 3 rocket-silos across 2 space-platforms (10 - 20 space-platforms total)
+          - "responsive":
+            - nigh instant launching from space-platforms
+            - about 4 seconds to launch from Fulgora (from a single rocket-silo array/block of 64 rocket-silos)
+          - "balance"
+            - close to instant launch from space-platforms; subsequent silos launched a few seconds later
+            - about 5 - 6 seconds to launch from Fulgora (from a single rocket-silo array/block of 64 rocket-silos)
+          - "performance"
+            - potentially up to about 6 seconds at most before launching from space-platforms
+            - about 6 seconds to launch from Fulgora (from a single rocket-silo array/block of 64 rocket-silos)
+        - Same save tested as above, but from an earlier point at about 200 hours - all tested launches were nigh instantaneous irrespective of processing mode
+    - Improved background performance slightly (no active launches or in-flight payloads)
+    - Improved the performance of the ICBM Dashboard
+      - Performance is improved while visible
+        - version 0.9.8, with 9 simultaneous in-flight ICBMS:
+          - 0.25 ms, spiking up to 0.5 ms update time
+        - version 0.9.9, with 9 simultaneous in-flight ICBMS:
+          - 0.06 ms - 0.08 ms update time
+      - The ICBM dashboard no longer updates unless it is actively visible
+        - Same above 9 simultaneous in-flight ICBMS, when the dashboard is closed:
+          - version 0.9.9
+            - 0.018 ms update time
+    - Improved performance notably for active launches and in-flight payloads
+      - Speed and deviation calculations have been improved
+        - e.g.
+        - Space-Exploration: launching a rocket-silo from Nauvis Orbit at an asteroid field
+            - default settings, guidance systems level 4
+            - 24 minutes 47 seconds calculcated delivery time
+            - version 0.9.8
+                - 0.07 ms update time on rocket launch
+                - 0.77 ms update time on cargo pod finished ascending
+            - version 0.9.9
+                - 0.046 ms update time on rocket launch
+                - 0.047 ms update time on cargo pod finished ascending
+---------------------------------------------------------------------------------------------------
 Version: 0.9.8
 Date: 2026-03-03
   Bug Fixes:

@@ -1,13 +1,9 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
-
 local Mod_Gui = require("__core__.lualib.mod-gui")
 
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local Gui_Utils = require("scripts.utils.gui-utils")
+local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
-local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Rocket_Dashboard_Constants = require("scripts.constants.gui.rocket-dashboard-constants")
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
 local String_Utils = require("scripts.utils.string-utils")
@@ -294,76 +290,40 @@ function rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard(data)
         gui.style.padding = padding
 
         --[[ Data ]]
+        storage.icbm_data = storage.icbm_data or {}
+        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+        local k, v = next(storage.icbm_data.item_numbers)
+        while k and v do
+            local icbm_data = v
+            if (icbm_data.force_index > 0 and icbm_data.force_index < 64) then
+                if (icbm_data) then ICBM_Data.validate_fields(icbm_data) end
 
-        local all_icbm_meta_data = ICBM_Meta_Repository.get_all_icbm_meta_data()
-
-        if (all_icbm_meta_data) then
-            local icbms = {}
-            for _, icbm_meta_data in pairs(all_icbm_meta_data) do
-                if (type(icbm_meta_data) ~= "table") then goto continue end
-                if (icbm_meta_data.icbms and type(icbm_meta_data.icbms) == "table") then
-                    for _, icbm in pairs(icbm_meta_data.icbms) do
-                        if (icbm.tick_launched and icbm.tick_launched > 0 and icbm.tick_to_target and icbm.tick_to_target > 0) then
-                            icbm.cargo_pod = nil
-                        end
-
-                        icbms[icbm.item_number] = icbm
-                    end
-                end
-                :: continue ::
-            end
-
-            local icbms_array = {}
-            for item_number, icbm_data in pairs(icbms) do
-                if (#icbms_array == 0) then
-                    table.insert(icbms_array, icbm_data)
-                else
-                    local i = 1
-                    while i <= #icbms_array do
-                        if (icbms_array[i].item_number > item_number) then break end
-                        i = i + 1
-                    end
-                    if (i > #icbms_array) then
-                        table.insert(icbms_array, icbm_data)
-                    else
-                        table.insert(icbms_array, i, icbm_data)
-                    end
-                end
-            end
-
-            local i = 1
-            while i <= #icbms_array do
-                local icbm_data = icbms_array[i]
-                if (icbm_data.force_index > 0 and icbm_data.force_index < 64) then
-                    icbm_data = ICBM_Repository.get_icbm_data(icbm_data.surface_name, icbm_data.item_number, { validate_fields = true })
-
-                    if (icbm_data and icbm_data.valid) then
-                        if (not icbm_data.enqueued_data) then
-                            local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
-                            local enqueued_data = force_launch_data.launch_action_queue:enqueue({
-                                data =
-                                {
-                                    tick = game.tick,
-                                    icbm_data = icbm_data,
-                                }
-                            })
-                            icbm_data.enqueued_data = enqueued_data
-                        end
-
-                        Log.warn(icbm_data)
-
-                        icbm_data = ICBM_Repository.update_icbm_data(icbm_data)
-
-                        rocket_dashboard_gui_service.add_rocket_data({
-                            storage_ref = storage_ref,
-                            gui = gui_inner_table,
-                            icbm_data = icbm_data,
+                if (icbm_data and icbm_data.valid) then
+                    if (not icbm_data.enqueued_data) then
+                        local force_launch_data = Force_Launch_Data_Repository.get_force_launch_data(icbm_data.force_index)
+                        local enqueued_data = force_launch_data.launch_action_queue:enqueue({
+                            data =
+                            {
+                                tick = game.tick,
+                                icbm_data = icbm_data,
+                            }
                         })
+                        icbm_data.enqueued_data = enqueued_data
                     end
-                end
 
-                i = i + 1
+                    Log.warn(icbm_data)
+
+                    icbm_data = ICBM_Repository.update_icbm_data(icbm_data)
+
+                    rocket_dashboard_gui_service.add_rocket_data({
+                        storage_ref = storage_ref,
+                        gui = gui_inner_table,
+                        icbm_data = icbm_data,
+                    })
+                end
             end
+            if (k and not storage.icbm_data.item_numbers[k]) then k = nil end
+            k, v = next(storage.icbm_data.item_numbers, k)
         end
     end
 
@@ -540,6 +500,7 @@ function rocket_dashboard_gui_service.add_rocket_data(data)
     caption_destination = String_Utils.format_surface_name({ string_data = caption_destination })
 
     local time_remaining = math.floor((data.icbm_data.tick_to_target - game.tick) / 60)
+    ---@diagnostic disable-next-line: cast-local-type
     if (time_remaining < 0) then time_remaining = "?" end
 
     if (caption_target_num == nil or caption_source == nil or caption_destination == nil) then
@@ -708,7 +669,7 @@ function rocket_dashboard_gui_service.update_time_remaining(data)
             player_index = player.index,
         })
 
-        if (dashboard_gui) then
+        if (dashboard_gui and dashboard_gui.valid and dashboard_gui.visible) then
             rocket_dashboard_gui_service.update_rocket_data({
                 player_index = player.index,
                 storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index],
@@ -742,7 +703,11 @@ function rocket_dashboard_gui_service.update_rocket_data(data)
         if (item_number ~= nil and data.storage_ref.item_numbers[item_number]) then
             local meta_icbm_data = data.storage_ref.item_numbers[item_number]
             local icbm_data = meta_icbm_data.icbm_data
-            local _icbm_data = ICBM_Repository.get_icbm_data(meta_icbm_data.surface_name, item_number, { validate_fields = true })
+
+            storage.icbm_data = storage.icbm_data or {}
+            storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+            local _icbm_data = storage.icbm_data.item_numbers[item_number]
+            if (_icbm_data) then ICBM_Data.validate_fields(_icbm_data) end
 
             if (_icbm_data and _icbm_data.valid and not _icbm_data.scrubbed) then
                 icbm_data = _icbm_data
@@ -1002,8 +967,11 @@ function rocket_dashboard_gui_service.update_gui_data(data)
     local storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]
     if (not storage_ref.item_numbers) then storage_ref.item_numbers = {} end
 
+    storage.icbm_data = storage.icbm_data or {}
+    storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
     for k, v in pairs(storage_ref.item_numbers) do
-        local _icbm_data = ICBM_Repository.get_icbm_data(v.surface_name, k, { validate_fields = true, })
+        local _icbm_data = storage.icbm_data.item_numbers[k]
+        if (_icbm_data) then ICBM_Data.validate_fields(_icbm_data) end
         if (_icbm_data and _icbm_data.valid) then
             storage_ref.item_numbers[k].icbm_data = _icbm_data
             storage_ref.item_numbers[k].surface_name = _icbm_data.surface and _icbm_data.surface.valid and _icbm_data.surface.name or _icbm_data.surface_name

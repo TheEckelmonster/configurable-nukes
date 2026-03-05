@@ -1,5 +1,6 @@
 local Custom_Input = require("prototypes.custom-input.custom-input")
 
+local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
@@ -300,7 +301,14 @@ function rocket_silo_controller.launch_rocket(event)
 
     if (type(return_val) == "number" and return_val == 1) then
         if (type(return_data) == "table" and return_data.valid) then
-            local icbm_data = ICBM_Repository.get_icbm_data(return_data.surface_name, return_data.item_number, { validate_fields = true })
+            storage.icbm_data = storage.icbm_data or {}
+            storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+            local icbm_data = storage.icbm_data.item_numbers[return_data.item_number]
+            if (icbm_data) then
+                ICBM_Data.validate_fields(icbm_data)
+            elseif (not icbm_data) then
+                icbm_data = ICBM_Repository.get_icbm_data(return_data.surface_name, return_data.item_number, { validate_fields = true })
+            end
             if (not icbm_data or not icbm_data.valid) then return end
 
             Rocket_Dashboard_Gui_Service.add_rocket_data_for_force({

@@ -57,6 +57,7 @@ data:extend({
 
     Runtime_Global_Settings_Constants.settings.PAYLOAD_EXPLOSIVES_AOE_MULTIPLIER,
 
+    Runtime_Global_Settings_Constants.settings.ROCKET_SILOS_PROCESSING_MODE,
     Runtime_Global_Settings_Constants.settings.ROCKET_SILO_PROCESSING_RATE,
     Runtime_Global_Settings_Constants.settings.NUM_ROCKET_SILOS_PROCESSED_PER_TICK,
 
