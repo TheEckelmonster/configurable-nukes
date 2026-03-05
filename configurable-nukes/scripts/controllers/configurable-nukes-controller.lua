@@ -8,7 +8,7 @@ configurable_nukes_controller.name = "configurable_nukes_controller"
 configurable_nukes_controller.planet_index = nil
 configurable_nukes_controller.planet = nil
 configurable_nukes_controller.nth_tick_rocket_silo_processing = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ROCKET_SILO_PROCESSING_RATE.name })
-configurable_nukes_controller.num_surfaces_to_process = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_ROCKET_SILOS_PROCESSED_PER_TICK.name })
+configurable_nukes_controller.num_rocket_silos_to_process = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_ROCKET_SILOS_PROCESSED_PER_TICK.name })
 
 local rocket_ready_status = defines.rocket_silo_status.rocket_ready
 
@@ -31,10 +31,12 @@ function configurable_nukes_controller.on_nth_tick(event)
     if (storage.rkt_key and storage.rkt_val) then
         local circuit_connected_silos = nil
 
-        for i = 1, configurable_nukes_controller.num_surfaces_to_process or 1, 1 do
+        for i = 1, configurable_nukes_controller.num_rocket_silos_to_process or 1, 1 do
             if (storage.rkt_val.entity and storage.rkt_val.entity.valid and storage.rkt_val.entity.type == "rocket-silo" and storage.rkt_val.entity.rocket_silo_status == rocket_ready_status) then
-                circuit_connected_silos = circuit_connected_silos or {}
-                circuit_connected_silos[storage.rkt_key] = storage.rkt_val
+                if (storage.rkt_val.entity.get_circuit_network(defines.wire_connector_id.circuit_red) or storage.rkt_val.entity.get_circuit_network(defines.wire_connector_id.circuit_green)) then
+                    circuit_connected_silos = circuit_connected_silos or {}
+                    circuit_connected_silos[storage.rkt_key] = storage.rkt_val
+                end
             end
 
             if (storage.rkt_key and not storage.rocket_silos[storage.rkt_key]) then storage.rkt_key = nil end
@@ -90,7 +92,7 @@ function configurable_nukes_controller.on_runtime_mod_setting_changed(event)
         end
     elseif (    event.setting == Runtime_Global_Settings_Constants.settings.NUM_ROCKET_SILOS_PROCESSED_PER_TICK.name
     ) then
-        configurable_nukes_controller.num_surfaces_to_process = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_ROCKET_SILOS_PROCESSED_PER_TICK.name })
+        configurable_nukes_controller.num_rocket_silos_to_process = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_ROCKET_SILOS_PROCESSED_PER_TICK.name })
     end
 end
 Event_Handler:register_event({

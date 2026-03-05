@@ -53,15 +53,17 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
         else
             if (not event.cargo_pod or not event.cargo_pod.valid) then return end
             if (not event.cargo_pod.surface or not event.cargo_pod.surface.valid) then return end
-            local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(event.cargo_pod.surface.name)
 
-            local k, icbm_data = next(icbm_meta_data.icbms, nil)
-            while k or (not k and icbm_data) do
-                if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == event.cargo_pod.unit_number) then
+            storage.icbm_data = storage.icbm_data or {}
+            storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+            local k, icbm_data = next(storage.icbm_data.item_numbers)
+            while k and icbm_data do
+                if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == data.cargo_pod.unit_number) then
                     break
                 end
 
-                if (k) then k, icbm_data = next(icbm_meta_data.icbms, k) end
+                if (k and not storage.icbm_data.item_numbers[k]) then k = nil end
+                k, icbm_data = next(storage.icbm_data.item_numbers, k)
             end
 
             if (icbm_data == nil) then
@@ -72,8 +74,8 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
     end
     if (not event.cargo_pod or not event.cargo_pod.valid) then return end
     local cargo_pod = event.cargo_pod
-    Log.warn(cargo_pod)
-    Log.warn(cargo_pod.cargo_pod_destination)
+    -- Log.warn(cargo_pod)
+    -- Log.warn(cargo_pod.cargo_pod_destination)
     if (not cargo_pod.cargo_pod_destination) then return end
 
     -- Check the carge; if the cargo pod doesn't have a station and has a destination type of 1

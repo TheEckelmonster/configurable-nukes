@@ -2,6 +2,7 @@ local TECL_Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.cor
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Custom_Events = require("prototypes.custom-events.custom-events")
+local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local Migrations = require("scripts.migrations")
 local Rocket_Silo_Constants = require("scripts.constants.rocket-silo-constants")
@@ -161,6 +162,24 @@ function locals.initialize(from_scratch, maintain_data)
                         Rocket_Silo_Meta_Repository.delete_rocket_silo_meta_data(surface_name)
                     end
                 end
+            end
+        end
+
+        local item_numbers = ICBM_Data:get_item_numbers()
+
+        storage.icbm_data = storage.icbm_data or {}
+        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+        for k, v in pairs(storage.icbm_data.item_numbers) do
+            if (v.valid and v.item_number) then
+
+                if (not v.cargo_pod or not v.cargo_pod.valid) then v.cargo_pod = nil end
+                if (not v.surface or not v.surface.valid) then v.surface = nil end
+                if (not v.source_silo or not v.source_silo.valid) then v.source_silo = nil end
+                if (not v.target_surface or not v.target_surface.valid) then v.target_surface = nil end
+                if (not v.player_launched_by or not v.player_launched_by.valid) then v.player_launched_by = nil end
+                if (not v.total_payload_items) then v.total_payload_items = ICBM_Data.total_payload_items end
+
+                if (not item_numbers.get(v.item_number)) then item_numbers.set(v.item_number, v) end
             end
         end
 

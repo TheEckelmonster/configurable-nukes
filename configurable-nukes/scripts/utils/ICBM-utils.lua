@@ -12,6 +12,9 @@ local icbm_utils = {
 }
 icbm_utils.name = "icbm_utils"
 
+local E = math.exp(1)
+local Sixth_Pi = math.pi / 6
+
 icbm_utils.rhythm = { name = icbm_utils.name, }
 local rhythm = Rhythm.new(icbm_utils.rhythm, icbm_utils.rhythm)
 
@@ -68,15 +71,17 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     local k, icbm_data = nil, data.icbm_data or nil
 
     if (not icbm_data) then
-        local icbm_meta_data = ICBM_Meta_Repository.get_icbm_meta_data(data.surface.name)
 
-        k, icbm_data = next(icbm_meta_data.icbms, nil)
-        while k or (not k and icbm_data) do
+        storage.icbm_data = storage.icbm_data or {}
+        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+        k, icbm_data = next(storage.icbm_data.item_numbers)
+        while k and icbm_data do
             if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == data.cargo_pod.unit_number) then
                 break
             end
 
-            if (k) then k, icbm_data = next(icbm_meta_data.icbms, k) end
+            if (k and not storage.icbm_data.item_numbers[k]) then k = nil end
+            k, icbm_data = next(storage.icbm_data.item_numbers, k)
         end
     end
 
@@ -228,43 +233,57 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             local deviation_threshold = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.name })
             local threshold = -(1 - deviation_threshold) * guidance_systems_modifier + deviation_threshold
             if (threshold - 1 < 0) then
-                for i = 1, math.floor(target_distance / distance_divisor), 1 do
+                local max_deviation_count = math.floor(target_distance / distance_divisor)
+                if (max_deviation_count > 32) then max_deviation_count = 24 + math.floor(math.log(1 + max_deviation_count - 32, 8)) end
+
+                local deviation_limit = 32
+                if (icbm_data.silo_type == "ipbm-rocket-silo") then
+                    deviation_limit = 8 + guidance_systems_modifier_difference * 16
+                else
+                    deviation_limit = 16 + guidance_systems_modifier_difference * 16
+                end
+
+                local target_surface_name
+                local target_space_location
+                if (se_active) then
+                    target_surface_name = icbm_data.target_surface and icbm_data.surface.valid and icbm_data.target_surface.name:lower() or icbm_data.target_surface_name
+                    if (not Constants.space_exploration_dictionary[target_surface_name]) then Constants.get_space_exploration_universe(true) end
+                    target_space_location = Constants.space_exploration_dictionary[target_surface_name]
+                end
+
+                for i = 1, max_deviation_count, 1 do
                     --[[ This shouldn't be necessary? ]]
                     if (threshold >= 1) then break end
                     local rand = math.random()
 
-                    Log.warn("rand = " .. rand)
-                    Log.warn("threshold = " .. threshold)
+                    -- Log.warn("rand = " .. rand)
+                    -- Log.warn("threshold = " .. threshold)
                     if (rand > threshold) then
                         -- Target deviation
-                        Log.warn("deviating from target: " .. i)
-                        local deviation_limit = 32 ^ 1
+                        -- Log.warn("deviating from target: " .. i)
 
                         if (icbm_data.silo_type == "ipbm-rocket-silo") then
-                            deviation_limit = ((8 + guidance_systems_modifier_difference * 16) * (i ^ (math.pi / 6))) ^ (0.75 * icbm_deviation_scaling_factor)
+                            deviation_limit = (deviation_limit * (i ^ Sixth_Pi)) ^ (0.75 * icbm_deviation_scaling_factor)
                         else
-                            deviation_limit = ((16 + guidance_systems_modifier_difference * 16) * (i ^ (math.pi / 6))) ^ icbm_deviation_scaling_factor
+                            deviation_limit = (deviation_limit * (i ^ Sixth_Pi)) ^ icbm_deviation_scaling_factor
                         end
-                        Log.warn("deviation_limit = " .. deviation_limit)
-                        deviation_limit = math.exp(1) * math.log(math.exp(1) + deviation_limit, math.exp(1)) * deviation_limit ^ 0.25
+
+                        -- Log.warn("deviation_limit = " .. deviation_limit)
+                        deviation_limit = E * math.log(E + deviation_limit, E) * deviation_limit ^ 0.25
                         Log.warn(deviation_limit)
 
                         if (type(deviation_limit) == "number" and deviation_limit >= 1 and deviation_limit < math.huge) then
                             if (not se_active) then
-                                Log.warn("deviation_limit = " .. deviation_limit)
+                                -- Log.warn("deviation_limit = " .. deviation_limit)
                                 icbm_data.target_position = {
                                     x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
                                     y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
                                 }
                             else
-                                local target_surface_name = icbm_data.target_surface and icbm_data.surface.valid and icbm_data.target_surface.name:lower() or icbm_data.target_surface_name
-                                if (not Constants.space_exploration_dictionary[target_surface_name]) then Constants.get_space_exploration_universe(true) end
-                                local target_space_location = Constants.space_exploration_dictionary[target_surface_name]
-
                                 if (target_space_location) then
                                     local radius_max = target_space_location.radius
 
-                                    Log.warn("deviation_limit = " .. deviation_limit)
+                                    -- Log.warn("deviation_limit = " .. deviation_limit)
                                     local previous_position = {
                                         x = icbm_data.target_position.x,
                                         y = icbm_data.target_position.y,
@@ -639,17 +658,20 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             +   top_speed_modifier_max * 14
             +   top_speed_modifier_max * 25
         top_speed_modifier_max = top_speed_modifier_max * 1.5
-        Log.warn(top_speed_modifier)
-        Log.warn(top_speed_modifier_max)
+        -- Log.warn(top_speed_modifier)
+        -- Log.warn(top_speed_modifier_max)
 
-        Log.warn(num_speed_checks)
-        Log.warn(top_speed)
+        -- Log.warn(num_speed_checks)
+        -- Log.warn(top_speed)
         for i = 1, num_speed_checks, 1 do
-            Log.debug(i)
-            Log.debug(current_speed)
-            Log.debug(time_to_target)
-            Log.debug(remaining_distance)
-            if (current_speed > top_speed) then current_speed = top_speed end
+            -- Log.debug(i)
+            -- Log.debug(current_speed)
+            -- Log.debug(time_to_target)
+            -- Log.debug(remaining_distance)
+            if (current_speed >= top_speed) then
+                time_to_target = time_to_target + math.ceil(remaining_distance / top_speed)
+                break
+            end
 
             time_to_target = time_to_target + 1
             remaining_distance = remaining_distance - current_speed
@@ -673,17 +695,17 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             if (remaining_distance <= 0) then break end
             if (current_speed < top_speed) then
                 local pre_update_speed = current_speed
-                Log.debug(current_speed)
+                -- Log.debug(current_speed)
                 current_speed = starting_speed + current_speed + (((starting_speed + (current_speed > starting_speed and (current_speed - starting_speed) or 0)) * (math.exp(1) ^ 4)) * (1 - 1 / math.exp(1) ^ ((i / 6) - 1 / 6))) ^ 0.25
-                Log.debug(current_speed)
+                -- Log.debug(current_speed)
                 current_speed = current_speed + (i * (1 - check_proportion))
-                Log.debug(current_speed)
+                -- Log.debug(current_speed)
                 local top_speed_proportion = 1 - (top_speed_modifier / top_speed_modifier_max)
-                Log.debug(top_speed_proportion)
+                -- Log.debug(top_speed_proportion)
                 current_speed = current_speed + current_speed / (1 + (2.71 ^ 2) * top_speed_proportion)
-                Log.debug(current_speed)
+                -- Log.debug(current_speed)
                 current_speed = original_starting_speed + pre_update_speed + current_speed
-                Log.debug(current_speed)
+                -- Log.debug(current_speed)
                 if (from_ipbm_silo) then
                     if (surface_to_orbit_complete or icbm_data.launched_from_space) then
                         if (icbm_data.launched_from == "orbit" or icbm_data.launched_from == "interplanetary") then
@@ -937,10 +959,16 @@ function icbm_utils.time_to_target_5_event(event, event_data)
     })
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
-        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
-            Log.warn("icbm_data no longer exists or is not valid")
-            return
+        storage.icbm_data = storage.icbm_data or {}
+        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+        event_data.icbm_data = storage.icbm_data.item_numbers[event_data.icbm_data.item_number] or event_data.icbm_data
+        ICBM_Data.validate_fields(event_data.icbm_data)
+        if (not event_data.icbm_data.valid) then
+            event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
+            if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+                Log.warn("icbm_data no longer exists or is not valid")
+                return
+            end
         end
     else
         Log.warn("icbm_data not provided or is not valid")
@@ -978,10 +1006,16 @@ function icbm_utils.time_to_target_3_event(event, event_data)
     })
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
-        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
-            Log.warn("icbm_data no longer exists or is not valid")
-            return
+        storage.icbm_data = storage.icbm_data or {}
+        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+        event_data.icbm_data = storage.icbm_data.item_numbers[event_data.icbm_data.item_number] or event_data.icbm_data
+        ICBM_Data.validate_fields(event_data.icbm_data)
+        if (not event_data.icbm_data.valid) then
+            event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
+            if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+                Log.warn("icbm_data no longer exists or is not valid")
+                return
+            end
         end
     else
         Log.warn("icbm_data not provided or is not valid")
@@ -1006,10 +1040,16 @@ function icbm_utils.time_to_target_2_event(event, event_data)
     })
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
-        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
-            Log.warn("icbm_data no longer exists or is not valid")
-            return
+        storage.icbm_data = storage.icbm_data or {}
+        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+        event_data.icbm_data = storage.icbm_data.item_numbers[event_data.icbm_data.item_number] or event_data.icbm_data
+        ICBM_Data.validate_fields(event_data.icbm_data)
+        if (not event_data.icbm_data.valid) then
+            event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
+            if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+                Log.warn("icbm_data no longer exists or is not valid")
+                return
+            end
         end
     else
         Log.warn("icbm_data not provided or is not valid")
@@ -1034,10 +1074,16 @@ function icbm_utils.time_to_target_1_event(event, event_data)
     })
 
     if (event_data.icbm_data and event_data.icbm_data.valid) then
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
-        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
-            Log.warn("icbm_data no longer exists or is not valid")
-            return
+        storage.icbm_data = storage.icbm_data or {}
+        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+        event_data.icbm_data = storage.icbm_data.item_numbers[event_data.icbm_data.item_number] or event_data.icbm_data
+        ICBM_Data.validate_fields(event_data.icbm_data)
+        if (not event_data.icbm_data.valid) then
+            event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
+            if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+                Log.warn("icbm_data no longer exists or is not valid")
+                return
+            end
         end
     else
         Log.warn("icbm_data not provided or is not valid")
@@ -1069,10 +1115,16 @@ function icbm_utils.payload_arrive_event(event, event_data)
             end
         end
 
-        event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
-        if (not event_data.icbm_data or not event_data.icbm_data.valid) then
-            Log.warn("icbm_data no longer exists or is not valid")
-            return
+        storage.icbm_data = storage.icbm_data or {}
+        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+        event_data.icbm_data = storage.icbm_data.item_numbers[event_data.icbm_data.item_number] or event_data.icbm_data
+        ICBM_Data.validate_fields(event_data.icbm_data)
+        if (not event_data.icbm_data.valid) then
+            event_data.icbm_data = ICBM_Repository.get_icbm_data(event_data.icbm_data.surface_name, event_data.icbm_data.item_number, { validate_fields = true })
+            if (not event_data.icbm_data or not event_data.icbm_data.valid) then
+                Log.warn("icbm_data no longer exists or is not valid")
+                return
+            end
         end
     else
         Log.warn("icbm_data not provided or is not valid")
@@ -1647,7 +1699,11 @@ function icbm_utils.print_space_launched_time_to_target_message(data)
     if (storage.icbm_utils and storage.icbm_utils.space_launches_initiated) then
         for k, v in pairs(storage.icbm_utils.space_launches_initiated) do
             if (k and k.valid) then
-                local icbm_data = ICBM_Repository.get_icbm_data(k.surface_name, k.item_number, { validate_fields = true })
+
+                storage.icbm_data = storage.icbm_data or {}
+                storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+                local icbm_data = storage.icbm_data.item_numbers[k.item_number]
+                ICBM_Data.validate_fields(icbm_data)
                 if (not icbm_data or not icbm_data.valid) then
                     Log.warn("icbm_data no longer exists or is not valid")
                     storage.icbm_utils.space_launches_initiated[k] = nil
