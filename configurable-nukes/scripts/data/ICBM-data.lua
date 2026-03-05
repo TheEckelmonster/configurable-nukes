@@ -64,14 +64,15 @@ icbm_data.item_numbers = {
 
         if (storage and storage.icbm_data and storage.icbm_data.item_numbers) then return storage.icbm_data.item_numbers[item_number] end
     end,
-    set = function (item_number)
+    set = function (item_number, val)
+        if (val == nil) then return end
         if (item_number == nil or type(item_number) ~= "number" or item_number < 1) then return end
 
         if (storage) then
-            if (not storage.icbm_data) then storage.icbm_data = {} end
-            if (not storage.icbm_data.item_numbers) then storage.icbm_data.item_numbers = {} end
+            storage.icbm_data = storage.icbm_data or {}
+            storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
 
-            storage.icbm_data.item_numbers[item_number] = {}
+            storage.icbm_data.item_numbers[item_number] = val
         end
     end,
     remove = function (item_number)
@@ -137,8 +138,8 @@ icbm_data.enqueued_data = nil
 icbm_data.event_handlers = {}
 
 function icbm_data:new(o)
-    _Log.debug("icbm_data:new")
-    _Log.info(o)
+    -- _Log.debug("icbm_data:new")
+    -- _Log.info(o)
 
     local defaults = {
         type = self.type,
@@ -200,14 +201,14 @@ function icbm_data:new(o)
 end
 
 function icbm_data:next_item_number()
-    _Log.debug("icbm_data:next_item_number")
+    -- _Log.debug("icbm_data:next_item_number")
 
     return icbm_data.item_number.get()
 end
 
 function icbm_data:get_item_numbers()
-    _Log.debug("icbm_data:get_item_numbers")
-    _Log.info(item_number)
+    -- _Log.debug("icbm_data:get_item_numbers")
+    -- _Log.info(item_number)
 
     return
     {
@@ -220,8 +221,8 @@ function icbm_data:get_item_numbers()
 end
 
 function icbm_data:validate_fields()
-    Log.debug("icbm_data:validate_fields")
-    Log.info(self)
+    -- Log.debug("icbm_data:validate_fields")
+    -- Log.info(self)
 
     if (not self or type(self) ~= "table") then return end
 

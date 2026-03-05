@@ -1,3 +1,4 @@
+local ICBM_Data = require("scripts.data.ICBM-data")
 local ICBM_Repository = require("scripts.repositories.ICBM-repository")
 local Rocket_Dashboard_Gui_Service = require("scripts.services.guis.rocket-dashboard-gui-service")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
@@ -44,9 +45,17 @@ function circuit_network_service.attempt_launch_silos(data)
                     if (not rocket_silo_data or not rocket_silo_data.valid) then
                         rocket_silo_data = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
                         rocket_silo_data = rocket_silo_data and rocket_silo_data.valid and rocket_silo_data or nil
-                        if (not rocket_silo_data or not rocket_silo_data.valid) then goto continue end
+                        if (not rocket_silo_data or not rocket_silo_data.valid) then
+                            if (rocket_silo_data and rocket_silo_data.unit_number) then
+                                storage.circuit_connected_rkt_silos[rocket_silo_data.unit_number] = nil
+                            end
+                            goto continue
+                        end
                     end
                 end
+
+                storage.circuit_connected_rkt_silos = storage.circuit_connected_rkt_silos or {}
+                storage.circuit_connected_rkt_silos[rocket_silo_data.unit_number] = storage.circuit_connected_rkt_silos[rocket_silo_data.unit_number] or rocket_silo_data
 
                 local is_orbit_surface = false
                 if (rocket_silo_data.surface and rocket_silo_data.surface.valid) then
@@ -284,7 +293,10 @@ function circuit_network_service.attempt_launch_silos(data)
                                     tick = game.tick,
                                     surface = target_surface,
                                     area = { left_top = { x = signal_x, y = signal_y }, right_bottom = { x = signal_x, y = signal_y }, },
-                                    --[[ Pretty sure valid player indices start at 1, so 0 should be safe for indicating a circuit launch? ]]
+                                    --[[
+                                        Pretty sure valid player indices start at 1, so 0 should be safe for indicating a circuit launch?
+                                            -> The above is partially correct: 0 is not used for player indices, but is also not a valid index to game.players
+                                    ]]
                                     player_index = 0,
                                     last_user_index = entity and entity.valid and entity.last_user and entity.last_user.index,
                                     orbit_to_surface = orbit_to_surface,
@@ -292,19 +304,33 @@ function circuit_network_service.attempt_launch_silos(data)
 
                                 if (type(return_val) == "number" and return_val == 1) then
                                     if (type(return_data) == "table" and return_data.valid) then
-                                        local icbm_data = ICBM_Repository.get_icbm_data(return_data.surface_name, return_data.item_number, { validate_fields = true })
+                                        storage.icbm_data = storage.icbm_data or {}
+                                        storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
+                                        local icbm_data = storage.icbm_data.item_numbers[return_data.item_number]
+                                        if (icbm_data) then
+                                            ICBM_Data.validate_fields(icbm_data)
+                                        elseif (not icbm_data) then
+                                            icbm_data = ICBM_Repository.get_icbm_data(return_data.surface_name, return_data.item_number, { validate_fields = true })
+                                        end
                                         if (not icbm_data or not icbm_data.valid) then return end
 
                                         Rocket_Dashboard_Gui_Service.add_rocket_data_for_force({
                                             icbm_data = icbm_data,
                                         })
 
-                                        return_val = 1
+                                        storage.recently_launched_rkt_silos = storage.recently_launched_rkt_silos or {}
+                                        storage.recently_launched_rkt_silos[rocket_silo_data.unit_number] = game.tick
+
+                                        return_val = return_val + 1
                                     end
                                 end
                             end
                         end
                     end
+                end
+            else
+                if (v.unit_number and storage.circuit_connected_rkt_silos[v.unit_number]) then
+                    storage.circuit_connected_rkt_silos[v.unit_number] = nil
                 end
             end
         end

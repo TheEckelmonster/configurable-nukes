@@ -142,7 +142,7 @@ function icbm_repository.save_icbm_data(icbm, optionals)
     icbms[return_val.item_number] = return_val
 
     local item_numbers = ICBM_Data:get_item_numbers()
-    if (item_numbers) then item_numbers.set(return_val.item_number) end
+    if (item_numbers) then item_numbers.set(return_val.item_number, return_val) end
 
     return icbm_repository.update_icbm_data(return_val)
 end
@@ -186,10 +186,10 @@ function icbm_repository.update_icbm_data(update_data, optionals)
 
     icbms[update_data.item_number] = return_val
 
-    local item_numbers = ICBM_Data:get_item_numbers()
-    if (not item_numbers.get(return_val.item_number)) then item_numbers.set(return_val.item_number) end
-
     ICBM_Data.validate_fields(return_val)
+
+    local item_numbers = ICBM_Data:get_item_numbers()
+    if (not item_numbers.get(return_val.item_number)) then item_numbers.set(return_val.item_number, return_val) end
 
     return return_val
 end
