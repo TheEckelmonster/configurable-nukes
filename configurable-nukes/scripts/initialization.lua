@@ -249,6 +249,10 @@ function locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
         if (ret_silo and ret_silo.valid) then
             storage.rocket_silos = storage.rocket_silos or {}
             storage.rocket_silos[ret_silo.unit_number] = ret_silo
+
+            storage.surfaces = storage.surfaces or {}
+            storage.surfaces[ret_silo.surface_name] = storage.surfaces[ret_silo.surface_name] or {}
+            storage.surfaces[ret_silo.surface_name][ret_silo.unit_number] = ret_silo
         end
     else
         Log.debug("saving rocket silo")
@@ -256,6 +260,10 @@ function locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
         if (ret_silo and ret_silo.valid) then
             storage.rocket_silos = storage.rocket_silos or {}
             storage.rocket_silos[ret_silo.unit_number] = ret_silo
+
+            storage.surfaces = storage.surfaces or {}
+            storage.surfaces[ret_silo.surface_name] = storage.surfaces[ret_silo.surface_name] or {}
+            storage.surfaces[ret_silo.surface_name][ret_silo.unit_number] = ret_silo
         end
     end
 end
