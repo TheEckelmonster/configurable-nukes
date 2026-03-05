@@ -106,6 +106,8 @@ function locals.initialize(from_scratch, maintain_data)
         -- do migrations
         locals.migrate({ maintain_data = maintain_data, new_version_data = configurable_nukes_data.version_data })
 
+        storage.storage_old = nil
+
         local version_data = configurable_nukes_data.version_data
         version_data.valid = true
     else
