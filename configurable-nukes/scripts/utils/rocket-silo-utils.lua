@@ -60,7 +60,7 @@ function rocket_silo_utils.mine_rocket_silo(event)
         storage.rocket_silos[rocket_silo.unit_number] = nil
 
         storage.surfaces = storage.surfaces or {}
-        storage.surfaces[rocket_silo.surface_name] = storage.surfaces[rocket_silo.surface_name] or {}
+        storage.surfaces[rocket_silo.surface.name] = storage.surfaces[rocket_silo.surface.name] or {}
         storage.surfaces[rocket_silo.surface.name][rocket_silo.unit_number] = nil
 
         Rocket_Silo_Repository.delete_rocket_silo_data_by_unit_number(rocket_silo.surface.name, rocket_silo.unit_number)
