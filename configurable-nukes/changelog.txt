@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.10
+Date: 2026-03-06
+  Bug Fixes:
+    - Fixed a runtime error introduced with version 0.9.9 when a rocket-silo is mined/destroyed (apologies for the oversight)
+---------------------------------------------------------------------------------------------------
 Version: 0.9.9
 Date: 2026-03-05
   Features:
