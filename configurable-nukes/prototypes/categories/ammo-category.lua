@@ -1,4 +1,4 @@
-Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
@@ -41,11 +41,14 @@ data:extend({
         icons =
         {
             {
-                icon = "__base__/graphics/icons/signal/signal-damage.png",
+                icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-rocket.png",
+                floating = true,
             },
             {
-                icon = "__base__/graphics/icons/atomic-bomb.png",
-                floating = true,
+                icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-crosshair.png",
+            },
+            {
+                icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-tip.png",
             },
         },
         hidden = true,
@@ -85,7 +88,7 @@ if (sa_active) then
     data:extend({
         {
             type = "ammo-category",
-            name = "tesla-rocket",
+            name = "tesla-munition",
             hidden = true,
             hidden_in_factoriopedia = true,
             subgroup = "ammo-category",
