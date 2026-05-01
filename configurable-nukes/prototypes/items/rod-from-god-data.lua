@@ -39,7 +39,7 @@ data:extend({
                 action_delivery =
                 {
                     type = "projectile",
-                    projectile = "cn-rod-from-god",
+                    projectile = "cn-rod-from-god-normal",
                     starting_speed = 0.0001,
                     source_effects =
                     {

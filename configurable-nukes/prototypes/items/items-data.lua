@@ -1,3 +1,5 @@
+local mods = mods
+
 local Util = require("__core__.lualib.util")
 -- local Item_Sounds = require("__base__.prototypes.item_sounds")
 
@@ -8,8 +10,6 @@ local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-uti
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
-
-local name_prefix = se_active and "se-" or ""
 
 local function item_sound(filename, volume)
     return
@@ -167,11 +167,14 @@ data:extend({
         icons =
         {
             {
-                icon = "__base__/graphics/icons/signal/signal-damage.png",
+                icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-rocket.png",
+                floating = true,
             },
             {
-                icon = "__base__/graphics/icons/atomic-bomb.png",
-                floating = true,
+                icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-crosshair.png",
+            },
+            {
+                icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-tip.png",
             },
         },
         flags = { "only-in-cursor", "not-stackable", "spawnable" },
@@ -193,7 +196,8 @@ data:extend({
         },
         alt_select =
         {
-            border_color = { 239, 153, 34 },
+            -- border_color = { 239, 153, 34 },
+            border_color = { 36.6, 25.6, 82.3 },
             mode = { "nothing" },
             cursor_box_type = "copy",
         },
@@ -250,7 +254,7 @@ local atomic_warhead_item =
             action_delivery =
             {
                 type = "projectile",
-                projectile = "atomic-warhead",
+                projectile = "atomic-warhead-normal",
                 starting_speed = 0.0001,
                 source_effects =
                 {
@@ -314,7 +318,7 @@ local rocket_control_unit =
     type = "item",
     name = "rocket-control-unit",
     icon = "__configurable-nukes__/graphics/icons/rocket-control-unit.png",
-    icon_size = 64, icon_mipmaps = 4,
+    icon_size = 64,
     subgroup = not se_active and "intermediate-product" or "rocket-part",
     order = "n[rocket-control-unit]",
     stack_size = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.ROCKET_CONTROL_UNIT_STACK_SIZE.name }),
@@ -329,6 +333,7 @@ if (sa_active or se_active) then
     --[[ ipbm-rocket-silo ]]
     local ipbm_rocket_silo = Util.table.deepcopy(data.raw["item"]["rocket-silo"])
     ipbm_rocket_silo.name = "ipbm-rocket-silo"
+    ipbm_rocket_silo.icon = "__configurable-nukes__/graphics/icons/ipbm-rocket-silo.png"
     ipbm_rocket_silo.subgroup = "inter-ballistic-missile"
     ipbm_rocket_silo.order = "b[icbm-rocket-silo]"
     ipbm_rocket_silo.place_result = "ipbm-rocket-silo"

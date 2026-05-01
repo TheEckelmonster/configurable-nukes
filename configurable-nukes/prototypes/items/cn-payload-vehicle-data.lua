@@ -22,10 +22,7 @@ data:extend({
     {
         type = "item-with-inventory",
         name = "cn-payload-vehicle",
-        icons =
-        {
-            { icon = "__configurable-nukes__/graphics/icons/payload-vehicle.png", icon_size = 173 }
-        },
+        icon = "__configurable-nukes__/graphics/icons/payload-vehicle.png",
         subgroup = "inter-ballistic-missile",
         order = "z-payload-vehicle",
         inventory_move_sound = Item_Sounds.mechanical_inventory_move,
@@ -39,6 +36,7 @@ data:extend({
         item_filters = {
             "explosives",
             "land-mine",
+            "target-combinator",
         },
         item_group_filters = {},
         item_subgroup_filters = {

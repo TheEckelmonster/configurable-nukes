@@ -27,7 +27,7 @@ data:extend({
             { icon = "__base__/graphics/icons/ammo-category/rocket.png", },
             { icon = "__base__/graphics/icons/ammo-category/rocket.png", tint = { 7, 7, 255, 85 } },
         },
-        ammo_category = "tesla-rocket",
+        ammo_category = "tesla-munition",
         ammo_type =
         {
             range_modifier = -1,
@@ -49,6 +49,7 @@ data:extend({
                 },
             },
         },
+        magazine_size = 4,
         subgroup = "payload",
         order = "d[warhead]-e[mjolnir]",
         inventory_move_sound = Item_Sounds.mechanical_inventory_move,
