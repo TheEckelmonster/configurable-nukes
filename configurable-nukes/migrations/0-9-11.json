@@ -1,0 +1,7 @@
+{
+    "recipe":
+    [
+        ["payload-add", "payloader-load"],
+        ["payload-remove", "payloader-unload"]
+    ]
+}
