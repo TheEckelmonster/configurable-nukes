@@ -184,14 +184,14 @@ local payloader_unlock =
 local payload_add_unlock =
 {
     type = "unlock-recipe",
-    recipe = "payload-add",
+    recipe = "payloader-load",
     hidden = true,
 }
 
 local payload_remove_unlock =
 {
     type = "unlock-recipe",
-    recipe = "payload-remove",
+    recipe = "payloader-unload",
     hidden = true,
 }
 

@@ -174,7 +174,7 @@ data:extend({recipe_payloader})
 data:extend({
     {
         type = "recipe",
-        name = "payload-add",
+        name = "payloader-load",
         icons = {
             {
                 icon = "__base__/graphics/item-group/military.png",
@@ -210,7 +210,7 @@ data:extend({
     },
     {
         type = "recipe",
-        name = "payload-remove",
+        name = "payloader-unload",
         icons = {
             {
                 icon = "__configurable-nukes__/graphics/icons/payload-vehicle.png",

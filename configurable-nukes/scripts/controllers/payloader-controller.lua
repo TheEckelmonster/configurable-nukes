@@ -1,17 +1,121 @@
+local storage
+local containers
+local ordered_payloaders
+local payloaders
+
+local game
+local create_inventory
+local get_player
+
+local Constants = Constants or require("scripts.constants.constants")
+
+local function set_game(event, __game, __storage)
+    storage = __storage or _ENV.storage
+
+    storage.ordered_payloaders = storage.ordered_payloaders or {}
+    ordered_payloaders = storage.ordered_payloaders
+
+    storage.containers = storage.containers or {}
+    containers = storage.containers
+
+    storage.payloaders = storage.payloaders or {}
+    payloaders = storage.payloaders
+
+    game = __game or _ENV.game
+    create_inventory = game.create_inventory
+    get_player = game.get_player
+
+    return game
+end
+
+local defines = defines
+local prototypes = prototypes
+
+local table = table
+local table_insert = table.insert
+local table_remove = table.remove
+
+local defines_payload_vehicle_inventory = defines.inventory.cn_payload_vehicle
+local payloader_container_inventory = defines.inventory.payloader
+local payloader_inventory_input = defines.inventory.crafter_input
+local payloader_inventory_output = defines.inventory.crafter_output
+
+local Constants = Constants
+local Event_Handler = Event_Handler
+local Filters = Filters
+local Log = Log
+
+-- local Payloader_Data = Circuit_Network_Payloader_Data or require("scripts.data.circuit-network.payloader-data")
+
 local String_Utils = require("scripts.utils.string-utils")
+
+local CN_PAYLOAD_VEHICLE = "cn-payload-vehicle"
+local GREATER_THAN_EQUAL_TO = ">="
+local PAYLOADER_LOAD = "payloader-load"
+local PAYLOADER_UNLOAD = "payloader-unload"
+
+local NTH_TICK = 60
+
+local payloader_load_recipe_crafting_time = prototypes.mod_data[Constants.mod_name .. "-payloader-recipe-data"].data.recipes[PAYLOADER_LOAD].energy_required
+local payloader_load_recipe_crafting_time_60 = payloader_load_recipe_crafting_time * NTH_TICK
+local payloader_unload_recipe_crafting_time = prototypes.mod_data[Constants.mod_name .. "-payloader-recipe-data"].data.recipes[PAYLOADER_UNLOAD].energy_required
+local payloader_unload_recipe_crafting_time_60 = payloader_unload_recipe_crafting_time * NTH_TICK
+
+local valid_payloader_types = {
+    ["ammo"] = 1,
+    ["capsule"] = 1,
+    ["land-mine"] = 1,
+}
+local valid_payloader_items = {
+    ["explosives"] = 1,
+}
+local valid_payloader_recipes = {
+    [PAYLOADER_LOAD] = 1,
+    [PAYLOADER_UNLOAD] = 1,
+}
+local entity_output_recipes = {
+}
+local item_output_recipes = {
+    [PAYLOADER_UNLOAD] = 1,
+}
+
+local payloader_load_ingredient_filters = {}
+local payloader_load_ingredient_amounts = {}
+
+local payloader_load_recipe = prototypes.recipe[PAYLOADER_LOAD]
+if (payloader_load_recipe.ingredients[1]) then
+    for _, ingredient in ipairs(payloader_load_recipe.ingredients) do
+        payloader_load_ingredient_filters[#payloader_load_ingredient_filters+1] = { name = ingredient.name, quality = "normal", comparator = GREATER_THAN_EQUAL_TO, }
+        payloader_load_ingredient_amounts[ingredient.name] = ingredient.amount
+    end
+end
+
+local num_payloader_load_ingredients = #payloader_load_ingredient_filters
+
+local CONTAINER = "container"
+local VERTICAL = "-vertical"
+local INPUT = "input"
+local ITEM_WITH_INVENTORY = "item-with-inventory"
+local OUTPUT = "output"
+local PAYLOADER = "payloader"
+local PAYLOADER_CONTAINER_INPUT  = "payloader-container-input"
+local PAYLOADER_CONTAINER_OUTPUT = "payloader-container-output"
+local PAYLOADER_CONTAINER_INPUT_VERTICAL  = "payloader-container-input-vertical"
+local PAYLOADER_CONTAINER_OUTPUT_VERTICAL = "payloader-container-output-vertical"
 
 local locals = {}
 
 local payloader_controller = {}
 payloader_controller.name = "payloader_controller"
+payloader_controller.set_game = set_game
 
 payloader_controller.filter = Filters.payloader_controller
 
 local valid_cloned = {
-    ["payloader-container-input"] = true,
-    ["payloader-container-output"] = true,
-    ["payloader-container-input-vertical"] = true,
-    ["payloader-container-output-vertical"] = true,
+    [PAYLOADER_CONTAINER_INPUT] = true,
+    [PAYLOADER_CONTAINER_OUTPUT] = true,
+    [PAYLOADER_CONTAINER_INPUT_VERTICAL] = true,
+    [PAYLOADER_CONTAINER_OUTPUT_VERTICAL] = true,
 }
 
 function payloader_controller.on_entity_created(event)
@@ -21,7 +125,7 @@ function payloader_controller.on_entity_created(event)
     if (not event) then return end
     local entity = event.entity
     if (not entity or not entity.valid) then return end
-    if (entity.name ~= "payloader") then return end
+    if (entity.name ~= PAYLOADER) then return end
 
     entity.active = false
 
@@ -66,9 +170,9 @@ function payloader_controller.on_entity_mined(event)
 
     local entity = event.entity
     if (not entity or not entity.valid) then return end
-    if (entity.name ~= "payloader") then return end
+    if (entity.name ~= PAYLOADER) then return end
 
-    local payloaders = storage.payloaders or {}
+    payloaders = payloaders or set_game() and payloaders
 
     if (payloaders[entity.unit_number]) then
         local payloader = payloaders[entity.unit_number]
@@ -80,29 +184,38 @@ function payloader_controller.on_entity_mined(event)
                 or  event.name == defines.events.on_robot_mined_entity
             )
         ) then
-            local input_inventory = payloader.containers.input.entity.get_inventory(defines.inventory.payloader)
-            local output_inventory = payloader.containers.output.entity.get_inventory(defines.inventory.payloader)
+            local output_inventory = payloader.containers.output.entity.get_inventory(payloader_container_inventory)
+            local input_inventory = payloader.containers.input.entity.get_inventory(payloader_container_inventory)
+            local internal_inventory = payloader.internal_inventory
 
-            if (not input_inventory or not input_inventory.valid or input_inventory.is_empty()) then input_inventory = nil end
             if (not output_inventory or not output_inventory.valid or output_inventory.is_empty()) then output_inventory = nil end
+            if (not input_inventory or not input_inventory.valid or input_inventory.is_empty()) then input_inventory = nil end
+            if (not internal_inventory or not internal_inventory.valid or internal_inventory.is_empty()) then internal_inventory = nil end
 
             local player_inventory = nil
             if (event.player_index) then
-                local player = game.get_player(event.player_index)
+                local player = (game or set_game()) and get_player(event.player_index)
+
                 if (player and player.valid) then
                     player_inventory = player.get_main_inventory()
                     if (not player_inventory or not player_inventory.valid) then player_inventory = nil end
                 end
             end
 
-            if (output_inventory and not output_inventory.is_empty()) then
+            if (output_inventory) then
                 for i = 1, #output_inventory, 1 do
                     if (output_inventory[i] and output_inventory[i].valid) then
                         if (player_inventory and player_inventory.can_insert(output_inventory[i])) then
                             local inserted = player_inventory.insert(output_inventory[i])
 
                             if (output_inventory[i].valid_for_read) then
-                                output_inventory.remove({ name = output_inventory[i].name, count = inserted, quality = output_inventory[i].quality, })
+                                output_inventory.remove({
+                                    name = output_inventory[i].name,
+                                    count = inserted,
+                                    quality = output_inventory[i].quality.name,
+                                    health = output_inventory[i].health,
+                                    tags = output_inventory[i].is_item_with_tags and output_inventory[i].tags or nil,
+                                })
                             end
                         end
                     end
@@ -117,14 +230,20 @@ function payloader_controller.on_entity_mined(event)
                 end
             end
 
-            if (input_inventory and not input_inventory.is_empty()) then
+            if (input_inventory) then
                 for i = 1, #input_inventory, 1 do
                     if (input_inventory[i] and input_inventory[i].valid) then
                         if (player_inventory and player_inventory.can_insert(input_inventory[i])) then
                             local inserted = player_inventory.insert(input_inventory[i])
 
                             if (input_inventory[i].valid_for_read) then
-                                input_inventory.remove({ name = input_inventory[i].name, count = inserted, quality = input_inventory[i].quality, })
+                                input_inventory.remove({
+                                    name = input_inventory[i].name,
+                                    count = inserted,
+                                    quality = input_inventory[i].quality.name,
+                                    health = input_inventory[i].health,
+                                    tags = input_inventory[i].is_item_with_tags and input_inventory[i].tags or nil,
+                                })
                             end
                         end
 
@@ -139,12 +258,42 @@ function payloader_controller.on_entity_mined(event)
                     })
                 end
             end
+
+            if (internal_inventory) then
+                for i = 1, #internal_inventory, 1 do
+                    if (internal_inventory[i] and internal_inventory[i].valid) then
+                        if (player_inventory and player_inventory.can_insert(internal_inventory[i])) then
+                            local inserted = player_inventory.insert(internal_inventory[i])
+
+                            if (internal_inventory[i].valid_for_read) then
+                                internal_inventory.remove({
+                                    name = internal_inventory[i].name,
+                                    count = inserted,
+                                    quality = internal_inventory[i].quality.name,
+                                    health = internal_inventory[i].health,
+                                    tags = internal_inventory[i].is_item_with_tags and internal_inventory[i].tags or nil,
+                                })
+                            end
+                        end
+
+                    end
+                end
+
+                if (internal_inventory.get_item_count() > 0) then
+                    entity.surface.spill_inventory({
+                        position = entity.position,
+                        inventory = internal_inventory,
+                        force = entity.force,
+                    })
+                end
+            end
         end
 
         payloader.containers.input.entity.destroy()
         payloader.containers.output.entity.destroy()
-    end
 
+        payloader.internal_inventory.destroy()
+    end
 end
 Event_Handler:register_events({
     {
@@ -167,6 +316,12 @@ Event_Handler:register_events({
         func_name = "payloader_controller.on_entity_mined",
         func = payloader_controller.on_entity_mined,
         filter = payloader_controller.filter,
+    },
+    {
+        event_name = "script_raised_destroy",
+        source_name = "payloader_controller.on_entity_mined",
+        func_name = "payloader_controller.on_entity_mined",
+        func = payloader_controller.on_entity_mined,
     },
 })
 
@@ -191,15 +346,16 @@ function payloader_controller.on_player_rotated_entity(event)
 
     local entity = event.entity
     if (not entity or not entity.valid) then return end
-    if (entity.name ~= "payloader") then return end
+    if (entity.name ~= PAYLOADER) then return end
 
-    local payloaders = storage.payloaders or {}
+    payloaders = payloaders or set_game() and payloaders
 
     if (payloaders[entity.unit_number]) then
         local payloader = payloaders[entity.unit_number]
+        local p_containers = payloader.containers
 
-        local input_container = payloader.containers.input
-        local output_container = payloader.containers.output
+        local input_container = p_containers.input
+        local output_container = p_containers.output
 
         local input_position = { x = entity.position.x - 0.25, y = entity.position.y - 1.5, }
         local output_position = { x = entity.position.x + 0.25, y = entity.position.y + 0.5, }
@@ -210,8 +366,8 @@ function payloader_controller.on_player_rotated_entity(event)
                             or  entity.orientation >  0.5 and 0.75
                             or  0
 
-        local input_name = "payloader-container-input"
-        local output_name = "payloader-container-output"
+        local input_name  = PAYLOADER_CONTAINER_INPUT
+        local output_name = PAYLOADER_CONTAINER_OUTPUT
 
         if (direction == 0.0 or direction == 0.5) then
             if (entity.mirroring) then direction = 0.5 - direction end
@@ -224,8 +380,8 @@ function payloader_controller.on_player_rotated_entity(event)
 
             payloader.horizontal = true
         elseif (direction == 0.25 or direction == 0.75) then
-            input_name = input_name .. "-vertical"
-            output_name = output_name .. "-vertical"
+            input_name = input_name .. VERTICAL
+            output_name = output_name .. VERTICAL
 
             input_position = { x = entity.position.x + 0.5, y = entity.position.y + 0.25, }
             output_position = { x = entity.position.x - 1.5, y = entity.position.y - 0.25, }
@@ -247,15 +403,15 @@ function payloader_controller.on_player_rotated_entity(event)
             position = input_position,
             create_build_effect_smoke = false,
         })
-        payloader.containers["input"] = {
+        p_containers[INPUT] = {
             entity = new_input_container,
             unit_number = new_input_container.unit_number
         }
 
         if (input_container.entity and input_container.entity.valid) then
-            local input_inventory = input_container.entity.get_inventory(defines.inventory.payloader)
+            local input_inventory = input_container.entity.get_inventory(payloader_container_inventory)
             if (input_inventory and input_inventory.valid) then
-                local new_input_inventory = new_input_container.get_inventory(defines.inventory.payloader)
+                local new_input_inventory = new_input_container.get_inventory(payloader_container_inventory)
                 if (new_input_inventory and new_input_inventory.valid) then
                     for i = 1, 2, 1 do
                         local item_stack = input_inventory[i]
@@ -267,6 +423,18 @@ function payloader_controller.on_player_rotated_entity(event)
                     end
                 end
             end
+            local target_wire_connectors = nil
+            for connector_id, wire_connector in ipairs(input_container.entity.get_wire_connectors() or {}) do
+                target_wire_connectors = target_wire_connectors or new_input_container.get_wire_connectors(true)
+                local connections, connection = wire_connector.real_connections, nil
+                local connect_to = target_wire_connectors[connector_id] and target_wire_connectors[connector_id].connect_to or nil
+                for i = 1, wire_connector.real_connection_count, 1 do
+                    connection = connections[1]
+                    if (connection and connect_to) then
+                        connect_to(connection.target, false)
+                    end
+                end
+            end
         end
 
         local new_output_container = entity.surface.create_entity({
@@ -275,15 +443,15 @@ function payloader_controller.on_player_rotated_entity(event)
             position = output_position,
             create_build_effect_smoke = false,
         })
-        payloader.containers["output"] = {
+        p_containers[OUTPUT] = {
             entity = new_output_container,
             unit_number = new_output_container.unit_number
         }
 
         if (output_container.entity and output_container.entity.valid) then
-            local output_inventory = output_container.entity.get_inventory(defines.inventory.payloader)
+            local output_inventory = output_container.entity.get_inventory(payloader_container_inventory)
             if (output_inventory and output_inventory.valid) then
-                local new_output_inventory = new_output_container.get_inventory(defines.inventory.payloader)
+                local new_output_inventory = new_output_container.get_inventory(payloader_container_inventory)
                 if (new_output_inventory and new_output_inventory.valid) then
                     for i = 1, 2, 1 do
                         local item_stack = output_inventory[i]
@@ -292,6 +460,18 @@ function payloader_controller.on_player_rotated_entity(event)
                                 new_output_inventory.insert(item_stack)
                             end
                         end
+                    end
+                end
+            end
+            local target_wire_connectors = nil
+            for connector_id, wire_connector in ipairs(output_container.entity.get_wire_connectors() or {}) do
+                target_wire_connectors = target_wire_connectors or new_output_container.get_wire_connectors(true)
+                local connections, connection = wire_connector.real_connections, nil
+                local connect_to = target_wire_connectors[connector_id] and target_wire_connectors[connector_id].connect_to or nil
+                for i = 1, wire_connector.real_connection_count, 1 do
+                    connection = connections[1]
+                    if (connection and connect_to) then
+                        connect_to(connection.target, false)
                     end
                 end
             end
@@ -319,17 +499,19 @@ function payloader_controller.on_player_flipped_entity(event)
 
     local entity = event.entity
     if (not entity or not entity.valid) then return end
-    if (entity.name ~= "payloader") then return end
+    if (entity.name ~= PAYLOADER) then return end
 
-    local payloaders = storage.payloaders or {}
+    payloaders = payloaders or set_game() and payloaders
 
     if (payloaders[entity.unit_number]) then
         local payloader = payloaders[entity.unit_number]
 
         if (payloader.horizontal and event.horizontal or not payloader.horizontal and not event.horizontal) then return end
 
-        local input_container = payloader.containers.input
-        local output_container = payloader.containers.output
+        local containers = payloader.containers
+
+        local input_container = containers.input
+        local output_container = containers.output
 
         local input_position = { x = entity.position.x - 0.25, y = entity.position.y - 1.5, }
         local output_position = { x = entity.position.x + 0.25, y = entity.position.y + 0.5, }
@@ -340,8 +522,8 @@ function payloader_controller.on_player_flipped_entity(event)
                             or  entity.orientation >  0.5 and 0.75
                             or  0
 
-        local input_name = "payloader-container-input"
-        local output_name = "payloader-container-output"
+        local input_name  = PAYLOADER_CONTAINER_INPUT
+        local output_name = PAYLOADER_CONTAINER_OUTPUT
 
         if (direction == 0 or direction == 0.5) then
             if (direction == 0.5) then
@@ -350,8 +532,8 @@ function payloader_controller.on_player_flipped_entity(event)
                 output_position = temp
             end
         elseif (direction == 0.25 or direction == 0.75) then
-            input_name = input_name .. "-vertical"
-            output_name = output_name .. "-vertical"
+            input_name = input_name .. VERTICAL
+            output_name = output_name .. VERTICAL
 
             input_position = { x = entity.position.x + 0.5, y = entity.position.y + 0.25, }
             output_position = { x = entity.position.x - 1.5, y = entity.position.y - 0.25, }
@@ -377,21 +559,35 @@ function payloader_controller.on_player_flipped_entity(event)
                 position = input_position,
                 create_build_effect_smoke = false,
             })
-            payloader.containers["input"] = {
+            payloader.containers[INPUT] = {
                 entity = new_input_container,
                 unit_number = new_input_container.unit_number
             }
 
-            local input_inventory = input_container.entity.get_inventory(defines.inventory.payloader)
-            if (input_inventory and input_inventory.valid) then
-                local new_input_inventory = new_input_container.get_inventory(defines.inventory.payloader)
-                if (new_input_inventory and new_input_inventory.valid) then
-                    for i = 1, 2, 1 do
-                        local item_stack = input_inventory[i]
-                        if (item_stack and item_stack.valid) then
-                            if (new_input_inventory.can_insert(item_stack)) then
-                                new_input_inventory.insert(item_stack)
+            if (input_container.entity and input_container.entity.valid) then
+                local input_inventory = input_container.entity.get_inventory(payloader_container_inventory)
+                if (input_inventory and input_inventory.valid) then
+                    local new_input_inventory = new_input_container.get_inventory(payloader_container_inventory)
+                    if (new_input_inventory and new_input_inventory.valid) then
+                        for i = 1, 2, 1 do
+                            local item_stack = input_inventory[i]
+                            if (item_stack and item_stack.valid) then
+                                if (new_input_inventory.can_insert(item_stack)) then
+                                    new_input_inventory.insert(item_stack)
+                                end
                             end
+                        end
+                    end
+                end
+                local target_wire_connectors = nil
+                for connector_id, wire_connector in ipairs(input_container.entity.get_wire_connectors() or {}) do
+                    target_wire_connectors = target_wire_connectors or new_input_container.get_wire_connectors(true)
+                    local connections, connection = wire_connector.real_connections, nil
+                    local connect_to = target_wire_connectors[connector_id] and target_wire_connectors[connector_id].connect_to or nil
+                    for i = 1, wire_connector.real_connection_count, 1 do
+                        connection = connections[1]
+                        if (connection and connect_to) then
+                            connect_to(connection.target, false)
                         end
                     end
                 end
@@ -403,23 +599,37 @@ function payloader_controller.on_player_flipped_entity(event)
                 position = output_position,
                 create_build_effect_smoke = false,
             })
-            payloader.containers["output"] = {
+            payloader.containers[OUTPUT] = {
                 entity = new_output_container,
                 unit_number = new_output_container.unit_number
             }
 
             if (output_container.entity and output_container.entity.valid) then
-                local output_inventory = output_container.entity.get_inventory(defines.inventory.payloader)
-                if (output_inventory and output_inventory.valid) then
-                    local new_output_inventory = new_output_container.get_inventory(defines.inventory.payloader)
-                    if (new_output_inventory and new_output_inventory.valid) then
-                        for i = 1, 2, 1 do
-                            local item_stack = output_inventory[i]
-                            if (item_stack and item_stack.valid) then
-                                if (new_output_inventory.can_insert(item_stack)) then
-                                    new_output_inventory.insert(item_stack)
+                if (output_container.entity and output_container.entity.valid) then
+                    local output_inventory = output_container.entity.get_inventory(payloader_container_inventory)
+                    if (output_inventory and output_inventory.valid) then
+                        local new_output_inventory = new_output_container.get_inventory(payloader_container_inventory)
+                        if (new_output_inventory and new_output_inventory.valid) then
+                            for i = 1, 2, 1 do
+                                local item_stack = output_inventory[i]
+                                if (item_stack and item_stack.valid) then
+                                    if (new_output_inventory.can_insert(item_stack)) then
+                                        new_output_inventory.insert(item_stack)
+                                    end
                                 end
                             end
+                        end
+                    end
+                end
+                local target_wire_connectors = nil
+                for connector_id, wire_connector in ipairs(output_container.entity.get_wire_connectors() or {}) do
+                    target_wire_connectors = target_wire_connectors or new_output_container.get_wire_connectors(true)
+                    local connections, connection = wire_connector.real_connections, nil
+                    local connect_to = target_wire_connectors[connector_id] and target_wire_connectors[connector_id].connect_to or nil
+                    for i = 1, wire_connector.real_connection_count, 1 do
+                        connection = connections[1]
+                        if (connection and connect_to) then
+                            connect_to(connection.target, false)
                         end
                     end
                 end
@@ -442,8 +652,8 @@ function payloader_controller.on_entity_cloned(event)
     Log.info(event)
 
     if (not event) then return end
-    if (not event.source or not event.source.valid or (event.source.name ~= "payloader" and not valid_cloned[event.source.name])) then return end
-    if (not event.destination or not event.destination.valid or (event.destination.name ~= "payloader" and not valid_cloned[event.destination.name])) then return end
+    if (not event.source or not event.source.valid or (event.source.name ~= PAYLOADER and not valid_cloned[event.source.name])) then return end
+    if (not event.destination or not event.destination.valid or (event.destination.name ~= PAYLOADER and not valid_cloned[event.destination.name])) then return end
 
     local source = event.source
     if (not source.surface or not source.surface.valid) then return end
@@ -457,28 +667,30 @@ function payloader_controller.on_entity_cloned(event)
     local destination_surface = destination.surface
     if (String_Utils.find_invalid_substrings(destination_surface.name)) then return end
 
-    local payloaders = storage.payloaders or {}
+    payloaders = payloaders or set_game() and payloaders
 
-    if (source.name == "payloader" and payloaders[source.unit_number]) then
-        local old_input_container = payloaders[source.unit_number].containers.input
-        local old_output_container = payloaders[source.unit_number].containers.output
+    if (source.name == PAYLOADER and payloaders[source.unit_number]) then
+        local source_payloader = payloaders[source.unit_number]
+        local old_input_container = source_payloader.containers.input
+        local old_output_container = source_payloader.containers.output
 
         local input_container_entities = destination_surface.find_entities_filtered({
             area = {{ destination.position.x - 1.5, destination.position.y - 1.5, }, { destination.position.x + 1.5, destination.position.y + 1.5, }},
-            type = "container",
-            name = { "payloader-container-input", "payloader-container-input-vertical", }
+            type = CONTAINER,
+            name = { PAYLOADER_CONTAINER_INPUT, PAYLOADER_CONTAINER_INPUT_VERTICAL, }
         })
 
         local output_container_entities = destination_surface.find_entities_filtered({
             area = {{ destination.position.x - 1.5, destination.position.y - 1.5, }, { destination.position.x + 1.5, destination.position.y + 1.5, }},
-            type = "container",
-            name = { "payloader-container-output", "payloader-container-output-vertical", }
+            type = CONTAINER,
+            name = { PAYLOADER_CONTAINER_OUTPUT, PAYLOADER_CONTAINER_OUTPUT_VERTICAL, }
         })
 
         locals.create_payloader({
             entity = destination,
             input_container_entity = input_container_entities and input_container_entities[1] or nil,
             output_container_entity = output_container_entities and output_container_entities[1] or nil,
+            internal_inventory = source_payloader.internal_inventory,
         })
 
         old_input_container.entity.destroy()
@@ -494,34 +706,74 @@ Event_Handler:register_event({
     filter = payloader_controller.filter,
 })
 
-function payloader_controller.on_nth_tick(event)
-    Log.debug("payloader_controller.on_nth_tick")
-    Log.info(event)
+function payloader_controller.on_tick(event)
+    -- Log.debug("payloader_controller.on_tick")
+    -- Log.info(event)
 
-    local payloaders = storage.payloaders or {}
-    for unit_num_P, payloader in pairs(payloaders) do
+    local tick = event.tick
+    ordered_payloaders = ordered_payloaders or set_game() and ordered_payloaders
+    if (not ordered_payloaders[tick % NTH_TICK]) then return end
+    if (not ordered_payloaders[tick % NTH_TICK][1]) then
+        ordered_payloaders[tick % NTH_TICK] = nil
+        return
+    end
+    local payloaders = ordered_payloaders[tick % NTH_TICK]
+    local payloader = nil
+    for idx = 1, #payloaders, 1 do
+        payloader = payloaders[idx]
+        if (not payloader) then goto continue end
         if (not payloader.entity.valid) then
             if (payloader.containers) then
                 if (    payloader.containers.input
                     and payloader.containers.input.entity
                     and payloader.containers.input.entity.valid
                 ) then
-                    payloader.containers.input.entity.destroy()
+                    payloader.containers.input.entity.destroy({ raise_destroy = true })
                 end
 
                 if (    payloader.containers.output
                     and payloader.containers.output.entity
                     and payloader.containers.output.entity.valid
                 ) then
-                    payloader.containers.input.entity.destroy()
+                    payloader.containers.output.entity.destroy({ raise_destroy = true })
                 end
             end
 
-            payloaders[unit_num_P] = nil
+            table_remove(ordered_payloaders[tick % NTH_TICK], idx)
         else
-            if (payloader.entity.active and payloader.activated) then
-                if (game.tick - payloader.activated > 60) then
+            game = game or set_game()
+
+            if (payloader.activated) then
+                if (payloader.entity.disabled_by_control_behavior) then
+                    payloader.disabled_by_control_behavior = payloader.disabled_by_control_behavior or tick
+                    payloader.ticks_remaining = payloader.ticks_remaining or payloader.crafting_time - (payloader.disabled_by_control_behavior - payloader.activated)
+
+                    if (not payloader.crafting_progress) then
+                        payloader.crafting_progress = payloader.ticks_remaining / payloader.crafting_time
+                        payloader.entity.crafting_progress = 1 - payloader.crafting_progress
+                    end
+
+                    payloader.to_finish_crafting = tick + payloader.ticks_remaining
+                    goto continue
+                else
+                    if (payloader.disabled_by_control_behavior) then
+                        payloader.entity.crafting_progress = 1 - (payloader.ticks_remaining > NTH_TICK and ((payloader.ticks_remaining - NTH_TICK) / payloader.crafting_time) or 0)
+
+                        payloader.crafting_progress = nil
+                        payloader.disabled_by_control_behavior = nil
+                        payloader.ticks_remaining = nil
+                    end
+                end
+
+                if (payloader.to_finish_crafting and tick >= payloader.to_finish_crafting) then
                     payloader.entity.active = false
+                    payloader.entity.crafting_progress = 0
+                    payloader.activated = nil
+                    payloader.crafting_time = nil
+                    payloader.processing = nil
+                    payloader.crafting_progress = nil
+                else
+                    goto continue
                 end
             end
 
@@ -529,218 +781,347 @@ function payloader_controller.on_nth_tick(event)
             local output_container = payloader.containers.output
             if (not input_container.entity.valid or not output_container.entity.valid) then
             else
-                local input_inventory = input_container.entity.get_inventory(defines.inventory.payloader)
-                if (input_inventory and input_inventory.valid) then
-                    input_inventory.set_filter(1, { name = "cn-payload-vehicle", quality = "normal", comparator = ">=", })
 
-                    if (not input_inventory.is_empty()) then
-                        local item_stack_1 = input_inventory[1]
-                        local item_stack_2 = input_inventory[2]
+                payloader.containers.input_inventory = payloader.containers.input_inventory or payloader.containers.input.entity.get_inventory(payloader_container_inventory)
+                payloader.containers.output_inventory = payloader.containers.output_inventory or payloader.containers.output.entity.get_inventory(payloader_container_inventory)
 
-                        local payloader_recipe = payloader.entity.get_recipe()
-                        local recipe_name = ""
-                        if (payloader_recipe and payloader_recipe.valid) then
-                            recipe_name = payloader_recipe.name
+                local input_inventory = payloader.containers.input_inventory
+                local output_inventory = payloader.containers.output_inventory
+
+                if (    not input_inventory
+                    or  not input_inventory.valid
+                ) then
+                    payloader.containers.input_inventory = nil
+                    goto continue
+                elseif (not output_inventory
+                    or  not output_inventory.valid
+                ) then
+                    payloader.containers.output_inventory = nil
+                    goto continue
+                end
+
+                payloader.internal_inventory = payloader.internal_inventory or (game or set_game()) and create_inventory(1)
+                local internal_inventory = payloader.internal_inventory
+                if (not internal_inventory or not internal_inventory.valid) then
+                    payloader.internal_inventory = nil
+                    goto continue
+                end
+
+                input_inventory.set_filter(1, { name = CN_PAYLOAD_VEHICLE, quality = "normal", comparator = GREATER_THAN_EQUAL_TO, })
+
+                payloader.recipe = payloader.recipe or payloader.entity.get_recipe()
+                if (payloader.recipe and not payloader.recipe.valid) then
+                    payloader.recipe = nil
+                    goto continue
+                elseif (not payloader.recipe or not valid_payloader_recipes[payloader.recipe.name]) then
+                    goto continue
+                end
+                local payloader_recipe = payloader.recipe
+
+                if (payloader.transferred_to_interal and not internal_inventory.is_empty() and not payloader.entity.disabled_by_control_behavior) then
+                    local internal_item_stack = internal_inventory[1]
+                    local item_stack_output_container, empty_stack_idx = output_inventory.find_empty_stack()
+
+                    local transferred_from_payload_vehicle = false
+
+                    if (    internal_item_stack
+                        and internal_item_stack.valid
+                        and internal_item_stack.valid_for_read
+                        and item_stack_output_container
+                        and item_stack_output_container.valid
+                    ) then
+                        if (item_output_recipes[payloader_recipe.name] and internal_item_stack.is_item_with_inventory) then
+                            local payload_vehicle_inventory = internal_item_stack.get_inventory(defines_payload_vehicle_inventory)
+                            if (not payload_vehicle_inventory or not payload_vehicle_inventory.valid) then goto continue end
+                            if (not payload_vehicle_inventory.is_empty()) then
+                                local payload_vehicle_item_stack = payload_vehicle_inventory[#payload_vehicle_inventory - payload_vehicle_inventory.count_empty_stacks(true, true)]
+                                if (not payload_vehicle_item_stack or not payload_vehicle_item_stack.valid) then goto continue end
+
+                                if (item_stack_output_container.transfer_stack(payload_vehicle_item_stack, payload_vehicle_item_stack.count)) then
+                                    transferred_from_payload_vehicle = true
+                                else
+                                    payloader.entity.active = false
+                                    goto continue
+                                end
+                            end
+
+                            item_stack_output_container = empty_stack_idx and (not transferred_from_payload_vehicle and output_inventory[empty_stack_idx] or empty_stack_idx < #output_inventory and output_inventory[empty_stack_idx + 1])
+                            if (not item_stack_output_container or not item_stack_output_container.valid) then
+                                payloader.entity.active = false
+                                goto continue
+                            end
+
+                            if (item_stack_output_container.transfer_stack(internal_item_stack, internal_item_stack.count)) then
+                                payloader.transferred_to_interal = nil
+                            else
+                                payloader.entity.active = false
+                                goto continue
+                            end
+                        else
+                            if (item_stack_output_container.transfer_stack(internal_item_stack, internal_item_stack.count)) then
+                                payloader.transferred_to_interal = nil
+                            else
+                                payloader.entity.active = false
+                                goto continue
+                            end
+                        end
+                    end
+                end
+
+                payloader.entity_output_inventory = payloader.entity_output_inventory or payloader.entity.get_inventory(payloader_inventory_output)
+                if (not payloader.entity_output_inventory or not payloader.entity_output_inventory.valid) then
+                    payloader.entity_output_inventory = nil
+                    goto continue
+                end
+
+                if (entity_output_recipes[payloader.recipe.name]) then
+                    local entity_output_inventory = payloader.entity_output_inventory
+                    if (not entity_output_inventory.is_empty()) then
+                        local item_stack_output_entity_1 = entity_output_inventory[1]
+                        local item_stack_output_entity_2 = entity_output_inventory[2]
+                        local item_stack_output_container, empty_stack_idx = output_inventory.find_empty_stack()
+
+                        if (    item_stack_output_entity_1
+                            and item_stack_output_entity_1.valid
+                            and item_stack_output_entity_1.valid_for_read
+                            and item_stack_output_container
+                            and item_stack_output_container.valid
+                        ) then
+                            if (not item_stack_output_container.transfer_stack(item_stack_output_entity_1, item_stack_output_entity_1.count)) then
+                                payloader.entity.active = false
+                                goto continue
+                            end
                         end
 
-                        if (    recipe_name == "payload-add"
-                            and item_stack_1.valid
-                            and item_stack_1.valid_for_read
-                            and item_stack_2.valid
-                            and item_stack_2.valid_for_read
-                            or
-                                recipe_name == "payload-remove"
-                            and (
-                                    item_stack_1.valid
-                                and item_stack_1.valid_for_read
-                                or
-                                    item_stack_2.valid
-                                and item_stack_2.valid_for_read
-                            )
+                        item_stack_output_container = empty_stack_idx and (output_inventory[empty_stack_idx] or empty_stack_idx < #output_inventory and output_inventory[empty_stack_idx + 1])
+                        if (not item_stack_output_container or not item_stack_output_container.valid) then
+                            payloader.entity.active = false
+                            goto continue
+                        end
+
+                        if (    item_stack_output_entity_2
+                            and item_stack_output_entity_2.valid
+                            and item_stack_output_entity_2.valid_for_read
+                            and item_stack_output_container
+                            and item_stack_output_container.valid
                         ) then
-                            local item_stacks = {}
-                            if (recipe_name == "payload-add") then
-                                item_stacks = { item_stack_1, item_stack_2, }
-                            elseif(recipe_name == "payload-remove") then
-                                if (item_stack_1.valid and item_stack_1.valid_for_read) then
-                                    table.insert(item_stacks, item_stack_1)
-                                end
+                            if (not item_stack_output_container.transfer_stack(item_stack_output_entity_2, item_stack_output_entity_2.count)) then
+                                payloader.entity.active = false
+                                goto continue
+                            end
+                        end
+                    end
+                end
 
-                                if (item_stack_2.valid and item_stack_2.valid_for_read) then
-                                    table.insert(item_stacks, item_stack_2)
-                                end
+                if (not input_inventory.is_empty() and internal_inventory.is_empty() and not payloader.entity.disabled_by_control_behavior) then
+                    local item_stack_1 = input_inventory[1]
+                    local item_stack_2 = input_inventory[2]
+                    local internal_item_stack = internal_inventory[1]
+                    if (not internal_item_stack or not internal_item_stack.valid) then goto continue end
+
+                    local recipe_name = payloader_recipe.name or ""
+
+                    if (    recipe_name == PAYLOADER_LOAD
+                        and item_stack_1.valid
+                        and item_stack_1.valid_for_read
+                        and item_stack_2.valid
+                        and item_stack_2.valid_for_read
+                        or
+                            recipe_name == PAYLOADER_UNLOAD
+                        and (
+                                item_stack_1.valid
+                            and item_stack_1.valid_for_read
+                            or
+                                item_stack_2.valid
+                            and item_stack_2.valid_for_read
+                        )
+                    ) then
+                        local item_stacks = {}
+                        if (recipe_name == PAYLOADER_LOAD) then
+                            item_stacks = { item_stack_1, item_stack_2, }
+                        elseif(recipe_name == PAYLOADER_UNLOAD) then
+                            if (item_stack_1.valid and item_stack_1.valid_for_read) then
+                                table_insert(item_stacks, item_stack_1)
                             end
 
-                            local stats = {
-                                payload_vehicle = { full = false, empty = true, count = 0},
-                                ammo = { count = 0, },
-                                capsule = { count = 0, },
-                            }
-                            local type = nil
-                            for i, item_stack in ipairs(item_stacks) do
-                                if (item_stack.type == "item-with-inventory" and item_stack.name == "cn-payload-vehicle") then
-                                    local item_stack_inventory = item_stack.get_inventory(defines.inventory.cn_payload_vehicle)
-                                    if (item_stack_inventory and item_stack_inventory.valid) then
-                                        stats.payload_vehicle.count = stats.payload_vehicle.count + 1
-
-                                        if (not item_stack_inventory.is_empty()) then
-                                            stats.payload_vehicle.empty = false
-                                        end
-
-                                        if (item_stack_inventory.is_full()) then
-                                            stats.payload_vehicle.full = true
-                                        end
-                                        if (stats.payload_vehicle.count == 1) then
-                                            stats.payload_vehicle.item_stack = item_stack
-                                        end
-                                    end
-                                elseif (item_stack.type == "ammo" or item_stack.type == "capsule") then
-                                    type = item_stack.type
-                                    stats[item_stack.type].count = stats[item_stack.type].count + item_stack.count
-                                    stats[item_stack.type].item_stack = item_stack
-                                end
+                            if (item_stack_2.valid and item_stack_2.valid_for_read) then
+                                table_insert(item_stacks, item_stack_2)
                             end
+                        end
 
-                            if (recipe_name == "payload-add") then
-                                if (    stats.payload_vehicle.count == 1
-                                    and stats.payload_vehicle.full == false
-                                    and (type == "ammo" or type == "capsule")
-                                    and (
-                                            stats.ammo.count > 0
-                                        and stats.capsule.count == 0
-                                        or
-                                            stats.capsule.count > 0
-                                        and stats.ammo.count == 0
-                                    )
+                        local stats = {
+                            payload_vehicle = { full = false, empty = true, count = 0},
+                        }
+                        local item_stack_type = nil
+                        for i, item_stack in ipairs(item_stacks) do
+                            if (item_stack.type == ITEM_WITH_INVENTORY and item_stack.name == CN_PAYLOAD_VEHICLE) then
+                                local payload_vehicle_inventory = item_stack.get_inventory(defines_payload_vehicle_inventory)
+                                if (payload_vehicle_inventory and payload_vehicle_inventory.valid) then
+                                    stats.payload_vehicle.count = stats.payload_vehicle.count + 1
+
+                                    stats.payload_vehicle.empty = payload_vehicle_inventory.is_empty()
+                                    stats.payload_vehicle.full  = payload_vehicle_inventory.is_full()
+
+                                    if (stats.payload_vehicle.count == 1) then stats.payload_vehicle.item_stack = item_stack end
+                                end
+                            elseif (valid_payloader_types[item_stack.type] or valid_payloader_items[item_stack.name]) then
+                                item_stack_type = item_stack.type
+                                stats[item_stack_type] = stats[item_stack_type] or {}
+                                stats[item_stack_type].item_stack = item_stack
+                                stats[item_stack_type].valid = item_stack.valid and item_stack.valid_for_read
+                            end
+                        end
+
+                        if (recipe_name == PAYLOADER_LOAD) then
+                            if (    stats.payload_vehicle.count == 1
+                                and stats.payload_vehicle.full == false
+                                and stats[item_stack_type]
+                                and stats[item_stack_type].valid
+                            ) then
+                                local payload_vehicle_item_stack = stats.payload_vehicle.item_stack
+                                local payload_item_stack = stats[item_stack_type].item_stack
+
+                                payloader.entity_input_inventory = payloader.entity_input_inventory or payloader.entity.get_inventory(payloader_inventory_input)
+                                local entity_input_inventory = payloader.entity_input_inventory
+                                if (not payloader.entity_input_inventory or not payloader.entity_input_inventory.valid) then
+                                    payloader.entity_input_inventory = nil
+                                    goto continue
+                                end
+
+                                if (    output_inventory
+                                    and output_inventory.valid
+                                    and entity_input_inventory
+                                    and entity_input_inventory.valid
+                                    and payload_vehicle_item_stack
+                                    and payload_vehicle_item_stack.valid
                                 ) then
-                                    local payload_vehicle_item_stack = stats.payload_vehicle.item_stack
-                                    local payload_item_stack = stats[type].item_stack
+                                    local payload_vehicle_item_inventory = payload_vehicle_item_stack.get_inventory(defines_payload_vehicle_inventory)
+                                    local payload_vehicle_empty_stack = payload_vehicle_item_inventory.find_empty_stack()
 
-                                    local output_inventory = output_container.entity.get_inventory(defines.inventory.payloader)
-                                    if (    output_inventory
-                                        and output_inventory.valid
-                                        and payload_vehicle_item_stack
-                                        and payload_vehicle_item_stack.valid
+                                    if (not payload_vehicle_empty_stack or not payload_vehicle_empty_stack.valid) then goto continue end
+
+                                    if (    not payloader.processing
+                                        and (
+                                                num_payloader_load_ingredients == 0
+                                            or
+                                                (function (entity_input_inventory, payloader_load_ingredient_filters)
+                                                    local ingredient = nil
+                                                    for i = 1, num_payloader_load_ingredients, 1 do
+                                                        ingredient = payloader_load_ingredient_filters[i]
+                                                        if (not ingredient or not (entity_input_inventory.get_item_count(ingredient) >= (payloader_load_ingredient_amounts[ingredient.name] or 0))) then return end
+                                                    end
+                                                    return true
+                                                end)(entity_input_inventory, payloader_load_ingredient_filters)
+                                            )
+                                        and payload_vehicle_item_inventory.can_insert(payload_item_stack)
+                                        and (
+                                                payload_vehicle_empty_stack.transfer_stack(payload_item_stack, payload_item_stack.count)
+                                            or
+                                                payload_vehicle_empty_stack.transfer_stack(payload_item_stack, payload_vehicle_item_inventory.get_insertable_count(payload_item_stack))
+                                        )
+                                        and internal_item_stack.transfer_stack(payload_vehicle_item_stack)
                                     ) then
-                                        if (output_inventory.can_insert(payload_vehicle_item_stack)) then
-                                            local payload_vehicle_inventory = payload_vehicle_item_stack.get_inventory(defines.inventory.cn_payload_vehicle)
-                                            if (payload_vehicle_inventory and payload_vehicle_inventory.valid) then
-                                                if (payload_vehicle_inventory.can_insert(payload_item_stack)) then
-                                                    if (payloader.entity.active) then
-                                                        payloader.entity.active = false
-
-                                                        local num_inserted = payload_vehicle_inventory.insert(payload_item_stack)
-                                                        if (num_inserted > 0) then
-                                                            local num_removed = input_inventory.remove({ name = payload_item_stack.name, count = num_inserted, quality = payload_item_stack.quality,  })
-
-                                                            local count = output_inventory.insert(payload_vehicle_item_stack)
-                                                            if (count > 0) then
-                                                                local removed = input_inventory.remove(payload_vehicle_item_stack)
-                                                            end
-                                                        end
-
-                                                        payloader.activated = nil
-                                                    else
-                                                        payloader.entity.active = true
-                                                        payloader.activated = game.tick
-                                                    end
-                                                end
-                                            end
-                                        end
+                                        payloader.transferred_to_interal = true
+                                        payloader.entity.active = true
+                                        payloader.activated = tick
+                                        payloader.to_finish_crafting = payloader.activated + (payloader_load_recipe_crafting_time_60) * (1 - payloader.entity.crafting_progress)
+                                        payloader.crafting_time = payloader_load_recipe_crafting_time_60
+                                        payloader.processing = true
+                                        payloader.paused = nil
                                     end
                                 end
-                            elseif (recipe_name == "payload-remove") then
-                                --[[ payload-remove ]]
-                                if (    stats.payload_vehicle.count >= 1
-                                    and stats.payload_vehicle.empty == false
-                                ) then
-                                    local payload_vehicle_item_stack = stats.payload_vehicle.item_stack
+                            end
+                        elseif (recipe_name == PAYLOADER_UNLOAD) then
+                            if (    stats.payload_vehicle.count >= 1
+                                and stats.payload_vehicle.empty == false
+                            ) then
+                                local payload_vehicle_item_stack = stats.payload_vehicle.item_stack
 
-                                    if (payload_vehicle_item_stack and payload_vehicle_item_stack.valid) then
-                                        local payload_vehicle_inventory = payload_vehicle_item_stack.get_inventory(defines.inventory.payloader)
-                                        if (payload_vehicle_inventory and payload_vehicle_inventory.valid) then
-                                            for i = #payload_vehicle_inventory, 1, -1 do
-                                                local item_stack = payload_vehicle_inventory[i]
-                                                if (item_stack and item_stack.valid and item_stack.count > 0) then
-                                                    local output_inventory = output_container.entity.get_inventory(defines.inventory.payloader)
-                                                    if (output_inventory and output_inventory.valid) then
-                                                        if (output_inventory.is_empty()) then
-                                                            if (payloader.entity.active) then
-                                                                if (game.tick - payloader.activated >= 60) then
-                                                                    payloader.entity.active = false
-                                                                    local inserted = output_inventory.insert(item_stack)
+                                if (payload_vehicle_item_stack and payload_vehicle_item_stack.valid) then
+                                    local payload_vehicle_item_inventory = payload_vehicle_item_stack.get_inventory(defines_payload_vehicle_inventory)
+                                    if (payload_vehicle_item_inventory and payload_vehicle_item_inventory.valid) then
+                                        payload_vehicle_item_inventory.sort_and_merge()
 
-                                                                    if (inserted > 0) then
-                                                                        local removed = payload_vehicle_inventory.remove({ name = item_stack.name, count = inserted, quality = item_stack.quality, })
-                                                                    end
+                                        if (    not payloader.processing
+                                            and internal_item_stack.transfer_stack(payload_vehicle_item_stack, payload_vehicle_item_stack.count)
+                                        ) then
+                                            payloader.transferred_to_interal = true
+                                            payloader.entity.active = true
+                                            payloader.activated = tick
+                                            payloader.to_finish_crafting = payloader.activated + (payloader_unload_recipe_crafting_time_60) * (1 - payloader.entity.crafting_progress)
+                                            payloader.crafting_time = payloader_unload_recipe_crafting_time_60
+                                            payloader.processing = true
+                                            payloader.paused = nil
 
-                                                                    inserted = output_inventory.insert(payload_vehicle_item_stack)
-                                                                    if (inserted > 0) then
-                                                                        local removed = input_inventory.remove({ name = payload_vehicle_item_stack.name, coun = inserted, quality = payload_vehicle_item_stack.quality, })
-                                                                    end
-
-                                                                    payloader.activated = nil
-                                                                    break
-                                                                end
-                                                            else
-                                                                payloader.entity.active = true
-                                                                payloader.activated = game.tick
-                                                            end
-                                                        end
-                                                    end
-                                                end
-                                            end
+                                            goto continue
                                         end
                                     end
                                 end
                             end
                         end
                     end
+                elseif (input_inventory.is_empty() and internal_inventory.is_empty() and not payloader.entity.disabled_by_control_behavior) then
+                    payloader.entity.active = false
+                    payloader.entity.crafting_progress = 0
+                    payloader.activated = nil
+                    payloader.crafting_time = nil
+                    payloader.processing = nil
                 end
             end
         end
+        ::continue::
     end
 end
 Event_Handler:register_event({
-    event_name = "on_nth_tick",
-    -- nth_tick = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PAYLOADER_UPDATE_RATE.name }) or 60,
-    nth_tick = 60,
-    source_name = "payloader_controller.on_nth_tick",
-    func_name = "payloader_controller.on_nth_tick",
-    func = payloader_controller.on_nth_tick,
+    event_name = "on_tick",
+    source_name = "payloader_controller.on_tick",
+    func_name = "payloader_controller.on_tick",
+    func = payloader_controller.on_tick,
 })
 
 function locals.create_payloader(params)
-    Log.debug("locals.create_payloader")
-    Log.info(params)
+    -- Log.debug("locals.create_payloader")
+    -- Log.info(params)
 
     if (not params) then return end
 
     local entity = params.entity
     if (not entity or not entity.valid) then return end
 
-    local input_container_entity = nil
-    local output_container_entity = nil
-
-    if (params.input_container_entity and params.input_container_entity.valid) then input_container_entity = params.input_container_entity end
-    if (params.output_container_entity and params.output_container_entity.valid) then output_container_entity = params.output_container_entity end
+    local input_container_entity = params.input_container_entity and params.input_container_entity.valid or nil
+    local output_container_entity = params.output_container_entity and params.output_container_entity.valid or nil
 
     local payloader = {
-        created = game and game.tick or 0,
-        updated = game and game.tick or 0,
+        created = (game or set_game()).tick or 0,
+        updated = (game or set_game()).tick or 0,
         entity = entity,
         position = entity.position,
         direction = 0,
         unit_number = entity.unit_number,
-        force = entity.force,
+        -- force = entity.force,
         force_index = entity.force.index,
-        surface = entity.surface,
+        -- surface = entity.surface,
         surface_index = entity.surface.index,
+        surface_name = entity.surface.name,
         containers = {},
         horizontal = true,
+        internal_inventory = params.internal_inventory or (game or set_game()) and create_inventory(1),
+        -- circuit_network_data = Payloader_Data:new({
+        --     unit_number = entity.unit_number,
+        --     -- entity = entity,
+        --     -- surface = entity.surface,
+        --     surface_index = entity.surface.index,
+        --     surface_name = entity.surface.name,
+        --     manual_entry = {
+        --         launch = 0,
+        --         x = 0,
+        --         y = 0,
+        --         space_location_index = entity.surface.index,
+        --     },
+        -- }),
     }
 
-    local input_position = { x = entity.position.x - 0.25, y = entity.position.y - 1.5, }
+    local input_position  = { x = entity.position.x - 0.25, y = entity.position.y - 1.5, }
     local output_position = { x = entity.position.x + 0.25, y = entity.position.y + 0.5, }
 
     local direction =       entity.orientation == 0   and 0
@@ -749,16 +1130,16 @@ function locals.create_payloader(params)
                         or  entity.orientation >  0.5 and 0.75
                         or  0
 
-    local input_name = "payloader-container-input"
-    local output_name = "payloader-container-output"
+    local input_name = PAYLOADER_CONTAINER_INPUT
+    local output_name = PAYLOADER_CONTAINER_OUTPUT
 
     if (direction == 0.5) then
         local temp = input_position
         input_position = output_position
         output_position = temp
     elseif (direction == 0.25 or direction == 0.75) then
-        input_name = input_name .. "-vertical"
-        output_name = output_name .. "-vertical"
+        input_name = input_name .. VERTICAL
+        output_name = output_name .. VERTICAL
 
         input_position = { x = entity.position.x + 0.5, y = entity.position.y + 0.25, }
         output_position = { x = entity.position.x - 1.5, y = entity.position.y - 0.25, }
@@ -772,10 +1153,10 @@ function locals.create_payloader(params)
         payloader.horizontal = false
     end
 
-    storage.payloaders = storage.payloaders or {}
-    storage.payloaders[payloader.unit_number] = payloader
+    payloaders = payloaders or set_game() and payloaders
+    payloaders[payloader.unit_number] = payloader
 
-    local containers = storage.containers or {}
+    containers = containers or set_game() and containers
 
     input_container_entity = input_container_entity or entity.surface.create_entity({
         force = entity.force,
@@ -783,14 +1164,12 @@ function locals.create_payloader(params)
         position = input_position,
         create_build_effect_smoke = false,
     })
-    payloader.containers["input"] = {
+    payloader.containers[INPUT] = {
         entity = input_container_entity,
         unit_number = input_container_entity.unit_number,
         position = input_container_entity.position,
-        force = input_container_entity.force,
         force_index = input_container_entity.force.index,
         surface_index = input_container_entity.surface_index,
-        surface = input_container_entity.surface,
     }
     containers[input_container_entity.unit_number] = { input = true, payloader = payloader, }
 
@@ -800,16 +1179,19 @@ function locals.create_payloader(params)
         position = output_position,
         create_build_effect_smoke = false,
     })
-    payloader.containers["output"] = {
+    payloader.containers[OUTPUT] = {
         entity = output_container_entity,
         unit_number = output_container_entity.unit_number,
         position = output_container_entity.position,
-        force = output_container_entity.force,
         force_index = input_container_entity.force.index,
         surface_index = output_container_entity.surface_index,
-        surface = output_container_entity.surface,
     }
     containers[output_container_entity.unit_number] = { output = true, payloader = payloader, }
+
+    ordered_payloaders[payloader.unit_number % NTH_TICK] = ordered_payloaders[payloader.unit_number % NTH_TICK] or {}
+    table_insert(ordered_payloaders[payloader.unit_number % NTH_TICK], payloader)
 end
+
+function payloader_controller.init(__storage) storage = __storage or _ENV.storage end
 
 return payloader_controller
