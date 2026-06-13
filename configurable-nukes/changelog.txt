@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.11
+Date: 2026-06-12
+  Bug Fixes:
+    - Fixed payloader automation not accepting explosives (thanks to adoline for the report)
+      - Payloader previously would do nothing if explosvies were present in the input container
+      - Was still possible to manually load a payload-vehicle with explosives
+      - Payloader will now properly detect and load explosives into a provided payload-vehicle
+    - Fixed payloader leaving behind input and/or output containers if deleted via script (thanks to adoline for the report)
+      - Added missing script_raised_destroyed event handler
+    - Fixed the input and/or output payloader containers losing all circuit connections when the parent payloader was rotated, flipped, or mirrored
+  Misc:
+    - Converted the payloader on_nth_tick (n = 60) event handler to a 60-tick time-sliced equivalent, using the on_tick event instead
+      - Same amount of workload is now spread more evenly across the full 60 tick (1 second) window, rather than all processing happening in the first tick, and nothing for the next 59
+      - Result is that the payloaders should feel snappier/more respsonsive
+      - Performance as a result of payloader processing should now be smoother
+    - Renamed the payloader add/remove recipes to load/unload respectively
+    - Changed license from MIT to CC BY-NC-SA
+---------------------------------------------------------------------------------------------------
 Version: 0.9.10
 Date: 2026-03-06
   Bug Fixes:
