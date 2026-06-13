@@ -54,6 +54,8 @@ local GREATER_THAN_EQUAL_TO = ">="
 local PAYLOADER_LOAD = "payloader-load"
 local PAYLOADER_UNLOAD = "payloader-unload"
 
+local NTH_TICK = 60
+
 local payloader_load_recipe_crafting_time = prototypes.mod_data[Constants.mod_name .. "-payloader-recipe-data"].data.recipes[PAYLOADER_LOAD].energy_required
 local payloader_load_recipe_crafting_time_60 = payloader_load_recipe_crafting_time * NTH_TICK
 local payloader_unload_recipe_crafting_time = prototypes.mod_data[Constants.mod_name .. "-payloader-recipe-data"].data.recipes[PAYLOADER_UNLOAD].energy_required
@@ -100,8 +102,6 @@ local PAYLOADER_CONTAINER_INPUT  = "payloader-container-input"
 local PAYLOADER_CONTAINER_OUTPUT = "payloader-container-output"
 local PAYLOADER_CONTAINER_INPUT_VERTICAL  = "payloader-container-input-vertical"
 local PAYLOADER_CONTAINER_OUTPUT_VERTICAL = "payloader-container-output-vertical"
-
-local NTH_TICK = 60
 
 local locals = {}
 
