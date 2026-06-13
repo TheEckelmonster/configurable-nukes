@@ -22,6 +22,7 @@ if (saa_s_active) then
 end
 
 require("prototypes.mod-data.space-data")
+require("prototypes.mod-data.payloader-recipe-data")
 
 if (se_active) then
     require("prototypes.entities.rocket-silo.rocket-silo-data-final-fixes")

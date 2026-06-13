@@ -2,6 +2,7 @@
 Did_Init = false
 
 Constants = require("scripts.constants.constants")
+Custom_Events = require("prototypes.custom-events.custom-events")
 Filters = require("scripts.constants.filters")
 
 Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
@@ -113,6 +114,42 @@ local events = {
     [Rocket_Silo_Controller.name] = Rocket_Silo_Controller,
     [Settings_Controller.name] = Settings_Controller,
 }
+
+---
+
+local to_init_storage = {
+    Payloader_Controller,
+}
+
+function to_init_storage.reinit_all(event)
+    for _, v in ipairs(to_init_storage) do
+        v.init(storage)
+    end
+end
+Event_Handler:register_events({
+    {
+        event_name = Custom_Events.cn_on_init_complete.name,
+        source_name = "to_init_storage.reinit_all",
+        func_name = "to_init_storage.reinit_all",
+        func = to_init_storage.reinit_all,
+    },
+    -- {
+    --     event_name = Custom_Events.cn_migrations_applied.name,
+    --     source_name = "to_init_storage.reinit_all",
+    --     func_name = "to_init_storage.reinit_all",
+    --     func = to_init_storage.reinit_all,
+    -- },
+    {
+        event_name = "on_configuration_changed",
+        source_name = "to_init_storage.on_configuration_changed",
+        func_name = "to_init_storage.on_configuration_changed",
+        func = to_init_storage.reinit_all,
+    }
+})
+
+To_Set_Game = require("scripts.to-set-game")
+
+---
 
 local epd_active = script and script.active_mods and script.active_mods["even-pickier-dollies"] and true
 local sa_active = script and script.active_mods and script.active_mods["space-age"] and true
@@ -879,6 +916,7 @@ function events.on_init()
 
     Constants.get_mod_data(true, { on_load = true })
 
+    for _, v in ipairs(to_init_storage) do v.init(_ENV.storage) end
     Did_Init = true
 end
 Event_Handler:register_event({
@@ -999,6 +1037,8 @@ function events.on_load()
     Constants.get_mod_data(true, { on_load = true })
 
     Event_Handler:on_load_restore({ events = events })
+
+    for _, v in ipairs(to_init_storage) do v.init(_ENV.storage) end
 end
 Event_Handler:register_event({
     event_name = "on_load",
@@ -1065,6 +1105,8 @@ function events.on_configuration_changed(event)
                 storage.configurable_nukes_controller = {
                     tick = game.tick,
                 }
+
+                for _, v in ipairs(to_init_storage) do v.init(_ENV.storage) end
             end
         end
     end

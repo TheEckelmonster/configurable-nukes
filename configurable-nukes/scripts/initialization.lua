@@ -331,21 +331,20 @@ function locals.migrate(data)
                 log("new version")
                 log(serpent.block(new_version_data.string_val))
 
+                local do_apply = nil
                 for version, migration in pairs(Migrations) do
-                    if (prev_version_data.major.value <= version.major) then
-                        if (prev_version_data.minor.value <= version.minor) then
-                            if (prev_version_data.bug_fix.value <= version.bug_fix) then
-                                if (type(migration) == "function") then
-                                    log(serpent.block("Applying version "
-                                        .. version.major.. "."
-                                        .. version.minor .. "."
-                                        .. version.bug_fix .. "."
-                                        .. " migration"
-                                    ))
-                                    migration()
-                                end
-                            end
-                        end
+                    do_apply = prev_version_data.major.value < version.major
+                    do_apply = do_apply or prev_version_data.minor.value < version.minor
+                    do_apply = do_apply or prev_version_data.bug_fix.value <= version.bug_fix
+
+                    if (do_apply and type(migration) == "function") then
+                        log(serpent.block("Applying version "
+                            .. version.major.. "."
+                            .. version.minor .. "."
+                            .. version.bug_fix
+                            .. " migration"
+                        ))
+                        migration()
                     end
                 end
             end
