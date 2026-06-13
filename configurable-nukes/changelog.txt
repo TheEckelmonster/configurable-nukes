@@ -27,7 +27,7 @@ Date: 2026-03-05
   Features:
     - Added "Rocket-silo processing mode" runtime setting
       - Controls the manner in which rocket-silos are selected for potential circuit launches
-      - Possible valus: "responsive" | "balance" | "performance"
+      - Possible values: "responsive" | "balance" | "performance"
         - responsive: least performant, but nominally fastest to recognize a launch signal
         - performance: most performant, but nominally slowest to recognize a launch signal
         - balance: nominally a balance between "responsive" and "performance"
