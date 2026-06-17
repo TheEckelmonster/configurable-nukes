@@ -6,6 +6,10 @@ local custom_events =
     },
     {
         type = "custom-event",
+        name = "cn-migrations-applied"
+    },
+    {
+        type = "custom-event",
         name = "cn-on-rocket-launch-initiated-successfully"
     },
     -- {
