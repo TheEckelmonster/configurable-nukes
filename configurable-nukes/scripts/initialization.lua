@@ -190,8 +190,6 @@ function locals.initialize(from_scratch, maintain_data)
         storage.rocket_silos = storage.rocket_silos or {}
     end
 
-    Payloads = storage.payloads
-
     storage.cache = {}
 
     storage.configurable_nukes.valid = true

@@ -1,120 +1,177 @@
+local storage
+local cache
+local circuit_connected_rkt_silos
+local keys
+local rocket_silos
+local surfaces
+local recently_launched_rkt_silos
+
+local game
+
+local function set_game(event, __game, __storage)
+    storage = __storage or _ENV.storage
+
+    storage.cache = storage.cache or {}
+    cache = storage.cache
+
+    storage.circuit_connected_rkt_silos = storage.circuit_connected_rkt_silos or {}
+    circuit_connected_rkt_silos = storage.circuit_connected_rkt_silos
+
+    storage.keys = storage.keys or {}
+    keys = storage.keys
+
+    storage.rocket_silos = storage.rocket_silos
+    rocket_silos = storage.rocket_silos
+
+    storage.surfaces = storage.surfaces or {}
+    surfaces = storage.surfaces
+
+    storage.recently_launched_rkt_silos = storage.recently_launched_rkt_silos or {}
+    recently_launched_rkt_silos = storage.recently_launched_rkt_silos
+
+    game = __game or _ENV.game
+
+    return game
+end
+
+local next = next
+local type = type
+
+local PERFORMANCE = "performance"
+local RESPONSIVE = "responsive"
+local ROCKET_SILO = "rocket-silo"
+
 local Circuit_Network_Service = require("scripts.services.circuit-network-service")
+local attempt_launch_silos = Circuit_Network_Service.attempt_launch_silos
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
+local print_space_launched_time_to_target_message = ICBM_Utils.print_space_launched_time_to_target_message
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
 local configurable_nukes_controller = {}
 configurable_nukes_controller.name = "configurable_nukes_controller"
+configurable_nukes_controller.set_game = set_game
 
 configurable_nukes_controller.nth_tick_rocket_silo_processing = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ROCKET_SILO_PROCESSING_RATE.name })
 configurable_nukes_controller.num_rocket_silos_to_process = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.NUM_ROCKET_SILOS_PROCESSED_PER_TICK.name })
 configurable_nukes_controller.rocket_silo_processing_mode = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ROCKET_SILOS_PROCESSING_MODE.name })
 
 local rocket_ready_status = defines.rocket_silo_status.rocket_ready
+local wire_connector_id = defines.wire_connector_id
+local wire_connector_id_circuit_green = wire_connector_id.circuit_green
+local wire_connector_id_circuit_red = wire_connector_id.circuit_red
 
 configurable_nukes_controller.rhythm = { name = configurable_nukes_controller.name, }
 
 ---
 
+local tick = 0
 function configurable_nukes_controller.on_nth_tick(event)
     -- Log.debug("configurable_nukes_controller.on_nth_tick")
     -- Log.info(event)
 
-    storage.cache = storage.cache or {}
-    local cache = storage.cache
+    cache = cache or set_game() and cache
+    tick = event.tick
 
-    if (not cache.print_space_launched_time_to_target_message or cache.print_space_launched_time_to_target_message.ttl < game.tick) then
-        cache.print_space_launched_time_to_target_message = { value = true, ttl = game.tick + 20 }
-        ICBM_Utils.print_space_launched_time_to_target_message()
+    if (not cache.print_space_launched_time_to_target_message or cache.print_space_launched_time_to_target_message.ttl < tick) then
+        cache.print_space_launched_time_to_target_message = cache.print_space_launched_time_to_target_message or {}
+        cache.print_space_launched_time_to_target_message.value, cache.print_space_launched_time_to_target_message.ttl = true, tick + 20
+        print_space_launched_time_to_target_message()
     end
 
     local circuit_connected_silos = nil
 
-    if (configurable_nukes_controller.rocket_silo_processing_mode ~= "performance") then
-        storage.surfaces = storage.surfaces or {}
+    if (configurable_nukes_controller.rocket_silo_processing_mode ~= PERFORMANCE) then
+        surfaces = surfaces or set_game() and surfaces
+        keys = keys or set_game() and keys
 
-        if (storage.surface_key) then
+        if (keys.surface_key) then
             for i = 1, configurable_nukes_controller.num_rocket_silos_to_process or 1, 1 do
-                if (storage.rkt_surface_key and storage.rkt_surface_val) then
-                    storage.recently_launched_rkt_silos = storage.recently_launched_rkt_silos or {}
-                    if (not storage.recently_launched_rkt_silos[storage.rkt_surface_key] or storage.recently_launched_rkt_silos[storage.rkt_surface_key] < game.tick - 1600) then
-                        if (storage.recently_launched_rkt_silos[storage.rkt_surface_key] and storage.recently_launched_rkt_silos[storage.rkt_surface_key] < game.tick - 1600) then storage.recently_launched_rkt_silos[storage.rkt_surface_key] = nil end
-                        if (storage.rkt_surface_val.entity and storage.rkt_surface_val.entity.valid and storage.rkt_surface_val.entity.type == "rocket-silo" and not storage.rkt_surface_val.entity.send_to_orbit_automatically and storage.rkt_surface_val.entity.rocket_silo_status == rocket_ready_status) then
-                            if (storage.rkt_surface_val.entity.get_circuit_network(defines.wire_connector_id.circuit_red) or storage.rkt_surface_val.entity.get_circuit_network(defines.wire_connector_id.circuit_green)) then
+                if (keys.rkt_surface_key and keys.rkt_surface_val) then
+                    recently_launched_rkt_silos = recently_launched_rkt_silos or set_game()
+                    if (not recently_launched_rkt_silos[keys.rkt_surface_key] or recently_launched_rkt_silos[keys.rkt_surface_key] < tick - 1600) then
+                        if (recently_launched_rkt_silos[keys.rkt_surface_key] and recently_launched_rkt_silos[keys.rkt_surface_key] < tick - 1600) then recently_launched_rkt_silos[keys.rkt_surface_key] = nil end
+                        if (keys.rkt_surface_val.entity and keys.rkt_surface_val.entity.valid and keys.rkt_surface_val.entity.type == ROCKET_SILO and not keys.rkt_surface_val.entity.send_to_orbit_automatically and keys.rkt_surface_val.entity.rocket_silo_status == rocket_ready_status) then
+                            local get_circuit_network = keys.rkt_surface_val.entity.get_circuit_network
+                            if (get_circuit_network(wire_connector_id_circuit_red) or get_circuit_network(wire_connector_id_circuit_green)) then
                                 circuit_connected_silos = circuit_connected_silos or {}
-                                circuit_connected_silos[storage.rkt_surface_key] = storage.rkt_surface_val
+                                circuit_connected_silos[keys.rkt_surface_key] = keys.rkt_surface_val
                             end
                         end
                     end
                 end
-                if (storage.rkt_surface_key and not storage.surfaces[storage.surface_key][storage.rkt_surface_key]) then storage.rkt_surface_key = nil end
-                storage.rkt_surface_key, storage.rkt_surface_val = next(storage.surfaces[storage.surface_key], storage.rkt_surface_key)
+                if (keys.rkt_surface_key and not surfaces[keys.surface_key][keys.rkt_surface_key]) then keys.rkt_surface_key = nil end
+                keys.rkt_surface_key, keys.rkt_surface_val = next(surfaces[keys.surface_key], keys.rkt_surface_key)
 
-                if (storage.surface_key and not storage.surfaces[storage.surface_key]) then storage.surface_key = nil end
-                storage.surface_key, _ = next(storage.surfaces, storage.surface_key)
-                if (not storage.surface_key) then break end
+                if (keys.surface_key and not surfaces[keys.surface_key]) then storage.surface_key = nil end
+                keys.surface_key, _ = next(surfaces, keys.surface_key)
+                if (not keys.surface_key) then break end
             end
         else
-            if (storage.surface_key and not storage.surfaces[storage.surface_key]) then storage.surface_key = nil end
-            storage.surface_key, _ = next(storage.surfaces, storage.surface_key)
+            if (keys.surface_key and not surfaces[keys.surface_key]) then keys.surface_key = nil end
+            keys.surface_key, _ = next(surfaces, keys.surface_key)
         end
     end
 
-    storage.rocket_silos = storage.rocket_silos or {}
-    if (storage.rkt_key and storage.rkt_val) then
+    rocket_silos = rocket_silos or set_game and rocket_silos
+    keys = keys or set_game() and keys
+
+    if (keys.rkt_key and keys.rkt_val) then
         for i = 1, configurable_nukes_controller.num_rocket_silos_to_process or 1, 1 do
-            storage.recently_launched_rkt_silos = storage.recently_launched_rkt_silos or {}
-            if (not storage.recently_launched_rkt_silos[storage.rkt_key] or storage.recently_launched_rkt_silos[storage.rkt_key] < game.tick - 1600) then
-                if (storage.recently_launched_rkt_silos[storage.rkt_key] and storage.recently_launched_rkt_silos[storage.rkt_key] < game.tick - 1600) then storage.recently_launched_rkt_silos[storage.rkt_key] = nil end
-                if (storage.rkt_val.entity and storage.rkt_val.entity.valid and storage.rkt_val.entity.type == "rocket-silo" and not storage.rkt_val.entity.send_to_orbit_automatically and storage.rkt_val.entity.rocket_silo_status == rocket_ready_status) then
-                    if (not circuit_connected_silos or not circuit_connected_silos[storage.rkt_key]) then
-                        if (storage.rkt_val.entity.get_circuit_network(defines.wire_connector_id.circuit_red) or storage.rkt_val.entity.get_circuit_network(defines.wire_connector_id.circuit_green)) then
+            recently_launched_rkt_silos = recently_launched_rkt_silos or set_game()
+            if (not recently_launched_rkt_silos[keys.rkt_key] or recently_launched_rkt_silos[keys.rkt_key] < tick - 1600) then
+                if (recently_launched_rkt_silos[keys.rkt_key] and recently_launched_rkt_silos[keys.rkt_key] < tick - 1600) then recently_launched_rkt_silos[keys.rkt_key] = nil end
+                if (keys.rkt_val.entity and keys.rkt_val.entity.valid and keys.rkt_val.entity.type == ROCKET_SILO and not keys.rkt_val.entity.send_to_orbit_automatically and keys.rkt_val.entity.rocket_silo_status == rocket_ready_status) then
+                    if (not circuit_connected_silos or not circuit_connected_silos[keys.rkt_key]) then
+                        local get_circuit_network = keys.rkt_val.entity.get_circuit_network
+                        if (get_circuit_network(wire_connector_id_circuit_red) or get_circuit_network(wire_connector_id_circuit_green)) then
                             circuit_connected_silos = circuit_connected_silos or {}
-                            circuit_connected_silos[storage.rkt_key] = storage.rkt_val
+                            circuit_connected_silos[keys.rkt_key] = keys.rkt_val
                         end
                     end
                 end
             end
 
-            if (storage.rkt_key and not storage.rocket_silos[storage.rkt_key]) then storage.rkt_key = nil end
-            storage.rkt_key, storage.rkt_val = next(storage.rocket_silos, storage.rkt_key)
-            if (not storage.rkt_key or not storage.rkt_val) then break end
+            if (keys.rkt_key and not rocket_silos[keys.rkt_key]) then keys.rkt_key = nil end
+            keys.rkt_key, keys.rkt_val = next(rocket_silos, keys.rkt_key)
+            if (not keys.rkt_key or not keys.rkt_val) then break end
         end
 
     else
-        if (storage.rkt_key and not storage.rocket_silos[storage.rkt_key]) then storage.rkt_key = nil end
-        storage.rkt_key, storage.rkt_val = next(storage.rocket_silos, storage.rkt_key)
+        if (keys.rkt_key and not keys.rocket_silos[keys.rkt_key]) then keys.rkt_key = nil end
+        keys.rkt_key, keys.rkt_val = next(rocket_silos, keys.rkt_key)
     end
 
-    if (configurable_nukes_controller.rocket_silo_processing_mode == "responsive") then
-        storage.circuit_connected_rkt_silos = storage.circuit_connected_rkt_silos or {}
+    if (configurable_nukes_controller.rocket_silo_processing_mode == RESPONSIVE) then
+        circuit_connected_rkt_silos = circuit_connected_rkt_silos or set_game() and circuit_connected_rkt_silos
 
-        if (storage.circuit_connected_rkt_key and storage.circuit_connected_rkt_val) then
+        if (keys.circuit_connected_rkt_key and keys.circuit_connected_rkt_val) then
             for i = 1, configurable_nukes_controller.num_rocket_silos_to_process or 1, 1 do
-                storage.recently_launched_rkt_silos = storage.recently_launched_rkt_silos or {}
-                if (not storage.recently_launched_rkt_silos[storage.rkt_key] or storage.recently_launched_rkt_silos[storage.rkt_key] < game.tick - 1600) then
-                    if (storage.recently_launched_rkt_silos[storage.rkt_key] and storage.recently_launched_rkt_silos[storage.rkt_key] < game.tick - 1600) then storage.recently_launched_rkt_silos[storage.rkt_key] = nil end
-                    if (storage.circuit_connected_rkt_val.entity and storage.circuit_connected_rkt_val.entity.valid and storage.circuit_connected_rkt_val.entity.type == "rocket-silo" and not storage.circuit_connected_rkt_val.entity.send_to_orbit_automatically and storage.circuit_connected_rkt_val.entity.rocket_silo_status == rocket_ready_status) then
+                recently_launched_rkt_silos = recently_launched_rkt_silos or set_game()
+                if (not recently_launched_rkt_silos[keys.rkt_key] or recently_launched_rkt_silos[keys.rkt_key] < tick - 1600) then
+                    if (recently_launched_rkt_silos[keys.rkt_key] and recently_launched_rkt_silos[keys.rkt_key] < tick - 1600) then recently_launched_rkt_silos[keys.rkt_key] = nil end
+                    if (keys.circuit_connected_rkt_val.entity and keys.circuit_connected_rkt_val.entity.valid and keys.circuit_connected_rkt_val.entity.type == ROCKET_SILO and not keys.circuit_connected_rkt_val.entity.send_to_orbit_automatically and keys.circuit_connected_rkt_val.entity.rocket_silo_status == rocket_ready_status) then
                         if (not circuit_connected_silos or not circuit_connected_silos[storage.circuit_connected_rkt_key]) then
-                            if (storage.circuit_connected_rkt_val.entity.get_circuit_network(defines.wire_connector_id.circuit_red) or storage.circuit_connected_rkt_val.entity.get_circuit_network(defines.wire_connector_id.circuit_green)) then
+                            local get_circuit_network = keys.circuit_connected_rkt_val.entity.get_circuit_network
+                            if (get_circuit_network(wire_connector_id_circuit_red) or get_circuit_network(wire_connector_id_circuit_green)) then
                                 circuit_connected_silos = circuit_connected_silos or {}
-                                circuit_connected_silos[storage.circuit_connected_rkt_key] = storage.circuit_connected_rkt_val
+                                circuit_connected_silos[keys.circuit_connected_rkt_key] = keys.circuit_connected_rkt_val
                             end
                         end
                     end
                 end
 
-                if (storage.circuit_connected_rkt_key and not storage.rocket_silos[storage.circuit_connected_rkt_key]) then storage.circuit_connected_rkt_key = nil end
-                storage.circuit_connected_rkt_key, storage.circuit_connected_rkt_val = next(storage.rocket_silos, storage.circuit_connected_rkt_key)
-                if (not storage.circuit_connected_rkt_key or not storage.circuit_connected_rkt_val) then break end
+                if (keys.circuit_connected_rkt_key and not rocket_silos[keys.circuit_connected_rkt_key]) then keys.circuit_connected_rkt_key = nil end
+                keys.circuit_connected_rkt_key, keys.circuit_connected_rkt_val = next(rocket_silos, keys.circuit_connected_rkt_key)
+                if (not keys.circuit_connected_rkt_key or not keys.circuit_connected_rkt_val) then break end
             end
         else
-            if (storage.circuit_connected_rkt_key and not storage.circuit_connected_rkt_silos[storage.circuit_connected_rkt_key]) then storage.circuit_connected_rkt_key = nil end
-            storage.circuit_connected_rkt_key, storage.circuit_connected_rkt_val = next(storage.circuit_connected_rkt_silos, storage.circuit_connected_rkt_key)
+            if (keys.circuit_connected_rkt_key and not circuit_connected_rkt_silos[keys.circuit_connected_rkt_key]) then keys.circuit_connected_rkt_key = nil end
+            keys.circuit_connected_rkt_key, keys.circuit_connected_rkt_val = next(circuit_connected_rkt_silos, keys.circuit_connected_rkt_key)
         end
     end
 
     if (circuit_connected_silos) then
-        Circuit_Network_Service.attempt_launch_silos({ rocket_silos = circuit_connected_silos, })
+        attempt_launch_silos(circuit_connected_silos, tick)
     end
 end
 --[[ Registerd in events.lua ]]
@@ -167,5 +224,7 @@ Event_Handler:register_event({
     func_name = "configurable_nukes_controller.on_runtime_mod_setting_changed",
     func = configurable_nukes_controller.on_runtime_mod_setting_changed,
 })
+
+function configurable_nukes_controller.init(__storage) storage = __storage or _ENV.storage end
 
 return configurable_nukes_controller
