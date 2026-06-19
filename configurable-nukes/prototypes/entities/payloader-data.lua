@@ -10,7 +10,7 @@ local do_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Cons
 local payloader_base_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_BASE_TINT.name, }) or { r = 1.0, g = 0.0, b = 0.0, a = 1.0, }
 
 local corpse_icon_path = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants.png"
-local corpse_icon = { icon = corpse_icon_path, size = 64, scale = 1, }
+local corpse_icon = { icon = corpse_icon_path, size = 64, scale = 0.5, }
 local corpse_icons = { corpse_icon, }
 
 if (do_tint) then
@@ -23,12 +23,12 @@ if (do_tint) then
         {
             icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-alpha.png",
             size = 64,
-            scale = 1,
+            scale = 0.5,
         },
         {
             icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-final-overlay.png",
             size = 64,
-            scale = 1,
+            scale = 0.5,
         },
     }
 end
@@ -90,7 +90,7 @@ data:extend({ payloader_corpse, })
 local payloader = Util.table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 
 local icon_path = "__configurable-nukes__/graphics/icons/payloader/payloader.png"
-local icon = { icon = icon_path, size = 64, scale = 1, }
+local icon = { icon = icon_path, size = 64, scale = 0.5, }
 local icons = { icon, }
 
 if (do_tint) then
@@ -103,12 +103,12 @@ if (do_tint) then
         {
             icon = "__configurable-nukes__/graphics/icons/payloader/payloader-base-alpha.png",
             size = 64,
-            scale = 1,
+            scale = 0.5,
         },
         {
             icon = "__configurable-nukes__/graphics/icons/payloader/payloader-final-overlay.png",
             size = 64,
-            scale = 1,
+            scale = 0.5,
         },
     }
 end
