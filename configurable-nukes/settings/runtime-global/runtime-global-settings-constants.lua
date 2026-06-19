@@ -23,7 +23,7 @@ runtime_global_settings_constants.settings = {
         name = prefix .. "legacy-launch-system-enabled",
         setting_type = "runtime-global",
         order = "",
-        default_value = false,
+        default_value = true,
     },
     ATOMIC_BOMB_ROCKET_LAUNCHABLE = {
         type = "bool-setting",
