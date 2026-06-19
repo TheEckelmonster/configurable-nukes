@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.12
+Date: 2026-06-19
+  Bug Fixes:
+    - Fixed payloader automation not accepting land-mines
+    - Fixed payloader only functioning for the first recipe it was set to
+    - (Hopefully) fixed intermittent issue of a payload not detonating on impact due to floating point rounding mismatches
+    - Fixed payloader's item icon being too large
+  Misc:
+    - Enabled the legacy launch system (pre-0.9.x system) by default
+      - Explicit warheads (i.e. atomic-bombs/warheads, "Rods-from-God", Mjölnirs, and Jerichos) can be loaded and launched without needing a payload-vehicle
+    - Improved performance somewhat further
+---------------------------------------------------------------------------------------------------
 Version: 0.9.11
 Date: 2026-06-12
   Bug Fixes:
