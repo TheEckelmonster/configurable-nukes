@@ -1,0 +1,702 @@
+-- local sounds = require("__base__.prototypes.entity.sounds")
+
+-- local Util = require("__core__.lualib.util")
+
+-- local fs_artillery_shell = data.raw.ammo["artillery-shell"]
+-- if (not fs_artillery_shell) then return end
+
+-- fs_artillery_shell = Util.table.deepcopy(fs_artillery_shell)
+
+-- fs_artillery_shell.name = "cn-flash-steam-artillery-shell"
+-- -- log(serpent.block(fs_artillery_shell))
+
+-- local action = fs_artillery_shell.ammo_type.action
+-- local action_delivery = action.action_delivery
+
+-- action_delivery.projectile = "cn-flash-steam-artillery-shell-projectile"
+-- -- log(serpent.block(fs_artillery_shell))
+
+-- -- local fs_artillery_shell_projectile = Util.table.deepcopy(data.raw["artillery-projectile"]["artillery-projectile"])
+-- -- fs_artillery_shell_projectile.name = "cn-flash-steam-artillery-shell-projectile"
+
+-- local fs_artillery_shell_projectile =
+-- {
+--     type = "artillery-projectile",
+--     name = "cn-flash-steam-artillery-shell-projectile",
+--     flags = { "not-on-map" },
+--     hidden = true,
+--     reveal_map = true,
+--     map_color = { 1, 1, 0 },
+--     picture =
+--     {
+--         filename = "__base__/graphics/entity/artillery-projectile/shell.png",
+--         draw_as_glow = true,
+--         width = 64,
+--         height = 64,
+--         scale = 0.5
+--     },
+--     shadow =
+--     {
+--         filename = "__base__/graphics/entity/artillery-projectile/shell-shadow.png",
+--         width = 64,
+--         height = 64,
+--         scale = 0.5
+--     },
+--     chart_picture =
+--     {
+--         filename = "__base__/graphics/entity/artillery-projectile/artillery-shoot-map-visualization.png",
+--         flags = { "icon" },
+--         width = 64,
+--         height = 64,
+--         priority = "high",
+--         scale = 0.25
+--     },
+--     action =
+--     {
+--         type = "direct",
+--         action_delivery =
+--         {
+--             type = "instant",
+--             target_effects =
+--             {
+--                 {
+--                     type = "nested-result",
+--                     action =
+--                     {
+--                         type = "area",
+--                         radius = 1 + (10 / 1) * 1.1,
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 20, type = "explosion", },
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 20, type = "acid", },
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 10, type = "heat", },
+--                                 },
+--                             },
+--                         },
+--                     },
+--                 },
+--                 {
+--                     type = "nested-result",
+--                     action =
+--                     {
+--                         type = "area",
+--                         radius = 6.5,
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 200, type = "physical", },
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 200, type = "explosion", },
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 100, type = "kinetic", },
+--                                 },
+--                             },
+--                         },
+--                     },
+--                 },
+--                 {
+--                     type = "create-trivial-smoke",
+--                     smoke_name = "artillery-smoke",
+--                     initial_height = 0,
+--                     speed_from_center = 0.05,
+--                     speed_from_center_deviation = 0.005,
+--                     offset_deviation = { { -4, -4 }, { 4, 4 } },
+--                     max_radius = 3.5,
+--                     repeat_count = 4 * 4 * 15
+--                 },
+--                 {
+--                     type = "create-entity",
+--                     entity_name = "big-artillery-explosion"
+--                 },
+--                 {
+--                     type = "show-explosion-on-chart",
+--                     scale = 8 / 32
+--                 },
+--             },
+--         },
+--     },
+--     -- final_action =
+--     -- {
+--     --     type = "direct",
+--     --     action_delivery =
+--     --     {
+--     --         type = "instant",
+--     --         target_effects =
+--     --         {
+--     --             {
+--     --                 type = "create-entity",
+--     --                 entity_name = "medium-scorchmark-tintable",
+--     --                 check_buildability = true
+--     --             },
+--     --             {
+--     --                 type = "invoke-tile-trigger",
+--     --                 repeat_count = 1
+--     --             },
+--     --             {
+--     --                 type = "destroy-decoratives",
+--     --                 from_render_layer = "decorative",
+--     --                 to_render_layer = "object",
+--     --                 include_soft_decoratives = true, -- soft decoratives are decoratives with grows_through_rail_path = true
+--     --                 include_decals = false,
+--     --                 invoke_decorative_trigger = true,
+--     --                 decoratives_with_trigger_only = false, -- if true, destroys only decoratives that have trigger_effect set
+--     --                 radius = 3.5                 -- large radius for demostrative purposes
+--     --             },
+--     --         },
+--     --     },
+--     -- },
+--     height_from_ground = 280 / 64
+-- }
+
+
+-- -- log(serpent.block(fs_artillery_shell_projectile))
+-- local fs_artillery_shell_sticker =
+-- {
+--     type = "sticker",
+--     name = "cn-flash-steam-artillery-sticker",
+--     hidden = true,
+--     animation =
+--     {
+--         filename = "__base__/graphics/entity/slowdown-sticker/slowdown-sticker.png",
+--         line_length = 5,
+--         width = 42,
+--         height = 48,
+--         frame_count = 50,
+--         animation_speed = 0.5,
+--         -- tint = { 1.000, 0.663, 0.000, 0.694 }, -- #ffa900b1
+--         shift = util.by_pixel(2, -0.5),
+--         scale = 0.5
+--     },
+--     duration_in_ticks = 60 * 4,
+--     damage_interval = 10,
+--     damage_per_tick = {
+--         type = "acid",
+--         amount = 6.5,
+--     },
+--     ground_target = true,
+--     -- target_movement_modifier = 0.35
+--     target_movement_modifier_from = 0.5,
+--     target_movement_modifier_to = 0.2,
+--     -- target_movement_max_from = 0.9,
+--     -- target_movement_max_to = 0.35,
+--     vehicle_speed_modifier_from = 0.6,
+--     vehicle_speed_modifier_to = 0.3,
+--     -- vehicle_speed_max_from = 0.9,
+--     -- vehicle_speed_max_to = 0.45,
+--     vehicle_friction_modifier_from = 1.5,
+--     vehicle_friction_modifier_to = 2,
+-- }
+
+-- local fs_artillery_shell_smoke_with_trigger_visual_dummy =
+-- {
+--     type = "smoke-with-trigger",
+--     name = "cn-flash-steam-artillery-cloud-visual-dummy",
+--     flags = { "not-on-map" },
+--     hidden = true,
+--     show_when_smoke_off = true,
+--     particle_count = 24,
+--     particle_spread = { 3.6 * 1.05, 3.6 * 0.6 * 1.05 },
+--     particle_distance_scale_factor = 0.5,
+--     particle_scale_factor = { 1, 0.707 },
+--     particle_duration_variation = 60 * 3,
+--     wave_speed = { 0.5 / 80, 0.5 / 60 },
+--     wave_distance = { 1, 0.5 },
+--     spread_duration_variation = 300 - 12,
+
+--     render_layer = "object",
+
+--     affected_by_wind = false,
+--     cyclic = true,
+--     duration = 60 * 12 + 3 * 60,
+--     fade_away_duration = 2 * 60,
+--     spread_duration = (300 - 12) / 2,
+--     -- color = { 0.014, 0.358, 0.395, 0.322 }, -- #035b6452
+
+--     animation =
+--     {
+--         width = 152,
+--         height = 120,
+--         line_length = 5,
+--         frame_count = 60,
+--         shift = { -0.53125, -0.4375 },
+--         priority = "high",
+--         animation_speed = 0.25,
+--         filename = "__base__/graphics/entity/smoke/smoke.png",
+--         flags = { "smoke" }
+--     },
+--     working_sound =
+--     {
+--         sound = { filename = "__base__/sound/fight/poison-cloud.ogg", volume = 0.5, audible_distance_modifier = 0.8 },
+--         max_sounds_per_prototype = 1,
+--         match_volume_to_activity = true
+--     }
+-- }
+
+-- local aoe_multiplier = 1.5
+-- local aoe_divisor = 1.25
+-- local cluster_multiplier = 1.5
+
+-- local fs_artillery_shell_smoke_with_trigger =
+-- {
+--     name = "cn-flash-steam-artillery-cloud",
+--     type = "smoke-with-trigger",
+--     flags = { "not-on-map" },
+--     hidden = true,
+--     show_when_smoke_off = true,
+--     particle_count = 16,
+--     particle_spread = { 3.6 * 1.05, 3.6 * 0.6 * 1.05 },
+--     particle_distance_scale_factor = 0.5,
+--     particle_scale_factor = { 1, 0.707 },
+--     wave_speed = { 1 / 80, 1 / 60 },
+--     wave_distance = { 0.3, 0.2 },
+--     spread_duration_variation = 12,
+--     particle_duration_variation = 60 * 3,
+--     render_layer = "object",
+
+--     affected_by_wind = false,
+--     cyclic = true,
+--     duration = 60 * 12,
+--     fade_away_duration = 2 * 60,
+--     spread_duration = 12,
+--     -- color = { 0.239, 0.875, 0.992, 0.690 }, -- #3ddffdb0,
+
+--     animation =
+--     {
+--         width = 152,
+--         height = 120,
+--         line_length = 5,
+--         frame_count = 60,
+--         shift = { -0.53125, -0.4375 },
+--         priority = "high",
+--         animation_speed = 0.25,
+--         filename = "__base__/graphics/entity/smoke/smoke.png",
+--         flags = { "smoke" }
+--     },
+
+--     created_effect =
+--     {
+--         {
+--             type = "cluster",
+--             cluster_count = 2 + (cluster_multiplier + 8 / 1) * cluster_multiplier,
+--             distance = (4 / 1) * aoe_multiplier,
+--             distance_deviation = (5 / 1) * aoe_multiplier,
+--             action_delivery =
+--             {
+--                 type = "instant",
+--                 target_effects =
+--                 {
+--                     {
+--                         type = "nested-result",
+--                         action = {
+--                             type = "cluster",
+--                             cluster_count = 2 + (cluster_multiplier + 8 / 1) * cluster_multiplier,
+--                             distance = 3.5,
+--                             distance_deviation = 3.5 / 1.75,
+--                             action_delivery = {
+--                                 type = "instant",
+--                                 target_effects = {
+--                                     {
+--                                         type = "create-smoke",
+--                                         show_in_tooltip = false,
+--                                         entity_name = "cn-flash-steam-artillery-cloud-visual-dummy",
+--                                         initial_height = 0
+--                                     },
+--                                 },
+--                             },
+--                         },
+--                     },
+--                     -- {
+--                     --     type = "create-smoke",
+--                     --     show_in_tooltip = false,
+--                     --     entity_name = "cn-flash-steam-cloud-visual-dummy",
+--                     --     initial_height = 0
+--                     -- },
+--                     {
+--                         type = "play-sound",
+--                         sound = sounds.poison_capsule_explosion
+--                     }
+--                 }
+--             }
+--         },
+--         {
+--             type = "cluster",
+--             cluster_count = 2 + (cluster_multiplier + 9 / 1) * cluster_multiplier,
+--             distance = ((9 * 1.1) / 1) * aoe_multiplier,
+--             -- distance = (((12 + aoe_multiplier) * 1.1) / 1) * aoe_multiplier,
+--             distance_deviation = (3 / 1) * aoe_multiplier,
+--             action_delivery =
+--             {
+--                 type = "instant",
+--                 target_effects =
+--                 {
+--                     {
+--                         type = "nested-result",
+--                         action = {
+--                             type = "cluster",
+--                             cluster_count = (10 / 1) * cluster_multiplier,
+--                             distance = 3.5,
+--                             distance_deviation = 3.5 / 1.75,
+--                             action_delivery = {
+--                                 type = "instant",
+--                                 target_effects = {
+--                                     {
+--                                         type = "create-smoke",
+--                                         show_in_tooltip = false,
+--                                         entity_name = "cn-flash-steam-artillery-cloud-visual-dummy",
+--                                         initial_height = 0
+--                                     },
+--                                 },
+--                             },
+--                         },
+--                     },
+--                     -- {
+--                     --     type = "create-smoke",
+--                     --     show_in_tooltip = false,
+--                     --     entity_name = "cn-flash-steam-cloud-visual-dummy",
+--                     --     initial_height = 0
+--                     -- },
+--                 },
+--             },
+--         },
+--     },
+--     action =
+--     {
+--         type = "cluster",
+--         cluster_count = 2 + (cluster_multiplier + 8 / 1) * cluster_multiplier,
+--         distance = (4 / aoe_divisor) * aoe_multiplier,
+--         distance_deviation = (5 / aoe_divisor) * aoe_multiplier,
+--         action_delivery =
+--         {
+--             type = "instant",
+--             target_effects =
+--             {
+--                 {
+--                     type = "nested-result",
+--                     action = {
+--                         type = "cluster",
+--                         cluster_count = 2 + (cluster_multiplier + 8 / 1) * cluster_multiplier,
+--                         distance = (3.5 / aoe_divisor) * aoe_multiplier,
+--                         distance_deviation = (3.5 / aoe_divisor) * aoe_multiplier,
+--                         -- action_delivery = {
+--                         --     type = "instant",
+--                         --     target_effects = {
+--         -- type = "direct",
+--         -- -- type = "cluster",
+--         -- -- cluster_count = 2 + (cluster_multiplier + 9 / 1) * cluster_multiplier,
+--         -- -- distance = ((9 * 1.1) / aoe_divisor) * aoe_multiplier,
+--         -- -- distance_deviation = (2 / aoe_divisor) * aoe_multiplier,
+--         action_delivery =
+--         {
+--             type = "instant",
+--             target_effects =
+--             {
+--                 type = "nested-result",
+--                 action =
+--                 {
+--                     {
+--                         type = "area",
+--                         radius = (10 / aoe_divisor) * aoe_multiplier,
+--                         entity_flags = { "breaths-air" },
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "create-sticker",
+--                                     sticker = "cn-flash-steam-artillery-sticker",
+--                                     show_in_tooltip = true
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 1, type = "acid" }
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 1, type = "heat" }
+--                                 },
+--                             },
+--                         },
+--                     },
+--                     {
+--                         type = "area",
+--                         radius = (7.5 / aoe_divisor) * aoe_multiplier,
+--                         entity_flags = { "breaths-air" },
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "create-sticker",
+--                                     sticker = "cn-flash-steam-artillery-sticker",
+--                                     show_in_tooltip = true
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 2, type = "acid" }
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 2, type = "heat" }
+--                                 },
+--                             },
+--                         },
+--                     },
+--                     {
+--                         type = "area",
+--                         radius = (5 / aoe_divisor) * aoe_multiplier,
+--                         entity_flags = { "breaths-air" },
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "create-sticker",
+--                                     sticker = "cn-flash-steam-artillery-sticker",
+--                                     show_in_tooltip = true
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 3, type = "acid" }
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 4, type = "heat" }
+--                                 },
+--                             },
+--                         },
+--                     },
+--                     {
+--                         type = "area",
+--                         radius = (2.5 / aoe_divisor) * aoe_multiplier,
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "create-sticker",
+--                                     sticker = "cn-flash-steam-artillery-sticker",
+--                                     show_in_tooltip = true
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 4, type = "acid" }
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 6, type = "heat" }
+--                                 },
+--                             },
+--                         },
+--                     },
+--                     {
+--                         type = "area",
+--                         radius = (1.25 / aoe_divisor) * aoe_multiplier,
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "create-sticker",
+--                                     sticker = "cn-flash-steam-artillery-sticker",
+--                                     show_in_tooltip = true
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 5, type = "acid" }
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 10, type = "heat" }
+--                                 },
+--                             },
+--                         },
+--                     },
+--                 },
+--             },
+--         },
+--         }
+--         }
+--         }
+--         }
+--         -- }
+--         -- }
+--     },
+--     action_cooldown = 10,
+-- }
+
+
+-- fs_artillery_shell_projectile.final_action =
+-- {
+--     type = "direct",
+--     action_delivery =
+--     {
+--         type = "instant",
+--         target_effects =
+--         {
+--             {
+--                 type = "create-entity",
+--                 entity_name = "flash-steam-artillery-shell-explosion"
+--             },
+--             {
+--                 type = "create-smoke",
+--                 show_in_tooltip = true,
+--                 entity_name = "cn-flash-steam-artillery-cloud",
+--                 initial_height = 0
+--             },
+--             {
+--                 type = "nested-result",
+--                 action =
+--                 {
+--                     {
+--                         type = "area",
+--                         radius = (4.25 / aoe_divisor) * aoe_multiplier,
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 600, type = "kinetic" }
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 200, type = "acid" }
+--                                 },
+--                                 {
+--                                     type = "damage",
+--                                     damage = { amount = 400, type = "heat" }
+--                                 },
+--                                 -- {
+--                                 --     type = "create-entity",
+--                                 --     entity_name = "flash-steam-artillery-artillery-explosion"
+--                                 -- },
+--                             },
+--                         },
+--                     },
+--                     {
+--                         type = "cluster",
+--                         cluster_count = 11,
+--                         distance = (4.25 / aoe_divisor) * aoe_multiplier,
+--                         distance_deviation = (4.25 / 1.25) * aoe_multiplier,
+--                         action_delivery =
+--                         {
+--                             type = "instant",
+--                             target_effects =
+--                             {
+--                                 {
+--                                     type = "nested-result",
+--                                     action = {
+--                                         {
+--                                             type = "area",
+--                                             radius = (3.2 / aoe_divisor) * aoe_multiplier,
+--                                             action_delivery = {
+--                                                 type = "instant",
+--                                                 target_effects = {
+--                                                     {
+--                                                         type = "damage",
+--                                                         damage = { amount = 30, type = "acid" }
+--                                                     },
+--                                                 },
+--                                             },
+--                                         },
+--                                         {
+--                                             type = "area",
+--                                             radius = (2.25 / aoe_divisor) * aoe_multiplier,
+--                                             action_delivery = {
+--                                                 type = "instant",
+--                                                 target_effects = {
+--                                                     {
+--                                                         type = "damage",
+--                                                         damage = { amount = 30, type = "heat" }
+--                                                     },
+--                                                 },
+--                                             },
+--                                         },
+--                                     },
+--                                 },
+--                             },
+--                         },
+--                     },
+--                 },
+--             },
+--             {
+--                 type = "create-entity",
+--                 entity_name = "medium-scorchmark-tintable",
+--                 check_buildability = true
+--             },
+--             {
+--                 type = "invoke-tile-trigger",
+--                 repeat_count = 1
+--             },
+--             {
+--                 type = "destroy-decoratives",
+--                 from_render_layer = "decorative",
+--                 to_render_layer = "object",
+--                 include_soft_decoratives = true, -- soft decoratives are decoratives with grows_through_rail_path = true
+--                 include_decals = false,
+--                 invoke_decorative_trigger = true,
+--                 decoratives_with_trigger_only = false, -- if true, destroys only decoratives that have trigger_effect set
+--                 radius = (6.5 / aoe_divisor) * aoe_multiplier, -- large radius for demostrative purposes
+--             },
+--         },
+--     },
+-- }
+
+-- local flash_steam_artillery_shell_explosion = Util.table.deepcopy(data.raw["explosion"]["big-artillery-explosion"])
+-- flash_steam_artillery_shell_explosion.name = "flash-steam-artillery-shell-explosion"
+-- flash_steam_artillery_shell_explosion.localised_name = {"entity-name.flash-steam-artillery-shell-explosion"}
+-- flash_steam_artillery_shell_explosion.icons =
+-- {
+--     { icon = "__base__/graphics/icons/explosion.png", },
+-- --   {icon = "__base__/graphics/icons/explosive-flash-steam-artillery-shell.png"}
+-- }
+-- flash_steam_artillery_shell_explosion.order = "a-c-d"
+-- -- flash_steam_artillery_shell_explosion.animations[1].tint = { r = 0.7, g = 1, b = 0.1, }
+
+-- data:extend({flash_steam_artillery_shell_explosion})
+
+-- local flash_steam_artillery_explosion = Util.table.deepcopy(data.raw["explosion"]["explosion"])
+-- flash_steam_artillery_explosion.name = "flash-steam-artillery-explosion"
+-- flash_steam_artillery_explosion.localised_name = "entity-name.flash-steam-artillery-explosion"
+-- flash_steam_artillery_explosion.icons =
+-- {
+--     { icon = "__base__/graphics/icons/explosion.png", },
+-- --   {icon = "__base__/graphics/icons/flash-steam-artillery-shell.png"}
+-- }
+-- flash_steam_artillery_explosion.order = "a-c-c"
+
+-- -- for k, v in pairs(flash_steam_artillery_explosion.animations) do
+-- --     v.tint = { r = 0.7, g = 1, b = 0.1, }
+-- -- end
+
+-- data:extend({flash_steam_artillery_explosion})
+
+
+-- fs_artillery_shell.enabled = true
+
+-- data:extend({ fs_artillery_shell_projectile, fs_artillery_shell_sticker, fs_artillery_shell_smoke_with_trigger_visual_dummy, fs_artillery_shell_smoke_with_trigger, fs_artillery_shell, })

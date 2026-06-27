@@ -1,6 +1,4 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local Log = Log
 
 local Version_Data = require("scripts.data.version-data")
 local Version_Repository = require("scripts.repositories.version-repository")

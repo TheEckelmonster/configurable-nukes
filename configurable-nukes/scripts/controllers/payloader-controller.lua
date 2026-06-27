@@ -31,16 +31,24 @@ end
 local defines = defines
 local prototypes = prototypes
 
+local math = math
+local math_ceil = math.ceil
+local math_floor = math.floor
 local table = table
 local table_insert = table.insert
 local table_remove = table.remove
+local type = type
+
+local string = string
+local string_format = string.format
 
 local defines_payload_vehicle_inventory = defines.inventory.cn_payload_vehicle
 local payloader_container_inventory = defines.inventory.payloader
 local payloader_inventory_input = defines.inventory.crafter_input
 local payloader_inventory_output = defines.inventory.crafter_output
 
-local Constants = Constants
+local entity_status_no_recipe = defines.entity_status.no_recipe
+
 local Event_Handler = Event_Handler
 local Filters = Filters
 local Log = Log
@@ -49,35 +57,88 @@ local Log = Log
 
 local String_Utils = require("scripts.utils.string-utils")
 
+local AMMO = "ammo"
+local CAPSULE = "capsule"
 local CN_PAYLOAD_VEHICLE = "cn-payload-vehicle"
+local CONTAINER = "container"
+local EXPLOSIVES = "explosives"
 local GREATER_THAN_EQUAL_TO = ">="
+local INPUT = "input"
+local ITEM_WITH_INVENTORY = "item-with-inventory"
+local LAND_MINE = "land-mine"
+local LAUNCH = "launch"
+local NORMAL = "normal"
+local OUTPUT = "output"
+local PAYLOADER = "payloader"
+local PAYLOADER_CONTAINER_INPUT  = "payloader-container-input"
+local PAYLOADER_CONTAINER_OUTPUT = "payloader-container-output"
+local PAYLOADER_CONTAINER_INPUT_VERTICAL  = "payloader-container-input-vertical"
+local PAYLOADER_CONTAINER_OUTPUT_VERTICAL = "payloader-container-output-vertical"
 local PAYLOADER_LOAD = "payloader-load"
 local PAYLOADER_UNLOAD = "payloader-unload"
+local SIGNAL_CHECK = "signal-check"
+local SIGNAL_X = "signal-X"
+local SIGNAL_Y = "signal-Y"
+local SIGNAL_I = "signal-I"
+local SPACE_LOCATION_INDEX = "space_location_index"
+local TARGET_COMBINATOR = "target-combinator"
+local TARGET_COMBINATOR_PROGRAM = "target-combinator-program"
+local TARGET_TAGS = "target_tags"
+local TARGET_TAGS_FORMAT = "X: %d, Y: %d, I: %d"
+local VERTICAL = "-vertical"
+local VIRTUAL = "virtual"
+local X = "x"
+local Y = "y"
 
 local NTH_TICK = 60
 
-local payloader_load_recipe_crafting_time = prototypes.mod_data[Constants.mod_name .. "-payloader-recipe-data"].data.recipes[PAYLOADER_LOAD].energy_required
+local mod_data = prototypes.mod_data
+local payloader_recipe_data = mod_data[Constants.mod_name .. "-payloader-recipe-data"].data
+
+local payloader_load_recipe_crafting_time = payloader_recipe_data.recipes[PAYLOADER_LOAD].energy_required
 local payloader_load_recipe_crafting_time_60 = payloader_load_recipe_crafting_time * NTH_TICK
-local payloader_unload_recipe_crafting_time = prototypes.mod_data[Constants.mod_name .. "-payloader-recipe-data"].data.recipes[PAYLOADER_UNLOAD].energy_required
+local payloader_unload_recipe_crafting_time = payloader_recipe_data.recipes[PAYLOADER_UNLOAD].energy_required
 local payloader_unload_recipe_crafting_time_60 = payloader_unload_recipe_crafting_time * NTH_TICK
+local target_combinator_program_recipe_crafting_time = payloader_recipe_data.recipes[TARGET_COMBINATOR_PROGRAM].energy_required
+local target_combinator_program_recipe_crafting_time_60 = target_combinator_program_recipe_crafting_time * NTH_TICK
+
+local land_mine_names = payloader_recipe_data[LAND_MINE]
+
+local Payloader_Data = Circuit_Network_Payloader_Data
+
+local circuit_networks = {
+    defines.wire_connector_id.circuit_red,
+    defines.wire_connector_id.circuit_green,
+}
+
+-------------------------------
 
 local valid_payloader_types = {
-    ["ammo"] = 1,
-    ["capsule"] = 1,
-    ["land-mine"] = 1,
+    [AMMO] = 1,
+    [CAPSULE] = 1,
 }
 local valid_payloader_items = {
-    ["explosives"] = 1,
+    [EXPLOSIVES] = 1,
 }
+
+for name, _ in pairs(land_mine_names) do
+    valid_payloader_items[name] = 1
+end
+
 local valid_payloader_recipes = {
     [PAYLOADER_LOAD] = 1,
     [PAYLOADER_UNLOAD] = 1,
+    [TARGET_COMBINATOR_PROGRAM] = 1,
 }
 local entity_output_recipes = {
+    [TARGET_COMBINATOR_PROGRAM] = 1,
 }
 local item_output_recipes = {
     [PAYLOADER_UNLOAD] = 1,
+    [TARGET_COMBINATOR] = 1,
 }
+
+-------------------------------
 
 local payloader_load_ingredient_filters = {}
 local payloader_load_ingredient_amounts = {}
@@ -85,23 +146,25 @@ local payloader_load_ingredient_amounts = {}
 local payloader_load_recipe = prototypes.recipe[PAYLOADER_LOAD]
 if (payloader_load_recipe.ingredients[1]) then
     for _, ingredient in ipairs(payloader_load_recipe.ingredients) do
-        payloader_load_ingredient_filters[#payloader_load_ingredient_filters+1] = { name = ingredient.name, quality = "normal", comparator = GREATER_THAN_EQUAL_TO, }
+        payloader_load_ingredient_filters[#payloader_load_ingredient_filters+1] = { name = ingredient.name, quality = NORMAL, comparator = GREATER_THAN_EQUAL_TO, }
         payloader_load_ingredient_amounts[ingredient.name] = ingredient.amount
     end
 end
 
 local num_payloader_load_ingredients = #payloader_load_ingredient_filters
 
-local CONTAINER = "container"
-local VERTICAL = "-vertical"
-local INPUT = "input"
-local ITEM_WITH_INVENTORY = "item-with-inventory"
-local OUTPUT = "output"
-local PAYLOADER = "payloader"
-local PAYLOADER_CONTAINER_INPUT  = "payloader-container-input"
-local PAYLOADER_CONTAINER_OUTPUT = "payloader-container-output"
-local PAYLOADER_CONTAINER_INPUT_VERTICAL  = "payloader-container-input-vertical"
-local PAYLOADER_CONTAINER_OUTPUT_VERTICAL = "payloader-container-output-vertical"
+local target_combinator_program_ingredient_filters = {}
+local target_combinator_program_ingredient_amounts = {}
+
+local target_combinator_program_recipe = prototypes.recipe[TARGET_COMBINATOR_PROGRAM]
+if (target_combinator_program_recipe.ingredients[1]) then
+    for _, ingredient in ipairs(target_combinator_program_recipe.ingredients) do
+        target_combinator_program_ingredient_filters[#target_combinator_program_ingredient_filters+1] = { name = ingredient.name, quality = NORMAL, comparator = ">=", }
+        target_combinator_program_ingredient_amounts[ingredient.name] = ingredient.amount
+    end
+end
+
+local num_target_combinator_program_ingredients = #target_combinator_program_ingredient_filters
 
 local locals = {}
 
@@ -117,6 +180,28 @@ local valid_cloned = {
     [PAYLOADER_CONTAINER_INPUT_VERTICAL] = true,
     [PAYLOADER_CONTAINER_OUTPUT_VERTICAL] = true,
 }
+
+local NOT_PLUGGED_IN_ELECTRIC_NETWORK = defines.entity_status.not_plugged_in_electric_network
+local NO_POWER = defines.entity_status.no_power
+local LOW_POWER = defines.entity_status.low_power
+
+local ENTITY_STATUS_NORMAL = defines.entity_status.normal
+
+local power_statuses = {
+    [NOT_PLUGGED_IN_ELECTRIC_NETWORK] = NOT_PLUGGED_IN_ELECTRIC_NETWORK,
+    [NO_POWER] = NO_POWER,
+    [LOW_POWER] = LOW_POWER,
+}
+local power_status = NOT_PLUGGED_IN_ELECTRIC_NETWORK
+local function has_power(entity)
+    if (entity and entity.valid) then
+        if (not entity.is_connected_to_electric_network()) then return NOT_PLUGGED_IN_ELECTRIC_NETWORK end
+        if (entity.energy <= 0) then return NO_POWER end
+        if (entity.energy < entity.electric_buffer_size) then return LOW_POWER end
+
+        return  ENTITY_STATUS_NORMAL
+    end
+end
 
 function payloader_controller.on_entity_created(event)
     Log.debug("payloader_controller.on_entity_created")
@@ -743,8 +828,16 @@ function payloader_controller.on_tick(event)
         else
             game = game or set_game()
 
+            -- if (not has_power(payloader.entity)) then goto continue end
+            -- if (power_statuses[has_power(payloader.entity)]) then goto continue end
+            power_status = has_power(payloader.entity)
+
             if (payloader.activated) then
-                if (payloader.entity.disabled_by_control_behavior) then
+                -- if (power_statuses[power_status]) then
+                --     goto continue
+                -- if (payloader.entity.disabled_by_control_behavior) then
+                if (power_statuses[power_status] or payloader.entity.disabled_by_control_behavior) then
+                -- elseif (payloader.entity.disabled_by_control_behavior) then
                     payloader.disabled_by_control_behavior = payloader.disabled_by_control_behavior or tick
                     payloader.ticks_remaining = payloader.ticks_remaining or payloader.crafting_time - (payloader.disabled_by_control_behavior - payloader.activated)
 
@@ -807,16 +900,27 @@ function payloader_controller.on_tick(event)
                     goto continue
                 end
 
-                input_inventory.set_filter(1, { name = CN_PAYLOAD_VEHICLE, quality = "normal", comparator = GREATER_THAN_EQUAL_TO, })
+                input_inventory.set_filter(1, { name = CN_PAYLOAD_VEHICLE, quality = NORMAL, comparator = GREATER_THAN_EQUAL_TO, })
 
-                payloader.recipe = payloader.recipe or payloader.entity.get_recipe()
-                if (payloader.recipe and not payloader.recipe.valid) then
-                    payloader.recipe = nil
-                    goto continue
-                elseif (not payloader.recipe or not valid_payloader_recipes[payloader.recipe.name]) then
+                -- if (power_statuses[power_status]) then goto continue end
+
+                payloader.recipe_tick = payloader.recipe_tick or tick
+
+                if (not payloader.recipe_name or payloader.recipe_tick < tick - 60) then
+                    local payloader_recipe = payloader.entity.get_recipe()
+
+                    if (not payloader_recipe or not payloader_recipe.valid or not valid_payloader_recipes[payloader_recipe.name]) then
+                        payloader.recipe_name = nil
+                        payloader.recipe_tick = tick
+                        goto continue
+                    else
+                        payloader.recipe_name = payloader_recipe.name
+                        payloader.recipe_tick = tick
+                    end
+                elseif (not payloader.recipe_name or not valid_payloader_recipes[payloader.recipe_name]) then
                     goto continue
                 end
-                local payloader_recipe = payloader.recipe
+                local payloader_recipe_name = payloader.recipe_name
 
                 if (payloader.transferred_to_interal and not internal_inventory.is_empty() and not payloader.entity.disabled_by_control_behavior) then
                     local internal_item_stack = internal_inventory[1]
@@ -830,7 +934,7 @@ function payloader_controller.on_tick(event)
                         and item_stack_output_container
                         and item_stack_output_container.valid
                     ) then
-                        if (item_output_recipes[payloader_recipe.name] and internal_item_stack.is_item_with_inventory) then
+                        if (item_output_recipes[payloader_recipe_name] and internal_item_stack.is_item_with_inventory) then
                             local payload_vehicle_inventory = internal_item_stack.get_inventory(defines_payload_vehicle_inventory)
                             if (not payload_vehicle_inventory or not payload_vehicle_inventory.valid) then goto continue end
                             if (not payload_vehicle_inventory.is_empty()) then
@@ -874,7 +978,7 @@ function payloader_controller.on_tick(event)
                     goto continue
                 end
 
-                if (entity_output_recipes[payloader.recipe.name]) then
+                if (entity_output_recipes[payloader_recipe_name]) then
                     local entity_output_inventory = payloader.entity_output_inventory
                     if (not entity_output_inventory.is_empty()) then
                         local item_stack_output_entity_1 = entity_output_inventory[1]
@@ -919,7 +1023,7 @@ function payloader_controller.on_tick(event)
                     local internal_item_stack = internal_inventory[1]
                     if (not internal_item_stack or not internal_item_stack.valid) then goto continue end
 
-                    local recipe_name = payloader_recipe.name or ""
+                    local recipe_name = payloader_recipe_name or ""
 
                     if (    recipe_name == PAYLOADER_LOAD
                         and item_stack_1.valid
@@ -941,11 +1045,13 @@ function payloader_controller.on_tick(event)
                             item_stacks = { item_stack_1, item_stack_2, }
                         elseif(recipe_name == PAYLOADER_UNLOAD) then
                             if (item_stack_1.valid and item_stack_1.valid_for_read) then
-                                table_insert(item_stacks, item_stack_1)
+                                -- table_insert(item_stacks, item_stack_1)
+                                item_stacks[#item_stacks+1] = item_stack_1
                             end
 
                             if (item_stack_2.valid and item_stack_2.valid_for_read) then
-                                table_insert(item_stacks, item_stack_2)
+                                -- table_insert(item_stacks, item_stack_2)
+                                item_stacks[#item_stacks+1] = item_stack_2
                             end
                         end
 
@@ -954,6 +1060,7 @@ function payloader_controller.on_tick(event)
                         }
                         local item_stack_type = nil
                         for i, item_stack in ipairs(item_stacks) do
+                            log(serpent.block(item_stack.type))
                             if (item_stack.type == ITEM_WITH_INVENTORY and item_stack.name == CN_PAYLOAD_VEHICLE) then
                                 local payload_vehicle_inventory = item_stack.get_inventory(defines_payload_vehicle_inventory)
                                 if (payload_vehicle_inventory and payload_vehicle_inventory.valid) then
@@ -1027,7 +1134,7 @@ function payloader_controller.on_tick(event)
                                         payloader.to_finish_crafting = payloader.activated + (payloader_load_recipe_crafting_time_60) * (1 - payloader.entity.crafting_progress)
                                         payloader.crafting_time = payloader_load_recipe_crafting_time_60
                                         payloader.processing = true
-                                        payloader.paused = nil
+                                        payloader.disabled_by_control_behavior = power_statuses[power_status] and tick or nil
                                     end
                                 end
                             end
@@ -1051,9 +1158,142 @@ function payloader_controller.on_tick(event)
                                             payloader.to_finish_crafting = payloader.activated + (payloader_unload_recipe_crafting_time_60) * (1 - payloader.entity.crafting_progress)
                                             payloader.crafting_time = payloader_unload_recipe_crafting_time_60
                                             payloader.processing = true
-                                            payloader.paused = nil
+                                            payloader.disabled_by_control_behavior = power_statuses[power_status] and tick or nil
 
                                             goto continue
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    elseif (
+                            recipe_name == TARGET_COMBINATOR_PROGRAM
+                        and item_stack_2
+                        and item_stack_2.valid
+                        and item_stack_2.valid_for_read
+                    ) then
+                        local signals = payloader.entity.get_signals(circuit_networks[1], circuit_networks[2])
+                        local circuit_network_data = payloader.circuit_network_data or Payloader_Data:new({
+                            unit_number = payloader.entity.unit_number,
+                            surface_index = payloader.surface_index,
+                            surface_name = payloader.entity.surface.name,
+                            manual_entry = {
+                                launch = 0,
+                                x = 0,
+                                y = 0,
+                                space_location_index = payloader.surface_index,
+                            },
+                        })
+
+                        local payloader_signals = {
+                            [circuit_network_data.signals.launch.name] = LAUNCH,
+                            [circuit_network_data.signals.x.name] = X,
+                            [circuit_network_data.signals.y.name] = Y,
+                            [circuit_network_data.signals.space_location_index.name] = SPACE_LOCATION_INDEX,
+                        }
+
+                        local signal = {
+                            launch = nil,
+                            x = nil,
+                            y = nil,
+                            space_location_index = nil,
+                        }
+                        if (    signals
+                            and signals[1]
+                            or
+                                circuit_network_data.manual_entry
+                            and (
+                                    circuit_network_data.manual_entry.x
+                                and circuit_network_data.manual_entry.x ~= 0
+                                or
+                                    circuit_network_data.manual_entry.y
+                                and circuit_network_data.manual_entry.y ~= 0
+                            )
+                            and circuit_network_data.manual_entry.manually_entered
+                        ) then
+                            if (not signals or not signals[1]) then
+                                signal = circuit_network_data.manual_entry
+                            else
+                                for i = 1, #signals, 1 do
+                                    if (not signals[i]) then break end
+                                    if (payloader_signals[signals[i].signal.name or ""]) then signal[payloader_signals[signals[i].signal.name]] = signals[i].count end
+                                end
+                            end
+
+                            signal.space_location_index = signal.space_location_index or payloader.surface_index
+
+                            if ((signal.x or signal.y) and signal.space_location_index) then
+                                local entity_input_inventory = payloader.entity.get_inventory(payloader_inventory_input)
+
+                                if (    output_inventory
+                                    and output_inventory.valid
+                                    and entity_input_inventory
+                                    and entity_input_inventory.valid
+                                    and item_stack_2
+                                    and item_stack_2.valid
+                                    and item_stack_2.is_item_with_tags
+                                    and item_stack_2.prototype
+                                    and item_stack_2.prototype.name == TARGET_COMBINATOR
+                                    and internal_item_stack
+                                    and internal_item_stack.valid
+                                ) then
+                                    if (    not payloader.processing
+                                        and (
+                                                num_target_combinator_program_ingredients == 0
+                                            or
+                                                (function (entity_input_inventory, target_combinator_program_ingredient_filters)
+                                                    local ingredient = nil
+                                                    for i = 1, num_target_combinator_program_ingredients, 1 do
+                                                        ingredient = target_combinator_program_ingredient_filters[i]
+                                                        if (not ingredient or not (entity_input_inventory.get_item_count(ingredient) >= (target_combinator_program_ingredient_amounts[ingredient.name] or 0))) then return end
+                                                    end
+                                                    return true
+                                                end)(entity_input_inventory, target_combinator_program_ingredient_filters)
+                                            )
+                                        and internal_item_stack.transfer_stack(item_stack_2, item_stack_2.count)
+                                    ) then
+                                        local target_tags = internal_item_stack.get_tag(TARGET_TAGS) or {}
+                                        local tag = {
+                                                launch = { value = { type = VIRTUAL, name = SIGNAL_CHECK, quality = NORMAL, }, min = signal.launch, },
+                                                x = { value = { type = VIRTUAL, name = SIGNAL_X, quality = NORMAL, }, min = signal.x, },
+                                                y = { value = { type = VIRTUAL, name = SIGNAL_Y, quality = NORMAL, }, min = signal.y, },
+                                                surface_index = { value = { type = VIRTUAL, name = SIGNAL_I, quality = NORMAL, }, min = signal.space_location_index or payloader.surface_index, },
+                                        }
+                                        target_tags[#target_tags+1] = tag
+                                        local custom_description = string_format(TARGET_TAGS_FORMAT, tag.x.min or 0, tag.y.min or 0, tag.surface_index.min or payloader.surface_index)
+
+                                        internal_item_stack.set_tag(TARGET_TAGS, target_tags)
+                                        internal_item_stack.custom_description = custom_description
+
+                                        payloader.transferred_to_interal = true
+                                        payloader.entity.active = not output_inventory.is_full() and not internal_inventory.is_empty()
+                                        if (payloader.entity.active) then
+                                            payloader.activated = event.tick
+                                            payloader.to_finish_crafting = payloader.activated + (target_combinator_program_recipe_crafting_time_60) * (1 - payloader.entity.crafting_progress)
+                                            payloader.crafting_time = target_combinator_program_recipe_crafting_time_60
+                                            payloader.processing = true
+                                            payloader.disabled_by_control_behavior = power_statuses[power_status] and tick or nil
+                                        else
+                                            payloader.activated = nil
+                                            payloader.crafting_time = nil
+                                            payloader.processing = nil
+                                        end
+                                    else
+                                        if (payloader.activated) then
+                                            if (    payloader.crafting_time
+                                                and event.tick - payloader.activated > payloader.crafting_time
+                                                or
+                                                    payloader.to_finish_crafting
+                                                and payloader.to_finish_crafting >= event.tick
+                                            ) then
+                                                payloader.entity.active = false
+                                                payloader.activated = nil
+                                                payloader.crafting_time = nil
+                                                payloader.processing = nil
+                                            else
+                                                payloader.processing = true
+                                                payloader.disabled_by_control_behavior = power_statuses[power_status] and tick or nil
+                                            end
                                         end
                                     end
                                 end
@@ -1106,19 +1346,19 @@ function locals.create_payloader(params)
         containers = {},
         horizontal = true,
         internal_inventory = params.internal_inventory or (game or set_game()) and create_inventory(1),
-        -- circuit_network_data = Payloader_Data:new({
-        --     unit_number = entity.unit_number,
-        --     -- entity = entity,
-        --     -- surface = entity.surface,
-        --     surface_index = entity.surface.index,
-        --     surface_name = entity.surface.name,
-        --     manual_entry = {
-        --         launch = 0,
-        --         x = 0,
-        --         y = 0,
-        --         space_location_index = entity.surface.index,
-        --     },
-        -- }),
+        circuit_network_data = Payloader_Data:new({
+            unit_number = entity.unit_number,
+            -- entity = entity,
+            -- surface = entity.surface,
+            surface_index = entity.surface.index,
+            surface_name = entity.surface.name,
+            manual_entry = {
+                launch = 0,
+                x = 0,
+                y = 0,
+                space_location_index = entity.surface.index,
+            },
+        }),
     }
 
     local input_position  = { x = entity.position.x - 0.25, y = entity.position.y - 1.5, }

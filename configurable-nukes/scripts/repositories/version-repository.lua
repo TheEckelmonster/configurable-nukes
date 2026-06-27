@@ -1,6 +1,6 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local Log = Log
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Version_Data = require("scripts.data.version-data")
@@ -79,6 +79,10 @@ function version_repository.get_version_data(optionals)
     end
 
     return storage.configurable_nukes.version_data
+end
+
+function version_repository.init(__storage)
+    storage = __storage
 end
 
 return version_repository

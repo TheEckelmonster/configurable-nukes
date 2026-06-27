@@ -1,10 +1,20 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local defines = defines
+local script = script
+
+local cargo_destination_surface = defines.cargo_destination.surface
+local cn_payload_vehicle_inventory = defines.inventory.cn_payload_vehicle
+
+local next = next
+local type = type
+
+local Log = Log
+local Settings_Service = Settings_Service
 
 local Circuit_Network_Validations = require("scripts.validations.circuit-network-data.rocket-silo-validations")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
-local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
+-- local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository")
 local ICBM_Utils = require("scripts.utils.ICBM-utils")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 local Rocket_Silo_Utils = require("scripts.utils.rocket-silo-utils")
@@ -58,7 +68,7 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
             storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
             local k, icbm_data = next(storage.icbm_data.item_numbers)
             while k and icbm_data do
-                if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == data.cargo_pod.unit_number) then
+                if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == event.cargo_pod.unit_number) then
                     break
                 end
 
@@ -78,25 +88,65 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
     -- Log.warn(cargo_pod.cargo_pod_destination)
     if (not cargo_pod.cargo_pod_destination) then return end
 
+    local return_val = nil
+
     -- Check the carge; if the cargo pod doesn't have a station and has a destination type of 1
     --   -> no station implies it was sent to "orbit"
     --   -> .type is 1 for some reason, and not defines.cargo_destination.orbit as I would have thought
     if (    cargo_pod.cargo_pod_destination
         and not cargo_pod.cargo_pod_destination.station
-        and cargo_pod.cargo_pod_destination.type == defines.cargo_destination.surface)
+        and cargo_pod.cargo_pod_destination.type == cargo_destination_surface)
     then
-        local inventory = cargo_pod.get_inventory(defines.inventory.cn_payload_vehicle)
+        local inventory = cargo_pod.get_inventory(cn_payload_vehicle_inventory)
 
         if (inventory and inventory.valid) then
+            inventory.sort_and_merge()
+            local count_empty_stacks = inventory.count_empty_stacks(true, true)
             local destroy_cargo_pod = false
             local icbm_data = nil
-            for _, item in ipairs(inventory.get_contents()) do
+            -- for _, item in ipairs(inventory.get_contents()) do
+            -- local item = nil
+
+            log(serpent.block(#inventory))
+            log(serpent.block(count_empty_stacks))
+            for i = 1, #inventory - count_empty_stacks, 1 do
+                local item = inventory[i]
+                if (not item or not item.valid or not item.valid_for_read) then goto continue end
+                log(serpent.block(_))
+                log(serpent.block(item))
                 if (valid_payload({ item_name = item.name })) then
-                    local return_val = nil
-                    if (icbm_data) then
+                    local tags = nil
+                    if (item.name == "cn-payload-vehicle") then
+                        local target_combinator_stack = nil
+                        local pv_inventory = item.get_inventory(cn_payload_vehicle_inventory)
+                        if (pv_inventory and pv_inventory.valid) then
+                            pv_inventory.sort_and_merge()
+                            for i = 1, #pv_inventory - pv_inventory.count_empty_stacks(), 1 do
+                                if (    pv_inventory[i]
+                                    and pv_inventory[i].valid
+                                    and pv_inventory[i].valid_for_read
+                                    and pv_inventory[i].name == "target-combinator"
+                                ) then
+                                    target_combinator_stack = pv_inventory[i]
+                                end
+                            end
+                        end
+
+                        if (target_combinator_stack and target_combinator_stack.valid and target_combinator_stack.valid_for_read) then
+                            tags = target_combinator_stack.tags
+                        end
+                    end
+
+                    log(serpent.block(tags))
+
+
+                    -- local return_val = nil
+                    -- if (icbm_data) then
+                    if (icbm_data and icbm_data.cargo_pod) then
                         return_val, icbm_data = ICBM_Utils.on_cargo_pod_finished_ascending({
                             tick = event.tick,
                             icbm_data = icbm_data,
+                            tags = tags,
                         })
                     else
                         return_val, icbm_data = ICBM_Utils.on_cargo_pod_finished_ascending({
@@ -104,6 +154,8 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
                             surface = cargo_pod.surface,
                             item = item,
                             cargo_pod = cargo_pod,
+                            cargo_pod_unit_number = cargo_pod and cargo_pod.valid and cargo_pod.unit_number,
+                            tags = tags,
                         })
                     end
 
@@ -122,11 +174,47 @@ function rocket_silo_service.on_cargo_pod_finished_ascending(event)
 
                     if (icbm_data) then icbm_data.cargo_pod = nil end
 
-                    Log.info("destroying cargo pod")
-                    if (cargo_pod.destroy({ raise_destroy = true })) then
-                        Log.debug("cargo pod destroyed")
+                    -- Log.info("destroying cargo pod")
+                    -- if (cargo_pod.destroy({ raise_destroy = true })) then
+                    --     Log.debug("cargo pod destroyed")
+                    -- end
+                    -- break
+                end
+
+                ::continue::
+            end
+
+            if (destroy_cargo_pod) then
+                if (icbm_data) then icbm_data.cargo_pod = nil end
+
+                if (return_val and return_val >= 0 and icbm_data) then
+                    log(serpent.block(cargo_pod.surface))
+
+                    local RR_level = 2
+                    local RR_theshold = 0.8
+
+                    if (return_val == 0) then RR_threshold = RR_threshold ^ 0.4 end
+
+                    if (math.random() < RR_theshold) then
+                        local cargo_pod = cargo_pod.surface.create_entity({ name = "cargo-pod", position = {0,0}, force = icbm_data.source_silo.force, })
+                        if (cargo_pod and cargo_pod.valid) then
+                            local inventory = cargo_pod.get_inventory(defines.inventory.cargo_unit)
+                            if (inventory and inventory.valid) then
+                                inventory.insert({ name = "ipbm-rocket-part", count = 2 * RR_level + math.random(0, 2 * RR_level)})
+                                cargo_pod.cargo_pod_origin = icbm_data.source_silo
+
+                                -- cargo_pod.surface.request_to_generate_chunks({0,0}, 3)
+                                -- cargo_pod.surface.force_generate_chunk_requests()
+                                cargo_pod.cargo_pod_destination = { type = cargo_destination_surface, surface = cargo_pod.surface, }
+                                cargo_pod.force_finish_ascending()
+                            end
+                        end
                     end
-                    break
+                end
+
+                Log.info("destroying cargo pod")
+                if (cargo_pod.destroy({ raise_destroy = true })) then
+                    Log.debug("cargo pod destroyed")
                 end
             end
         end
@@ -167,6 +255,10 @@ function rocket_silo_service.rocket_silo_cloned(data)
         circuit_network_data = destination_rocket_silo_data.circuit_network_data,
         reinitialize = true,
     })
+
+    storage.rocket_silos = storage.rocket_silos or {}
+    storage.rocket_silos[source_rocket_silo_data.entity.unit_number] = nil
+    storage.rocket_silos[destination_rocket_silo_data.entity.unit_number] = destination_rocket_silo_data
 
     Log.debug("Cloned a rocket silo")
     Log.info(data.destination_silo)
@@ -254,6 +346,10 @@ function rocket_silo_service.scrub_all_launches(data)
     if (i > 0 and force_launch_data.force and force_launch_data.force.valid) then
         force_launch_data.force.print({ "rocket-silo-service.scrub-all-launches" })
     end
+end
+
+function rocket_silo_service.init(__storage)
+    storage = __storage
 end
 
 return rocket_silo_service

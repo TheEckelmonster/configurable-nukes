@@ -1,12 +1,10 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
 
 local Constants = require("scripts.constants.constants")
 local Data = require("scripts.data.data")
 
-local sa_active = mods and mods["space-age"] and true or script and script.active_mods and script.active_mods["space-age"]
-local se_active = mods and mods["space-exploration"] and true or script and script.active_mods and script.active_mods["space-exploration"]
+local sa_active = script and script.active_mods and script.active_mods["space-age"]
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local icbm_data = {}
 
@@ -234,6 +232,10 @@ function icbm_data:validate_fields()
         if (not self.player_launched_by or not self.player_launched_by.valid) then self.player_launched_by = nil end
         if (not self.total_payload_items) then self.total_payload_items = icbm_data.total_payload_items end
     end
+end
+
+function icbm_data.init(__storage)
+    storage = __storage
 end
 
 setmetatable(icbm_data, Data)

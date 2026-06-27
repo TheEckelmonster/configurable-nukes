@@ -1,16 +1,21 @@
+local storage
+
+local Circuit_Network_Rocket_Silo_Data = Circuit_Network_Rocket_Silo_Data
+local Log = Log
+
 local __Data_Utils = require("data-utils")
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
-local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
+-- local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
 local Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 
 local rocket_silo_repository = {}
 
 function rocket_silo_repository.save_rocket_silo_data(rocket_silo, optionals)
-    Log.debug("rocket_silo_repository.save_rocket_silo_data")
-    Log.info(rocket_silo)
-    Log.info(optionals)
+    -- Log.debug("rocket_silo_repository.save_rocket_silo_data")
+    -- Log.info(rocket_silo)
+    -- Log.info(optionals)
 
     local return_val = Rocket_Silo_Data:new()
 
@@ -43,11 +48,20 @@ function rocket_silo_repository.save_rocket_silo_data(rocket_silo, optionals)
     return_val.surface_name = rocket_silo.surface.name
     return_val.surface_index = rocket_silo.surface.index
 
-    return_val.circuit_network_data.unit_number = rocket_silo.unit_number
-    return_val.circuit_network_data.entity = rocket_silo
-    return_val.circuit_network_data.surface = rocket_silo.surface
-    return_val.circuit_network_data.surface_name = rocket_silo.surface.name
-    return_val.circuit_network_data.surface_index = rocket_silo.surface.index
+    -- return_val.circuit_network_data.unit_number = rocket_silo.unit_number
+    -- return_val.circuit_network_data.entity = rocket_silo
+    -- return_val.circuit_network_data.surface = rocket_silo.surface
+    -- return_val.circuit_network_data.surface_name = rocket_silo.surface.name
+    -- return_val.circuit_network_data.surface_index = rocket_silo.surface.index
+
+    -- return_val.circuit_network_data = Circuit_Network_Rocket_Silo_Data:new(return_val.circuit_network_data)
+    return_val.circuit_network_data = Circuit_Network_Rocket_Silo_Data:new({
+        unit_number = rocket_silo.unit_number,
+        entity = rocket_silo,
+        -- surface = rocket_silo.surface,
+        surface_name = rocket_silo.surface.name,
+        surface_index = rocket_silo.surface.index,
+    })
 
     return_val.circuit_network_data.valid = true
 
@@ -59,10 +73,10 @@ function rocket_silo_repository.save_rocket_silo_data(rocket_silo, optionals)
 end
 
 function rocket_silo_repository.update_rocket_silo_data(source_silo, update_data, optionals)
-    Log.debug("rocket_silo_repository.update_rocket_silo_data")
-    Log.info(source_silo)
-    Log.info(update_data)
-    Log.info(optionals)
+    -- Log.debug("rocket_silo_repository.update_rocket_silo_data")
+    -- Log.info(source_silo)
+    -- Log.info(update_data)
+    -- Log.info(optionals)
 
     local return_val = Rocket_Silo_Data:new()
 
@@ -116,14 +130,40 @@ function rocket_silo_repository.update_rocket_silo_data(source_silo, update_data
 
     rocket_silos[update_data.unit_number] = return_val
 
+    storage.rocket_silos = storage.rocket_silos or {}
+    storage.rocket_silos[return_val.unit_number] = return_val
+
+    return_val.surface_name = return_val.surface_name or planet_name
+
+    storage.surfaces = storage.surfaces or {}
+    storage.surfaces[return_val.surface_name] = storage.surfaces[return_val.surface_name] or {}
+    storage.surfaces[return_val.surface_name][return_val.unit_number] = return_val
+
+    storage.ordered_rocket_silos = storage.ordered_rocket_silos or {}
+    local ordered_rocket_silos = storage.ordered_rocket_silos
+    local mod = return_val.unit_number % 60
+    ordered_rocket_silos[mod] = ordered_rocket_silos[mod] or {}
+
+    local already_exists = false
+    for i = 1, #ordered_rocket_silos[mod], 1 do
+        if (ordered_rocket_silos[mod][i] and ordered_rocket_silos[mod][i].unit_number == return_val.unit_number) then
+            ordered_rocket_silos[mod][i] = return_val.circuit_network_data
+            already_exists = true
+            break
+        end
+    end
+    if (not already_exists) then
+        table.insert(ordered_rocket_silos[mod], return_val.circuit_network_data)
+    end
+
     return return_val
 end
 
 function rocket_silo_repository.delete_rocket_silo_data_by_unit_number(planet_name, unit_number, optionals)
-    Log.debug("rocket_silo_repository.delete_rocket_silo_data_by_unit_number")
-    Log.info(planet_name)
-    Log.info(unit_number)
-    Log.info(optionals)
+    -- Log.debug("rocket_silo_repository.delete_rocket_silo_data_by_unit_number")
+    -- Log.info(planet_name)
+    -- Log.info(unit_number)
+    -- Log.info(optionals)
 
     local return_val = false
 
@@ -152,10 +192,10 @@ function rocket_silo_repository.delete_rocket_silo_data_by_unit_number(planet_na
 end
 
 function rocket_silo_repository.get_rocket_silo_data(planet_name, unit_number, optionals)
-    Log.debug("rocket_silo_repository.get_rocket_silo_data")
-    Log.info(planet_name)
-    Log.info(unit_number)
-    Log.info(optionals)
+    -- Log.debug("rocket_silo_repository.get_rocket_silo_data")
+    -- Log.info(planet_name)
+    -- Log.info(unit_number)
+    -- Log.info(optionals)
 
     local return_val = Rocket_Silo_Data:new()
 
@@ -177,6 +217,10 @@ function rocket_silo_repository.get_rocket_silo_data(planet_name, unit_number, o
     local rocket_silos = storage.configurable_nukes.rocket_silo_meta_data[planet_name].rocket_silos
 
     return rocket_silos[unit_number]
+end
+
+function rocket_silo_repository.init(__storage)
+    storage = __storage
 end
 
 return rocket_silo_repository

@@ -6,8 +6,10 @@ local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-uti
 
 local se_active = mods and mods["space-exploration"] and true
 
-local do_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_DO_TINT.name, })
-local payloader_base_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_BASE_TINT.name, }) or { r = 1.0, g = 0.0, b = 0.0, a = 1.0, }
+-- local do_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_DO_TINT.name, })
+-- local payloader_base_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_BASE_TINT.name, }) or { r = 1.0, g = 0.0, b = 0.0, a = 1.0, }
+local do_tint = false
+local payloader_base_tint = { r = 1.0, g = 0.0, b = 0.0, a = 1.0, }
 
 local corpse_icon_path = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants.png"
 local corpse_icon = { icon = corpse_icon_path, size = 64, scale = 1, }
@@ -23,12 +25,12 @@ if (do_tint) then
         {
             icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-alpha.png",
             size = 64,
-            scale = 1,
+            scale = 0.5,
         },
         {
             icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-final-overlay.png",
             size = 64,
-            scale = 1,
+            scale = 0.5,
         },
     }
 end
@@ -38,51 +40,62 @@ local payloader_corpse = Util.table.deepcopy(data.raw["corpse"]["assembling-mach
 payloader_corpse.name = "payloader-remnants"
 payloader_corpse.icons = corpse_icons
 
-local animations = {
-    grayscale = make_rotated_animation_variations_from_sheet(3,
-    {
-        filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-grayscale.png",
-        line_length = 1,
-        width = 328,
-        height = 282,
-        direction_count = 1,
-        shift = Util.by_pixel(0, 9.5),
-        scale = 0.5,
-        tint = payloader_base_tint,
-    }),
-    alpha = make_rotated_animation_variations_from_sheet(3,
-    {
-        filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-alpha.png",
-        line_length = 1,
-        width = 328,
-        height = 282,
-        direction_count = 1,
-        shift = Util.by_pixel(0, 9.5),
-        scale = 0.5,
-        tint = payloader_base_tint,
-    }),
-    overlay = make_rotated_animation_variations_from_sheet(3,
-    {
-        filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-final-overlay.png",
-        line_length = 1,
-        width = 328,
-        height = 282,
-        direction_count = 1,
-        shift = Util.by_pixel(0, 9.5),
-        scale = 0.5,
-        tint = payloader_base_tint,
-    }),
-}
+if (do_tint) then
+    local animations = {
+        grayscale = make_rotated_animation_variations_from_sheet(3,
+        {
+            filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-grayscale.png",
+            line_length = 1,
+            width = 328,
+            height = 282,
+            direction_count = 1,
+            shift = Util.by_pixel(0, 9.5),
+            scale = 0.5,
+            tint = payloader_base_tint,
+        }),
+        alpha = make_rotated_animation_variations_from_sheet(3,
+        {
+            filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-alpha.png",
+            line_length = 1,
+            width = 328,
+            height = 282,
+            direction_count = 1,
+            shift = Util.by_pixel(0, 9.5),
+            scale = 0.5,
+        }),
+        overlay = make_rotated_animation_variations_from_sheet(3,
+        {
+            filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-final-overlay.png",
+            line_length = 1,
+            width = 328,
+            height = 282,
+            direction_count = 1,
+            shift = Util.by_pixel(0, 9.5),
+            scale = 0.5,
+        }),
+    }
 
-local animation = {}
-local num_animations = #animations
-for i = 1, 3, 1 do
-    table.insert(animation, animations.grayscale[i])
-    table.insert(animation, animations.alpha[i])
-    table.insert(animation, animations.overlay[i])
+    local animation = {}
+    local num_animations = #animations
+    for i = 1, 3, 1 do
+        table.insert(animation, animations.grayscale[i])
+        table.insert(animation, animations.alpha[i])
+        table.insert(animation, animations.overlay[i])
+    end
+
+    payloader_corpse.animation = animation
+else
+    payloader_corpse.animation = make_rotated_animation_variations_from_sheet(3,
+    {
+        filename = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants.png",
+        line_length = 1,
+        width = 328,
+        height = 282,
+        direction_count = 1,
+        shift = Util.by_pixel(0, 9.5),
+        scale = 0.5,
+    })
 end
-
-payloader_corpse.animation = animation
 
 data:extend({ payloader_corpse, })
 
@@ -90,7 +103,7 @@ data:extend({ payloader_corpse, })
 local payloader = Util.table.deepcopy(data.raw["assembling-machine"]["assembling-machine-3"])
 
 local icon_path = "__configurable-nukes__/graphics/icons/payloader/payloader.png"
-local icon = { icon = icon_path, size = 64, scale = 1, }
+local icon = { icon = icon_path, size = 64, scale = 0.5, }
 local icons = { icon, }
 
 if (do_tint) then
@@ -103,12 +116,12 @@ if (do_tint) then
         {
             icon = "__configurable-nukes__/graphics/icons/payloader/payloader-base-alpha.png",
             size = 64,
-            scale = 1,
+            scale = 0.5,
         },
         {
             icon = "__configurable-nukes__/graphics/icons/payloader/payloader-final-overlay.png",
             size = 64,
-            scale = 1,
+            scale = 0.5,
         },
     }
 end
@@ -116,7 +129,9 @@ end
 payloader.name = "payloader"
 payloader.icon = nil
 payloader.icons = icons
-payloader.flags = { "placeable-neutral", "placeable-player", "player-creation", "no-automated-item-removal", "no-automated-item-insertion", }
+-- payloader.flags = { "placeable-neutral", "placeable-player", "player-creation", "no-automated-item-removal", "no-automated-item-insertion", }
+payloader.flags = { "placeable-neutral", "placeable-player", "player-creation", "no-automated-item-removal", }
+-- payloader.flags = { "placeable-neutral", "placeable-player", "player-creation", }
 payloader.minable.result = "payloader"
 payloader.max_health = payloader.max_health * 1.25
 payloader.corpse = "payloader-remnants"
@@ -257,9 +272,9 @@ payloader.graphics_set =
     animation =
     {
         north = { layers = Util.table.deepcopy(layers), },
-        east = { layers = Util.table.deepcopy(layers), },
+        east  = { layers = Util.table.deepcopy(layers), },
         south = { layers = Util.table.deepcopy(layers), },
-        west = { layers = Util.table.deepcopy(layers), },
+        west  = { layers = Util.table.deepcopy(layers), },
     },
 }
 
@@ -274,7 +289,6 @@ payloader.energy_source =
     drain = "100kW",
 }
 payloader.energy_usage = "500kW"
-payloader.ingredient_count = 0
 payloader.module_slots = 2
 payloader.allowed_effects = { "consumption", "pollution" }
 
@@ -288,8 +302,8 @@ data:extend({
         name = "payloader-container-input",
         icon = "__configurable-nukes__/graphics/icons/payloader/payloader.png",
         icon_size = 64,
-        -- flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map" },
-        flags = { "placeable-neutral", "player-creation", "not-deconstructable", "not-on-map" },
+        -- flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map", "no-automated-item-removal", },
+        flags = { "placeable-neutral", "player-creation", "not-deconstructable", "not-on-map", "no-automated-item-removal", },
         hidden = true,
         factoriopedia_alternative = "payloader",
         max_health = payloader.max_health,
@@ -317,8 +331,8 @@ data:extend({
         name = "payloader-container-output",
         icon = "__configurable-nukes__/graphics/icons/payloader/payloader.png",
         icon_size = 64,
-        -- flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map" },
-        flags = { "placeable-neutral", "player-creation", "not-deconstructable", "not-on-map" },
+        -- flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map", "no-automated-item-insertion", },
+        flags = { "placeable-neutral", "player-creation", "not-deconstructable", "not-on-map", "no-automated-item-insertion", },
         hidden = true,
         factoriopedia_alternative = "payloader",
         max_health = payloader.max_health,
@@ -334,6 +348,7 @@ data:extend({
             filename = "__configurable-nukes__/graphics/icons/empty.png",
             size = 1,
         },
+        -- inventory_size = 3,
         inventory_size = 2,
         inventory_type = "with_filters_and_bar",
         circuit_connector = circuit_connector_definitions["offshore-pump"],
@@ -346,8 +361,8 @@ data:extend({
         name = "payloader-container-input-vertical",
         icon = "__configurable-nukes__/graphics/icons/payloader/payloader.png",
         icon_size = 64,
-        -- flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map" },
-        flags = { "placeable-neutral", "player-creation", "not-deconstructable", "not-on-map" },
+        -- flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map", "no-automated-item-removal", },
+        flags = { "placeable-neutral", "player-creation", "not-deconstructable", "not-on-map", "no-automated-item-removal", },
         hidden = true,
         factoriopedia_alternative = "payloader",
         max_health = payloader.max_health,
@@ -375,8 +390,8 @@ data:extend({
         name = "payloader-container-output-vertical",
         icon = "__configurable-nukes__/graphics/icons/payloader/payloader.png",
         icon_size = 64,
-        -- flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map" },
-        flags = { "placeable-neutral", "player-creation", "not-deconstructable", "not-on-map" },
+        -- flags = { "placeable-neutral", "player-creation", "not-blueprintable", "not-deconstructable", "not-on-map", "no-automated-item-insertion", },
+        flags = { "placeable-neutral", "player-creation", "not-deconstructable", "not-on-map", "no-automated-item-insertion", },
         hidden = true,
         factoriopedia_alternative = "payloader",
         max_health = payloader.max_health,
@@ -392,6 +407,7 @@ data:extend({
             filename = "__configurable-nukes__/graphics/icons/empty.png",
             size = 1,
         },
+        -- inventory_size = 3,
         inventory_size = 2,
         inventory_type = "with_filters_and_bar",
         circuit_connector = circuit_connector_definitions["offshore-pump"],

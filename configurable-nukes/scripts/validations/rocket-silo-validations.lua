@@ -1,6 +1,8 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local type = type
+
+local Log = Log
 
 local String_Utils = require("scripts.utils.string-utils")
 
@@ -60,6 +62,10 @@ function rocket_silo_validations.is_targetable_surface(data)
     end
 
     return true
+end
+
+function rocket_silo_validations.init(__storage)
+    storage = __storage
 end
 
 return rocket_silo_validations

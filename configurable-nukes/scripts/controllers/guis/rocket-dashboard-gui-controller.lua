@@ -1,6 +1,7 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local Event_Handler = Event_Handler
+local Log = Log
 
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Custom_Input = require("prototypes.custom-input.custom-input")
@@ -289,7 +290,7 @@ function rocket_dashboard_gui_controller.on_nth_tick(event)
     if (not event) then return end
     if (not event.tick) then return end
     if (not event.nth_tick) then return end
-    if (not storage.nth_tick) then storage.nth_tick = {} end
+
     rocket_dashboard_gui_controller.nth_tick = event.nth_tick
 
     if (game and game.forces) then
@@ -407,5 +408,10 @@ Event_Handler:register_event({
     func_name = "rocket_dashboard_gui_controller.cn_on_init_complete",
     func = rocket_dashboard_gui_controller.cn_on_init_complete,
 })
+
+
+function rocket_dashboard_gui_controller.init(__storage)
+    storage = __storage
+end
 
 return rocket_dashboard_gui_controller

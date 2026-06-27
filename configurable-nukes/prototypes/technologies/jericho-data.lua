@@ -42,7 +42,7 @@ local get_jericho_research_prerequisites = function ()
 
     while param ~= nil do
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
         for k, v in pairs(data.raw) do
             found_match = false
@@ -111,7 +111,7 @@ local get_jericho_research_ingredients = function ()
     while param ~= nil and param_val ~= nil do
 
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
         for k, v in pairs(data.raw) do
             found_match = false

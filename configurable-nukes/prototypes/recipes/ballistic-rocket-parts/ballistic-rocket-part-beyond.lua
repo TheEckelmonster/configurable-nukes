@@ -1,3 +1,5 @@
+local mods = mods
+
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 
@@ -11,176 +13,194 @@ local Startup_Settings_Constants = require("settings.startup.startup-settings-co
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
--- INPUT_MULTIPLIER
-local get_input_multiplier = function ()
-    return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER.name })
-end
--- BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES
-local get_ballistic_rocket_part_additional_crafting_machines = function ()
-    local setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES.default_value
+local Setting_Utils = require("settings.settings-utils")
 
-    if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES.name]) then
-        setting = settings.startup[Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES.name].value
-    end
+-- -- INPUT_MULTIPLIER
+-- local get_input_multiplier = function ()
+--     return Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_INPUT_MULTIPLIER.name })
+-- end
+-- -- BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES
+-- local get_ballistic_rocket_part_additional_crafting_machines = function ()
+--     local setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES.default_value
 
-    local crafting_machines = {}
+--     if (settings and settings.startup and settings.startup[Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES.name]) then
+--         setting = settings.startup[Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES.name].value
+--     end
 
-    --[[ Looks for:
-            >= 0 commas,
-            >= 0 space characters,
-            >= 1 alphanumerics/dashes/space characters,
-            >= 0 space characters,
-            >= 0 commas,
-    ]]
-    local search_pattern = ",*%s*([%w%-%s]+)%s*,*"
-    local i, j, param = string.find(setting, search_pattern, 1)
-    local possible_matches = {}
-    local found_match = false
+--     local crafting_machines = {}
 
-    local found_func = function(param, t, type)
-        for _, j in pairs(t) do
-            if (j.name == param) then
-                found_match = true
-                break
-            elseif (j.name:find(param, 1, true)) then
-                possible_matches[j.name] = { param = param, }
-            end
-        end
-    end
+--     --[[ Looks for:
+--             >= 0 commas,
+--             >= 0 space characters,
+--             >= 1 alphanumerics/dashes/space characters,
+--             >= 0 space characters,
+--             >= 0 commas,
+--     ]]
+--     local search_pattern = ",*%s*([%w%-%s]+)%s*,*"
+--     local i, j, param = string.find(setting, search_pattern, 1)
+--     local possible_matches = {}
+--     local found_match = false
 
-    while param ~= nil do
-        --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+--     local found_func = function(param, t, type)
+--         for _, j in pairs(t) do
+--             if (j.name == param) then
+--                 found_match = true
+--                 break
+--             elseif (j.name:find(param, 1, true)) then
+--                 possible_matches[j.name] = { param = param, }
+--             end
+--         end
+--     end
 
-        for k, v in pairs(data.raw) do
-            found_match = false
-            if (k == "recipe-category") then
-                found_func(param, v, "recipe-category")
-            end
+--     while param ~= nil do
+--         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
+--         param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
-            if (found_match) then break end
-        end
+--         for k, v in pairs(data.raw) do
+--             found_match = false
+--             if (k == "recipe-category") then
+--                 found_func(param, v, "recipe-category")
+--             end
 
-        if (found_match) then table.insert(crafting_machines, param) end
+--             if (found_match) then break end
+--         end
 
-        setting = string.sub(setting, j + 1, #setting)
+--         if (found_match) then table.insert(crafting_machines, param) end
 
-        i, j, param = string.find(setting, search_pattern, 1)
-    end
+--         setting = string.sub(setting, j + 1, #setting)
 
-    -- if (#crafting_machines <= 0) then
-    --     for k, v in pairs(possible_matches) do
-    --         table.insert(crafting_machines, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
-    --     end
-    -- end
+--         i, j, param = string.find(setting, search_pattern, 1)
+--     end
 
-    if (#crafting_machines <= 0) then crafting_machines = nil end
+--     -- if (#crafting_machines <= 0) then
+--     --     for k, v in pairs(possible_matches) do
+--     --         table.insert(crafting_machines, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
+--     --     end
+--     -- end
 
-    return crafting_machines
-end
+--     if (#crafting_machines <= 0) then crafting_machines = nil end
 
-local ingredients = {}
-local ballistic_rocket_part_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.name, default_value = "" })
+--     return crafting_machines
+-- end
 
---[[ Looks for:
-        >= 0 commas,
-        >= 0 space characters,
-        >= 1 alphanumerics/dashes/space characters,
-        >= 0 space characters,
-        == 1 equals,
-        >= 0 space characters,
-        >= 1 digits,
-        >= 0 space characters,
-        >= 0 commas,
-        >= 0 space characters,
-]]
-local search_pattern = ",*%s*([%w%-%s]+)%s*=%s*(%d+)%s*,*"
-local i, j, param, param_val = string.find(ballistic_rocket_part_recipe_string, search_pattern, 1)
-local possible_matches = {}
-local found_match = false
-local ingredient_type = "item"
+-- local ingredients = {}
+-- local ballistic_rocket_part_recipe_string = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.name, default_value = "" })
 
-local found_func = function (param, param_val, t, type)
-    for _, j in pairs(t) do
-        if (j.name == param) then
-            ingredient_type = type == "fluid" and "fluid" or "item"
-            found_match = true
-            break
-        elseif (j.name:find(param, 1, true)) then
-            possible_matches[j.name] = { param = param, param_val = param_val, }
-        end
-    end
-end
+-- --[[ Looks for:
+--         >= 0 commas,
+--         >= 0 space characters,
+--         >= 1 alphanumerics/dashes/space characters,
+--         >= 0 space characters,
+--         == 1 equals,
+--         >= 0 space characters,
+--         >= 1 digits,
+--         >= 0 space characters,
+--         >= 0 commas,
+--         >= 0 space characters,
+-- ]]
+-- local search_pattern = ",*%s*([%w%-%s]+)%s*=%s*(%d+)%s*,*"
+-- local i, j, param, param_val = string.find(ballistic_rocket_part_recipe_string, search_pattern, 1)
+-- local possible_matches = {}
+-- local found_match = false
+-- local ingredient_type = "item"
 
-while param ~= nil and param_val ~= nil do
+-- local found_func = function (param, param_val, t, type)
+--     for _, j in pairs(t) do
+--         if (j.name == param) then
+--             ingredient_type = type == "fluid" and "fluid" or "item"
+--             found_match = true
+--             break
+--         elseif (j.name:find(param, 1, true)) then
+--             possible_matches[j.name] = { param = param, param_val = param_val, }
+--         end
+--     end
+-- end
 
-    --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-    param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+-- while param ~= nil and param_val ~= nil do
 
-    for k, v in pairs(data.raw) do
-        found_match = false
-        if (k == "ammo") then found_func(param, param_val, v, "ammo")
-        elseif (k == "blueprint") then found_func(param, param_val, v, "blueprint")
-        elseif (k == "blueprint-book") then found_func(param, param_val, v, "blueprint-book")
-        elseif (k == "capsule") then found_func(param, param_val, v, "capsule")
-        elseif (k == "gun") then found_func(param, param_val, v, "gun")
-        elseif (k == "item")  then found_func(param, param_val, v, "item")
-        elseif (k == "item-with-label")  then found_func(param, param_val, v, "item-with-label")
-        elseif (k == "item-with-tags")  then found_func(param, param_val, v, "item-with-tags")
-        elseif (k == "item-with-inventory")  then found_func(param, param_val, v, "item-with-inventory")
-        elseif (k == "item-with-entity-data") then found_func(param, param_val, v, "item-with-entity-data")
-        elseif (k == "fluid")  then found_func(param, param_val, v, "fluid")
-        elseif (k == "module") then found_func(param, param_val, v, "module")
-        elseif (k == "rail-planner") then found_func(param, param_val, v, "rail-planner")
-        elseif (k == "repair-tool") then found_func(param, param_val, v, "repair-tool")
-        elseif (k == "spidertron-remote") then found_func(param, param_val, v, "spidertron-remote")
-        elseif (k == "armor") then found_func(param, param_val, v, "armor")
-        elseif (k == "tool") then found_func(param, param_val, v, "tool")
-        elseif (k == "upgrade-item") then found_func(param, param_val, v, "upgrade-item")
-        end
+--     --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
+--     param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
-        if (found_match) then break end
-    end
+--     for k, v in pairs(data.raw) do
+--         found_match = false
+--         if (k == "ammo") then found_func(param, param_val, v, "ammo")
+--         elseif (k == "blueprint") then found_func(param, param_val, v, "blueprint")
+--         elseif (k == "blueprint-book") then found_func(param, param_val, v, "blueprint-book")
+--         elseif (k == "capsule") then found_func(param, param_val, v, "capsule")
+--         elseif (k == "gun") then found_func(param, param_val, v, "gun")
+--         elseif (k == "item")  then found_func(param, param_val, v, "item")
+--         elseif (k == "item-with-label")  then found_func(param, param_val, v, "item-with-label")
+--         elseif (k == "item-with-tags")  then found_func(param, param_val, v, "item-with-tags")
+--         elseif (k == "item-with-inventory")  then found_func(param, param_val, v, "item-with-inventory")
+--         elseif (k == "item-with-entity-data") then found_func(param, param_val, v, "item-with-entity-data")
+--         elseif (k == "fluid")  then found_func(param, param_val, v, "fluid")
+--         elseif (k == "module") then found_func(param, param_val, v, "module")
+--         elseif (k == "rail-planner") then found_func(param, param_val, v, "rail-planner")
+--         elseif (k == "repair-tool") then found_func(param, param_val, v, "repair-tool")
+--         elseif (k == "spidertron-remote") then found_func(param, param_val, v, "spidertron-remote")
+--         elseif (k == "armor") then found_func(param, param_val, v, "armor")
+--         elseif (k == "tool") then found_func(param, param_val, v, "tool")
+--         elseif (k == "upgrade-item") then found_func(param, param_val, v, "upgrade-item")
+--         end
 
-    if (found_match) then table.insert(ingredients, { type = ingredient_type or "item", name = param, amount = param_val * get_input_multiplier(), }) end
+--         if (found_match) then break end
+--     end
 
-    ballistic_rocket_part_recipe_string = string.sub(ballistic_rocket_part_recipe_string, j + 1, #ballistic_rocket_part_recipe_string)
+--     if (found_match) then table.insert(ingredients, { type = ingredient_type or "item", name = param, amount = param_val * get_input_multiplier(), }) end
 
-    i, j, param, param_val = string.find(ballistic_rocket_part_recipe_string, search_pattern, 1)
-end
+--     ballistic_rocket_part_recipe_string = string.sub(ballistic_rocket_part_recipe_string, j + 1, #ballistic_rocket_part_recipe_string)
 
-if (not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE.name })) then
-    -- if (#ingredients <= 0) then
-    --     for k, v in pairs(possible_matches) do
-    --         table.insert(ingredients, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
-    --     end
-    -- end
+--     i, j, param, param_val = string.find(ballistic_rocket_part_recipe_string, search_pattern, 1)
+-- end
 
-    if (#ingredients <= 0) then
-        ingredients = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.ingredients
-        if (ingredients) then for k, v in pairs(ingredients) do v.amount = v.amount * get_input_multiplier() end end
-    end
-end
+-- if (not Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE_ALLOW_NONE.name })) then
+--     -- if (#ingredients <= 0) then
+--     --     for k, v in pairs(possible_matches) do
+--     --         table.insert(ingredients, { type = "item", name = k, amount = v.param_val * get_input_multiplier(), })
+--     --     end
+--     -- end
+
+--     if (#ingredients <= 0) then
+--         ingredients = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.ingredients
+--         if (ingredients) then for k, v in pairs(ingredients) do v.amount = v.amount * get_input_multiplier() end end
+--     end
+-- end
 
 local name_prefix = se_active and "se-" or ""
 
 local rocket_part_recipe = data.raw["recipe"]["rocket-part"]
 local ipbm_rocket_part_beyond = Util.table.deepcopy(rocket_part_recipe)
 
--- ipbm_rocket_part_beyond.name = "ipbm-rocket-part-beyond"
-ipbm_rocket_part_beyond.name = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.recipe_name
+ipbm_rocket_part_beyond.name = "ipbm-rocket-part-beyond"
+-- ipbm_rocket_part_beyond.name = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.recipe_name
+-- ipbm_rocket_part_beyond.name = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.name
 ipbm_rocket_part_beyond.energy_required = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_CRAFTING_TIME.name })
-ipbm_rocket_part_beyond.ingredients = ingredients
+-- ipbm_rocket_part_beyond.ingredients = ingredients
+ipbm_rocket_part_beyond.ingredients = Setting_Utils.get_recipe_ingredients({
+    recipe_setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE,
+}) or Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RECIPE.ingredients
 ipbm_rocket_part_beyond.category = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_CRAFTING_MACHINE.name })
-ipbm_rocket_part_beyond.additional_categories = get_ballistic_rocket_part_additional_crafting_machines()
+-- ipbm_rocket_part_beyond.additional_categories = get_ballistic_rocket_part_additional_crafting_machines()
+ipbm_rocket_part_beyond.additional_categories = Setting_Utils.get_additional_crafting_machines({
+    default_value = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_ADDITIONAL_CRAFTING_MACHINES.name }),
+})
 ipbm_rocket_part_beyond.hide_from_player_crafting = false
 ipbm_rocket_part_beyond.auto_recycle = false
 ipbm_rocket_part_beyond.overload_multiplier = 2
 ipbm_rocket_part_beyond.allow_inserter_overload = true
-ipbm_rocket_part_beyond.results = {{ type = "item", name = "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
+-- ipbm_rocket_part_beyond.results = {{ type = "item", name = "ipbm-rocket-part", amount = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RESULT_COUNT.name }) }}
+ipbm_rocket_part_beyond.results = Setting_Utils.get_recipe_results({
+    recipe_setting = Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RESULTS,
+}) or Startup_Settings_Constants.settings.BEYOND_BALLISTIC_ROCKET_PART_RESULTS.results
 ipbm_rocket_part_beyond.enabled = false
 ipbm_rocket_part_beyond.subgroup = "ipbm-rocket-parts"
 ipbm_rocket_part_beyond.order = "yzzz[ipbm-rocket-part-beyond]-yzzz[ipbm-rocket-part-beyond]"
 ipbm_rocket_part_beyond.localised_name = { "recipe-name.ipbm-rocket-part-beyond" }
+ipbm_rocket_part_beyond.allowed_effects = {
+    "consumption",
+    "speed",
+    "productivity",
+    "pollution"
+}
 
 data:extend({ipbm_rocket_part_beyond})

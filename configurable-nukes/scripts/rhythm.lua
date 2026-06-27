@@ -1,3 +1,10 @@
+local storage
+
+local type = type
+
+local math_abs = math.abs
+local math_floor = math.floor
+
 local Data = require("scripts.data.data")
 
 local Primes = {
@@ -76,7 +83,7 @@ function rhythm.new(self, o)
 
         if (Rhythm.rhythm_pulse and Rhythm.rhythm_pulse.count) then
             if (Rhythm.rhythm_pulse.count >= game.tick) then
-                Rhythm.rhythm_pulse.count = math.floor(Rhythm.rhythm_pulse.count / 2)
+                Rhythm.rhythm_pulse.count = math_floor(Rhythm.rhythm_pulse.count / 2)
             end
             Rhythm.rhythm_pulse.count = Rhythm.rhythm_pulse.count + 1
         end
@@ -152,7 +159,7 @@ function rhythm.new(self, o)
 
         local sign = return_val < 0 and -1 or 1
 
-        return_val = sign * ((math.abs(return_val)) ^ 0.5)
+        return_val = sign * ((math_abs(return_val)) ^ 0.5)
 
         if (param1_valid) then return_val = return_val - return_val % 1 end
 
@@ -286,6 +293,10 @@ function rhythm.new(self, o)
     rhythm.__index = rhythm
 
     return obj
+end
+
+function rhythm.init(__storage)
+    storage = __storage
 end
 
 setmetatable(rhythm, Data)

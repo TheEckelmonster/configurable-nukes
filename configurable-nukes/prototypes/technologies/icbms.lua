@@ -43,7 +43,7 @@ local get_icbms_research_prerequisites = function ()
     while param ~= nil do
 
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
         for k, v in pairs(data.raw) do
             found_match = false
@@ -67,15 +67,7 @@ local get_icbms_research_prerequisites = function ()
     -- end
 
     if (#prerequisites <= 0) then
-        prerequisites = {
-            "automation-science-pack",
-            "logistic-science-pack",
-            "chemical-science-pack",
-            "military-science-pack",
-            "utility-science-pack",
-            "production-science-pack",
-            "space-science-pack",
-        }
+        prerequisites = Startup_Settings_Constants.settings.ICBMS_RESEARCH_PREREQUISITES.prerequisites
     end
 
     return prerequisites
@@ -120,7 +112,7 @@ local get_icbms_research_ingredients = function ()
     while param ~= nil and param_val ~= nil do
 
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
         for k, v in pairs(data.raw) do
             found_match = false
@@ -144,25 +136,7 @@ local get_icbms_research_ingredients = function ()
     -- end
 
     if (#ingredients <= 0) then
-        ingredients = {
-            { "automation-science-pack", 1 },
-            { "logistic-science-pack", 1 },
-            { "chemical-science-pack", 1 },
-            { "military-science-pack", 1 },
-            { "utility-science-pack", 1 },
-            { "production-science-pack", 1 },
-            { "space-science-pack", 1 },
-        }
-
-        if (mods and mods["space-exploration"]) then
-            ingredients = {
-                { "automation-science-pack", 1 },
-                { "logistic-science-pack", 1 },
-                { "chemical-science-pack", 1 },
-                { "military-science-pack", 1 },
-                { "se-rocket-science-pack", 1 },
-            }
-        end
+        ingredients = Startup_Settings_Constants.settings.ICBMS_RESEARCH_INGREDIENTS.ingredients
     end
 
     return ingredients
@@ -175,51 +149,40 @@ local cn_payload_vehicle_unlock =
     recipe = "cn-payload-vehicle",
 }
 
-local payloader_unlock =
-{
-    type = "unlock-recipe",
-    recipe = "payloader",
-}
+-- local payloader_unlock =
+-- {
+--     type = "unlock-recipe",
+--     recipe = "payloader",
+-- }
 
-local payload_add_unlock =
-{
-    type = "unlock-recipe",
-    recipe = "payloader-load",
-    hidden = true,
-}
+-- local payload_add_unlock =
+-- {
+--     type = "unlock-recipe",
+--     recipe = "payloader-load",
+--     hidden = true,
+-- }
 
-local payload_remove_unlock =
-{
-    type = "unlock-recipe",
-    recipe = "payloader-unload",
-    hidden = true,
-}
+-- local payload_remove_unlock =
+-- {
+--     type = "unlock-recipe",
+--     recipe = "payloader-unload",
+--     hidden = true,
+-- }
 
 local technology_effects =
 {
     cn_payload_vehicle_unlock,
-    payloader_unlock,
-    payload_add_unlock,
-    payload_remove_unlock,
+    -- payloader_unlock,
+    -- payload_add_unlock,
+    -- payload_remove_unlock,
 }
 
 data:extend({
     {
         type = "technology",
         name = "icbms",
-        icons =
-        {
-            {
-                icon = "__base__/graphics/technology/atomic-bomb.png",
-                icon_size = 256,
-            },
-            {
-                icon = "__base__/graphics/technology/rocket-silo.png",
-                icon_size = 256,
-                scale = 1 / 2 ^ 2,
-                shift = { 0, 32 },
-            },
-        },
+        icon = "__configurable-nukes__/graphics/technology/icbms.png",
+        icon_size = 256,
         localised_description = { "technology-description.icbms" },
         effects = technology_effects,
         prerequisites = get_icbms_research_prerequisites(),

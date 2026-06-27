@@ -1,6 +1,6 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local Log = Log
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 
@@ -96,6 +96,10 @@ function configurable_nukes_repository.get_configurable_nukes_data(optionals)
     return_val = storage.configurable_nukes
 
     return return_val
+end
+
+function configurable_nukes_repository.init(__storage)
+    storage = __storage
 end
 
 return configurable_nukes_repository

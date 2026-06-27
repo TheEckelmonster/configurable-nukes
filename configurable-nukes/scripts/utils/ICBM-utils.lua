@@ -1,3 +1,37 @@
+local storage
+
+local defines = defines
+local script = script
+
+local south = defines.direction.south
+
+local next = next
+local type = type
+local table_insert = table.insert
+
+local math_abs = math.abs
+local math_atan = math.atan
+local math_atan2 = math.atan2
+local math_ceil = math.ceil
+local math_floor = math.floor
+local math_log = math.log
+local math_random = math.random
+
+local E = math.exp(1)
+local MATH_HUGE = math.huge
+local PI = math.pi
+local SIXTH_PI = PI / 6
+
+local PERCENT_POINT_2_F = "%.2f"
+local PERCENT_POINT_8_F = "%.8f"
+local FORWARD_SLASH = "/"
+
+local string_format = string.format
+
+local Event_Handler = Event_Handler
+local Log = Log
+local Payloads = Payloads
+
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local ICBM_Data = require("scripts.data.ICBM-data")
@@ -7,13 +41,16 @@ local Rhythm = require("scripts.rhythm")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local cn_propulsion_active = script and script.active_mods and script.active_mods["configurable-nukes-extended-propulsion-systems"]
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+local TOP_SPEED_MAX_SETTING = Startup_Settings_Constants.settings.BRAL_RESEARCH_TOP_SPEED_MODIFIER.name
+if (cn_propulsion_active) then TOP_SPEED_MAX_SETTING = "configurable-nukes-propulsion-systems-research-top-speed-modifier" end
+
 local icbm_utils = {
     space_launches_initiated = {}
 }
 icbm_utils.name = "icbm_utils"
-
-local E = math.exp(1)
-local Sixth_Pi = math.pi / 6
 
 icbm_utils.rhythm = { name = icbm_utils.name, }
 local rhythm = Rhythm.new(icbm_utils.rhythm, icbm_utils.rhythm)
@@ -35,7 +72,7 @@ Event_Handler:register_events({
     },
 })
 
-local time_to_target_message = function (params)
+local function time_to_target_message(params)
     local print_message = function (param_1, param_2)
         if (param_1 and param_1.force and param_1.force.valid) then
             param_1.force.print({ "icbm-utils.seconds-to-target", param_1.item_number, param_2 })
@@ -57,11 +94,14 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     Log.debug("icbm_utils.on_cargo_pod_finished_ascending")
     Log.info(data)
 
+    log(serpent.block(data))
+
     if (data == nil) then return -1 end
     local reuse = false
     if (data.icbm_data == nil or type(data.icbm_data) ~= "table") then
         if (data.surface == nil or not data.surface.valid) then return -1 end
-        if (data.item == nil or type(data.item) ~= "table") then return -1 end
+        -- if (data.item == nil or type(data.item) ~= "table") then return -1 end
+        if (data.item == nil or not data.item.valid) then return -1 end
         if (data.cargo_pod == nil or not data.cargo_pod.valid) then return -1 end
         if (data.tick == nil or type(data.tick) ~= "number") then return -1 end
     else
@@ -70,13 +110,54 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
 
     local k, icbm_data = nil, data.icbm_data or nil
 
-    if (not icbm_data) then
+    -- if (not icbm_data) then
+    if (not icbm_data or not icbm_data.cargo_pod) then
+        local target_position = nil
+        if (    data.tags
+            and data.tags.target_tags
+            and data.tags.target_tags[1]
+        ) then
+            local target_tag = data.tags.target_tags["1"]
+            if (    target_tag
+                and target_tag.launch
+                and target_tag.surface_index
+                and target_tag.x
+                and target_tag.x.min
+                and target_tag.y
+                and target_tag.y.min
+            ) then
+                target_position = { x = target_tag.x.min, target_tag.y.min, }
+            end
+        end
+        log(serpent.block(target_position))
 
         storage.icbm_data = storage.icbm_data or {}
         storage.icbm_data.item_numbers = storage.icbm_data.item_numbers or {}
         k, icbm_data = next(storage.icbm_data.item_numbers)
         while k and icbm_data do
-            if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == data.cargo_pod.unit_number) then
+            -- if (icbm_data and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == data.cargo_pod.unit_number) then
+            log(serpent.block(k))
+            log(serpent.block(icbm_data))
+            -- if (icbm_data and icbm_data.cargo_pod and icbm_data.tick_to_target < 0 and icbm_data.cargo_pod_unit_number and icbm_data.cargo_pod_unit_number == data.cargo_pod_unit_number) then
+            if (    icbm_data
+                and icbm_data.cargo_pod
+                and icbm_data.tick_to_target < 0
+                and icbm_data.cargo_pod_unit_number
+                and icbm_data.cargo_pod_unit_number == data.cargo_pod_unit_number
+                and (
+                        not target_position
+                    or
+                        target_position
+                    and icbm_data.items
+                    and icbm_data.items.mirv
+                    -- and icbm_data.items.area
+                    -- and icbm_data.items.area.left_top
+                    -- and icbm_data.items.area.left_top.x == target_position.x
+                    -- and icbm_data.items.area.left_top.y == target_position.y
+                    and icbm_data.original_target_position.x == target_position.x
+                    and icbm_data.original_target_position.y == target_position.y
+                )
+            ) then
                 break
             end
 
@@ -101,7 +182,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         if (type(guidance_systems_modifier) ~= "number" or guidance_systems_modifier < -1 or guidance_systems_modifier > 0) then guidance_systems_modifier = -1 end
     end
 
-    local absolute_guidance_systems_modifier = math.abs(guidance_systems_modifier)
+    local absolute_guidance_systems_modifier = math_abs(guidance_systems_modifier)
     local guidance_systems_modifier_difference = 1 - absolute_guidance_systems_modifier
     if (guidance_systems_modifier_difference < 0) then guidance_systems_modifier_difference = 0 end
 
@@ -117,8 +198,6 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     local destination = nil
     local from, to = nil, nil
     local origin_space_location = nil
-
-    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     --[[ Check if there is a platform attached to the given surface; and if the potential platform has a schedule with a valid destination ]]
     if (not se_active and icbm_data.source_silo and icbm_data.source_silo.valid and icbm_data.source_silo.surface.valid and icbm_data.source_silo.surface.platform and icbm_data.source_silo.surface.platform.valid) then
@@ -183,16 +262,16 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             remaining_distance = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name }) * remaining_distance
         end
 
-        target_distance = icbm_data.launched_from == "orbit" and ((math.log(1 + target_distance, 10 * (4 - 3 * guidance_systems_modifier_difference))) * magnitude) or target_distance
+        target_distance = icbm_data.launched_from == "orbit" and ((math_log(1 + target_distance, 10 * (4 - 3 * guidance_systems_modifier_difference))) * magnitude) or target_distance
 
         local distance_modifier = (1 - 0.125) * (1 - absolute_guidance_systems_modifier) + 0.125
         target_distance = icbm_data.launched_from == "surface" and icbm_data.same_surface and ((target_distance * distance_modifier) * magnitude) or target_distance
 
         target_distance = target_distance + 1
 
-        local exponent = math.abs(1 + (1/3) * absolute_guidance_systems_modifier)
+        local exponent = math_abs(1 + (1/3) * absolute_guidance_systems_modifier)
         local base = ((1 + target_distance) ^ (exponent)) + 1
-        local base_log = math.log(1 + target_distance, base)
+        local base_log = math_log(1 + target_distance, base)
         target_distance = destination_is_target and icbm_data.launched_from == "interplanetary" and base_log * target_distance or target_distance
 
         if (icbm_data.launched_from == "interplanetary" and icbm_data.launched_from_space) then
@@ -205,7 +284,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         --[[ TODO: Make in space top speed configurable? ]]
         local in_space_speed_modifier = 1.66 + (2.71 * top_speed_modifier)
 
-        if (not Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.name }) or math.abs(guidance_systems_modifier) < 1) then
+        if (not Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.name }) or math_abs(guidance_systems_modifier) < 1) then
             local distance_divisor = (32 / magnitude)
 
             if (icbm_data.launched_from) then
@@ -233,8 +312,8 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             local deviation_threshold = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_GUIDANCE_DEVIATION_THRESHOLD.name })
             local threshold = -(1 - deviation_threshold) * guidance_systems_modifier + deviation_threshold
             if (threshold - 1 < 0) then
-                local max_deviation_count = math.floor(target_distance / distance_divisor)
-                if (max_deviation_count > 32) then max_deviation_count = 24 + math.floor(math.log(1 + max_deviation_count - 32, 8)) end
+                local max_deviation_count = math_floor(target_distance / distance_divisor)
+                if (max_deviation_count > 32) then max_deviation_count = 24 + math_floor(math_log(1 + max_deviation_count - 32, 8)) end
 
                 local deviation_limit = 32
                 if (icbm_data.silo_type == "ipbm-rocket-silo") then
@@ -254,7 +333,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                 for i = 1, max_deviation_count, 1 do
                     --[[ This shouldn't be necessary? ]]
                     if (threshold >= 1) then break end
-                    local rand = math.random()
+                    local rand = math_random()
 
                     -- Log.warn("rand = " .. rand)
                     -- Log.warn("threshold = " .. threshold)
@@ -263,21 +342,21 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                         -- Log.warn("deviating from target: " .. i)
 
                         if (icbm_data.silo_type == "ipbm-rocket-silo") then
-                            deviation_limit = (deviation_limit * (i ^ Sixth_Pi)) ^ (0.75 * icbm_deviation_scaling_factor)
+                            deviation_limit = (deviation_limit * (i ^ SIXTH_PI)) ^ (0.75 * icbm_deviation_scaling_factor)
                         else
-                            deviation_limit = (deviation_limit * (i ^ Sixth_Pi)) ^ icbm_deviation_scaling_factor
+                            deviation_limit = (deviation_limit * (i ^ SIXTH_PI)) ^ icbm_deviation_scaling_factor
                         end
 
                         -- Log.warn("deviation_limit = " .. deviation_limit)
-                        deviation_limit = E * math.log(E + deviation_limit, E) * deviation_limit ^ 0.25
+                        deviation_limit = E * math_log(E + deviation_limit, E) * deviation_limit ^ 0.25
                         Log.warn(deviation_limit)
 
-                        if (type(deviation_limit) == "number" and deviation_limit >= 1 and deviation_limit < math.huge) then
+                        if (type(deviation_limit) == "number" and deviation_limit >= 1 and deviation_limit < MATH_HUGE) then
                             if (not se_active) then
                                 -- Log.warn("deviation_limit = " .. deviation_limit)
                                 icbm_data.target_position = {
-                                    x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
-                                    y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
+                                    x = icbm_data.target_position.x + math_random(0 - deviation_limit, deviation_limit),
+                                    y = icbm_data.target_position.y + math_random(0 - deviation_limit, deviation_limit),
                                 }
                             else
                                 if (target_space_location) then
@@ -290,8 +369,8 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                                     }
 
                                     icbm_data.target_position = {
-                                        x = icbm_data.target_position.x + math.random(0 - deviation_limit, deviation_limit),
-                                        y = icbm_data.target_position.y + math.random(0 - deviation_limit, deviation_limit),
+                                        x = icbm_data.target_position.x + math_random(0 - deviation_limit, deviation_limit),
+                                        y = icbm_data.target_position.y + math_random(0 - deviation_limit, deviation_limit),
                                     }
 
                                     local delta_from_origin = ((icbm_data.target_position.x) ^ 2 + (icbm_data.target_position.y) ^ 2) ^ 0.5
@@ -301,7 +380,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                                         icbm_data.target_position = previous_position
                                     end
                                 else
-                                --[[ Couldn't find a valid taget space_location
+                                --[[ Couldn't find a valid target space_location
                                         -> How?
                                 ]]
                                 --    log(target_surface_name)
@@ -318,7 +397,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         local burnout_speed = 1.8125
         local starting_speed_bonus = icbm_data.starting_speed_bonus or 0
 
-        local proportion = math.pi / 4
+        local proportion = PI / 4
 
         if (icbm_data.launched_from == "interplanetary" and icbm_data.launched_from_space and (icbm_data.speed > 0 or starting_speed_bonus > 0)) then
             local platform = icbm_data.source_silo and icbm_data.source_silo.valid and icbm_data.source_silo.surface and icbm_data.source_silo.surface.valid and icbm_data.source_silo.surface.platform
@@ -395,9 +474,9 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                 Log.warn({ x = destination_planet.x, y = destination_planet.y })
                 Log.warn({ x = origin_planet.x, y = origin_planet.y })
 
-                local x_diff = math.abs(target_planet.x - icbm_data.space_origin_pos.x)
+                local x_diff = math_abs(target_planet.x - icbm_data.space_origin_pos.x)
                 Log.warn(x_diff)
-                local y_diff = math.abs(target_planet.y - icbm_data.space_origin_pos.y)
+                local y_diff = math_abs(target_planet.y - icbm_data.space_origin_pos.y)
                 Log.warn(y_diff)
 
                 local d_pos_x, d_pos_y = nil, nil
@@ -507,7 +586,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
 
                 if (from_planet and to_planet) then
                     travelling_direction.distance = ((from_planet.x - to_planet.x) ^ 2 + (from_planet.y - to_planet.y) ^ 2) ^ 0.5
-                    local orientation = math.atan2(from_planet.y - to_planet.y, from_planet.x - to_planet.x) / math.pi
+                    local orientation = math_atan2(from_planet.y - to_planet.y, from_planet.x - to_planet.x) / PI
                     travelling_direction.orientation = orientation < 0 and orientation or 1 - orientation
                 end
 
@@ -524,9 +603,9 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                 target_direction.y = t_pos_y and 1 or t_neg_y and -1 or target_direction.y
                 target_direction.cardinal = t_orientation
 
-                local _t_orientation = math.atan2(target_planet.y - icbm_data.space_origin_pos.y, target_planet.x - icbm_data.space_origin_pos.x)
+                local _t_orientation = math_atan2(target_planet.y - icbm_data.space_origin_pos.y, target_planet.x - icbm_data.space_origin_pos.x)
                 local base_t_orientation = _t_orientation
-                base_t_orientation = base_t_orientation / math.pi
+                base_t_orientation = base_t_orientation / PI
                 local base_t_orientation_was_negative = base_t_orientation < 0
                 if (base_t_orientation_was_negative) then
                     if (target_direction.cardinal > 0.5) then
@@ -544,7 +623,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                         base_t_orientation = base_t_orientation / 4
                     elseif (target_direction.cardinal < 0.5) then
                         base_t_orientation = 1 + base_t_orientation
-                        base_t_orientation = base_t_orientation * (math.pi / 4)
+                        base_t_orientation = base_t_orientation * (PI / 4)
                         base_t_orientation = base_t_orientation / 4
                     end
                 end
@@ -570,7 +649,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                     Log.debug("1")
                     local orientation = target_direction.orientation
                     Log.debug(orientation)
-                    if ((math.abs(target_direction.cardinal - travelling_direction.cardinal) ~= 0.5)) then
+                    if ((math_abs(target_direction.cardinal - travelling_direction.cardinal) ~= 0.5)) then
                         Log.debug("1.1")
                         if (target_direction.cardinal > 0.5) then
                             Log.debug("2")
@@ -619,7 +698,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         top_speed = top_speed * (24 / magnitude)
         if (icbm_data.speed * proportion > 0) then
             top_speed = (top_speed + starting_speed_bonus)
-            local modifier = 0.75 * (((1 - (1.25) * (1 + top_speed_modifier) * (-1 * top_speed_modifier)) / (math.pi / 2)) * ((math.atan((icbm_data.speed / (math.exp(1) ^ 5))) / math.pi) + 1))
+            local modifier = 0.75 * (((1 - (1.25) * (1 + top_speed_modifier) * (-1 * top_speed_modifier)) / (PI / 2)) * ((math_atan((icbm_data.speed / (E ^ 5))) / PI) + 1))
             top_speed = top_speed * modifier
         end
 
@@ -629,7 +708,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
                 top_speed = top_speed * 2.5 * ((1 - top_speed_base) * top_speed_modifier + top_speed_base)
             else
                 -- top_speed = top_speed * 1.5 * ((1 - top_speed_base) * top_speed_modifier + top_speed_base)
-                top_speed = top_speed * (math.pi / 2) * ((1 - top_speed_base) * top_speed_modifier + top_speed_base)
+                top_speed = top_speed * (PI / 2) * ((1 - top_speed_base) * top_speed_modifier + top_speed_base)
             end
         else
             top_speed = top_speed * ((1 - top_speed_base) * top_speed_modifier + top_speed_base)
@@ -642,21 +721,25 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             distance_divisor = icbm_data.launched_from == "surface" and (24 / magnitude ^ 1.5) or distance_divisor
             distance_divisor = icbm_data.launched_from == "interplanetary" and (16 / magnitude ^ 2.25) * 1.25 or distance_divisor
         end
-        local num_speed_checks = math.ceil(target_distance / (distance_divisor))
+        local num_speed_checks = math_ceil(target_distance / (distance_divisor))
 
-        local check_threshold = math.log(num_speed_checks, math.exp(1))
+        local check_threshold = math_log(num_speed_checks, E)
         local original_starting_speed = starting_speed
         local times_starting_speed_updated = 0
         local times_starting_speed_updated_limit = not from_ipbm_silo and 1 + num_speed_checks * (3/4) or (1 + num_speed_checks) ^ 0.5
         local update_proportion_modifier = icbm_data.launched_from_space and 13/9 or 2/3
         local surface_to_orbit_complete = icbm_data.launched_from == "interplanetary" or icbm_data.launched_from == "orbit"
 
-        local top_speed_modifier_max = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name })
+        -- local top_speed_modifier_max = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name })
+        local top_speed_modifier_max = Settings_Service.get_startup_setting({ setting = TOP_SPEED_MAX_SETTING })
         top_speed_modifier_max =
-                top_speed_modifier_max * 10
-            +   top_speed_modifier_max * 6
-            +   top_speed_modifier_max * 14
-            +   top_speed_modifier_max * 25
+            --     top_speed_modifier_max * 10
+            -- +   top_speed_modifier_max * 6
+            -- +   top_speed_modifier_max * 14
+            -- +   top_speed_modifier_max * 25
+                top_speed_modifier_max * 8
+            +   top_speed_modifier_max * 16
+            +   top_speed_modifier_max * 32
         top_speed_modifier_max = top_speed_modifier_max * 1.5
         -- Log.warn(top_speed_modifier)
         -- Log.warn(top_speed_modifier_max)
@@ -669,7 +752,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             -- Log.debug(time_to_target)
             -- Log.debug(remaining_distance)
             if (current_speed >= top_speed) then
-                time_to_target = time_to_target + math.ceil(remaining_distance / top_speed)
+                time_to_target = time_to_target + math_ceil(remaining_distance / top_speed)
                 break
             end
 
@@ -696,7 +779,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             if (current_speed < top_speed) then
                 local pre_update_speed = current_speed
                 -- Log.debug(current_speed)
-                current_speed = starting_speed + current_speed + (((starting_speed + (current_speed > starting_speed and (current_speed - starting_speed) or 0)) * (math.exp(1) ^ 4)) * (1 - 1 / math.exp(1) ^ ((i / 6) - 1 / 6))) ^ 0.25
+                current_speed = starting_speed + current_speed + (((starting_speed + (current_speed > starting_speed and (current_speed - starting_speed) or 0)) * (E ^ 4)) * (1 - 1 / E ^ ((i / 6) - 1 / 6))) ^ 0.25
                 -- Log.debug(current_speed)
                 current_speed = current_speed + (i * (1 - check_proportion))
                 -- Log.debug(current_speed)
@@ -739,7 +822,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     end
 
     if (not se_active and icbm_data.launched_from_space) then
-        local launch_duration_ticks = 511 + math.random(-1, 1) * math.random(32)
+        local launch_duration_ticks = 511 + math_random(-1, 1) * math_random(32)
         time_to_target = time_to_target + launch_duration_ticks
         icbm_utils.space_launches_initiated[icbm_data] = {
             tick = game.tick + launch_duration_ticks,
@@ -749,10 +832,10 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         storage.icbm_utils = storage.icbm_utils or {}
         storage.icbm_utils.space_launches_initiated = icbm_utils.space_launches_initiated
     else
-        local rand_additional_time = (math.log(2.71 + target_distance, 2.71) * (magnitude ^ 1.66))
-        if (type(rand_additional_time) ~= "number" or rand_additional_time < 1 or rand_additional_time >= math.huge) then rand_additional_time = 1 end
+        local rand_additional_time = (math_log(2.71 + target_distance, 2.71) * (magnitude ^ 1.66))
+        if (type(rand_additional_time) ~= "number" or rand_additional_time < 1 or rand_additional_time >= MATH_HUGE) then rand_additional_time = 1 end
 
-        time_to_target = time_to_target + math.random(60 * rand_additional_time) * magnitude
+        time_to_target = time_to_target + math_random(60 * rand_additional_time) * magnitude
     end
 
     Log.warn("game.tick = " .. game.tick)
@@ -769,14 +852,14 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
     end
 
     if (se_active or not icbm_data.launched_from_space) then
-        if (math.floor(time_to_target / 60) >= 1) then
+        if (math_floor(time_to_target / 60) >= 1) then
             if (icbm_data.player_launched_index == 0) then
                 if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name })) then
-                    icbm_data.force.print({ "icbm-utils.seconds-to-target", icbm_data.item_number, math.floor(time_to_target / 60) })
+                    icbm_data.force.print({ "icbm-utils.seconds-to-target", icbm_data.item_number, math_floor(time_to_target / 60) })
                 end
             else
                 if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name })) then
-                    icbm_data.force.print({ "icbm-utils.seconds-to-target", icbm_data.item_number, math.floor(time_to_target / 60) })
+                    icbm_data.force.print({ "icbm-utils.seconds-to-target", icbm_data.item_number, math_floor(time_to_target / 60) })
                 end
             end
         end
@@ -804,7 +887,7 @@ function icbm_utils.register_delivery_data(data)
 
     ICBM_Repository.update_icbm_data(data.icbm_data)
 
-    local tick = game and game.tick or storage and storage.tick or math.huge
+    local tick = game and game.tick or storage and storage.tick or MATH_HUGE
     Log.warn(tick)
 
     local icbm_data = data.icbm_data
@@ -1189,8 +1272,6 @@ function icbm_utils.launch_initiated(data)
         Log.warn("from origin, target_distance = " .. target_distance)
     end
 
-    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
-
     local icbm_data = ICBM_Data:new({
         se_active = se_active,
         item_name = data.item_name,
@@ -1373,13 +1454,13 @@ function icbm_utils.spawn_jericho_event(event, event_data)
     surface.create_entity({
         name = payload_item or icbm.item_name .. "-" .. icbm.item.quality,
         position = payload_spawn_position,
-        direction = defines.direction.south,
+        direction = south,
         force = force,
         target = target,
         source = source_position or icbm.source_position,
         --[[ TODO: Make configurable ]]
         cause = icbm and icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-        speed = 0.00000025 * math.random(1000) * math.exp(1),
+        speed = 0.00000025 * math_random(1000) * E,
         base_damage_modifiers = {
             damage_modifier = 1,
             damage_addition = 1,
@@ -1449,23 +1530,49 @@ function icbm_utils.payload_arrived(data)
             end
         end
 
+        log(serpent.block(icbm.item_name))
+        log(serpent.block(icbm.items))
         if (not icbm.item_name) then
+            log("no item name")
             if (icbm.items) then
+                log("items exists")
                 local payloads = {}
-                for _, item in pairs(icbm.items) do
-                    table.insert(payloads, item)
+                if (icbm.items.mirv) then
+                    log("is mirv")
+                    -- payloads = icbm.items.cargo or payloads
+                    for _, v in ipairs(icbm.items.cargo or {}) do
+                        log(serpent.block(v))
+                        if (v.name ~= "target-combinator") then
+                            if (v.name == "cn-payload-vehicle") then
+                                for _, cargo in ipairs(v.cargo or {}) do
+                                    log(serpent.block(cargo))
+                                    cargo.mirv = true
+                                    payloads[#payloads+1] = cargo
+                                end
+                            else
+                                v.mirv = true
+                                payloads[#payloads+1] = v
+                            end
+                        end
+                    end
+                else
+                    log("not mirv")
+                    for _, item in pairs(icbm.items) do
+                        log(serpent.block(item))
+                        table_insert(payloads, item)
+                    end
                 end
 
                 local payload_entity = icbm.target_surface.create_entity({
                     name = "payloader-rocket",
                     position = payload_spawn_position,
-                    direction = defines.direction.south,
+                    direction = south,
                     force = force,
                     target = icbm.target_position,
                     source = icbm.source_position,
                     --[[ TODO: Make configurable ]]
                     cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-                    speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (game.tick % 100) + 1) ^ 0.666),
+                    speed = 0.025 * E + 0.075 * E * ((0.001 * (game.tick % 100) + 1) ^ 0.666),
                     -- base_damage_modifiers = {
                     --     damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
                     --     damage_addition = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
@@ -1478,6 +1585,7 @@ function icbm_utils.payload_arrived(data)
                     -- },
                 })
 
+                log(serpent.block(payload_entity))
                 if (payload_entity and payload_entity.valid) then
                     local payload_data = {
                         tick = game.tick,
@@ -1488,93 +1596,97 @@ function icbm_utils.payload_arrived(data)
                         rhythm_count = Rhythm.get_count(rhythm, "increment"),
                     }
 
-                    local position_key = string.format("%.2f", math.floor(icbm.target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100)  .. "-1"
+                    local position_key = string_format(PERCENT_POINT_2_F, math_floor(icbm.target_position.x * 100) / 100) .. FORWARD_SLASH .. string_format(PERCENT_POINT_2_F, math_floor(icbm.target_position.y * 100) / 100)  .. "-1"
                     payload_data.keys[position_key] = payload_data.rhythm_count
                     if (not Payloads[position_key]) then
                         Payloads[position_key] = payload_data
                     else
                         if (Payloads[position_key][1]) then
-                            table.insert(Payloads[position_key], payload_data)
+                            table_insert(Payloads[position_key], payload_data)
                         else
                             Payloads[position_key] = { Payloads[position_key], payload_data, }
                         end
                     end
 
-                    position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.8f", icbm.target_position.y) .. "-2"
+                    -- position_key = string_format(PERCENT_POINT_8_F, icbm.target_position.x) .. FORWARD_SLASH .. string_format(PERCENT_POINT_8_F, icbm.target_position.y) .. "-2"
+                    -- payload_data.keys[position_key] = payload_data.rhythm_count
+                    -- if (not Payloads[position_key]) then
+                    --     Payloads[position_key] = payload_data
+                    -- else
+                    --     if (Payloads[position_key][1]) then
+                    --         table_insert(Payloads[position_key], payload_data)
+                    --     else
+                    --         Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    --     end
+                    -- end
+
+                    -- position_key = string_format(PERCENT_POINT_8_F, icbm.target_position.x) .. FORWARD_SLASH .. string_format(PERCENT_POINT_2_F, math_floor(icbm.target_position.y * 100) / 100) .. "-3"
+                    -- payload_data.keys[position_key] = payload_data.rhythm_count
+                    -- if (not Payloads[position_key]) then
+                    --     Payloads[position_key] = payload_data
+                    -- else
+                    --     if (Payloads[position_key][1]) then
+                    --         table_insert(Payloads[position_key], payload_data)
+                    --     else
+                    --         Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    --     end
+                    -- end
+
+                    position_key = string_format(PERCENT_POINT_2_F, math_floor(icbm.original_target_position.x * 100) / 100) .. FORWARD_SLASH .. string_format(PERCENT_POINT_2_F, math_floor(icbm.original_target_position.y * 100) / 100) .. "-4"
                     payload_data.keys[position_key] = payload_data.rhythm_count
                     if (not Payloads[position_key]) then
                         Payloads[position_key] = payload_data
                     else
                         if (Payloads[position_key][1]) then
-                            table.insert(Payloads[position_key], payload_data)
+                            table_insert(Payloads[position_key], payload_data)
                         else
                             Payloads[position_key] = { Payloads[position_key], payload_data, }
                         end
                     end
 
-                    position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100) .. "-3"
-                    payload_data.keys[position_key] = payload_data.rhythm_count
-                    if (not Payloads[position_key]) then
-                        Payloads[position_key] = payload_data
-                    else
-                        if (Payloads[position_key][1]) then
-                            table.insert(Payloads[position_key], payload_data)
-                        else
-                            Payloads[position_key] = { Payloads[position_key], payload_data, }
-                        end
-                    end
+                    -- position_key = string_format(PERCENT_POINT_8_F, icbm.original_target_position.x) .. FORWARD_SLASH .. string_format(PERCENT_POINT_8_F, icbm.original_target_position.y) .. "-5"
+                    -- payload_data.keys[position_key] = payload_data.rhythm_count
+                    -- if (not Payloads[position_key]) then
+                    --     Payloads[position_key] = payload_data
+                    -- else
+                    --     if (Payloads[position_key][1]) then
+                    --         table_insert(Payloads[position_key], payload_data)
+                    --     else
+                    --         Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    --     end
+                    -- end
 
-                    position_key = string.format("%.2f", math.floor(icbm.original_target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100) .. "-4"
-                    payload_data.keys[position_key] = payload_data.rhythm_count
-                    if (not Payloads[position_key]) then
-                        Payloads[position_key] = payload_data
-                    else
-                        if (Payloads[position_key][1]) then
-                            table.insert(Payloads[position_key], payload_data)
-                        else
-                            Payloads[position_key] = { Payloads[position_key], payload_data, }
-                        end
-                    end
+                    -- position_key = string_format(PERCENT_POINT_8_F, icbm.original_target_position.x) .. FORWARD_SLASH .. string_format(PERCENT_POINT_2_F, math_floor(icbm.original_target_position.y * 100) / 100) .. "-6"
+                    -- payload_data.keys[position_key] = payload_data.rhythm_count
+                    -- if (not Payloads[position_key]) then
+                    --     Payloads[position_key] = payload_data
+                    -- else
+                    --     if (Payloads[position_key][1]) then
+                    --         table_insert(Payloads[position_key], payload_data)
+                    --     else
+                    --         Payloads[position_key] = { Payloads[position_key], payload_data, }
+                    --     end
+                    -- end
 
-                    position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.8f", icbm.original_target_position.y) .. "-5"
-                    payload_data.keys[position_key] = payload_data.rhythm_count
-                    if (not Payloads[position_key]) then
-                        Payloads[position_key] = payload_data
-                    else
-                        if (Payloads[position_key][1]) then
-                            table.insert(Payloads[position_key], payload_data)
-                        else
-                            Payloads[position_key] = { Payloads[position_key], payload_data, }
-                        end
-                    end
-
-                    position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100) .. "-6"
-                    payload_data.keys[position_key] = payload_data.rhythm_count
-                    if (not Payloads[position_key]) then
-                        Payloads[position_key] = payload_data
-                    else
-                        if (Payloads[position_key][1]) then
-                            table.insert(Payloads[position_key], payload_data)
-                        else
-                            Payloads[position_key] = { Payloads[position_key], payload_data, }
-                        end
-                    end
+                    log(serpent.block(payload_data))
                 end
             end
         else
+            log(serpent.block(icbm))
             local payload = icbm.cargo and icbm.cargo[1] and icbm.cargo or { name = icbm.item_name, count = 1, quality = icbm.item and icbm.item.quality or "normal" }
+            log(serpent.block(payload))
 
             local payload_entity = icbm.target_surface.create_entity({
                 name = "payloader-rocket",
                 position = payload_spawn_position,
-                direction = defines.direction.south,
+                direction = south,
                 force = force,
                 target = icbm.target_position,
                 -- source = icbm.source_position,
                 source = icbm.original_target_position,
                 --[[ TODO: Make configurable ]]
                 cause = icbm.same_surface and icbm.source_silo and icbm.source_silo.valid and icbm.source_silo or force,
-                speed = 0.025 * math.exp(1) + 0.075 * math.exp(1) * ((0.001 * (game.tick % 100 + 1)) ^ 0.666),
+                speed = 0.025 * E + 0.075 * E * ((0.001 * (game.tick % 100 + 1)) ^ 0.666),
                 -- base_damage_modifiers = {
                 --     damage_modifier = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_MODIFIER.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_MODIFIER.name }) or 1,
                 --     damage_addition = name == "atomic-rocket" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_BASE_DAMAGE_ADDITION.name }) or payload.name == "atomic-warhead" and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_WARHEAD_BASE_DAMAGE_ADDITION.name }) or 1,
@@ -1597,77 +1709,79 @@ function icbm_utils.payload_arrived(data)
                     rhythm_count = Rhythm.get_count(rhythm, "increment"),
                 }
 
-                local position_key = string.format("%.2f", math.floor(icbm.target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100) .. "-1"
+                local position_key = string_format(PERCENT_POINT_2_F, math_floor(icbm.target_position.x * 100) / 100) .. FORWARD_SLASH .. string_format(PERCENT_POINT_2_F, math_floor(icbm.target_position.y * 100) / 100) .. "-1"
                 payload_data.keys[position_key] = payload_data.rhythm_count
                 if (not Payloads[position_key]) then
                     Payloads[position_key] = payload_data
                 else
                     if (Payloads[position_key][1]) then
-                        table.insert(Payloads[position_key], payload_data)
+                        table_insert(Payloads[position_key], payload_data)
                     else
                         Payloads[position_key] = { Payloads[position_key], payload_data, }
                     end
                 end
 
-                position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.8f", icbm.target_position.y) .. "-2"
+                -- position_key = string_format(PERCENT_POINT_8_F, icbm.target_position.x) .. FORWARD_SLASH .. string_format(PERCENT_POINT_8_F, icbm.target_position.y) .. "-2"
+                -- payload_data.keys[position_key] = payload_data.rhythm_count
+                -- if (not Payloads[position_key]) then
+                --     Payloads[position_key] = payload_data
+                -- else
+                --     if (Payloads[position_key][1]) then
+                --         table_insert(Payloads[position_key], payload_data)
+                --     else
+                --         Payloads[position_key] = { Payloads[position_key], payload_data, }
+                --     end
+                -- end
+
+                -- position_key = string_format(PERCENT_POINT_8_F, icbm.target_position.x) .. FORWARD_SLASH .. string_format(PERCENT_POINT_2_F, math_floor(icbm.target_position.y * 100) / 100) .. "-3"
+                -- payload_data.keys[position_key] = payload_data.rhythm_count
+                -- if (not Payloads[position_key]) then
+                --     Payloads[position_key] = payload_data
+                -- else
+                --     if (Payloads[position_key][1]) then
+                --         table_insert(Payloads[position_key], payload_data)
+                --     else
+                --         Payloads[position_key] = { Payloads[position_key], payload_data, }
+                --     end
+                -- end
+
+                position_key = string_format(PERCENT_POINT_2_F, math_floor(icbm.original_target_position.x * 100) / 100) .. FORWARD_SLASH .. string_format(PERCENT_POINT_2_F, math_floor(icbm.original_target_position.y * 100) / 100) .. "-4"
                 payload_data.keys[position_key] = payload_data.rhythm_count
                 if (not Payloads[position_key]) then
                     Payloads[position_key] = payload_data
                 else
                     if (Payloads[position_key][1]) then
-                        table.insert(Payloads[position_key], payload_data)
+                        table_insert(Payloads[position_key], payload_data)
                     else
                         Payloads[position_key] = { Payloads[position_key], payload_data, }
                     end
                 end
 
-                position_key = string.format("%.8f", icbm.target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.target_position.y * 100) / 100) .. "-3"
-                payload_data.keys[position_key] = payload_data.rhythm_count
-                if (not Payloads[position_key]) then
-                    Payloads[position_key] = payload_data
-                else
-                    if (Payloads[position_key][1]) then
-                        table.insert(Payloads[position_key], payload_data)
-                    else
-                        Payloads[position_key] = { Payloads[position_key], payload_data, }
-                    end
-                end
+                -- position_key = string_format(PERCENT_POINT_8_F, icbm.original_target_position.x) .. FORWARD_SLASH .. string_format(PERCENT_POINT_8_F, icbm.original_target_position.y) .. "-5"
+                -- payload_data.keys[position_key] = payload_data.rhythm_count
+                -- if (not Payloads[position_key]) then
+                --     Payloads[position_key] = payload_data
+                -- else
+                --     if (Payloads[position_key][1]) then
+                --         table_insert(Payloads[position_key], payload_data)
+                --     else
+                --         Payloads[position_key] = { Payloads[position_key], payload_data, }
+                --     end
+                -- end
 
-                position_key = string.format("%.2f", math.floor(icbm.original_target_position.x * 100) / 100) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100) .. "-4"
-                payload_data.keys[position_key] = payload_data.rhythm_count
-                if (not Payloads[position_key]) then
-                    Payloads[position_key] = payload_data
-                else
-                    if (Payloads[position_key][1]) then
-                        table.insert(Payloads[position_key], payload_data)
-                    else
-                        Payloads[position_key] = { Payloads[position_key], payload_data, }
-                    end
-                end
+                -- position_key = string_format(PERCENT_POINT_8_F, icbm.original_target_position.x) .. FORWARD_SLASH .. string_format(PERCENT_POINT_2_F, math_floor(icbm.original_target_position.y * 100) / 100) .. "-6"
+                -- payload_data.keys[position_key] = payload_data.rhythm_count
+                -- if (not Payloads[position_key]) then
+                --     Payloads[position_key] = payload_data
+                -- else
+                --     if (Payloads[position_key][1]) then
+                --         table_insert(Payloads[position_key], payload_data)
+                --     else
+                --         Payloads[position_key] = { Payloads[position_key], payload_data, }
+                --     end
+                -- end
 
-                position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.8f", icbm.original_target_position.y) .. "-5"
-                payload_data.keys[position_key] = payload_data.rhythm_count
-                if (not Payloads[position_key]) then
-                    Payloads[position_key] = payload_data
-                else
-                    if (Payloads[position_key][1]) then
-                        table.insert(Payloads[position_key], payload_data)
-                    else
-                        Payloads[position_key] = { Payloads[position_key], payload_data, }
-                    end
-                end
-
-                position_key = string.format("%.8f", icbm.original_target_position.x) .. "/" .. string.format("%.2f", math.floor(icbm.original_target_position.y * 100) / 100) .. "-6"
-                payload_data.keys[position_key] = payload_data.rhythm_count
-                if (not Payloads[position_key]) then
-                    Payloads[position_key] = payload_data
-                else
-                    if (Payloads[position_key][1]) then
-                        table.insert(Payloads[position_key], payload_data)
-                    else
-                        Payloads[position_key] = { Payloads[position_key], payload_data, }
-                    end
-                end
+                log(serpent.block(payload_data))
             end
         end
 
@@ -1720,14 +1834,14 @@ function icbm_utils.print_space_launched_time_to_target_message(data)
             end
 
             if (game.tick >= v.tick) then
-                if (math.floor(v.time_to_target / 60) >= 1) then
+                if (math_floor(v.time_to_target / 60) >= 1) then
                     if (k.player_launched_index == 0) then
                         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_CIRCUIT_PRINT_LAUNCH_MESSAGES.name })) then
-                            k.force.print({ "icbm-utils.seconds-to-target", k.item_number, math.floor(v.time_to_target / 60) })
+                            k.force.print({ "icbm-utils.seconds-to-target", k.item_number, math_floor(v.time_to_target / 60) })
                         end
                     else
                         if (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.PRINT_LAUNCH_MESSAGES.name })) then
-                            k.force.print({ "icbm-utils.seconds-to-target", k.item_number, math.floor(v.time_to_target / 60) })
+                            k.force.print({ "icbm-utils.seconds-to-target", k.item_number, math_floor(v.time_to_target / 60) })
                         end
                     end
 
@@ -1769,6 +1883,11 @@ function icbm_utils.rocket_silo_cloned(data)
         end
         ICBM_Data.validate_fields(v)
     end
+end
+
+function icbm_utils.init(__storage)
+    storage = __storage
+    Payloads = _ENV.Payloads
 end
 
 return icbm_utils

@@ -18,6 +18,7 @@ return function(params)
     if (storage_old.configurable_nukes.icbm_meta_data) then
         local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
         if (type(all_icbm_meta_data) == "table") then
+            ICBM_Repository.init(storage)
             for k, icbm_meta_data in pairs(all_icbm_meta_data) do
                 if (type(icbm_meta_data) == "table" and icbm_meta_data.valid and icbm_meta_data.icbms) then
                     if (type(icbm_meta_data.icbms) == "table") then

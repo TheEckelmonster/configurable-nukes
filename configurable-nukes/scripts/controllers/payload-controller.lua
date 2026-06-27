@@ -1,3 +1,9 @@
+local storage
+
+local Event_Handler = Event_Handler
+local Log = Log
+local Settings_Service = Settings_Service
+
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 
 local payload_controller = {}
@@ -13,7 +19,7 @@ function payload_controller.on_nth_tick(event)
 
     for k, payload in pairs(payloads) do
         if (payload.delivered and payload.updated) then
-            if (game.tick > payload.delivered + 600 and game.tick > payload.updated + 600) then
+            if (event.tick > payload.delivered + 600 and event.tick > payload.updated + 600) then
                 payloads[k] = nil
             end
         else
@@ -23,7 +29,7 @@ function payload_controller.on_nth_tick(event)
                     local payload = _payload[i]
                     if (    not payload.tick
                         or
-                            game.tick
+                            event.tick
                         and (
                                 payload.icbm
                             and payload.icbm.tick_to_target
@@ -31,12 +37,12 @@ function payload_controller.on_nth_tick(event)
                                     payload.icbm.tick_to_target <= payload.tick
                                 and payload.tick - payload.icbm.tick_to_target >= 240 + payload_controller.nth_tick
                                 or
-                                    payload.icbm.tick_to_target <= game.tick
-                                and game.tick - payload.icbm.tick_to_target >= 240 + payload_controller.nth_tick
+                                    payload.icbm.tick_to_target <= event.tick
+                                and event.tick - payload.icbm.tick_to_target >= 240 + payload_controller.nth_tick
                             )
                             or
-                                game.tick > payload.tick
-                            and game.tick - payload.tick >= 240 + payload_controller.nth_tick
+                                event.tick > payload.tick
+                            and event.tick - payload.tick >= 240 + payload_controller.nth_tick
                         )
                     ) then
                         payloads[k] = nil
@@ -45,7 +51,7 @@ function payload_controller.on_nth_tick(event)
             else
                 if (    not payload.tick
                     or
-                        game.tick
+                        event.tick
                     and (
                             payload.icbm
                         and payload.icbm.tick_to_target
@@ -53,12 +59,12 @@ function payload_controller.on_nth_tick(event)
                                 payload.icbm.tick_to_target <= payload.tick
                             and payload.tick - payload.icbm.tick_to_target >= 240 + payload_controller.nth_tick
                             or
-                                payload.icbm.tick_to_target <= game.tick
-                            and game.tick - payload.icbm.tick_to_target >= 240 + payload_controller.nth_tick
+                                payload.icbm.tick_to_target <= event.tick
+                            and event.tick - payload.icbm.tick_to_target >= 240 + payload_controller.nth_tick
                         )
                         or
-                            game.tick > payload.tick
-                        and game.tick - payload.tick >= 240 + payload_controller.nth_tick
+                            event.tick > payload.tick
+                        and event.tick - payload.tick >= 240 + payload_controller.nth_tick
                     )
                 ) then
                     payloads[k] = nil
@@ -107,5 +113,9 @@ Event_Handler:register_event({
     func_name = "payload_controller.on_runtime_mod_setting_changed",
     func = payload_controller.on_runtime_mod_setting_changed,
 })
+
+function payload_controller.init(__storage)
+    storage = __storage
+end
 
 return payload_controller

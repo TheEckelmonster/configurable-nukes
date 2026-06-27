@@ -20,6 +20,9 @@ return function(params)
     ]]
     if (storage_old.configurable_nukes.icbm_meta_data) then
         local all_icbm_meta_data = storage_old.configurable_nukes.icbm_meta_data
+        ICBM_Meta_Repository.init(storage)
+        ICBM_Repository.init(storage)
+        ICBM_Utils.init(storage)
         for k, icbm_meta_data in pairs(all_icbm_meta_data) do
             icbm_meta_data.item_numbers = nil
             icbm_meta_data.surface_name = icbm_meta_data.planet_name

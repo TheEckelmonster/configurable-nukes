@@ -199,7 +199,8 @@ local function make_extend_ammo(params)
     end
 end
 
-for _, possible_payload in pairs({ Util.table.deepcopy(data.raw.ammo), Util.table.deepcopy(data.raw["land-mine"]), }) do
+for _, possible_payload in pairs({ Util.table.deepcopy(data.raw.ammo), Util.table.deepcopy(data.raw.capsule), Util.table.deepcopy(data.raw["land-mine"]), }) do
+-- for _, possible_payload in pairs({ Util.table.deepcopy(data.raw.capsule), Util.table.deepcopy(data.raw["land-mine"]), }) do
     if (DEBUG) then log(serpent.block(_)) end
     if (DEBUG) then log(debug_count); debug_count = debug_count + 1 end
     for k, ammo in pairs(possible_payload) do
@@ -210,6 +211,7 @@ for _, possible_payload in pairs({ Util.table.deepcopy(data.raw.ammo), Util.tabl
 
         local target_effects = {}
         if (ammo.type == "ammo" and ammo.ammo_type or ammo.type == "land-mine") then
+        -- if (ammo.type == "ammo" and ammo.ammo_type or ammo.type == "land-mine" or ammo.type == "capsule") then
             local ammo_type = ammo.type == "ammo" and ammo.ammo_type or nil
 
             if (not ammo_type) then
@@ -257,11 +259,22 @@ for _, possible_payload in pairs({ Util.table.deepcopy(data.raw.ammo), Util.tabl
     end
 end
 
-for _, v in pairs(data.raw.projectile) do
-    if (not projectile_placeholder_data.data[v.name]) then
-        projectile_placeholder_data.data[v.name] = { name = v.name, speed = v.speed or 1, }
-    end
-end
+-- local all, found = {}, {}
+-- for _, v in pairs(data.raw.projectile) do
+--     all[_] = 1
+--     if (not projectile_placeholder_data.data[v.name]) then
+--         found[_] = 1
+--         projectile_placeholder_data.data[v.name] = { name = v.name, speed = v.speed or 1, }
+--     end
+-- end
+
+-- for k, v in pairs(found) do
+--     all[k] = nil
+-- end
+
+-- log(serpent.block(all))
+-- log(serpent.block(found))
+-- log(serpent.block(projectile_placeholder_data))
 
 if (next(projectile_placeholders)) then
     local found = {}

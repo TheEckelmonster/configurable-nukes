@@ -7,7 +7,7 @@ local Runtime_Global_Settings_Constants = require("settings.runtime-global.runti
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
 local space_data = Space_Data.create({
-    name = Constants.mod_name .. "-mod-data",
+    name = Constants.mod_name .. "-space-data",
     default_distance_modifier = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.MULTISURFACE_BASE_DISTANCE_MODIFIER.name }),
 })
 

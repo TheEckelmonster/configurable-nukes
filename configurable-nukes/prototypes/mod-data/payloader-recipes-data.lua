@@ -1,3 +1,7 @@
+local pairs = pairs
+
+local data = data
+
 local Mod_Data = require("__TheEckelmonster-core-library__.libs.mod-data.mod-data")
 
 local Constants = require("scripts.constants.constants")
@@ -11,6 +15,7 @@ local payloader_data = Mod_Data.create({
 local recipe_names = {
     ["payloader-load"] = 1,
     ["payloader-unload"] = 1,
+    ["target-combinator-program"] = 1,
 }
 
 for k, v in pairs(data.raw["recipe"]) do
@@ -18,6 +23,13 @@ for k, v in pairs(data.raw["recipe"]) do
         payloader_data.data.recipes = payloader_data.data.recipes or {}
         payloader_data.data.recipes[k] = v
     end
+end
+
+local land_mine = "land-mine"
+
+for k, _ in pairs(data.raw[land_mine]) do
+    payloader_data.data[land_mine] = payloader_data.data[land_mine] or {}
+    payloader_data.data[land_mine][k] = 1
 end
 
 data:extend({

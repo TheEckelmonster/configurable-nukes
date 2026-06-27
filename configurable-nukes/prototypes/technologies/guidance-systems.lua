@@ -45,7 +45,7 @@ local get_guidance_systems_research_prerequisites = function ()
     while param ~= nil do
 
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
         for k, v in pairs(data.raw) do
             found_match = false
@@ -136,7 +136,7 @@ local get_guidance_systems_research_ingredients = function (param_data)
     while param ~= nil and param_val ~= nil do
 
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
         for k, v in pairs(data.raw) do
             found_match = false
@@ -244,11 +244,14 @@ local guidance_effect =
     icons =
     {
         {
-            icon = "__base__/graphics/icons/signal/signal-damage.png",
+            icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-rocket.png",
+            floating = true,
         },
         {
-            icon = "__base__/graphics/icons/atomic-bomb.png",
-            floating = true,
+            icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-crosshair.png",
+        },
+        {
+            icon = "__configurable-nukes__/graphics/shortcuts/icbm-remote-tip.png",
         },
     }
 }

@@ -27,7 +27,7 @@ if (saa_s_active) then
                 target_effects = {
                     {
                         type = "script",
-                        effect_id = "saa-s-atomic-artillery-projectile-fired"
+                        effect_id = "atomic-artillery-shell-fired"
                     }
                 },
                 type = "instant"
@@ -42,6 +42,7 @@ if (saa_s_active) then
                 type = "artillery",
                 projectile = "saa-s-atomic-artillery-projectile-placeholder",
                 starting_speed = 1,
+                -- type = "instant",
                 source_effects =
                 {
                     type = "create-entity",

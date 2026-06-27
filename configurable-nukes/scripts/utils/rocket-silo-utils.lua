@@ -1,12 +1,67 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local game
+local get_player
+
+local forces
+
+local Constants = Constants or require("scripts.constants.constants")
+
+local Set_Forces = Set_Forces
+
+local function set_game(event, __game, __storage)
+    storage = __storage or _ENV.storage
+
+    game = __game or _ENV.game
+    get_player = game.get_player
+
+    Set_Forces()
+    forces = _ENV.Forces
+
+    return game
+end
+
+local table = table
+
+local next = next
+local table_insert = table.insert
+local type = type
+local table_remove = table.remove
+
+local math_abs = math.abs
+local math_atan = math.atan
+local math_log = math.log
+local math_random = math.random
+
+local E = math.exp(1)
+local PI = math.pi
+
+local PLAYER = "player"
+
+local defines = defines
+local prototypes = prototypes
+local script = script
+
+local cargo_destination_surface = defines.cargo_destination.surface
+local cargo_unit_inventory = defines.inventory.cargo_unit
+local rocket_ready_status = defines.rocket_silo_status.rocket_ready
+local rocket_silo_rocket_inventory = defines.inventory.rocket_silo_rocket
+
+local sa_active = script and script.active_mods and script.active_mods["space-age"]
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+local Configurable_Nukes_Data = Configurable_Nukes_Data
+
+local Event_Handler = Event_Handler
+local Log = Log
+local Settings_Service = Settings_Service
 
 local Util = require("__core__.lualib.util")
 
 local Zone_Static_Data = require("scripts.data.static.zone-static-data")
 
-local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
+-- local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
+-- local Constants = require("scripts.constants.constants")
 local Custom_Events = require("prototypes.custom-events.custom-events")
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
 local ICBM_Data = require("scripts.data.ICBM-data")
@@ -17,8 +72,22 @@ local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-reposit
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
 
+local cn_on_rocket_launch_scrubbed = defines.events[Custom_Events.cn_on_rocket_launch_scrubbed.name]
+
+local launchable_rocket_silos = {
+    ["rocket-silo"] = 1,
+    ["ipbm-rocket-silo"] = 1,
+}
+
+if (script and script.active_mods and script.active_mods["QualityRockets"]) then
+    for k, v in pairs(prototypes.quality) do
+        launchable_rocket_silos[k .. "-rocket-silo"] = 1
+        launchable_rocket_silos[k .. "-ipbm-rocket-silo"] = 1
+    end
+end
+
 local function has_power(data)
-    if (data and type(type(data) == "table")) then
+    if (data and type(data) == "table") then
         if (data.rocket_silo and data.rocket_silo.valid) then
             return  data.rocket_silo.is_connected_to_electric_network()
                 and data.rocket_silo.energy > 0
@@ -49,6 +118,30 @@ local function valid_payload(data)
 end
 
 local rocket_silo_utils = {}
+rocket_silo_utils.name = "rocket_silo_utils"
+rocket_silo_utils.set_game = set_game
+
+rocket_silo_utils.always_use_closest_silo = Data_Utils.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
+
+function rocket_silo_utils.on_runtime_mod_setting_changed(event)
+    Log.debug("rocket_silo_utils.on_runtime_mod_setting_changed")
+    Log.info(event)
+
+    if (not event.setting or type(event.setting) ~= "string") then return end
+    if (not event.setting_type or type(event.setting_type) ~= "string") then return end
+
+    if (not (event.setting:find("configurable-nukes-", 1, true) == 1)) then return end
+
+    if (event.setting == Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name) then
+        rocket_silo_utils.always_use_closest_silo = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name, reindex = true })
+    end
+end
+Event_Handler:register_event({
+    event_name = "on_runtime_mod_setting_changed",
+    source_name = "rocket_silo_utils.on_runtime_mod_setting_changed",
+    func_name = "rocket_silo_utils.on_runtime_mod_setting_changed",
+    func = rocket_silo_utils.on_runtime_mod_setting_changed,
+})
 
 function rocket_silo_utils.mine_rocket_silo(event)
     Log.debug("rocket_silo_utils.mine_rocket_silo")
@@ -63,6 +156,17 @@ function rocket_silo_utils.mine_rocket_silo(event)
         storage.surfaces[rocket_silo.surface.name] = storage.surfaces[rocket_silo.surface.name] or {}
         storage.surfaces[rocket_silo.surface.name][rocket_silo.unit_number] = nil
 
+        storage.ordered_rocket_silos = storage.ordered_rocket_silos or {}
+        local ordered_rocket_silos = storage.ordered_rocket_silos
+        local mod = rocket_silo.unit_number % 60
+
+        for idx, rocket_silo_data in ipairs(ordered_rocket_silos[mod] or {}) do
+            if (rocket_silo_data and rocket_silo_data.unit_number == rocket_silo.unit_number) then
+               table.remove(ordered_rocket_silos[mod], idx)
+               break
+            end
+        end
+
         Rocket_Silo_Repository.delete_rocket_silo_data_by_unit_number(rocket_silo.surface.name, rocket_silo.unit_number)
     end
 end
@@ -72,14 +176,30 @@ function rocket_silo_utils.add_rocket_silo(rocket_silo)
     Log.info(rocket_silo)
 
     local saved_rocket_silo = Rocket_Silo_Repository.save_rocket_silo_data(rocket_silo)
-    if (saved_rocket_silo and saved_rocket_silo.valid) then
-        storage.rocket_silos = storage.rocket_silos or {}
-        storage.rocket_silos[saved_rocket_silo.unit_number] = saved_rocket_silo
+    -- if (saved_rocket_silo and saved_rocket_silo.valid) then
+        -- storage.rocket_silos = storage.rocket_silos or {}
+        -- storage.rocket_silos[saved_rocket_silo.unit_number] = saved_rocket_silo
 
-        storage.surfaces = storage.surfaces or {}
-        storage.surfaces[saved_rocket_silo.surface_name] = storage.surfaces[saved_rocket_silo.surface_name] or {}
-        storage.surfaces[saved_rocket_silo.surface_name][saved_rocket_silo.unit_number] = saved_rocket_silo
-    end
+        -- storage.surfaces = storage.surfaces or {}
+        -- storage.surfaces[saved_rocket_silo.surface_name] = storage.surfaces[saved_rocket_silo.surface_name] or {}
+        -- storage.surfaces[saved_rocket_silo.surface_name][saved_rocket_silo.unit_number] = saved_rocket_silo
+
+        -- storage.ordered_rocket_silos = storage.ordered_rocket_silos or {}
+        -- local ordered_rocket_silos = storage.ordered_rocket_silos
+        -- local mod = saved_rocket_silo.unit_number % 60
+        -- ordered_rocket_silos[mod] = ordered_rocket_silos[mod] or {}
+
+        -- local already_exists = false
+        -- for i = 1, #ordered_rocket_silos[mod], 1 do
+        --     if (ordered_rocket_silos[mod][i] and ordered_rocket_silos[mod][i].unit_number == saved_rocket_silo.unit_number) then
+        --         already_exists = true
+        --         break
+        --     end
+        -- end
+        -- if (not already_exists) then
+        --     table.insert(ordered_rocket_silos[mod], saved_rocket_silo.circuit_network_data)
+        -- end
+    -- end
 end
 
 function rocket_silo_utils.scrub_launch(data)
@@ -89,7 +209,7 @@ function rocket_silo_utils.scrub_launch(data)
     if (not data) then return end
     if (not data.player_index or type(data.player_index) ~= "number" or data.player_index < 1) then return end
     if (not data.player) then
-        data.player = game.get_player(data.player_index)
+        data.player = (game or set_game()) and get_player(data.player_index)
         if (not data.player or not data.player.valid) then
             return
         end
@@ -118,8 +238,58 @@ function rocket_silo_utils.scrub_launch(data)
 
         Log.warn(launch_to_scrub.icbm_data)
         if (type(launch_to_scrub.icbm_data) ~= "table" or not launch_to_scrub.icbm_data.valid) then return end
+        log(serpent.block(launch_to_scrub.icbm_data))
 
-        local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
+        if (launch_to_scrub.icbm_data.source_silo and launch_to_scrub.icbm_data.source_silo.valid) then
+            local surface = launch_to_scrub.icbm_data.source_silo.surface
+
+            local position = { x = 0, y = 0, }
+
+            if (launch_to_scrub.icbm_data.tick_to_target < 0) then
+                position = launch_to_scrub.icbm_data.source_position
+
+                position.x = position.x + math_random(-1, 1) * math_random(42)
+                position.y = position.y + math_random(-1, 1) * math_random(42)
+            else
+                local total_flight_ticks = launch_to_scrub.icbm_data.tick_to_target - launch_to_scrub.icbm_data.tick_launched - 933
+                if (total_flight_ticks < 1) then total_flight_ticks = 1 end
+                local ticks_remaining = launch_to_scrub.icbm_data.tick_to_target - (data.tick or (game or set_game()).tick)
+                local flight_proportion = (total_flight_ticks - ticks_remaining) / total_flight_ticks
+                local distance_traveled = launch_to_scrub.icbm_data.target_distance * flight_proportion
+                local distance_remaining = launch_to_scrub.icbm_data.target_distance * (1 - flight_proportion)
+                log(serpent.block(total_flight_ticks))
+                log(serpent.block(ticks_remaining))
+                log(serpent.block(flight_proportion))
+                log(serpent.block(distance_traveled))
+
+                position.x = (launch_to_scrub.icbm_data.target_position.x - launch_to_scrub.icbm_data.source_position.x) * flight_proportion
+                position.y = (launch_to_scrub.icbm_data.target_position.y - launch_to_scrub.icbm_data.source_position.y) * flight_proportion
+                log(serpent.block(position))
+
+                position.x = position.x + (1 - flight_proportion + flight_proportion * (flight_proportion ^ ((distance_remaining - distance_traveled) / launch_to_scrub.icbm_data.target_distance))) * math_random(42 + distance_traveled * (1 - flight_proportion))
+                position.y = position.y + (1 - flight_proportion + flight_proportion * (flight_proportion ^ ((distance_remaining - distance_traveled) / launch_to_scrub.icbm_data.target_distance))) * math_random(42 + distance_traveled * (1 - flight_proportion))
+            end
+            log(serpent.block(position))
+
+            -- local cargo_pod = launch_to_scrub.icbm_data.source_silo.create_cargo_pod()
+            local cargo_pod = surface.create_entity({ name = "cargo-pod", position = position, force = launch_to_scrub.icbm_data.source_silo.force, })
+            if (cargo_pod and cargo_pod.valid) then
+                local inventory = cargo_pod.get_inventory(defines.inventory.cargo_unit)
+                if (inventory and inventory.valid) then
+                    inventory.insert(launch_to_scrub.icbm_data.item)
+                    cargo_pod.cargo_pod_origin = launch_to_scrub.icbm_data.source_silo
+
+                    cargo_pod.surface.request_to_generate_chunks(position, 3)
+                    cargo_pod.surface.force_generate_chunk_requests()
+                    cargo_pod.cargo_pod_destination = { type = cargo_destination_surface, position = position, surface = cargo_pod.surface, }
+                    cargo_pod.force_finish_ascending()
+                end
+            end
+        end
+
+        -- local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
+        storage.configurable_nukes = storage.configurable_nukes or Configurable_Nukes_Data:new()
+        local configurable_nukes_data = storage.configurable_nukes
         local icbm_meta_data_source = configurable_nukes_data.icbm_meta_data[launch_to_scrub.icbm_data.surface_name]
         local icbm_meta_data_target = nil
 
@@ -165,16 +335,25 @@ function rocket_silo_utils.scrub_launch(data)
         launch_to_scrub.icbm_data.cargo_pod = nil
 
         local force = launch_to_scrub.icbm_data.force
-        if (not force or not force.valid) then force = game.forces[launch_to_scrub.icbm_data.force_index] end
-        if (not force or not force.valid) then force = game.forces["player"] end
-        if (not force or not force.valid) then force = nil end
+        if (not force or not force.valid) then
+            -- force = game.forces[launch_to_scrub.icbm_data.force_index]
+            -- if (not force or not force.valid) then
+            --     force = game.forces[PLAYER]
+            --     if (not force or not force.valid) then force = nil end
+            -- end
+            force = (game or set_game) and forces and forces[launch_to_scrub.icbm_data.force_index] or nil
+            if (not force or not force.valid) then
+                force = (game or set_game) and forces and forces[PLAYER] or nil
+                if (not force or not force.valid) then force = nil end
+            end
+        end
 
         if (data.raise_event) then
             script.raise_event(
                 Custom_Events.cn_on_rocket_launch_scrubbed.name,
                 {
-                    name = defines.events[Custom_Events.cn_on_rocket_launch_scrubbed.name],
-                    tick = game.tick,
+                    name = cn_on_rocket_launch_scrubbed,
+                    tick = data.tick,
                     force = force,
                     item_number = launch_to_scrub.icbm_data.item_number,
                 }
@@ -191,7 +370,7 @@ function rocket_silo_utils.scrub_launch(data)
 end
 
 function rocket_silo_utils.launch_rocket(event)
-    Log.debug("rocket_silo_utils.launch_rocket")
+    Log.warn("rocket_silo_utils.launch_rocket")
     Log.info(event)
 
     if (not event) then return end
@@ -200,13 +379,28 @@ function rocket_silo_utils.launch_rocket(event)
     local surface = event.surface
     if (not surface or not surface.valid) then return end
     if (not event.player_index or type(event.player_index) ~= "number") then return end
-    local player = event.player_index > 0 and game.get_player(event.player_index)
+    local player = event.player_index > 0 and (game or set_game()) and get_player(event.player_index)
     local circuit_launch_initiated = false
     if (not player and event.player_index == 0) then circuit_launch_initiated = true end
     if (not circuit_launch_initiated and (not player or not player.valid)) then return end
 
-    local sa_active = storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
-    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
+    local icbm_researched = false
+    local ipbm_researched = false
+    if (player and player.valid) then
+        log(serpent.block(player))
+        local technologies = player.force.technologies
+        icbm_researched = technologies["icbms"] and technologies["icbms"].valid and technologies["icbms"].researched
+        ipbm_researched = technologies["ipbms"] and technologies["ipbms"].valid and technologies["ipbms"].researched
+    elseif (event.rocket_silo and event.rocket_silo.valid) then
+        log(serpent.block(event.rocket_silo))
+        local technologies = event.rocket_silo.force.technologies
+        icbm_researched = technologies["icbms"] and technologies["icbms"].valid and technologies["icbms"].researched
+        ipbm_researched = technologies["ipbms"] and technologies["ipbms"].valid and technologies["ipbms"].researched
+    end
+    log(serpent.block(icbm_researched))
+    log(serpent.block(ipbm_researched))
+    if (not icbm_researched) then return end
+    log("past research check")
 
     local multisurface_circuit_launch = false
     if (event.circuit_launched ~= nil and type(event.circuit_launched) ~= "boolean") then return end
@@ -230,8 +424,8 @@ function rocket_silo_utils.launch_rocket(event)
 
     local rocket_silo_array = {}
 
-    local setting_atomic_bomb_rocket_launchable = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name })
-    local setting_atomic_warhead_enabled = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })
+    -- local setting_atomic_bomb_rocket_launchable = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ATOMIC_BOMB_ROCKET_LAUNCHABLE.name })
+    -- local setting_atomic_warhead_enabled = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.ATOMIC_WARHEAD_ENABLED.name })
 
     if (not Constants.planets_dictionary[surface.name]) then Constants.get_planets(true) end
     local source_target_planet = Constants.planets_dictionary[surface.name]
@@ -264,14 +458,19 @@ function rocket_silo_utils.launch_rocket(event)
 
     local found_in_orbit = false
     local icbm_allow_multisurface = Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
-    local ipbm_researched = false
-    if (sa_active or se_active) then
-        if (player and player.valid) then
-            ipbm_researched = player.force.technologies["ipbms"].researched
-        elseif (event.rocket_silo and event.rocket_silo.valid) then
-            ipbm_researched = event.rocket_silo.force.technologies["ipbms"].researched
-        end
-    end
+    -- local icbm_researched = false
+    -- local ipbm_researched = false
+    -- if (sa_active or se_active) then
+    --     if (player and player.valid) then
+    --         icbm_researched = player.force.technologies["icbms"].researched
+    --         ipbm_researched = player.force.technologies["ipbms"].researched
+    --     elseif (event.rocket_silo and event.rocket_silo.valid) then
+    --         icbm_researched = event.rocket_silo.force.technologies["icbms"].researched
+    --         ipbm_researched = event.rocket_silo.force.technologies["ipbms"].researched
+    --     end
+    -- end
+
+    log("looking for rocket-silo")
 
     --[[ Circuit-network launched ]]
     local circuit_launch = event.circuit_launched or false
@@ -307,15 +506,16 @@ function rocket_silo_utils.launch_rocket(event)
         local rocket_silo_data = {}
         if (do_calc_distance) then
             if (event.rocket_silo_data and event.circuit_launched_space_location_name) then
+                ---@diagnostic disable-next-line: cast-local-type
                 rocket_silo_data = rocket_silo_utils.calculate_multifsurface_distance({
                     rocket_silo_data = event.rocket_silo_data,
                     space_location_name = event.circuit_launched_space_location_name,
                     target_position = target_position,
                     source_target_planet = source_target_planet,
                     source_target_system = source_target_system,
-                    setting_atomic_bomb_rocket_launchable = setting_atomic_bomb_rocket_launchable,
-                    setting_atomic_warhead_enabled = setting_atomic_warhead_enabled,
-                    launched_from = launched_from,
+                    -- setting_atomic_bomb_rocket_launchable = setting_atomic_bomb_rocket_launchable,
+                    -- setting_atomic_warhead_enabled = setting_atomic_warhead_enabled,
+                    -- launched_from = launched_from,
                     orbit_to_surface = event.orbit_to_surface,
                 })
             end
@@ -346,7 +546,7 @@ function rocket_silo_utils.launch_rocket(event)
         end
 
         if (type(rocket_silo_data) == "table") then
-            table.insert(rocket_silo_array, rocket_silo_data)
+            table_insert(rocket_silo_array, rocket_silo_data)
         end
     end
 
@@ -358,7 +558,7 @@ function rocket_silo_utils.launch_rocket(event)
     if (not circuit_launch and not se_active) then
         local planet = surface.planet
         if (planet and planet.valid) then
-            for name, platform in pairs(planet.get_space_platforms("player")) do
+            for name, platform in pairs(planet.get_space_platforms(PLAYER)) do
                 if (platform.valid and platform.space_location) then
                     if (not Constants.space_locations_dictionary[platform.space_location.name]) then Constants.get_space_locations(true) end
                     local space_location = Constants.space_locations_dictionary[platform.space_location.name]
@@ -378,40 +578,48 @@ function rocket_silo_utils.launch_rocket(event)
                                     and v.entity.type == "rocket-silo"
                                     and has_power({ rocket_silo = v.entity })
                                     and v.entity.position
-                                    and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+                                    and v.entity.rocket_silo_status == rocket_ready_status
+                                    -- and (
+                                    --         v.entity.name == "rocket-silo"
+                                    --     or
+                                    --         Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
+                                    --     and v.entity.name == "ipbm-rocket-silo"
+                                    -- ))
                                     and (
-                                            v.entity.name == "rocket-silo"
+                                            launchable_rocket_silos[v.entity.name]
+                                        and not v.entity.name:find("ipbm")
                                         or
-                                            Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
-                                        and v.entity.name == "ipbm-rocket-silo"
-                                    ))
-                                then
-                                    local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+                                            launchable_rocket_silos[v.entity.name]
+                                        and v.entity.name:find("ipbm")
+                                        and rocket_silo_utils.always_use_closest_silo
+                                    )
+                                ) then
+                                    local inventory = v.entity.get_inventory(rocket_silo_rocket_inventory)
                                     if (inventory and inventory.valid) then
                                         for _, item in ipairs(inventory.get_contents()) do
                                             if (valid_payload({ item_name = item.name })) then
                                                 found_in_orbit = true
                                                 local position = v.entity.position
                                                 local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
-                                                local distance_modifier = 1 - (1 / (math.pi / 2)) * (-1 * math.atan((--[[ TODO: Make the 1/3 configurable ]](1/3)/(math.log(distance + math.exp(1), math.exp(1))) ^ 3) * distance) + math.pi / 2)
+                                                local distance_modifier = 1 - (1 / (PI / 2)) * (-1 * math_atan((--[[ TODO: Make the 1/3 configurable ]](1/3)/(math_log(distance + E, E)) ^ 3) * distance) + PI / 2)
 
                                                 if (distance_modifier > 1) then distance_modifier = 1 end
                                                 distance = distance * distance_modifier
 
                                                 if (#rocket_silo_array == 0) then
-                                                    table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                    table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                                 else
                                                     local found = false
                                                     for i, j in ipairs(rocket_silo_array) do
                                                         if (distance < j.distance) then
-                                                            table.insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                            table_insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                                             found = true
                                                             break
                                                         end
                                                     end
 
                                                     if (not found) then
-                                                        table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                        table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                                     end
                                                 end
                                             end
@@ -440,7 +648,7 @@ function rocket_silo_utils.launch_rocket(event)
                                 and v.entity.type == "rocket-silo"
                                 and has_power({ rocket_silo = v.entity })
                                 and v.entity.position
-                                and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+                                and v.entity.rocket_silo_status == rocket_ready_status
                                 and (
                                         v.entity.name == "rocket-silo"
                                     or
@@ -448,32 +656,32 @@ function rocket_silo_utils.launch_rocket(event)
                                     and v.entity.name == "ipbm-rocket-silo"
                                 ))
                             then
-                                local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+                                local inventory = v.entity.get_inventory(rocket_silo_rocket_inventory)
                                 if (inventory and inventory.valid) then
                                     for _, item in ipairs(inventory.get_contents()) do
                                         if (valid_payload({ item_name = item.name })) then
                                             found_in_orbit = true
                                             local position = v.entity.position
                                             local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
-                                            local distance_modifier = 1 - (1 / (math.pi / 2)) * (-1 * math.atan((--[[ TODO: Make the 1/3 configurable ]](1/3)/(math.log(distance + math.exp(1), math.exp(1))) ^ 3) * distance) + math.pi / 2)
+                                            local distance_modifier = 1 - (1 / (PI / 2)) * (-1 * math_atan((--[[ TODO: Make the 1/3 configurable ]](1/3)/(math_log(distance + E, E)) ^ 3) * distance) + PI / 2)
 
                                             if (distance_modifier > 1) then distance_modifier = 1 end
                                             distance = distance * distance_modifier
 
                                             if (#rocket_silo_array == 0) then
-                                                table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                             else
                                                 local found = false
                                                 for i, j in ipairs(rocket_silo_array) do
                                                     if (distance < j.distance) then
-                                                        table.insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                        table_insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                                         found = true
                                                         break
                                                     end
                                                 end
 
                                                 if (not found) then
-                                                    table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                    table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                                 end
                                             end
                                         end
@@ -499,15 +707,23 @@ function rocket_silo_utils.launch_rocket(event)
                 and v.entity.type == "rocket-silo"
                 and has_power({ rocket_silo = v.entity })
                 and v.entity.position
-                and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+                and v.entity.rocket_silo_status == rocket_ready_status
+                -- and (
+                --         v.entity.name == "rocket-silo"
+                --     or
+                --         Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
+                --     and v.entity.name == "ipbm-rocket-silo"
+                -- )
                 and (
-                        v.entity.name == "rocket-silo"
+                        launchable_rocket_silos[v.entity.name]
+                    and not v.entity.name:find("ipbm")
                     or
-                        Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ALWAYS_USE_CLOSEST_SILO.name })
-                    and v.entity.name == "ipbm-rocket-silo"
-                ))
-            then
-                local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+                        launchable_rocket_silos[v.entity.name]
+                    and v.entity.name:find("ipbm")
+                    and rocket_silo_utils.always_use_closest_silo
+                )
+            ) then
+                local inventory = v.entity.get_inventory(rocket_silo_rocket_inventory)
                 if (inventory and inventory.valid) then
                     for _, item in ipairs(inventory.get_contents()) do
                         if (valid_payload({ item_name = item.name })) then
@@ -515,19 +731,19 @@ function rocket_silo_utils.launch_rocket(event)
                             local position = v.entity.position
                             local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
                             if (#rocket_silo_array == 0) then
-                                table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
+                                table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
                             else
                                 local found = false
                                 for i, j in ipairs(rocket_silo_array) do
                                     if (distance < j.distance) then
-                                        table.insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
+                                        table_insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
                                         found = true
                                         break
                                     end
                                 end
 
                                 if (not found) then
-                                    table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
+                                    table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
                                 end
                             end
                         end
@@ -546,7 +762,7 @@ function rocket_silo_utils.launch_rocket(event)
         if (not se_active) then
             local planet = surface.planet
             if (planet and planet.valid) then
-                for name, platform in pairs(planet.get_space_platforms("player")) do
+                for name, platform in pairs(planet.get_space_platforms(PLAYER)) do
                     if (platform.valid and platform.space_location) then
                         if (not Constants.space_locations_dictionary[platform.space_location.name]) then Constants.get_space_locations(true) end
                         local space_location = Constants.space_locations_dictionary[platform.space_location.name]
@@ -564,35 +780,35 @@ function rocket_silo_utils.launch_rocket(event)
                                         and v.entity.type == "rocket-silo"
                                         and has_power({ rocket_silo = v.entity })
                                         and v.entity.position
-                                        and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+                                        and v.entity.rocket_silo_status == rocket_ready_status
                                         and v.entity.name == "ipbm-rocket-silo")
                                     then
-                                        local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+                                        local inventory = v.entity.get_inventory(rocket_silo_rocket_inventory)
                                         if (inventory and inventory.valid) then
                                             for _, item in ipairs(inventory.get_contents()) do
                                                 if (valid_payload({ item_name = item.name })) then
                                                     found_in_orbit = true
                                                     local position = v.entity.position
                                                     local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
-                                                    local distance_modifier = 1 - (1 / (math.pi / 2)) * (-1 * math.atan((--[[ TODO: Make the 1/3 configurable ]](1/3)/(math.log(distance + math.exp(1), math.exp(1))) ^ 3) * distance) + math.pi / 2)
+                                                    local distance_modifier = 1 - (1 / (PI / 2)) * (-1 * math_atan((--[[ TODO: Make the 1/3 configurable ]](1/3)/(math_log(distance + E, E)) ^ 3) * distance) + PI / 2)
 
                                                     if (distance_modifier > 1) then distance_modifier = 1 end
                                                     distance = distance * distance_modifier
 
                                                     if (#rocket_silo_array == 0) then
-                                                        table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                        table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                                     else
                                                         local found = false
                                                         for i, j in ipairs(rocket_silo_array) do
                                                             if (distance < j.distance) then
-                                                                table.insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                                table_insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                                                 found = true
                                                                 break
                                                             end
                                                         end
 
                                                         if (not found) then
-                                                            table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
+                                                            table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true })
                                                         end
                                                     end
                                                 end
@@ -621,17 +837,17 @@ function rocket_silo_utils.launch_rocket(event)
                                     and v.entity.type == "rocket-silo"
                                     and has_power({ rocket_silo = v.entity })
                                     and v.entity.position
-                                    and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+                                    and v.entity.rocket_silo_status == rocket_ready_status
                                     and v.entity.name == "ipbm-rocket-silo")
                                 then
-                                    local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+                                    local inventory = v.entity.get_inventory(rocket_silo_rocket_inventory)
                                     if (inventory and inventory.valid) then
                                         for _, item in ipairs(inventory.get_contents()) do
                                             if (valid_payload({ item_name = item.name })) then
                                                 found_in_orbit = true
                                                 local position = v.entity.position
                                                 local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
-                                                local distance_modifier = 1 - (1 / (math.pi / 2)) * (-1 * math.atan((--[[ TODO: Make the 1/3 configurable ]](1/3)/(math.log(distance + math.exp(1), math.exp(1))) ^ 3) * distance) + math.pi / 2)
+                                                local distance_modifier = 1 - (1 / (PI / 2)) * (-1 * math_atan((--[[ TODO: Make the 1/3 configurable ]](1/3)/(math_log(distance + E, E)) ^ 3) * distance) + PI / 2)
 
                                                 if (distance_modifier > 1) then distance_modifier = 1 end
                                                 distance = distance * distance_modifier
@@ -639,19 +855,19 @@ function rocket_silo_utils.launch_rocket(event)
                                                 local rocket_silo_data = { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "orbit", launched_from_space = true }
 
                                                 if (#rocket_silo_array == 0) then
-                                                    table.insert(rocket_silo_array, rocket_silo_data)
+                                                    table_insert(rocket_silo_array, rocket_silo_data)
                                                 else
                                                     local found = false
                                                     for i, j in ipairs(rocket_silo_array) do
                                                         if (distance < j.distance) then
-                                                            table.insert(rocket_silo_array, i, rocket_silo_data)
+                                                            table_insert(rocket_silo_array, i, rocket_silo_data)
                                                             found = true
                                                             break
                                                         end
                                                     end
 
                                                     if (not found) then
-                                                        table.insert(rocket_silo_array, rocket_silo_data)
+                                                        table_insert(rocket_silo_array, rocket_silo_data)
                                                     end
                                                 end
                                             end
@@ -684,10 +900,10 @@ function rocket_silo_utils.launch_rocket(event)
                 and v.entity.type == "rocket-silo"
                 and has_power({ rocket_silo = v.entity })
                 and v.entity.position
-                and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+                and v.entity.rocket_silo_status == rocket_ready_status
                 and v.entity.name == "ipbm-rocket-silo")
             then
-                local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+                local inventory = v.entity.get_inventory(rocket_silo_rocket_inventory)
                 if (inventory and inventory.valid) then
                     for _, item in ipairs(inventory.get_contents()) do
                         if (valid_payload({ item_name = item.name })) then
@@ -695,19 +911,19 @@ function rocket_silo_utils.launch_rocket(event)
                             local position = v.entity.position
                             local distance = ((target_position.x - position.x) ^ 2 + (target_position.y - position.y) ^ 2) ^ 0.5
                             if (#rocket_silo_array == 0) then
-                                table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
+                                table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
                             else
                                 local found = false
                                 for i, j in ipairs(rocket_silo_array) do
                                     if (distance < j.distance) then
-                                        table.insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
+                                        table_insert(rocket_silo_array, i, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
                                         found = true
                                         break
                                     end
                                 end
 
                                 if (not found) then
-                                    table.insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
+                                    table_insert(rocket_silo_array, { entity = v.entity, distance = distance, source_surface = v.entity.surface, launched_from = "surface", launched_from_space = false })
                                 end
                             end
                         end
@@ -745,15 +961,24 @@ function rocket_silo_utils.launch_rocket(event)
                         and v.entity.type == "rocket-silo"
                         and has_power({ rocket_silo = v.entity })
                         and v.entity.position
-                        and v.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+                        and v.entity.rocket_silo_status == rocket_ready_status
+                        -- and (
+                        --         Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
+                        --         and v.entity.name == "rocket-silo"
+                        --     or
+                        --         v.entity.name == "ipbm-rocket-silo"
+                        -- )
                         and (
-                                Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
-                                and v.entity.name == "rocket-silo"
+                                launchable_rocket_silos[v.entity.name]
+                            and not v.entity.name:find("ipbm")
+                            and Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
                             or
-                                v.entity.name == "ipbm-rocket-silo"))
-                    then
+                                launchable_rocket_silos[v.entity.name]
+                            and v.entity.name:find("ipbm")
+                        )
+                    ) then
 
-                        local inventory = v.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+                        local inventory = v.entity.get_inventory(rocket_silo_rocket_inventory)
                         if (inventory and inventory.valid) then
                             for _, item in ipairs(inventory.get_contents()) do
                                 if (valid_payload({ item_name = item.name })) then
@@ -773,8 +998,8 @@ function rocket_silo_utils.launch_rocket(event)
                                 rocket_silo_array = rocket_silo_array,
                                 source_target_planet = source_target_planet,
                                 source_target_system = source_target_system,
-                                setting_atomic_bomb_rocket_launchable = setting_atomic_bomb_rocket_launchable,
-                                setting_atomic_warhead_enabled = setting_atomic_warhead_enabled,
+                                -- setting_atomic_bomb_rocket_launchable = setting_atomic_bomb_rocket_launchable,
+                                -- setting_atomic_warhead_enabled = setting_atomic_warhead_enabled,
                             })
                             if (type(returned_rocket_silo_data) == "table") then
                                 calculated = true
@@ -796,7 +1021,7 @@ function rocket_silo_utils.launch_rocket(event)
                                     end
                                 end
 
-                                table.insert(rocket_silo_array, index, return_val_copy)
+                                table_insert(rocket_silo_array, index, return_val_copy)
                             end
                         end
                     end
@@ -809,7 +1034,8 @@ function rocket_silo_utils.launch_rocket(event)
 
     Log.warn(rocket_silo_array)
 
-    local return_val, return_data
+    -- local return_val, return_data
+    local return_val, return_data = nil, {}
     for _, rocket_silo_data in ipairs(rocket_silo_array) do
         local rocket_silo = nil
         local launched = false
@@ -832,19 +1058,22 @@ function rocket_silo_utils.launch_rocket(event)
 
         if (rocket_silo and rocket_silo.valid) then
             --[[ rocket silo inventory ]]
-            local inventory = rocket_silo.get_inventory(defines.inventory.rocket_silo_rocket)
+            local inventory = rocket_silo.get_inventory(rocket_silo_rocket_inventory)
             if (inventory and inventory.valid) then
+                inventory.sort_and_merge()
                 local items = {}
                 local payload_items = {}
                 local total_payload_items = 1
                 local cargo_dictionary = {}
+                local mirv = false
 
                 --[[ Iterate through the rocket-silo's inventory slots ]]
-                for i = 1, #inventory, 1 do
+                for i = 1, #inventory - inventory.count_empty_stacks(true, true), 1 do
                     local item = inventory[i]
+                    log(serpent.block(item))
                     if (item and item.valid and item.valid_for_read and valid_payload({ item_name = item.name })) then
                         local _item = { name = item.name, count = item.count, quality = item.quality.name, }
-                        table.insert(items, _item)
+                        table_insert(items, _item)
 
                         if (not cargo_dictionary[item.name]) then
                             cargo_dictionary[item.name] = { name = item.name, count = item.count, }
@@ -853,27 +1082,81 @@ function rocket_silo_utils.launch_rocket(event)
                         end
 
                         --[[ Does the item have an inventroy? i.e. is it a cn-payload-vehicle? ]]
-                        local item_inventory = item.get_inventory(defines.inventory.cargo_unit)
+                        local item_inventory = item.get_inventory(cargo_unit_inventory)
                         if (item_inventory and item_inventory.valid) then
                             --[[ Get the contents of the cn-payload-vehicle ]]
-                            local contents = item_inventory.get_contents()
-                            if (contents) then
-                                for _, v in pairs(contents) do
+                            -- local contents = item_inventory.get_contents()
+                            item_inventory.sort_and_merge()
+                            -- if (contents) then
+                                -- for _, v in pairs(contents) do
+
+                                local cargo = {}
+                                for j = 1, #item_inventory - item_inventory.count_empty_stacks(true, true) do
+                                    local v = item_inventory[j]
+                                    log(serpent.block(v))
+                                    if (not v.valid or not v.valid_for_read) then goto continue end
+                                    log(serpent.block(v.name))
+
                                     total_payload_items = total_payload_items + v.count
-                                    table.insert(payload_items, v)
+                                    -- table_insert(payload_items, v)
 
                                     if (v.name == "explosives") then
                                         if (not _item.explosives) then _item.explosives = 0 end
                                         _item.explosives = _item.explosives + v.count
+                                    elseif (v.name == "target-combinator") then
+                                        local item_stack = item_inventory.find_item_stack("target-combinator")
+                                        log(serpent.block(v))
+                                        log(serpent.block(item_stack))
+                                        if (item_stack and item_stack.valid and item_stack.is_item_with_tags) then
+                                            local target_tags = item_stack.get_tag("target_tags")
+
+                                            log(serpent.block(target_tags))
+                                            if (target_tags and target_tags[1]) then
+                                            -- if (target_tags) then
+                                                local area = { x = target_tags[1].x.min, y = target_tags[1].y.min, }
+                                                -- local area = { x = target_tags.x.min, y = target_tags.y.min, }
+
+                                                local mirv_tag_number = item_stack.get_tag("mirv_tag_number")
+
+                                                storage.mirv_targets = storage.mirv_targets or {}
+                                                local mirv_target = storage.mirv_targets[mirv_tag_number]
+                                                if (mirv_target and mirv_target.chart_tag and mirv_target.chart_tag.valid) then
+                                                    log(serpent.block(mirv_target))
+                                                    log(serpent.block(mirv_target.chart_tag.position))
+                                                    mirv_target.chart_tag.icon = { type = "virtual", name = "mirv-targeting-signal-locked"}
+                                                    -- area = mirv_target.chart_tag.position
+                                                    area = { x = mirv_target.chart_tag.position.x, y = mirv_target.chart_tag.position.y, }
+                                                    log(serpent.block(mirv_target.chart_tag.position))
+                                                end
+
+                                                log(serpent.block(target_tags))
+                                                -- _item.cargo = _item.cargo or {}
+                                                _item.cargo = cargo
+                                                -- _item.cargo = contents
+                                                -- _item.cargo[#_item.cargo+1] = { name = _item.cargo.name, quality = _item.cargo.quality, count = _item.cargo.count, }
+                                                -- _item.cargo[#_item.cargo+1] = _item
+                                                _item.area = { left_top = area, right_bottom = area, }
+                                                _item.mirv = true
+                                                mirv = true
+                                            end
+                                        end
+                                    else
+                                        log(serpent.block(v))
+                                        log(serpent.block(payload_items))
+                                        
+                                        table_insert(cargo, { name = v.name, count = v.count, quality = v.quality.name, })
+                                        table_insert(payload_items, { name = v.name, count = v.count, quality = v.quality.name, })
                                     end
 
                                     if (not cargo_dictionary[v.name]) then
-                                        cargo_dictionary[v.name] = { name = v.name, count = v.count, }
+                                        cargo_dictionary[v.name] = { name = v.name, count = v.count, quality = v.quality.name, }
                                     else
                                         cargo_dictionary[v.name].count = cargo_dictionary[v.name].count + v.count
                                     end
+
+                                    ::continue::
                                 end
-                            end
+                            -- end
                         end
                     end
                 end
@@ -886,57 +1169,216 @@ function rocket_silo_utils.launch_rocket(event)
                         cargo_pod = rocket.attached_cargo_pod
 
                         if (cargo_pod and cargo_pod.valid) then
-                            cargo_pod.cargo_pod_destination = { type = defines.cargo_destination.surface, surface = surface, rocket_silo_type = rocket_silo.name }
+                            cargo_pod.cargo_pod_destination = { type = cargo_destination_surface, surface = surface, rocket_silo_type = rocket_silo.name }
                         end
                     end
 
+                    -- Log.debug(rocket_silo_data)
+                    -- if (cargo_pod and cargo_pod.valid and rocket_silo.launch_rocket(cargo_pod.cargo_pod_destination)) then
+                    --     Log.debug("Launched rocket_silo:")
+                    --     Log.info(rocket_silo)
+
+                    --     local item_name = #items == 1 and items[1] and items[1].count == 1 and items[1].name or nil
+                    --     if (item_name == "atomic-bomb") then item_name = "atomic-rocket" end
+
+                    --     local launch_initiated_params =
+                    --     {
+                    --         surface = rocket_silo.surface,
+                    --         target_surface = surface,
+                    --         item_name = item_name,
+                    --         item = item_name and items[1] or nil,
+                    --         items = not item_name and items or nil,
+                    --         cargo = payload_items,
+                    --         cargo_dictionary = cargo_dictionary,
+                    --         total_payload_items = total_payload_items,
+                    --         tick = event.tick,
+                    --         source_silo = rocket_silo,
+                    --         area = event.area,
+                    --         cargo_pod = cargo_pod and cargo_pod.valid and cargo_pod,
+                    --         circuit_launch = circuit_launch,
+                    --         player_index = event.player_index,
+                    --         distance = rocket_silo_data.distance,
+                    --         launched_from = rocket_silo_data.launched_from,
+                    --         launched_from_space = rocket_silo_data.launched_from_space,
+                    --         base_target_distance = rocket_silo_data.base_target_distance,
+                    --         speed = speed,
+                    --         is_travelling = rocket_silo_data.is_travelling,
+                    --         space_origin_pos = rocket_silo_data.space_origin_pos,
+                    --         -- origin_system = rocket_silo_data.origin_system,
+                    --         -- source_target_system = rocket_silo_data.source_target_system,
+                    --     }
+                    --     Log.debug(launch_initiated_params)
+                    --     return_val, return_data = ICBM_Utils.launch_initiated(launch_initiated_params)
+                    --     launched = true
+                    -- else
+                    --     Log.error("Failed to launch rocket_silo: ")
+                    --     Log.warn(rocket)
+                    --     Log.warn(cargo_pod)
+                    --     Log.warn(rocket_silo_data)
+                    --     Log.warn(rocket_silo)
+                    --     if (rocket_silo and rocket_silo.valid and rocket_silo.force and rocket_silo.force.valid) then
+                    --         rocket_silo.force.print(string.format("Failed to launch rocket silo: [entity=%s][gps=%d,%d,%s]", rocket_silo.name, rocket_silo.position.x, rocket_silo.position.y, rocket_silo.surface.name))
+                    --     end
+                    -- end
                     Log.debug(rocket_silo_data)
-                    if (cargo_pod and cargo_pod.valid and rocket_silo.launch_rocket(cargo_pod.cargo_pod_destination)) then
-                        Log.debug("Launched rocket_silo:")
-                        Log.info(rocket_silo)
 
-                        local item_name = #items == 1 and items[1] and items[1].count == 1 and items[1].name or nil
-                        if (item_name == "atomic-bomb") then item_name = "atomic-rocket" end
+                    log(serpent.block(mirv))
+                    if (mirv) then
+                        -- local mirvs = {}
+                        local to_remove = {}
 
-                        local launch_initiated_params =
-                        {
-                            surface = rocket_silo.surface,
-                            target_surface = surface,
-                            item_name = item_name,
-                            item = item_name and items[1] or nil,
-                            items = not item_name and items or nil,
-                            cargo = payload_items,
-                            cargo_dictionary = cargo_dictionary,
-                            total_payload_items = total_payload_items,
-                            tick = event.tick,
-                            source_silo = rocket_silo,
-                            area = event.area,
-                            cargo_pod = cargo_pod and cargo_pod.valid and cargo_pod,
-                            circuit_launch = circuit_launch,
-                            player_index = event.player_index,
-                            distance = rocket_silo_data.distance,
-                            launched_from = rocket_silo_data.launched_from,
-                            launched_from_space = rocket_silo_data.launched_from_space,
-                            base_target_distance = rocket_silo_data.base_target_distance,
-                            speed = speed,
-                            is_travelling = rocket_silo_data.is_travelling,
-                            space_origin_pos = rocket_silo_data.space_origin_pos,
-                            -- origin_system = rocket_silo_data.origin_system,
-                            -- source_target_system = rocket_silo_data.source_target_system,
-                        }
-                        Log.debug(launch_initiated_params)
-                        return_val, return_data = ICBM_Utils.launch_initiated(launch_initiated_params)
-                        launched = true
-                    else
-                        Log.error("Failed to launch rocket_silo: ")
-                        Log.warn(rocket)
-                        Log.warn(cargo_pod)
-                        Log.warn(rocket_silo_data)
-                        Log.warn(rocket_silo)
+                        for k, v in ipairs(items) do
+                            log(serpent.block(k))
+                            log(serpent.block(v))
+                            if (v.mirv) then
+                                table_insert(to_remove, k)
+                                -- table_insert(mirvs, v)
+
+                                if (cargo_pod and cargo_pod.valid and rocket_silo.launch_rocket(cargo_pod.cargo_pod_destination)) then
+                                    Log.debug("Launched rocket_silo:")
+                                    Log.info(rocket_silo)
+
+                                    local item_name = #items == 1 and items[1] and items[1].count == 1 and items[1].name or nil
+                                    if (item_name == "atomic-bomb") then item_name = "atomic-rocket" end
+
+                                    local launch_initiated_params =
+                                    {
+                                        surface = rocket_silo.surface,
+                                        target_surface = surface,
+                                        item_name = item_name,
+                                        item = item_name and items[1] or nil,
+                                        items = not item_name and v or nil,
+                                        cargo = payload_items,
+                                        cargo_dictionary = cargo_dictionary,
+                                        total_payload_items = total_payload_items,
+                                        tick = event.tick,
+                                        source_silo = rocket_silo,
+                                        area = v.area,
+                                        cargo_pod = cargo_pod and cargo_pod.valid and cargo_pod,
+                                        circuit_launch = circuit_launch,
+                                        player_index = event.player_index,
+                                        distance = rocket_silo_data.distance,
+                                        launched_from = rocket_silo_data.launched_from,
+                                        launched_from_space = rocket_silo_data.launched_from_space,
+                                        base_target_distance = rocket_silo_data.base_target_distance,
+                                        speed = speed,
+                                        is_travelling = rocket_silo_data.is_travelling,
+                                        space_origin_pos = rocket_silo_data.space_origin_pos,
+                                        -- origin_system = rocket_silo_data.origin_system,
+                                        -- source_target_system = rocket_silo_data.source_target_system,
+                                    }
+                                    Log.debug(launch_initiated_params)
+                                    return_val, return_data[#return_data+1] = ICBM_Utils.launch_initiated(launch_initiated_params)
+                                    launched = true
+                                else
+                                    if (return_val == 1 and return_data[1] and return_data[#return_data].valid) then
+                                        local item_name = #items == 1 and items[1] and items[1].count == 1 and items[1].name or nil
+                                        if (item_name == "atomic-bomb") then item_name = "atomic-rocket" end
+
+                                        local launch_initiated_params =
+                                        {
+                                            surface = rocket_silo.surface,
+                                            target_surface = surface,
+                                            item_name = item_name,
+                                            item = item_name and items[1] or nil,
+                                            items = not item_name and v or nil,
+                                            cargo = payload_items,
+                                            cargo_dictionary = cargo_dictionary,
+                                            total_payload_items = total_payload_items,
+                                            tick = event.tick,
+                                            source_silo = rocket_silo,
+                                            area = v.area,
+                                            cargo_pod = cargo_pod and cargo_pod.valid and cargo_pod,
+                                            circuit_launch = circuit_launch,
+                                            player_index = event.player_index,
+                                            distance = rocket_silo_data.distance,
+                                            launched_from = rocket_silo_data.launched_from,
+                                            launched_from_space = rocket_silo_data.launched_from_space,
+                                            base_target_distance = rocket_silo_data.base_target_distance,
+                                            speed = speed,
+                                            is_travelling = rocket_silo_data.is_travelling,
+                                            space_origin_pos = rocket_silo_data.space_origin_pos,
+                                            -- origin_system = rocket_silo_data.origin_system,
+                                            -- source_target_system = rocket_silo_data.source_target_system,
+                                        }
+                                        Log.debug(launch_initiated_params)
+                                        return_val, return_data[#return_data + 1] = ICBM_Utils.launch_initiated(launch_initiated_params)
+                                    else
+                                        Log.error("Failed to launch rocket_silo: ")
+                                        Log.warn(rocket)
+                                        Log.warn(cargo_pod)
+                                        Log.warn(rocket_silo_data)
+                                        Log.warn(rocket_silo)
+                                        if (rocket_silo and rocket_silo.valid and rocket_silo.force and rocket_silo.force.valid) then
+                                            rocket_silo.force.print(string.format("Failed to launch rocket silo: [entity=%s][gps=%d,%d,%s]", rocket_silo.name, rocket_silo.position.x, rocket_silo.position.y, rocket_silo.surface.name))
+                                        end
+                                    end
+                                end
+                            end
+                        end
+
+                        log(serpent.block(items))
+                        for i = #to_remove, 1, -1 do
+                            table_remove(items, i)
+                        end
+                    end
+
+                    log(serpent.block(items))
+                    -- if (cargo_pod and cargo_pod.valid and rocket_silo.launch_rocket(cargo_pod.cargo_pod_destination)) then
+                    if (next(items)) then
+                        if (cargo_pod and cargo_pod.valid and rocket_silo.launch_rocket(cargo_pod.cargo_pod_destination) or return_val == 1 and return_data[1] and return_data[#return_data].valid) then
+                            Log.debug("Launched rocket_silo:")
+                            Log.info(rocket_silo)
+
+                            local item_name = #items == 1 and items[1] and items[1].count == 1 and items[1].name or nil
+                            if (item_name == "atomic-bomb") then item_name = "atomic-rocket" end
+
+                            local launch_initiated_params =
+                            {
+                                surface = rocket_silo.surface,
+                                target_surface = surface,
+                                item_name = item_name,
+                                item = item_name and items[1] or nil,
+                                items = not item_name and items or nil,
+                                cargo = payload_items,
+                                cargo_dictionary = cargo_dictionary,
+                                total_payload_items = total_payload_items,
+                                tick = event.tick,
+                                source_silo = rocket_silo,
+                                area = event.area,
+                                cargo_pod = cargo_pod and cargo_pod.valid and cargo_pod,
+                                circuit_launch = circuit_launch,
+                                player_index = event.player_index,
+                                distance = rocket_silo_data.distance,
+                                launched_from = rocket_silo_data.launched_from,
+                                launched_from_space = rocket_silo_data.launched_from_space,
+                                base_target_distance = rocket_silo_data.base_target_distance,
+                                speed = speed,
+                                is_travelling = rocket_silo_data.is_travelling,
+                                space_origin_pos = rocket_silo_data.space_origin_pos,
+                                -- origin_system = rocket_silo_data.origin_system,
+                                -- source_target_system = rocket_silo_data.source_target_system,
+                            }
+                            Log.debug(launch_initiated_params)
+                            -- return_val, return_data = ICBM_Utils.launch_initiated(launch_initiated_params)
+                            return_val, return_data[#return_data + 1] = ICBM_Utils.launch_initiated(launch_initiated_params)
+                            launched = true
+                        else
+                            Log.error("Failed to launch rocket_silo: ")
+                            Log.warn(rocket)
+                            Log.warn(cargo_pod)
+                            Log.warn(rocket_silo_data)
+                            Log.warn(rocket_silo)
+                            if (rocket_silo and rocket_silo.valid and rocket_silo.force and rocket_silo.force.valid) then
+                                rocket_silo.force.print(string.format("Failed to launch rocket silo: [entity=%s][gps=%d,%d,%s]", rocket_silo.name, rocket_silo.position.x, rocket_silo.position.y, rocket_silo.surface.name))
+                            end
+                        end
                     end
                 end
             end
         end
+
+        -- log(serpent.block(return_data))
 
         if (launched) then return return_val, return_data end
     end
@@ -954,29 +1396,38 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
     local rocket_silo_array = data.rocket_silo_array
     local source_target_planet = data.source_target_planet
     local source_target_system = data.source_target_system
-    local setting_atomic_bomb_rocket_launchable = data.setting_atomic_bomb_rocket_launchable
-    local setting_atomic_warhead_enabled = data.setting_atomic_warhead_enabled
-    local launched_from = data.launched_from
+    -- local setting_atomic_bomb_rocket_launchable = data.setting_atomic_bomb_rocket_launchable
+    -- local setting_atomic_warhead_enabled = data.setting_atomic_warhead_enabled
+    -- local launched_from = data.launched_from
     local orbit_to_surface = data.orbit_to_surface
-
-    local sa_active = storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
-    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     if (    passed_rocket_silo_data.entity
         and passed_rocket_silo_data.entity.valid
         and passed_rocket_silo_data.entity.type == "rocket-silo"
         and has_power({ rocket_silo = passed_rocket_silo_data.entity })
         and passed_rocket_silo_data.entity.position
-        and passed_rocket_silo_data.entity.rocket_silo_status == defines.rocket_silo_status.rocket_ready
+        and passed_rocket_silo_data.entity.rocket_silo_status == rocket_ready_status
+        -- and (
+        --         (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
+        --         or orbit_to_surface)
+        --         and passed_rocket_silo_data.entity.name == "rocket-silo"
+        --     or
+        --         passed_rocket_silo_data.entity.name == "ipbm-rocket-silo"
+        -- )
         and (
-                (Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
-                or orbit_to_surface)
-                and passed_rocket_silo_data.entity.name == "rocket-silo"
+                launchable_rocket_silos[passed_rocket_silo_data.entity.name]
+            and not passed_rocket_silo_data.entity.name:find("ipbm")
+            and (
+                    orbit_to_surface
+                or  Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_ALLOW_MULTISURFACE.name })
+            )
             or
-                passed_rocket_silo_data.entity.name == "ipbm-rocket-silo"))
-    then
+                launchable_rocket_silos[passed_rocket_silo_data.entity.name]
+            and passed_rocket_silo_data.entity.name:find("ipbm")
+        )
+    ) then
 
-        local inventory = passed_rocket_silo_data.entity.get_inventory(defines.inventory.rocket_silo_rocket)
+        local inventory = passed_rocket_silo_data.entity.get_inventory(rocket_silo_rocket_inventory)
         if (inventory and inventory.valid) then
             for _, item in ipairs(inventory.get_contents()) do
                 if (valid_payload({ item_name = item.name })) then
@@ -1193,7 +1644,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                             --[[ Haven't actually tested this yet; that being firing at/from the anomaly ]]
                             if (origin_space_distortion > 0 and destination_space_distortion > 0) then
                                 --[[ Patrially distorted ]]
-                                target_distance = Zone_Static_Data.travel_cost.interstellar * math.abs(origin_space_distortion - destination_space_distortion)
+                                target_distance = Zone_Static_Data.travel_cost.interstellar * math_abs(origin_space_distortion - destination_space_distortion)
                                 distance_calculcated = true
                             elseif (origin_space_distortion > 0) then
                                 --[[ Origin distortion ]]
@@ -1245,7 +1696,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                                         --[[ Same planetary system ]]
                                         Log.debug("same planetary system")
                                         Log.info(origin_space_location)
-                                        Log.debug(math.abs(origin_space_location.planet_gravity_well - source_target_planet.planet_gravity_well))
+                                        Log.debug(math_abs(origin_space_location.planet_gravity_well - source_target_planet.planet_gravity_well))
 
                                         local origin_planet_gravity_well = origin_space_location.star_gravity_well
                                         Log.debug(origin_planet_gravity_well)
@@ -1254,11 +1705,11 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                                         end
                                         Log.debug(origin_planet_gravity_well)
 
-                                        target_distance = Zone_Static_Data.travel_cost.planet_gravity * math.abs(origin_planet_gravity_well - source_target_planet.planet_gravity_well)
+                                        target_distance = Zone_Static_Data.travel_cost.planet_gravity * math_abs(origin_planet_gravity_well - source_target_planet.planet_gravity_well)
                                     else
                                         --[[ Different planetary system ]]
                                         Log.debug("different planetary system")
-                                        target_distance = Zone_Static_Data.travel_cost.star_gravity * math.abs(origin_star_gravity_well - source_target_planet.star_gravity_well)
+                                        target_distance = Zone_Static_Data.travel_cost.star_gravity * math_abs(origin_star_gravity_well - source_target_planet.star_gravity_well)
                                             + Zone_Static_Data.travel_cost.planet_gravity * origin_space_location.planet_gravity_well
                                             + Zone_Static_Data.travel_cost.planet_gravity * source_target_planet.planet_gravity_well
                                     end
@@ -1319,7 +1770,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                     if (not se_active) then
                         if (space_location_name:find("platform-", 1, true)) then
                             --[[ base_target_distance shouldn't contribute as much if launched from space/a platform -> it is already in space/orbit ]]
-                            target_distance = target_distance + math.log(1 + base_target_distance, (math.exp(1) * 2) / (target_planet.magnitude) ^ math.exp(1))
+                            target_distance = target_distance + math_log(1 + base_target_distance, (E * 2) / (target_planet.magnitude) ^ E)
                             Log.warn(target_distance)
                         else
                             target_distance = target_distance + base_target_distance
@@ -1352,7 +1803,7 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
 
                     if (rocket_silo_array) then
                         if (#rocket_silo_array == 0) then
-                            table.insert(rocket_silo_array, local_rocket_silo_data)
+                            table_insert(rocket_silo_array, local_rocket_silo_data)
                         else
                             local found = false
                             for i, j in ipairs(rocket_silo_array) do
@@ -1384,14 +1835,14 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
                                     )
                                 )
                                 then
-                                    table.insert(rocket_silo_array, i, local_rocket_silo_data)
+                                    table_insert(rocket_silo_array, i, local_rocket_silo_data)
                                     found = true
                                     break
                                 end
                             end
 
                             if (not found) then
-                                table.insert(rocket_silo_array, local_rocket_silo_data)
+                                table_insert(rocket_silo_array, local_rocket_silo_data)
                             end
                         end
                         Log.debug(rocket_silo_array)
@@ -1411,6 +1862,10 @@ function rocket_silo_utils.calculate_multifsurface_distance(data)
     end
 
     return -2
+end
+
+function rocket_silo_utils.init(__storage)
+    storage = __storage
 end
 
 return rocket_silo_utils

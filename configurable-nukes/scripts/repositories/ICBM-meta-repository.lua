@@ -1,10 +1,15 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local string_find = string.find
+
+local Constants = Constants
+local Log = Log
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
 local String_Utils = require("scripts.utils.string-utils")
+
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local icbm_meta_repository = {}
 
@@ -20,8 +25,7 @@ function icbm_meta_repository.save_icbm_meta_data(surface_name, optionals)
     if (String_Utils.find_invalid_substrings(surface_name)) then return return_val end
     if (not Constants.planets_dictionary) then Constants.get_planets(true) end
     if (not Constants.planets_dictionary[surface_name]) then
-        local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
-        if (not se_active and not string.find(surface_name, "platform-", 1, true)) then
+        if (not se_active and not string_find(surface_name, "platform-", 1, true)) then
             return return_val
         end
     end
@@ -151,6 +155,10 @@ function icbm_meta_repository.get_all_icbm_meta_data(optionals)
     if (not storage.configurable_nukes.icbm_meta_data) then storage.configurable_nukes.icbm_meta_data = {} end
 
     return storage.configurable_nukes.icbm_meta_data
+end
+
+function icbm_meta_repository.init(__storage)
+    storage = __storage
 end
 
 return icbm_meta_repository

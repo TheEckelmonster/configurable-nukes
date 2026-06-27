@@ -1,3 +1,10 @@
+local type = type
+
+local commands = commands
+
+local Constants = Constants
+local Log = Log
+
 local Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
 local Initialization = require("scripts.initialization")
@@ -51,6 +58,14 @@ function configurable_nukes_commands.reinit(event)
 
         Initialization.reinit({ maintain_data = maintain_data})
         player.print("Reinitialization complete")
+    end)
+end
+
+function configurable_nukes_commands.apply_migrations(event)
+    Log.debug("configurable_nukes_commands.apply_migrations")
+    locals.validate_command(event, function (player)
+        Log.info("commands.print_table")
+        Initialization.apply_migrations()
     end)
 end
 
@@ -328,6 +343,7 @@ commands.add_command("configurable_nukes.reinit", "Tries to reinitialize, attemp
 commands.add_command("configurable_nukes.print_table", "", configurable_nukes_commands.print_table)
 commands.add_command("configurable_nukes.print_event_handlers", "", configurable_nukes_commands.print_event_handlers)
 commands.add_command("configurable_nukes.print_storage", "", configurable_nukes_commands.print_storage)
+commands.add_command("configurable_nukes.apply_migrations", "", configurable_nukes_commands.apply_migrations)
 -- commands.add_command("configurable_nukes.print_projectile_placeholders", "", configurable_nukes_commands.print_projectile_placeholders)
 -- commands.add_command("configurable_nukes.find_functions_in_storage", "", configurable_nukes_commands.find_functions_in_storage)
 -- commands.add_command("configurable_nukes.print_mod_data", "Exports to a .json file the currently available mod-data.", configurable_nukes_commands.print_mod_data)

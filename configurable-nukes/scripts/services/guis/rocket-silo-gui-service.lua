@@ -1,10 +1,23 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local next = next
+local type = type
+
+local defines = defines
+local script = script
+
+local relative_gui_rocket_silo = defines.relative_gui_type.rocket_silo_gui
+local gui_position_right = defines.relative_gui_position.right
+
+local Log = Log
+local Settings_Service = Settings_Service
 
 local Circuit_Network_Validations = require("scripts.validations.circuit-network-data.rocket-silo-validations")
 local Gui_Utils = require("scripts.utils.gui-utils")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
+
+local sa_active = script and script.active_mods and script.active_mods["space-age"]
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local rocket_silo_gui_service = {}
 
@@ -15,9 +28,6 @@ function rocket_silo_gui_service.create_rocket_silo_gui(data)
     if (not data or type(data) ~= "table") then return end
     if (not data.rocket_silo_data or type(data.rocket_silo_data) ~= "table") then return end
     if (not data.player or not data.player.valid) then return end
-
-    local sa_active = storage and storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
-    local se_active = storage and storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     --[[ Validate/reinitialize rocket-silo circuit-network-data ]]
     local is_valid = Circuit_Network_Validations.validate({ circuit_network_data = data.rocket_silo_data.circuit_network_data, })
@@ -46,8 +56,8 @@ function rocket_silo_gui_service.create_rocket_silo_gui(data)
             direction = "vertical",
             index = 0,
             anchor = {
-                gui = defines.relative_gui_type.rocket_silo_gui,
-                position = defines.relative_gui_position.right
+                gui = relative_gui_rocket_silo,
+                position = gui_position_right
             }
         })
         local gui_inner = gui.add({
@@ -212,8 +222,8 @@ function rocket_silo_gui_service.create_rocket_silo_gui(data)
                     end
                 end
 
-                Log.warn(items)
-                Log.warn(items_dictionary)
+                -- Log.warn(items)
+                -- Log.warn(items_dictionary)
 
                 local index = 1
                 local name = ""
@@ -241,6 +251,10 @@ function rocket_silo_gui_service.create_rocket_silo_gui(data)
         gui_inner.style.padding = { 4, 6, 4, 4 }
         gui_flow.style.padding = { 4, 6, 4, 4 }
     end
+end
+
+function rocket_silo_gui_service.init(__storage)
+    storage = __storage
 end
 
 return rocket_silo_gui_service

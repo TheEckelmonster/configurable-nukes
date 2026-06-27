@@ -1,4 +1,6 @@
-local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
+-- local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
+local Circuit_Network_Rocket_Silo_Data = Circuit_Network_Rocket_Silo_Data
+local Rocket_Silo_Meta_Repository = require("scripts.repositories.rocket-silo-meta-repository")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
 
 return function(params)
@@ -15,6 +17,8 @@ return function(params)
     if (storage_old.configurable_nukes) then
         if (storage_old.configurable_nukes.rocket_silo_meta_data) then
             local all_rocket_silo_meta_data = storage_old.configurable_nukes.rocket_silo_meta_data
+            Rocket_Silo_Repository.init(storage)
+            Rocket_Silo_Meta_Repository.init(storage)
             for k, v in pairs(all_rocket_silo_meta_data) do
                 for k_2, v_2 in pairs(v.rocket_silos) do
                     if (v_2.signals) then

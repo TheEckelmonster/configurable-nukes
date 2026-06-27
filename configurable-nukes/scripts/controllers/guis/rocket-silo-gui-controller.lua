@@ -1,11 +1,25 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local next = next
+local type = type
+
+local defines = defines
+
+local wire_connector_id_circuit_red = defines.wire_connector_id.circuit_red
+local wire_connector_id_circuit_green = defines.wire_connector_id.circuit_green
+
+local gui_type_entity = defines.gui_type.entity
+
+local Event_Handler = Event_Handler
+local Log = Log
 
 local Util = require("__core__.lualib.util")
 
 local Rocket_Silo_Gui_Service = require("scripts.services.guis.rocket-silo-gui-service")
 local Rocket_Silo_Repository = require("scripts.repositories.rocket-silo-repository")
+
+local sa_active = script and script.active_mods and script.active_mods["space-age"]
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local rocket_silo_gui_controller = {}
 rocket_silo_gui_controller.name = "rocket_silo_gui_controller"
@@ -15,14 +29,14 @@ function rocket_silo_gui_controller.on_gui_opened(event)
     Log.info(event)
 
     if (not event or type(event) ~= "table") then return end
-    if (not event.gui_type or event.gui_type ~= defines.gui_type.entity) then return end
+    if (not event.gui_type or event.gui_type ~= gui_type_entity) then return end
     if (not event.entity or type(event.entity) ~= "userdata" or not event.entity.valid) then return end
     if (event.entity.type ~= "rocket-silo") then return end
     if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
 
     local rocket_silo = event.entity
-    local circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_red)
-    if (not circuit_network) then circuit_network = rocket_silo.get_circuit_network(defines.wire_connector_id.circuit_green) end
+    local circuit_network = rocket_silo.get_circuit_network(wire_connector_id_circuit_red)
+    if (not circuit_network) then circuit_network = rocket_silo.get_circuit_network(wire_connector_id_circuit_green) end
     if (not circuit_network) then return end
 
     local rocket_silo_data = Rocket_Silo_Repository.get_rocket_silo_data(rocket_silo.surface.name, rocket_silo.unit_number)
@@ -53,7 +67,7 @@ function rocket_silo_gui_controller.on_gui_closed(event)
     Log.info(event)
 
     if (not event or not type(event) == "table") then return end
-    if (not event.gui_type or event.gui_type ~= defines.gui_type.entity) then return end
+    if (not event.gui_type or event.gui_type ~= gui_type_entity) then return end
     if (not event.entity or type(event.entity) ~= "userdata" or not event.entity.valid) then return end
     if (event.entity.type ~= "rocket-silo") then return end
     if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
@@ -142,9 +156,6 @@ function rocket_silo_gui_controller.on_gui_selection_state_changed(event)
     if (not event or not type(event) == "table") then return end
     if (not event.player_index or type(event.player_index) ~= "number" or event.player_index < 1) then return end
 
-    local sa_active = storage and storage.sa_active ~= nil and storage.sa_active or script and script.active_mods and script.active_mods["space-age"]
-    local se_active = storage and storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
-
     if (not sa_active and not se_active) then return end
 
     if (string.find(event.element.name, "cn_dropdown", 1, true)) then
@@ -203,16 +214,23 @@ function rocket_silo_gui_controller.on_entity_settings_pasted(event)
     if (entity_source.name ~= "rocket-silo" and entity_source.name ~= "ipbm-rocket-silo") then return end
     if (entity_destination.name ~= "rocket-silo" and entity_destination.name ~= "ipbm-rocket-silo") then return end
 
-    local rocket_silo_data_source = Rocket_Silo_Repository.get_rocket_silo_data(entity_source.surface.name, entity_source.unit_number)
+    -- local rocket_silo_data_source = Rocket_Silo_Repository.get_rocket_silo_data(entity_source.surface.name, entity_source.unit_number)
+
+    storage.rocket_silos = storage.rocket_silos or {}
+    local rocket_silo_data_source = storage.rocket_silos[entity_source.unit_number]
     if (not rocket_silo_data_source or not rocket_silo_data_source.valid) then
         rocket_silo_data_source = Rocket_Silo_Repository.save_rocket_silo_data(entity_source)
         if (not rocket_silo_data_source or not rocket_silo_data_source.valid) then return end
+        storage.rocket_silos[rocket_silo_data_source.unit_number] = rocket_silo_data_source
     end
 
-    local rocket_silo_data_destination = Rocket_Silo_Repository.get_rocket_silo_data(entity_destination.surface.name, entity_destination.unit_number)
+    -- local rocket_silo_data_destination = Rocket_Silo_Repository.get_rocket_silo_data(entity_destination.surface.name, entity_destination.unit_number)
+
+    local rocket_silo_data_destination = storage.rocket_silos[entity_destination.unit_number]
     if (not rocket_silo_data_destination or not rocket_silo_data_destination.valid) then
         rocket_silo_data_destination = Rocket_Silo_Repository.save_rocket_silo_data(entity_source)
         if (not rocket_silo_data_destination or not rocket_silo_data_destination.valid) then return end
+        storage.rocket_silos[entity_destination.unit_number] = rocket_silo_data_destination
     end
 
     local circuit_network_data = Util.table.deepcopy(rocket_silo_data_source.circuit_network_data)
@@ -224,7 +242,7 @@ function rocket_silo_gui_controller.on_entity_settings_pasted(event)
     circuit_network_data.surface_name = rocket_silo_data_destination.surface_name or rocket_silo_data_destination.surface and  rocket_silo_data_destination.surface.valid and rocket_silo_data_destination.surface.name or nil
 
     circuit_network_data.created = rocket_silo_data_destination.circuit_network_data and rocket_silo_data_destination.circuit_network_data.created or rocket_silo_data_destination.created or game.tick
-    circuit_network_data.updated = game.tick
+    circuit_network_data.updated = event.tick
 
     rocket_silo_data_destination.circuit_network_data = circuit_network_data
 
@@ -236,5 +254,9 @@ Event_Handler:register_event({
     func_name = "rocket_silo_gui_controller.on_entity_settings_pasted",
     func = rocket_silo_gui_controller.on_entity_settings_pasted,
 })
+
+function rocket_silo_gui_controller.init(__storage)
+    storage = __storage
+end
 
 return rocket_silo_gui_controller

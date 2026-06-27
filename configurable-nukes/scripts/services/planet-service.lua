@@ -1,10 +1,14 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local Log = Log
+
+local Constants = Constants
 
 local Configurable_Nukes_Repository = require("scripts.repositories.configurable-nukes-repository")
 local Spaceship_Data = require("scripts.data.space.spaceship-data")
 local String_Utils = require("scripts.utils.string-utils")
+
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
 local planet_service = {}
 
@@ -18,8 +22,6 @@ function planet_service.on_surface_created(event)
 
     local surface = game.get_surface(event.surface_index)
     if (not surface or not surface.valid) then return end
-
-    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
 
     if (not se_active) then
         --[[ TODO: Implement and then refernce here an update rather than full reindex ]]
@@ -50,6 +52,7 @@ function planet_service.on_surface_created(event)
 
             value.surface = surface
             value.surface_index = surface and surface.valid and surface.index
+
             if (is_spaceship_surface) then
                 Constants["space-exploration"].spaceships[value.name] = value
                 if (not storage.constants) then storage.constants = {} end
@@ -81,8 +84,6 @@ function planet_service.on_pre_surface_deleted(event)
 
     local surface = game.get_surface(event.surface_index)
     if (not surface or not surface.valid) then return end
-
-    local se_active = storage.se_active ~= nil and storage.se_active or script and script.active_mods and script.active_mods["space-exploration"]
 
     local configurable_nukes_data = Configurable_Nukes_Repository.get_configurable_nukes_data()
     --[[ Retrieving the old values, just in case they are needed for anything prior to, or after surface deletion ]]
@@ -134,6 +135,10 @@ function planet_service.on_pre_surface_deleted(event)
     end
 
     Log.debug(space_location)
+end
+
+function planet_service.init(__storage)
+    storage = __storage
 end
 
 return planet_service

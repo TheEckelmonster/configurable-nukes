@@ -1,6 +1,6 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local type = type
+
+local Log = Log
 
 local gui_utils = {}
 

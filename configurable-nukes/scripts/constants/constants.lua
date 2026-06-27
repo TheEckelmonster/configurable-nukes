@@ -1,6 +1,15 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local type = type
+local next = next
+
+local prototypes
+local mod_data
+
+local mods = mods
+local script = script
+
+local Log = Log
 
 local Anomaly_Data = require("scripts.data.space.celestial-objects.anomaly-data")
 local Asteroid_Belt_Data = require("scripts.data.space.celestial-objects.asteroid-belt-data")
@@ -447,8 +456,8 @@ locals.get_mod_data = function(data)
 
         if (prototypes) then
             local mod_data_prototypes = prototypes
-                                    and prototypes.mod_data
-                                    and prototypes.mod_data["configurable-nukes-mod-data"]
+                                    and mod_data
+                                    and mod_data["configurable-nukes-space-data"]
 
             if (mod_data_prototypes and type(mod_data_prototypes) == "table") then
                 Log.debug("Found mod_data_prototypes")
@@ -640,7 +649,7 @@ locals.get_planets = function(data)
     constants.planet_dictionary = {}
 
     if (prototypes) then
-        local planet_prototypes = prototypes.mod_data["configurable-nukes-mod-data"]
+        local planet_prototypes = mod_data["configurable-nukes-space-data"]
 
         if (planet_prototypes and type(planet_prototypes) == "table") then
             Log.debug("Found planet prototypes")
@@ -707,7 +716,7 @@ locals.get_space_locations = function(data)
     constants.space_locations_dictionary = {}
 
     if (prototypes) then
-        local mod_data_prototypes = prototypes.mod_data["configurable-nukes-mod-data"]
+        local mod_data_prototypes = mod_data["configurable-nukes-space-data"]
 
         if (mod_data_prototypes and type(mod_data_prototypes) == "table") then
             Log.debug("Found mod_data_prototypes")
@@ -774,7 +783,7 @@ locals.get_space_connections = function(data)
     constants.space_connections_dictionary = {}
 
     if (prototypes) then
-        local mod_data_prototypes = prototypes.mod_data["configurable-nukes-mod-data"]
+        local mod_data_prototypes = mod_data["configurable-nukes-space-data"]
 
         if (mod_data_prototypes and type(mod_data_prototypes) == "table") then
             Log.debug("Found mod_data_prototypes")
@@ -914,7 +923,7 @@ locals.get_space_exploration_universe = function(data)
                             planet_gravity_well = zone.planet_gravity_well or 0,
                             star_gravity_well = zone.star_gravity_well or 0,
 
-                            zone = zone,
+                            -- zone = zone,
                             zone_index = zone.index,
 
                             orbit_index = zone.orbit_index,
@@ -975,7 +984,7 @@ locals.get_space_exploration_universe = function(data)
                             planet_gravity_well = zone.planet_gravity_well or 0,
                             star_gravity_well = zone.star_gravity_well or 0,
 
-                            zone = zone,
+                            -- zone = zone,
                             zone_index = zone.index,
 
                             orbit_index = zone.orbit_index,
@@ -1011,7 +1020,7 @@ locals.get_space_exploration_universe = function(data)
                             planet_gravity_well = zone.planet_gravity_well or 0,
                             star_gravity_well = zone.star_gravity_well or 0,
 
-                            zone = zone,
+                            -- zone = zone,
                             zone_index = zone.index,
 
                             parent_index = zone.parent_index,
@@ -1033,7 +1042,7 @@ locals.get_space_exploration_universe = function(data)
                             planet_gravity_well = zone.planet_gravity_well or 0,
                             star_gravity_well = zone.star_gravity_well or 0,
 
-                            zone = zone,
+                            -- zone = zone,
                             zone_index = zone.index,
 
                             surface = zone_surface,
@@ -1056,7 +1065,7 @@ locals.get_space_exploration_universe = function(data)
                             planet_gravity_well = zone.planet_gravity_well or 0,
                             star_gravity_well = zone.star_gravity_well or 0,
 
-                            zone = zone,
+                            -- zone = zone,
                             zone_index = zone.index,
 
                             surface = zone_surface,
@@ -1132,6 +1141,12 @@ locals.get_space_exploration_universe = function(data)
     storage.constants.space_exploration_dictionary = constants.space_exploration_dictionary
 
     return constants["space-exploration"]
+end
+
+function constants.init(__storage)
+    storage =__storage
+    prototypes = _ENV.prototypes
+    mod_data = prototypes.mod_data
 end
 
 return constants

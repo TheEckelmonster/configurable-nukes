@@ -1,3 +1,4 @@
+script = script
 
 -- Globals
 Log = require("__TheEckelmonster-core-library__.libs.log.log")
@@ -64,7 +65,7 @@ Data = require("__TheEckelmonster-core-library__.libs.data.data")
 Force_Launch_Data = require("scripts.data.force-launch-data")
 ICBM_Data = require("scripts.data.ICBM-data")
 ICBM_Meta_Data = require("scripts.data.ICBM-meta-data")
--- local Rhythm = require("scripts.rhythm")
+-- Rhythm = require("scripts.rhythm")
 Rocket_Silo_Data = require("scripts.data.rocket-silo-data")
 Rocket_Silo_Meta_Data = require("scripts.data.rocket-silo-meta-data")
 Version_Data = require("scripts.data.version-data")

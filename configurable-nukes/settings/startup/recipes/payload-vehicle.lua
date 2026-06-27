@@ -43,8 +43,6 @@ local recipes = {
             { type = "item", name = "accumulator",  amount = 10 },
             { type = "item", name = "steel-chest",  amount = 5  } ,
             { type = "item", name = "storage-tank", amount = 2  },
-            heat_shielding,
-            liquid_rocket_fuel,
         },
         results = {
             { type = "item", name = "cn-payload-vehicle", amount = 1, }
@@ -80,7 +78,7 @@ if (heat_shielding) then
 end
 if (liquid_rocket_fuel) then
     table.insert(recipes[1].ingredients, liquid_rocket_fuel)
-    table.insert(recipes[1].ingredients, (function()
+    table.insert(recipes[2].ingredients, (function()
         local _liquid_rocket_fuel = Util.table.deepcopy(liquid_rocket_fuel)
         _liquid_rocket_fuel.amount = 200
         return _liquid_rocket_fuel

@@ -1,3 +1,12 @@
+local storage
+
+local next = next
+local type = type
+
+local math_floor = math.floor
+
+local Log = Log
+
 local Mod_Gui = require("__core__.lualib.mod-gui")
 
 local Force_Launch_Data_Repository = require("scripts.repositories.force-launch-data-repository")
@@ -93,7 +102,7 @@ function rocket_dashboard_gui_service.get_or_instantiate_rocket_dashboard(data)
     local storage_ref = storage.gui_data[player.index][Rocket_Dashboard_Constants.gui_data_index]
     if (not storage_ref[Rocket_Dashboard_Constants.frame_main_name]) then
 
-        local get_or_instantiate = function (params)
+        local function get_or_instantiate(params)
             -- Log.debug("local.get_or_instantiate")
             -- Log.info(params)
 
@@ -499,7 +508,7 @@ function rocket_dashboard_gui_service.add_rocket_data(data)
     local caption_destination = data.icbm_data.target_surface and data.icbm_data.target_surface.valid and data.icbm_data.target_surface.name or data.icbm_data.target_surface_name
     caption_destination = String_Utils.format_surface_name({ string_data = caption_destination })
 
-    local time_remaining = math.floor((data.icbm_data.tick_to_target - game.tick) / 60)
+    local time_remaining = math_floor((data.icbm_data.tick_to_target - game.tick) / 60)
     ---@diagnostic disable-next-line: cast-local-type
     if (time_remaining < 0) then time_remaining = "?" end
 
@@ -983,6 +992,10 @@ function rocket_dashboard_gui_service.update_gui_data(data)
             })
         end
     end
+end
+
+function rocket_dashboard_gui_service.init(__storage)
+    storage = __storage
 end
 
 return rocket_dashboard_gui_service

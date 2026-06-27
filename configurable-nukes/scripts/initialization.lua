@@ -1,3 +1,34 @@
+local next = next
+local type = type
+
+local defines = defines
+local script = script
+
+local rocket_silo_status_timeout = {
+    -- [defines.rocket_silo_status.building_rocket] = Constants.BIG_INTEGER,
+    -- [defines.rocket_silo_status.create_rocket] = 1900,
+    -- [defines.rocket_silo_status.lights_blinking_open] = 1,
+    -- [defines.rocket_silo_status.doors_opening] = 1,
+    -- [defines.rocket_silo_status.doors_opened] = 1,
+    [defines.rocket_silo_status.rocket_rising] = 800,
+    [defines.rocket_silo_status.arms_advance] = 100,
+    [defines.rocket_silo_status.rocket_ready] = 1,
+    -- [defines.rocket_silo_status.launch_starting] = 1,
+    -- [defines.rocket_silo_status.engine_starting] = 1,
+    -- [defines.rocket_silo_status.arms_retract] = 1,
+    -- [defines.rocket_silo_status.rocket_flying] = 1,
+    -- [defines.rocket_silo_status.lights_blinking_close] = 1,
+    -- [defines.rocket_silo_status.doors_closing] = 1,
+    -- [defines.rocket_silo_status.launch_started] = 1,
+}
+
+local rocket_ready_status = defines.rocket_silo_status.rocket_ready
+
+local sa_active = script and script.active_mods and script.active_mods["space-age"]
+local se_active = script and script.active_mods and script.active_mods["space-exploration"]
+
+local Log = Log
+
 local TECL_Core_Utils = require("__TheEckelmonster-core-library__.libs.utils.core-utils")
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
@@ -51,6 +82,20 @@ function initialization.reinit(data)
     return locals.initialize(false, data.maintain_data) -- as is
 end
 
+function initialization.apply_migrations()
+    for version, migration in pairs(Migrations) do
+        if (type(migration) == "function") then
+            log(serpent.block("Applying version "
+                .. version.major.. "."
+                .. version.minor .. "."
+                .. version.bug_fix .. "."
+                .. " migration"
+            ))
+            migration()
+        end
+    end
+end
+
 function locals.initialize(from_scratch, maintain_data)
     Log.debug("locals.initialize")
     Log.info(from_scratch)
@@ -86,9 +131,6 @@ function locals.initialize(from_scratch, maintain_data)
         end
     end
 
-    local sa_active = script and script.active_mods and script.active_mods["space-age"]
-    local se_active = script and script.active_mods and script.active_mods["space-exploration"]
-
     -- Configurable Nukes
     if (from_scratch) then
         log({ "initialization.cn-initialization-anew", Constants.mod_name })
@@ -119,12 +161,11 @@ function locals.initialize(from_scratch, maintain_data)
         if (not configurable_nukes_data.rocket_silo_meta_data) then configurable_nukes_data.rocket_silo_meta_data = {} end
     end
 
-    storage.sa_active = sa_active ~= nil and sa_active or storage.sa_active
-    storage.se_active = se_active ~= nil and se_active or storage.se_active
 
     locals.reindex_and_save_mod_data()
 
     if (game) then
+        Rocket_Silo_Meta_Repository.init(storage)
         for name, surface in pairs(game.surfaces) do
             Log.warn(name)
             Log.warn(surface)
@@ -147,6 +188,7 @@ function locals.initialize(from_scratch, maintain_data)
 
                 local rocket_silos = surface.find_entities_filtered(Rocket_Silo_Constants.entity_filter)
                 Log.debug(serpent.block(rocket_silos))
+                Rocket_Silo_Repository.init(storage)
                 for i = 1, #rocket_silos do
                     local rocket_silo = rocket_silos[i]
                     Log.debug(serpent.block(rocket_silo))
@@ -165,8 +207,41 @@ function locals.initialize(from_scratch, maintain_data)
                     end
                 end
             end
+
+            storage.ordered_rocket_silos = storage.ordered_rocket_silos or {}
+            local ordered_rocket_silos = storage.ordered_rocket_silos
+
+            for surface_name, rocket_silo_meta_data in pairs(Rocket_Silo_Meta_Repository.get_all_rocket_silo_meta_data() or {}) do
+                -- log(serpent.block(rocket_silo_meta_data))
+                if (rocket_silo_meta_data and rocket_silo_meta_data.rocket_silos) then
+                    for unit_number, rocket_silo_data in pairs(rocket_silo_meta_data.rocket_silos) do
+                        -- log(serpent.block(rocket_silo_data))
+                        if (rocket_silo_data.entity.rocket_silo_status ~= rocket_ready_status) then goto continue end
+
+                        local mod = unit_number % 60
+                        ordered_rocket_silos[mod] = ordered_rocket_silos[mod] or {}
+                        local already_exists = false
+                        for i = 1, #ordered_rocket_silos[mod], 1 do
+                            if (ordered_rocket_silos[mod][i] and ordered_rocket_silos[mod][i].unit_number == unit_number) then
+                                ordered_rocket_silos[mod][i] = rocket_silo_data.circuit_network_data
+                                already_exists = true
+                                break
+                            end
+                        end
+                        if (not already_exists) then
+                            table.insert(ordered_rocket_silos[mod], rocket_silo_data.circuit_network_data)
+                        end
+                        ::continue::
+                    end
+                end
+            end
+
+            -- log(serpent.block(ordered_rocket_silos))
+
+            --[[ Search for payloaders ]]
         end
 
+        ICBM_Data.init(storage)
         local item_numbers = ICBM_Data:get_item_numbers()
 
         storage.icbm_data = storage.icbm_data or {}
@@ -185,6 +260,19 @@ function locals.initialize(from_scratch, maintain_data)
             end
         end
 
+        for k, v in pairs(game.forces) do
+            if (v.valid) then
+                if (v.technologies["icbms"] and v.technologies["icbms"].researched) then
+                    storage["icbms_researched"] = storage["icbms_researched"] or {}
+                    storage["icbms_researched"][v.index] = game.tick
+                end
+                if (v.technologies["ipbms"] and v.technologies["ipbms"].researched) then
+                    storage["ipbms_researched"] = storage["ipbms_researched"] or {}
+                    storage["ipbms_researched"][v.index] = game.tick
+                end
+            end
+        end
+
         storage.payloads = storage.payloads or {}
         storage.containers = storage.containers or {}
         storage.rocket_silos = storage.rocket_silos or {}
@@ -193,6 +281,7 @@ function locals.initialize(from_scratch, maintain_data)
     Payloads = storage.payloads
 
     storage.cache = {}
+    storage.recently_launched_rkt_silos = storage.recently_launched_rkt_silos or {}
 
     storage.configurable_nukes.valid = true
 
@@ -247,7 +336,7 @@ function locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
             }
         }
 
-        local ret_silo = Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo, update_data, { reinitialize_soft = true } )
+        local ret_silo = Rocket_Silo_Repository.update_rocket_silo_data(rocket_silo, update_data, { reinitialize_soft = true })
         if (ret_silo and ret_silo.valid) then
             storage.rocket_silos = storage.rocket_silos or {}
             storage.rocket_silos[ret_silo.unit_number] = ret_silo
@@ -255,6 +344,11 @@ function locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
             storage.surfaces = storage.surfaces or {}
             storage.surfaces[ret_silo.surface_name] = storage.surfaces[ret_silo.surface_name] or {}
             storage.surfaces[ret_silo.surface_name][ret_silo.unit_number] = ret_silo
+
+            if (rocket_silo_status_timeout[ret_silo.entity.rocket_silo_status]) then
+                storage.ready_rocket_silos = storage.ready_rocket_silos or {}
+                storage.ready_rocket_silos[ret_silo.unit_number] = game.tick + rocket_silo_status_timeout[ret_silo.entity.rocket_silo_status] - 1
+            end
         end
     else
         Log.debug("saving rocket silo")
@@ -266,6 +360,11 @@ function locals.add_rocket_silo(rocket_silo_meta_data, rocket_silo)
             storage.surfaces = storage.surfaces or {}
             storage.surfaces[ret_silo.surface_name] = storage.surfaces[ret_silo.surface_name] or {}
             storage.surfaces[ret_silo.surface_name][ret_silo.unit_number] = ret_silo
+
+            if (rocket_silo_status_timeout[ret_silo.entity.rocket_silo_status]) then
+                storage.ready_rocket_silos = storage.ready_rocket_silos or {}
+                storage.ready_rocket_silos[ret_silo.unit_number] = game.tick + rocket_silo_status_timeout[ret_silo.entity.rocket_silo_status] - 1
+            end
         end
     end
 end
@@ -281,14 +380,18 @@ function locals.migrate(data)
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "event_handlers" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "handles" })
 
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "icbms_researched" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "ipbms_researched" })
+
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "constants" })
-    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })
+    -- TECL_Core_Utils.table.reassign(storage_old, storage, { field = "configurable_nukes_controller" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "gui_data" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "icbm_data" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "nth_tick" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "tick" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "icbm_utils" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "payloaders" })
+    TECL_Core_Utils.table.reassign(storage_old, storage, { field = "ordered_payloaders" })
     TECL_Core_Utils.table.reassign(storage_old, storage, { field = "containers" })
 
     if (not data or type(data) ~= "table") then return end
@@ -351,13 +454,15 @@ function locals.migrate(data)
         end
 
         if (type(storage_old.configurable_nukes.rocket_silo_meta_data) == "table") then
+            Rocket_Silo_Repository.init(storage)
+            Rocket_Silo_Meta_Repository.init(storage)
             for k, v in pairs(storage_old.configurable_nukes.rocket_silo_meta_data) do
                 if (type(v) == "table" and v.valid) then
                     if (type(v.rocket_silos) == "table") then
                         for k_2, v_2 in pairs(v.rocket_silos) do
                             if (v_2.entity and v_2.entity.valid) then
                                 if (silo_names[v_2.entity.name]) then
-                                    Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2)
+                                    Rocket_Silo_Repository.update_rocket_silo_data(v_2.entity, v_2, { reinitialize_soft = true })
                                 else
                                     Rocket_Silo_Repository.delete_rocket_silo_data_by_unit_number(k_2, v_2.entity.unit_number)
                                 end
@@ -403,7 +508,6 @@ function locals.migrate(data)
         end
         TECL_Core_Utils.table.reassign(storage_old.configurable_nukes, storage.configurable_nukes, { field = "force_launch_data" })
 
-        local se_active = script and script.active_mods and script.active_mods["space-exploration"]
         local dictionary =     not se_active and Constants.get_planets(true) and Constants.planets_dictionary
                             or Constants.get_space_exploration_universe(true) and Constants.space_exploration_dictionary
 
@@ -412,6 +516,7 @@ function locals.migrate(data)
         end
 
         if (type(storage_old.configurable_nukes.icbm_meta_data) == "table") then
+            ICBM_Meta_Repository.init(storage)
             for k, v in pairs(storage_old.configurable_nukes.icbm_meta_data) do
                 if (dictionary[k]) then
                     ICBM_Meta_Repository.update_icbm_meta_data(v)

@@ -65,7 +65,7 @@ local create_quality_nuclear_artillery_shell = function (params)
         if (default_multiplier) then
             quality_nuclear_artillery_shell = Util.table.deepcopy(original_nuclear_artillery_shell)
 
-            local quality_level_multiplier = default_multiplier ^ quality.level
+            local quality_level_multiplier = 1 + (default_multiplier - 1) * quality.level
 
             data:extend(
             {

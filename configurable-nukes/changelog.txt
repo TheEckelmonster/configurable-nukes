@@ -1,4 +1,56 @@
 ---------------------------------------------------------------------------------------------------
+Date: 2026-03-11
+  Features:
+    - Updated the "fire wave" included by default for the atomic-warhead (and available optionally for the default atomic-bomb/rocket & rod-from-god)
+      - No longer a single instant area of effect
+      - Now an actual wave of fire that expands from the center of the explosion burning literally everything along the way, even water, because the fish shouldn't be safe from the heat of spicy green rocks either
+        - Nominally smoother, in that the effect is now spread out over a duration rather than a single tick
+        - Closer to what I personally envisioned when originally adding the fire wave (open to adding a toggleable setting for the old effect)
+    - Updated/reworkd the Jericho warhead
+      - Functions now almost entirely from prototypes, rather than runtime scripting
+        - Should be *relatively* smoother, less lag spike inducing on delivery (particularly when many are delivered, and/or at higher quality than normal)
+          - This is not to say that the higher qualities are more performant, rather, just somewhat smoother and less prone to non-lag induced desyncs
+          - Did successfully test launching a single legendary Jericho with the area, damange, and repeat settings set to 11 (don't recommend, lots of "diplomacy" was distributed though)
+        - The sub-rockets fired are actually real explosive rockets now (which are also affected by quality (damage, aoe, repeat))
+  Balance:
+    - Scaled the current default settings to be equivalent to a value of 1 for (Damage, AoE, Repeat) (the baseline is now inherently higher):
+      - [atomic-warhead] Applied a default multiplier to each setting (2.71)
+      - [atomic-warhead] Decreased the default settings (2.71 -> 1)
+      - [rod-from-god] Applied a default multiplier to each setting (1.57)
+      - [rod-from-god] Decreased the default settings (1.57 -> 1)
+    - Attempted to normalize the (default) relative "effort" to produce/manufacture the 4 warheads respectively on each of their corresponding planets
+      - [atomic-warhead] Increased explosives count (50 -> 100)
+      - [atomic-warhead] Increased processing-unit count (50 -> 100)
+      - [atomic-warhead] Increased rocket-control-unit count (25 -> 50)
+      - [rod-from-god] Decreased crafting time (50 -> 40)
+      - [rod-from-god] Increased tungesten-plate count (2000 -> 2500)
+      - [rod-from-god] Increased tungesten-carbide count (1000 -> 1200)
+      - [rod-from-god] Added rocket-control-unit (1)
+      - [jericho] Decreased explosive-rocket count (100 -> 24)
+      - [jericho] Changed advanced-circuit to processing-unit (100 -> 12)
+      - [jericho] Decreased carbon-fiber count (100 -> 24)
+      - [jericho] Added pentapod-egg (3)
+      - [jericho] Added rocket-control-unit (1)
+      - [mjölnir] Increased lightning-collector count (1 -> 10)
+      - [mjölnir] Increased processing-unit count (1 -> 400)
+      - [mjölnir] Increased tesla-ammo count (25 -> 100)
+      - [mjölnir] Increased electrolyte count (1000 -> 1600)
+      - [mjölnir] Added rocket-control-unit (25)
+      - [mjölnir] Increased crafting time (50 -> 75)
+  Bug Fixes:
+    - Fixed improper quality calculations resulting in dramatically larger values than intended (especially noticeable if the base quality factor was raised above 1.3)
+      - Should now properly match the default quality scaling of [1, 1.3, 1.6, 1.9, 2.5] (previously was [1, 1.3, 1.69, 2.197, 3.71293])
+      - Possible downside (open to adding a toggleable setting) is that higher quality munitions are not as ridiculous in their scaling
+    - Fixed payloads being launchable from rocket-silos without the ICBMs technology being researched
+    - Fixed missing research requirements for the ICBM technology (automation-3, bulk-inserter, radar, electric-energy-accumulators)
+    - [QualityRockets] Fixed ICBMs not being launchable when the rocket-silo is a higher quality than normal
+    - [Space-Exploration] Fixed incorrect default recipe item for Payloader (space-assembling-machine -> se-space-assembling-machine)
+    - [bobs-warfare] Fixed missing localised string for "plasma" damage-type for the custom quality tooltips for the atomic bomb, warhead, and rod-from-god
+  Compatibility:
+    - QualityRockets, by Moterius
+      - Ballistic rocket-silos are now affected by quality (raise and launch speed)
+      - Quality rocket-silos and quality ballistic rocket-silos are now detected when placed on space-platforms
+---------------------------------------------------------------------------------------------------
 Version: 0.9.11
 Date: 2026-06-12
   Bug Fixes:

@@ -1,6 +1,6 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local Log = Log
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local Force_Launch_Data = require("scripts.data.force-launch-data")
@@ -140,6 +140,10 @@ function force_launch_data_repository.get_all_force_launch_data(optionals)
     if (not storage.configurable_nukes.force_launch_data) then storage.configurable_nukes.force_launch_data = {} end
 
     return storage.configurable_nukes.force_launch_data
+end
+
+function force_launch_data_repository.init(__storage)
+    storage = __storage
 end
 
 return force_launch_data_repository

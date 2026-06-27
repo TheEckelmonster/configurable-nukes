@@ -1,6 +1,9 @@
-local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
-local _Log = Log
-if (not script or not _Log or mods) then _Log = Log_Stub end
+local storage
+
+local type = type
+
+local Constants = Constants
+local Log = Log
 
 local Configurable_Nukes_Data = require("scripts.data.configurable-nukes-data")
 local ICBM_Data = require("scripts.data.ICBM-data")
@@ -259,6 +262,10 @@ function icbm_repository.get_icbm_data(planet_name, item_number, optionals)
     if (optionals.validate_fields) then ICBM_Data.validate_fields(return_val) end
 
     return return_val
+end
+
+function icbm_repository.init(__storage)
+    storage = __storage
 end
 
 return icbm_repository

@@ -2,7 +2,8 @@ local Log_Stub = require("__TheEckelmonster-core-library__.libs.log.log-stub")
 local _Log = Log
 if (not script or not _Log or mods) then _Log = Log_Stub end
 
-local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
+-- local Circuit_Network_Rocket_Silo_Data = require("scripts.data.circuit-network.rocket-silo-data")
+local Circuit_Network_Rocket_Silo_Data = Circuit_Network_Rocket_Silo_Data
 local Data = require("scripts.data.data")
 
 local rocket_silo_data = {}
@@ -26,7 +27,7 @@ function rocket_silo_data:new(o)
         unit_number = self.unit_number,
         entity = self.entity,
         circuit_network_data = Circuit_Network_Rocket_Silo_Data:new(),
-        surface = self.surface,
+        -- surface = self.surface,
         surface_name = self.surface_name,
         surface_index = self.surface_index,
     }
@@ -54,7 +55,7 @@ function rocket_silo_data:is_ipbm_silo(data)
     -- _Log.info(self)
     -- _Log.info(data)
 
-    return self.entity and self.entity.valid and self.entity.name == "ipbm-rocket-silo"
+    return self.entity and self.entity.valid and self.entity.name:find("ipbm%-rocket%-silo")
 end
 
 setmetatable(rocket_silo_data, Data)
