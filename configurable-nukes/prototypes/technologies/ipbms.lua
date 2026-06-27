@@ -2,6 +2,9 @@ local Startup_Settings_Constants = require("settings.startup.startup-settings-co
 
 local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 
+local cn_avionics_active = mods and mods["configurable-nukes-extended-avionics"] and true
+local cn_materials_active = mods and mods["configurable-nukes-extended-materials-engineering"] and true
+local cn_propulsion_active = mods and mods["configurable-nukes-extended-propulsion-systems"] and true
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 local name_prefix = se_active and "se-" or ""
@@ -55,7 +58,7 @@ local get_ipbms_research_prerequisites = function ()
     while param ~= nil do
 
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
         for k, v in pairs(data.raw) do
             found_match = false
@@ -79,10 +82,7 @@ local get_ipbms_research_prerequisites = function ()
     -- end
 
     if (#prerequisites <= 0) then
-        prerequisites = {
-            "icbms",
-            "guidance-systems-4",
-        }
+        prerequisites = Startup_Settings_Constants.settings.IPBMS_RESEARCH_PREREQUISITES.prerequisites
     end
 
     return prerequisites
@@ -127,7 +127,7 @@ local get_ipbms_research_ingredients = function ()
     while param ~= nil and param_val ~= nil do
 
         --[[ Replace space characters with a dash; remove any prefixed dashes; remove any postfixed dashes ]]
-        param = param:gsub("(%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
+        param = param:gsub("%s+", "-"):gsub("^%-+", ""):gsub("%-+$", "")
 
         for k, v in pairs(data.raw) do
             found_match = false
@@ -191,42 +191,35 @@ local ipbm_silo_unlock =
     recipe = "ipbm-rocket-silo",
 }
 
-local advanced_rocket_control_unit_recipe =
-{
-    type = "unlock-recipe",
-    recipe = "advanced-rocket-control-unit",
-}
+-- local advanced_rocket_control_unit_recipe =
+-- {
+--     type = "unlock-recipe",
+--     recipe = "advanced-rocket-control-unit",
+-- }
 
 local technology_effects =
 {
-    (sa_active or se_active) and rocket_part_basic_unlock or nil,
     (sa_active or se_active) and ipbm_silo_unlock or nil,
-    (sa_active or se_active) and advanced_rocket_control_unit_recipe or nil,
+    (sa_active or se_active) and rocket_part_basic_unlock or nil,
+    -- (sa_active or se_active) and advanced_rocket_control_unit_recipe or nil,
+    (sa_active or se_active) and {
+        type = "unlock-recipe",
+        recipe = name_prefix .. "ipbm-rocket-part-dummy",
+    } or nil,
 }
+
+if (sa_active) then
+    if (cn_propulsion_active) then
+        table.insert(technology_effects, { type = "unlock-recipe", recipe = "cn-terrestrial-thruster-oxidizer", })
+    end
+end
 
 data:extend({
     {
         type = "technology",
         name = "ipbms",
-        icons =
-        {
-            {
-                icon = "__base__/graphics/technology/atomic-bomb.png",
-                icon_size = 256,
-            },
-            {
-                icon = "__base__/graphics/technology/rocket-silo.png",
-                icon_size = 256,
-                scale = 1 / 2 ^ 2,
-                shift = { 0, 32 },
-            },
-            {
-                icon = "__base__/graphics/icons/nauvis.png",
-                icon_size = 64,
-                scale = 1 / 2 ^ 1,
-                shift = { 32, 64 },
-            },
-        },
+        icon = "__configurable-nukes__/graphics/technology/ipbms.png",
+        icon_size = 256,
         localised_name = { "technology-name." .. name_prefix .. "ipbms" },
         localised_description = { "technology-description." .. name_prefix .. "ipbms" },
         effects = technology_effects,

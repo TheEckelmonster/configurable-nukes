@@ -1,0 +1,15 @@
+{
+    "technology":
+    [
+        ["guidance-systems",    "cn-bral"],
+        ["guidance-systems-2",  "cn-bral-2"],
+        ["guidance-systems-3",  "cn-bral-3"],
+        ["guidance-systems-4",  "cn-bral-4"],
+        ["guidance-systems-5",  "cn-bral-5"],
+        ["guidance-systems-6",  "cn-bral-6"],
+        ["guidance-systems-7",  "cn-bral-7"],
+        ["guidance-systems-8",  "cn-bral-8"],
+        ["guidance-systems-9",  "cn-bral-9"],
+        ["guidance-systems-10", "cn-bral-10"]
+    ]
+}

@@ -1,13 +1,15 @@
 local __debug = DEBUG
 DEBUG = false
 
+local mods = mods
+
 local k2so_active = mods and mods["Krastorio2-spaced-out"] and true
 local saa_s_active = mods and mods["SimpleAtomicArtillery-S"] and true
 local sa_active = mods and mods["space-age"] and true
 local se_active = mods and mods["space-exploration"] and true
 local StopgapNukes_active = mods and mods["StopgapNukes"] and true
 
-require("prototypes.recipes.payloader-data-final-fixes")
+require("prototypes.recipes.payloader.payloader-data-final-fixes")
 
 if (StopgapNukes_active) then
     require("prototypes.recipes.atomic-bomb")
@@ -28,9 +30,12 @@ if (se_active) then
     require("prototypes.entities.rocket-silo.rocket-silo-data-final-fixes")
     require("prototypes.compatibility.space-exploration.collision-layers.ipbm-silo")
     require("prototypes.compatibility.space-exploration.collision-layers.payloader")
+
     require("prototypes.technologies.icbms")
+    require("prototypes.technologies.ballistic-rocketry-and-logistics")
+
     require("prototypes.technologies.atomic-warhead")
-    require("prototypes.technologies.guidance-systems")
+    -- require("prototypes.technologies.guidance-systems")
 
     require("prototypes.items.rod-from-god-data")
     require("prototypes.recipes.rod-from-god-data")
@@ -39,7 +44,8 @@ if (se_active) then
 
     require("prototypes.items.jericho-data")
     require("prototypes.recipes.jericho-data")
-    require("prototypes.entities.jericho-data")
+    -- require("prototypes.entities.jericho-data")
+    require("prototypes.entities.jericho.jericho-data-two")
     require("prototypes.technologies.jericho-data")
 
     if (not sa_active) then
@@ -47,7 +53,7 @@ if (se_active) then
         require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-intermediate")
         require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-advanced")
         require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond")
-        require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond-2")
+        -- require("prototypes.recipes.ballistic-rocket-parts.ballistic-rocket-part-beyond-2")
         require("prototypes.recipes.ipbm-rocket-silo")
         require("prototypes.technologies.ipbms")
     else

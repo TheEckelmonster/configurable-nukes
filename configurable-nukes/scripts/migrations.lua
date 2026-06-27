@@ -5,6 +5,7 @@ local versions = {
     { major = 0, minor = 7, bug_fix = 1,  },
     { major = 0, minor = 7, bug_fix = 4,  },
     { major = 0, minor = 9, bug_fix = 11, },
+    { major = 0, minor = 9, bug_fix = 12, },
 }
 
 local return_val = {}

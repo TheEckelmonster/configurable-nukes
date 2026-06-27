@@ -95,6 +95,8 @@ local get_runtime_global_setting = Settings_Service.get_runtime_global_setting
 local get_startup_setting = Settings_Service.get_startup_setting
 
 local true_nukes_contiued = script and script.active_mods and script.active_mods["True-Nukes_Continued"]
+local quality_active = script and script.active_mods and script.active_mods["quality"] and true
+local quality_rockets_active = script and script.active_mods and script.active_mods["QualityRockets"]
 
 local Custom_Input = require("prototypes.custom-input.custom-input")
 
@@ -118,6 +120,8 @@ locals.name = "locals"
 
 local valid_event_effect_ids =
 {
+    ["clamps_on_trigger"] = true,
+
     ["map-reveal"] = true,
 
     ["payload-delivered"] = true,
@@ -127,24 +131,28 @@ local valid_event_effect_ids =
     ["k2-nuclear-turret-rocket-pollution"] = true,
     ["k2-atomic-artillery-pollution"] = true,
     ["saa-s-atomic-artillery-pollution"] = true,
+
+    ["cn-jericho-fired"] = true,
+    ["cn-tesla-rocket-fired"] = true,
+
     ["atomic-bomb-fired"] = true,
     ["kr-nuclear-turret-rocket-projectile-fired"] = true,
     ["kr-atomic-artillery-projectile-fired"] = true,
-    ["saa-s-atomic-artillery-projectile-fired"] = true,
+    ["atomic-artillery-shell-fired"] = true,
     ["cn-tesla-rocket-lightning"] = true,
 
     ["Atomic Weapon hit 20t"] = true_nukes_contiued and true or nil
 }
 
-if (script and script.active_mods and script.active_mods["quality"]) then
-    for k, quality in pairs(prototypes.quality) do
-        if (not quality.hidden) then
-            valid_event_effect_ids["jericho-delivered-" .. k] = true
-        end
-    end
-else
-    valid_event_effect_ids["jericho-delivered-normal"] = true
-end
+-- if (script and script.active_mods and script.active_mods["quality"]) then
+--     for k, quality in pairs(prototypes.quality) do
+--         if (not quality.hidden) then
+--             valid_event_effect_ids["jericho-delivered-" .. k] = true
+--         end
+--     end
+-- else
+--     valid_event_effect_ids["jericho-delivered-normal"] = true
+-- end
 
 local ATOMIC_ARTILLERY = "atomic-artillery-projectile"
 local ATOMIC_BOMB = "atomic-bomb"
@@ -166,7 +174,9 @@ local quality_affected_prototypes = {
 
     [ATOMIC_WARHEAD] = ATOMIC_WARHEAD,
     ["cn-rod-from-god"] = "cn-rod-from-god",
-    ["cn-jericho"] = "jericho-payloader-rocket",
+    -- ["cn-jericho"] = "jericho-payloader-rocket",
+    -- ["cn-jericho"] = "cn-jericho",
+    ["cn-jericho"] = "cn-jericho-rocket",
     ["jericho-payloader-rocket"] = "jericho-payloader-rocket",
     ["cn-tesla-rocket"] = "cn-tesla-rocket",
 
@@ -205,8 +215,6 @@ local payload_pollution = {
     end,
 }
 
-local Quality_Prototypes = nil
-
 local events = {
     name = "events",
     [locals.name] = locals,
@@ -224,12 +232,22 @@ local events = {
 
 ---
 
+if (quality_rockets_active) then
+    local Quality_Rockets_Controller = require("scripts.compatibility.QualityRockets-controller")
+    events[Quality_Rockets_Controller.name] = Quality_Rockets_Controller
+end
+
+---
+
+local Quality_Prototypes = prototypes.quality
+
 local to_init_storage = {
     Configurable_Nukes_Controller,
     Payloader_Controller,
     ICBM_Utils,
 
     require("scripts.services.circuit-network-service"),
+    require("scripts.utils.rocket-silo-utils"),
 }
 
 function to_init_storage.reinit_all(event)
@@ -360,7 +378,110 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
             target = event.target_entity.position
         end
 
+        if (target == nil and event.source_position) then
+            if (event.source_entity and event.cause_entity) then
+                if (event.source_entity.valid and event.cause_entity.valid) then
+                    if ((
+                            event.source_entity == event.cause_entity
+                        )
+                        or (
+                                event.source_entity.name == CHARACTER
+                            or  event.cause_entity.name  == CHARACTER
+                        )
+                    ) then
+                        return
+                    end
+                else
+                    return
+                end
+            else
+                return
+            end
+            target = event.source_position
+        end
+
+        if (not target) then return end
         surface.execute_lightning({ name = LIGHTNING, position = target })
+    elseif (event.effect_id == "cn-jericho-fired") then
+        local source, target = event.source_position, event.target_position
+        local quality = event.quality
+        quality = quality and Quality_Prototypes[quality] and quality or "normal"
+
+        local orientation = event.source_entity and event.source_entity.valid and (event.source_entity.type == "spider-vehicle" and event.source_entity.torso_orientation or event.source_entity.orientation)
+        local _orientation = orientation
+        orientation = math_floor(orientation * 16)
+
+        if (target == nil and event.target_entity and event.target_entity.valid) then
+            target = event.target_entity.position
+        end
+
+        if (source ~= nil and target ~= nil) then
+            local entity = surface.create_entity({
+                -- name = "cn-jericho" .. DASH .. quality,
+                name = "cn-jericho-rocket" .. DASH .. quality,
+                position = source,
+                -- position = { source.x + 0.6 * math_cos(TWO_PI * ((_orientation - 0.25) % 1)), source.y + 0.6 * math_sin(TWO_PI * ((_orientation - 0.25) % 1)), },
+                -- position = { source.x + 0.09 * math_cos(TWO_PI * _orientation), source.y + 0.09 * math_sin(TWO_PI * _orientation), },
+                -- position = { source.x - 0.3, source.y + 0.3, },
+                direction = direction[Constants.direction_table[orientation]],
+                force = event.cause_entity and event.cause_entity.valid and event.cause_entity.force or "player",
+                target = target,
+                -- source = source,
+                source = event.cause_entity and event.cause_entity.valid and event.cause_entity,
+                cause = event.cause_entity and event.cause_entity.valid and event.cause_entity,
+                -- speed = 0.1 * math_exp(1),
+                speed = 0.05,
+                base_damage_modifiers = {
+                    damage_modifier = 1,
+                    damage_addition = 1,
+                    radius_modifier = 1,
+                },
+                bonus_damage_modifiers = {
+                    damage_modifier = 1,
+                    damage_addition = 1,
+                    radius_modifier = 1,
+                },
+            })
+            if (entity and entity.valid and event.source_entity.type == "spider-vehicle") then entity.orientation = _orientation end
+        end
+    elseif (event.effect_id == "cn-tesla-rocket-fired") then
+        local source, target = event.source_position, event.target_position
+        local quality = event.quality
+        quality = quality and Quality_Prototypes[quality] and quality or "normal"
+
+        local orientation = event.source_entity and event.source_entity.valid and (event.source_entity.type == "spider-vehicle" and event.source_entity.torso_orientation or event.source_entity.orientation)
+        local _orientation = orientation
+        orientation = math_floor(orientation * 16)
+
+        if (target == nil and event.target_entity and event.target_entity.valid) then
+            target = event.target_entity.position
+        end
+
+        if (source ~= nil and target ~= nil) then
+            local entity = surface.create_entity({
+                -- name = "cn-jericho" .. DASH .. quality,
+                name = "cn-tesla-rocket" .. DASH .. quality,
+                position = source,
+                direction = direction[Constants.direction_table[orientation]],
+                force = event.cause_entity and event.cause_entity.valid and event.cause_entity.force or "player",
+                target = target,
+                source = source,
+                cause = event.cause_entity and event.cause_entity.valid and event.cause_entity,
+                -- speed = 0.1 * math_exp(1),
+                speed = 0.05,
+                base_damage_modifiers = {
+                    damage_modifier = 1,
+                    damage_addition = 1,
+                    radius_modifier = 1,
+                },
+                bonus_damage_modifiers = {
+                    damage_modifier = 1,
+                    damage_addition = 1,
+                    radius_modifier = 1,
+                },
+            })
+            if (entity and entity.valid and event.source_entity.type == "spider-vehicle") then entity.orientation = _orientation end
+        end
     elseif (event.effect_id == "atomic-bomb-fired") then
         local source, target = event.source_position, event.target_position
         local quality = event.quality
@@ -534,133 +655,133 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
         end
     elseif (string_find(event.effect_id, EFFECT_ID_SUFFIX_POLLUTION, 1, true)) then
         if (payload_pollution[event.effect_id]) then payload_pollution[event.effect_id](surface, event.source_position or event.target_position) end
-    elseif (string_find(event.effect_id, "jericho-delivered-", 1, true)) then
-        local target_position = event.target_position
-        local _, _, quality = string_find(event.effect_id, "jericho%-delivered%-(%a+)")
+    -- elseif (string_find(event.effect_id, "jericho-delivered-", 1, true)) then
+    --     local target_position = event.target_position
+    --     local _, _, quality = string_find(event.effect_id, "jericho%-delivered%-(%a+)")
 
-        if (not quality or quality == EMPTY_STRING) then quality = "normal" end
+    --     if (not quality or quality == EMPTY_STRING) then quality = "normal" end
 
-        if (target_position and target_position.x and target_position.y) then
+    --     if (target_position and target_position.x and target_position.y) then
 
-            local explosives = 0
-            local explosives_aoe_modifier = 0
-            local settings_modifier = get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_SUB_ROCKET_REPEAT_MULTIPLIER.name, reindex = true })
-            if (settings_modifier == nil) then settings_modifier = 1 end
+    --         local explosives = 0
+    --         local explosives_aoe_modifier = 0
+    --         local settings_modifier = get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_SUB_ROCKET_REPEAT_MULTIPLIER.name, reindex = true })
+    --         if (settings_modifier == nil) then settings_modifier = 1 end
 
-            local target =
-            {
-                x = target_position.x,
-                y = target_position.y,
-            }
-            local _target = { x = target.x, y = target.y }
-            local function reset_target()
-                return { x = _target.x, y = _target.y }
-            end
-            local function random_scaling()
-                return math_random(10000) * .0001355
-            end
+    --         local target =
+    --         {
+    --             x = target_position.x,
+    --             y = target_position.y,
+    --         }
+    --         local _target = { x = target.x, y = target.y }
+    --         local function reset_target()
+    --             return { x = _target.x, y = _target.y }
+    --         end
+    --         local function random_scaling()
+    --             return math_random(10000) * .0001355
+    --         end
 
-            local area_setting = get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_AREA_MULTIPLIER.name, reindex = true })
-            if (area_setting == nil) then area_setting = 1 end
+    --         local area_setting = get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_AREA_MULTIPLIER.name, reindex = true })
+    --         if (area_setting == nil) then area_setting = 1 end
 
-            if (not Quality_Prototypes) then Quality_Prototypes = prototypes.quality end
-            local quality_factor = Quality_Prototypes[quality].level or 0
-            local repititions = 3 + math_ceil(quality_factor / 3)
+    --         if (not Quality_Prototypes) then Quality_Prototypes = prototypes.quality end
+    --         local quality_factor = Quality_Prototypes[quality].level or 0
+    --         local repititions = 3 + math_ceil(quality_factor / 3)
 
-            local targets = {}
-            local ticks = {}
+    --         local targets = {}
+    --         local ticks = {}
 
-            local threshold = 100
+    --         local threshold = 100
 
-            local rockets_created = 0
-            local random_additional_ticks = 1
+    --         local rockets_created = 0
+    --         local random_additional_ticks = 1
 
-            local do_break = false
-            for i = 0, repititions, 1 do
-                if (do_break) then break end
+    --         local do_break = false
+    --         for i = 0, repititions, 1 do
+    --             if (do_break) then break end
 
-                local loop_count = 2 ^ i + quality_factor + settings_modifier
-                for j = 0, loop_count, 1 do
+    --             local loop_count = 2 ^ i + quality_factor + settings_modifier
+    --             for j = 0, loop_count, 1 do
 
-                    if (threshold < 1) then do_break = true; break end
-                    if (math_random(100) <= threshold) then
-                        threshold = threshold - 0.5
-                        for k = 0, settings_modifier, 1 do
-                            target = reset_target()
+    --                 if (threshold < 1) then do_break = true; break end
+    --                 if (math_random(100) <= threshold) then
+    --                     threshold = threshold - 0.5
+    --                     for k = 0, settings_modifier, 1 do
+    --                         target = reset_target()
 
-                            local factor = ((i) * 5 + 4 * (quality_factor + 1) * area_setting) + math_random(5)
+    --                         local factor = ((i) * 5 + 4 * (quality_factor + 1) * area_setting) + math_random(5)
 
-                            if (rockets_created % 5 > 0 and rockets_created % 5 ~= 3) then
-                                target.x = target.x + random_scaling() * factor * math_cos(TWO_PI * (j / loop_count))
-                                target.y = target.y + random_scaling() * factor * math_sin(TWO_PI * (j / loop_count))
-                            else
-                                target.x = target.x + factor * math_cos(TWO_PI * (j / loop_count))
-                                target.y = target.y + factor * math_sin(TWO_PI * (j / loop_count))
-                            end
+    --                         if (rockets_created % 5 > 0 and rockets_created % 5 ~= 3) then
+    --                             target.x = target.x + random_scaling() * factor * math_cos(TWO_PI * (j / loop_count))
+    --                             target.y = target.y + random_scaling() * factor * math_sin(TWO_PI * (j / loop_count))
+    --                         else
+    --                             target.x = target.x + factor * math_cos(TWO_PI * (j / loop_count))
+    --                             target.y = target.y + factor * math_sin(TWO_PI * (j / loop_count))
+    --                         end
 
-                            if (rockets_created > 0) then
-                                random_additional_ticks = random_additional_ticks + math_random(10)
-                            end
+    --                         if (rockets_created > 0) then
+    --                             random_additional_ticks = random_additional_ticks + math_random(10)
+    --                         end
 
-                            local nth_tick = game.tick + random_additional_ticks
-                            local source_name = "icbm_utils.spawn_jericho_event-"
-                                                .. rockets_created .. DASH
-                                                .. "on_nth_tick-"
-                                                .. nth_tick
+    --                         local nth_tick = game.tick + random_additional_ticks
+    --                         local source_name = "icbm_utils.spawn_jericho_event-"
+    --                                             .. rockets_created .. DASH
+    --                                             .. "on_nth_tick-"
+    --                                             .. nth_tick
 
-                            rockets_created = rockets_created + 1
+    --                         rockets_created = rockets_created + 1
 
-                            table_insert(targets, { x = target.x, y = target.y })
-                            table_insert(ticks, { nth_tick = nth_tick, source_name = source_name })
-                        end
-                    end
-                end
-            end
+    --                         table_insert(targets, { x = target.x, y = target.y })
+    --                         table_insert(ticks, { nth_tick = nth_tick, source_name = source_name })
+    --                     end
+    --                 end
+    --             end
+    --         end
 
-            for i = 1, #ticks, 1 do
-                if (i == 1) then
-                    target = reset_target()
-                else
-                    if (targets and #targets > 0) then
-                        local rand = math_random(#targets)
-                        target = table_remove(targets, rand)
-                    else
-                        target = reset_target()
-                    end
-                end
+    --         for i = 1, #ticks, 1 do
+    --             if (i == 1) then
+    --                 target = reset_target()
+    --             else
+    --                 if (targets and #targets > 0) then
+    --                     local rand = math_random(#targets)
+    --                     target = table_remove(targets, rand)
+    --                 else
+    --                     target = reset_target()
+    --                 end
+    --             end
 
-                local nth_tick = ticks[i].nth_tick
-                local source_name = ticks[i].source_name
+    --             local nth_tick = ticks[i].nth_tick
+    --             local source_name = ticks[i].source_name
 
-                if (target and nth_tick and source_name) then
-                    Event_Handler:register_event({
-                        event_name = "on_nth_tick",
-                        nth_tick = nth_tick,
-                        restore_on_load = true,
-                        source_name = source_name,
-                        func = ICBM_Utils.spawn_jericho_event,
-                        func_name = "icbm_utils.spawn_jericho_event",
-                        func_data =
-                        {
-                            nth_tick = nth_tick,
-                            source_name = source_name,
-                            payload_item = "cn-jericho-" .. quality,
-                            surface = surface,
-                            source_position = target_position,
-                            payload_spawn_position = {
-                                x = target_position.x,
-                                y = target_position.y,
-                            },
-                            target = {
-                                x = target.x + math_random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * math_random(explosives + 1) or 0) * math_cos((2 * math_random()) * math.pi * (i / #ticks)),
-                                y = target.y + math_random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * math_random(explosives + 1) or 0) * math_sin((2 * math_random()) * math.pi * (i / #ticks)),
-                            },
-                        },
-                        save_to_storage = true,
-                    })
-                end
-            end
-        end
+    --             if (target and nth_tick and source_name) then
+    --                 Event_Handler:register_event({
+    --                     event_name = "on_nth_tick",
+    --                     nth_tick = nth_tick,
+    --                     restore_on_load = true,
+    --                     source_name = source_name,
+    --                     func = ICBM_Utils.spawn_jericho_event,
+    --                     func_name = "icbm_utils.spawn_jericho_event",
+    --                     func_data =
+    --                     {
+    --                         nth_tick = nth_tick,
+    --                         source_name = source_name,
+    --                         payload_item = "cn-jericho-" .. quality,
+    --                         surface = surface,
+    --                         source_position = target_position,
+    --                         payload_spawn_position = {
+    --                             x = target_position.x,
+    --                             y = target_position.y,
+    --                         },
+    --                         target = {
+    --                             x = target.x + math_random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * math_random(explosives + 1) or 0) * math_cos((2 * math_random()) * math.pi * (i / #ticks)),
+    --                             y = target.y + math_random(-1 * (1 + explosives_aoe_modifier * explosives) - 1, (1 + explosives_aoe_modifier * explosives) + 1) * (explosives_aoe_modifier --[[* (total_delivered / payload.icbm.total_payload_items)]]) * (explosives > 0 and explosives_aoe_modifier * math_random(explosives + 1) or 0) * math_sin((2 * math_random()) * math.pi * (i / #ticks)),
+    --                         },
+    --                     },
+    --                     save_to_storage = true,
+    --                 })
+    --             end
+    --         end
+    --     end
     elseif (event.effect_id == "payload-delivered") then
         local target_position = event.target_position
         local source_position = event.source_position
@@ -786,10 +907,21 @@ script.on_event(defines.events.on_script_trigger_effect, function (event)
 
                 local final_name = not quality_affected_prototypes[cargo.name] and name or nil
                 if (not final_name) then
-                    if (quality_affected_prototypes[cargo.name]) then
-                        final_name = quality_affected_prototypes[cargo.name] .. DASH .. cargo.quality
-                    elseif (quality_affected_prototypes[name]) then
-                        final_name = quality_affected_prototypes[name] .. DASH .. cargo.quality
+                    -- if (quality_affected_prototypes[cargo.name]) then
+                    --     final_name = quality_affected_prototypes[cargo.name] .. DASH .. cargo.quality
+                    -- elseif (quality_affected_prototypes[name]) then
+                    --     final_name = quality_affected_prototypes[name] .. DASH .. cargo.quality
+                    -- else
+                    --     final_name = name
+                    -- end
+                    if (quality_active) then
+                        if (quality_affected_prototypes[cargo.name]) then
+                            final_name = quality_affected_prototypes[cargo.name] .. DASH .. cargo.quality
+                        elseif (quality_affected_prototypes[name]) then
+                            final_name = quality_affected_prototypes[name] .. DASH .. cargo.quality
+                        else
+                            final_name = name
+                        end
                     else
                         final_name = name
                     end

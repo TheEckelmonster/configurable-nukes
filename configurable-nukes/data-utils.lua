@@ -1,3 +1,7 @@
+local ipairs = ipairs
+local pairs = pairs
+local type = type
+
 local tab = "    "
 local source_pattern = "@__([%a%-]+)__"
 local no_source = "__no-src__/"
@@ -54,19 +58,99 @@ function data_utils.pack(...)
     return setmetatable(packed, new_packed_mt(#packed))
 end
 
-function data_utils.unpack(tbl)
+function data_utils.unpack(tbl, ...)
     if (not tbl) then return end
     if (type(tbl) ~= "table") then return end
     if (not tbl[1]) then return data_utils.table.unpack_tbl(tbl) end
+
+    local _params = {...}
+    local _size = #_params
 
     local size = #tbl
     local function recurse(tbl, i)
         if (i <= size) then
             return tbl[i], recurse(tbl, i + 1)
+        elseif (_size > 0) then
+            i = 1
+            size = _size
+            _size = -1
+            return _params[i], recurse(_params, i + 1)
         end
     end
 
     return tbl[1], recurse(tbl, 2)
+end
+
+function data_utils.foreach(func, ...)
+    local tbls = {...}
+
+    if (type(func) == "function") then
+        for _, tbl in ipairs(tbls) do
+            func(tbl)
+        end
+    end
+
+    return data_utils.unpack(tbls)
+end
+
+function data_utils.find_by(tbl, by, to_find)
+    if (type(tbl) ~= "table") then return end
+    -- if (type(by) ~= "string" or by:gsub("%s", "") == "") then return end
+    local by_type = type(by)
+    if (by_type ~= "string") then
+        if (by_type ~= "table" or not next(by)) then return end
+    end
+    local to_find_type = type(to_find)
+    if (to_find_type ~= "table" and to_find_type ~= "function") then return end
+
+    local found = {}
+
+    local ret = {}
+    local function recurse(_tbl, _p_tbl)
+        if (not _tbl or type(_tbl) ~= "table") then return end
+
+        local _p_tbl = _p_tbl or _tbl
+        if (not found[_tbl]) then found[_tbl] = 1 end
+
+        for k, v in pairs(_tbl) do
+            if (type(v) == "table") then
+                if (not found[v]) then
+                    found[v] = 1
+                    recurse(v, _tbl)
+                end
+            end
+        end
+
+        if (by_type == "table") then
+            for _by, _ in pairs(by) do
+                if (to_find_type == "table") then
+                    if (_tbl[_by] and (to_find[_tbl[_by]] or to_find[_by])) then
+                        ret[#ret+1] = _tbl
+                    end
+                else
+                    if (_tbl[_by] and to_find(_tbl, _by, _tbl[_by], _p_tbl)) then
+                        ret[#ret+1] = _tbl
+                    end
+                end
+            end
+        else
+            if (to_find_type == "table") then
+                if (_tbl[by] and (to_find[_tbl[by]] or table_size(to_find) == 0)) then
+                    ret[#ret+1] = _tbl
+                end
+            else
+                if (_tbl[by] and to_find(_tbl, by, _tbl[by], _p_tbl)) then
+                    ret[#ret+1] = _tbl
+                end
+            end
+        end
+
+        return ret
+    end
+
+    recurse(tbl)
+
+    return ret
 end
 
 function data_utils.table.unpack_tbl(tbl)
@@ -78,7 +162,8 @@ function data_utils.table.unpack_tbl(tbl)
             return v, recurse(tbl, k)
         end
     end
-    return recurse(tbl)
+    local _, v = next(tbl)
+    return v, recurse(tbl)
 end
 
 function data_utils.table.deepcopy(tbl)
@@ -167,6 +252,14 @@ function data_utils.table.merge(...)
     for _, tbl in pairs(tbls) do
         if (type(tbl) == "table") then
             merged_tbl = r(merged_tbl, tbl)
+
+            if (script) then
+                local mts = {
+                    [1] = getmetatable(merged_tbl),
+                    [2] = getmetatable(tbl)
+                }
+                setmetatable(merged_tbl, mts[1] and mts[2] and data_utils.table.merge(mts[1], mts[2]) or mts[2])
+            end
         -- else
         --     merged_tbl[#merged_tbl+1] = tbl
         end

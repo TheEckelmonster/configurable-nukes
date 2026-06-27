@@ -27,11 +27,12 @@ data:extend({
             { icon = "__base__/graphics/icons/ammo-category/rocket.png", },
             { icon = "__base__/graphics/icons/ammo-category/rocket.png", tint = { 7, 7, 255, 85 } },
         },
-        ammo_category = "tesla-rocket",
+        -- ammo_category = "tesla-munition",
+        ammo_category = "rocket",
         ammo_type =
         {
-            range_modifier = -1,
-            cooldown_modifier = 1000,
+            range_modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_HANDHELD_FIREABLE.name }) and Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_RANGE_MODIFIER.name }) or -1,
+            cooldown_modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.TESLA_ROCKET_COOLDOWN_MODIFIER.name }) or 8,
             target_type = "position",
             action =
             {
@@ -41,6 +42,11 @@ data:extend({
                     type = "projectile",
                     projectile = "cn-tesla-rocket",
                     starting_speed = 0.05,
+                    target_effects =
+                    {
+                        type = "script",
+                        effect_id = "cn-tesla-rocket-fired"
+                    },
                     source_effects =
                     {
                         type = "create-entity",
@@ -49,6 +55,7 @@ data:extend({
                 },
             },
         },
+        magazine_size = 10,
         subgroup = "payload",
         order = "d[warhead]-e[mjolnir]",
         inventory_move_sound = Item_Sounds.mechanical_inventory_move,

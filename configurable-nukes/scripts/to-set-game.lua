@@ -59,7 +59,7 @@ To_Set_Game = To_Set_Game or {
         require("scripts.controllers.payloader-controller"),
         require("scripts.services.circuit-network-service"),
         require("scripts.utils.ICBM-utils"),
-        -- require("scripts.utils.rocket-silo-utils"),
+        require("scripts.utils.rocket-silo-utils"),
     }
 }
 

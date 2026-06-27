@@ -30,8 +30,8 @@ data:extend({
         ammo_category = "rocket",
         ammo_type =
         {
-            range_modifier = -1,
-            cooldown_modifier = 1000,
+            range_modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_HANDHELD_FIREABLE.name }) and Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_RANGE_MODIFIER.name }) or -1,
+            cooldown_modifier = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.JERICHO_COOLDOWN_MODIFIER.name }) or 8,
             target_type = "position",
             action =
             {
@@ -40,7 +40,12 @@ data:extend({
                 {
                     type = "projectile",
                     projectile = "cn-jericho",
-                    starting_speed = 0.00001,
+                    starting_speed = 0.05,
+                    target_effects =
+                    {
+                        type = "script",
+                        effect_id = "cn-jericho-fired"
+                    },
                     source_effects =
                     {
                         type = "create-entity",
@@ -49,6 +54,7 @@ data:extend({
                 },
             },
         },
+        magazine_size = 10,
         subgroup = "payload",
         order = "d[warhead]-e[jericho]",
         inventory_move_sound = Item_Sounds.mechanical_inventory_move,

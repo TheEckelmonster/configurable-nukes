@@ -6,32 +6,32 @@ local Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-uti
 
 local se_active = mods and mods["space-exploration"] and true
 
-local do_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_DO_TINT.name, })
-local payloader_base_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_BASE_TINT.name, }) or { r = 1.0, g = 0.0, b = 0.0, a = 1.0, }
+-- local do_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_DO_TINT.name, })
+-- local payloader_base_tint = Data_Utils.get_startup_setting({ setting = Startup_Settings_Constants.settings.PAYLOADER_BASE_TINT.name, }) or { r = 1.0, g = 0.0, b = 0.0, a = 1.0, }
 
 local corpse_icon_path = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants.png"
 local corpse_icon = { icon = corpse_icon_path, size = 64, scale = 0.5, }
 local corpse_icons = { corpse_icon, }
 
-if (do_tint) then
-    corpse_icon.icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-grayscale.png"
-    corpse_icon.tint = payloader_base_tint
+-- if (do_tint) then
+--     corpse_icon.icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-grayscale.png"
+--     corpse_icon.tint = payloader_base_tint
 
-    corpse_icons =
-    {
-        corpse_icon,
-        {
-            icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-alpha.png",
-            size = 64,
-            scale = 0.5,
-        },
-        {
-            icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-final-overlay.png",
-            size = 64,
-            scale = 0.5,
-        },
-    }
-end
+--     corpse_icons =
+--     {
+--         corpse_icon,
+--         {
+--             icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-base-alpha.png",
+--             size = 64,
+--             scale = 0.5,
+--         },
+--         {
+--             icon = "__configurable-nukes__/graphics/entity/payloader/remnants/payloader-remnants-final-overlay.png",
+--             size = 64,
+--             scale = 0.5,
+--         },
+--     }
+-- end
 
 --[[ payloader-corpse ]]
 local payloader_corpse = Util.table.deepcopy(data.raw["corpse"]["assembling-machine-3-remnants"])
@@ -95,7 +95,7 @@ local icons = { icon, }
 
 if (do_tint) then
     icon.icon = "__configurable-nukes__/graphics/icons/payloader/payloader-base-grayscale.png"
-    icon.tint = payloader_base_tint
+    -- icon.tint = payloader_base_tint
 
     icons =
     {
@@ -193,63 +193,63 @@ local layers =
     },
 }
 
-if (do_tint) then
-    layers =
-    {
-        {
-            filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-grayscale.png",
-            priority = "high",
-            width = 214,
-            height = 237,
-            frame_count = 32,
-            line_length = 8,
-            shift = Util.by_pixel(0, -0.75),
-            scale = 0.5,
-        },
-        {
-            filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-grayscale.png",
-            priority = "high",
-            width = 214,
-            height = 237,
-            frame_count = 32,
-            line_length = 8,
-            shift = Util.by_pixel(0, -0.75),
-            scale = 0.5,
-            tint = { r = payloader_base_tint.r, g = payloader_base_tint.g, b = payloader_base_tint.b, a = payloader_base_tint.a * 0.85},
-        },
-        {
-            filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-alpha.png",
-            priority = "high",
-            width = 214,
-            height = 237,
-            frame_count = 32,
-            line_length = 8,
-            shift = Util.by_pixel(0, -0.75),
-            scale = 0.5,
-        },
-        {
-            filename = "__configurable-nukes__/graphics/entity/payloader/payloader-final-overlay.png",
-            priority = "high",
-            width = 214,
-            height = 237,
-            frame_count = 32,
-            line_length = 8,
-            shift = Util.by_pixel(0, -0.75),
-            scale = 0.5,
-        },
-        {
-            filename = "__base__/graphics/entity/assembling-machine-3/assembling-machine-3-shadow.png",
-            priority = "high",
-            width = 260,
-            height = 162,
-            frame_count = 32,
-            line_length = 8,
-            draw_as_shadow = true,
-            shift = Util.by_pixel(28, 4),
-            scale = 0.5,
-        },
-    }
-end
+-- if (do_tint) then
+--     layers =
+--     {
+--         {
+--             filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-grayscale.png",
+--             priority = "high",
+--             width = 214,
+--             height = 237,
+--             frame_count = 32,
+--             line_length = 8,
+--             shift = Util.by_pixel(0, -0.75),
+--             scale = 0.5,
+--         },
+--         {
+--             filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-grayscale.png",
+--             priority = "high",
+--             width = 214,
+--             height = 237,
+--             frame_count = 32,
+--             line_length = 8,
+--             shift = Util.by_pixel(0, -0.75),
+--             scale = 0.5,
+--             tint = { r = payloader_base_tint.r, g = payloader_base_tint.g, b = payloader_base_tint.b, a = payloader_base_tint.a * 0.85},
+--         },
+--         {
+--             filename = "__configurable-nukes__/graphics/entity/payloader/payloader-base-alpha.png",
+--             priority = "high",
+--             width = 214,
+--             height = 237,
+--             frame_count = 32,
+--             line_length = 8,
+--             shift = Util.by_pixel(0, -0.75),
+--             scale = 0.5,
+--         },
+--         {
+--             filename = "__configurable-nukes__/graphics/entity/payloader/payloader-final-overlay.png",
+--             priority = "high",
+--             width = 214,
+--             height = 237,
+--             frame_count = 32,
+--             line_length = 8,
+--             shift = Util.by_pixel(0, -0.75),
+--             scale = 0.5,
+--         },
+--         {
+--             filename = "__base__/graphics/entity/assembling-machine-3/assembling-machine-3-shadow.png",
+--             priority = "high",
+--             width = 260,
+--             height = 162,
+--             frame_count = 32,
+--             line_length = 8,
+--             draw_as_shadow = true,
+--             shift = Util.by_pixel(28, 4),
+--             scale = 0.5,
+--         },
+--     }
+-- end
 
 payloader.graphics_set =
 {

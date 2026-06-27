@@ -792,7 +792,7 @@ return function (params)
                 if (ammo_types) then
                     local ret = {}
                     for k, v in pairs(ammo_types) do
-                        if (v.action) then
+                        if (type(v.action) == "table") then
                             table.insert(ret, v.action)
                         end
                     end
@@ -912,7 +912,8 @@ return function (params)
         local max_stack_size = 200
         local magazine_size_modifier = 1 + (((1 + (((q + q_max)/((q + q_max) ^ 0.54321 ))) * ((q_max - 1) - (q_max - 1.3)) + ((((max_stack_size - x) ^ (2)) / max_stack_size) / max_stack_size))) /  (3)) ^ (q_max - (q_max - 1) * (q / q_max))
 
-        local modified_magazine_size = params.magazine_size * magazine_size_modifier
+        -- local modified_magazine_size = params.magazine_size * magazine_size_modifier
+        local modified_magazine_size = params.magazine_size * 1
         if (modified_magazine_size < x) then modified_magazine_size = x end
         --[[ Highest stack size (nominally 200) * legendary quality bonus (2.5) ]]
         if (modified_magazine_size > 200 * 2.5) then modified_magazine_size = 200 * 2.5 end

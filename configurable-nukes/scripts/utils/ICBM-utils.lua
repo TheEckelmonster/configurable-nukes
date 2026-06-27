@@ -40,6 +40,8 @@ local TABLE = "table"
 local USERDATA = "userdata"
 
 local E = math.exp(1)
+local E_SQUARED = E ^ 2
+local E_TO_4 = E ^ 4
 local PI = math.pi
 local HALF_PI = PI / 2
 local QUARTER_PI = PI / 4
@@ -83,6 +85,19 @@ local ICBM_Meta_Repository = require("scripts.repositories.ICBM-meta-repository"
 local Rhythm = require("scripts.rhythm")
 local Runtime_Global_Settings_Constants = require("settings.runtime-global.runtime-global-settings-constants")
 local Startup_Settings_Constants = require("settings.startup.startup-settings-constants")
+
+local cn_propulsion_active = script and script.active_mods and script.active_mods["configurable-nukes-extended-propulsion-systems"]
+
+local TOP_SPEED_MAX_SETTING = Startup_Settings_Constants.settings.BRAL_RESEARCH_TOP_SPEED_MODIFIER.name
+if (cn_propulsion_active) then TOP_SPEED_MAX_SETTING = "configurable-nukes-propulsion-systems-research-top-speed-modifier" end
+
+local top_speed_research_modifier = Data_Utils.get_startup_setting({ setting = TOP_SPEED_MAX_SETTING })
+local top_speed_modifier_max = top_speed_research_modifier
+top_speed_modifier_max =
+        top_speed_modifier_max * 8
+    +   top_speed_modifier_max * 16
+    +   top_speed_modifier_max * 32
+top_speed_modifier_max = top_speed_modifier_max * 1.5
 
 local icbm_utils = {
     space_launches_initiated = {}
@@ -279,7 +294,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
 
     if (tick and guidance_systems_modifier ~= nil) then
         --[[ TODO: Make in space top speed configurable? ]]
-        local in_space_speed_modifier = 1.66 + (2.71 * top_speed_modifier)
+        local in_space_speed_modifier = 1.66 + (E * top_speed_modifier)
 
         if (not Settings_Service.get_runtime_global_setting({ setting = Runtime_Global_Settings_Constants.settings.ICBM_PERFECT_GUIDANCE.name }) or math_abs(guidance_systems_modifier) < 1) then
             local distance_divisor = (32 / magnitude)
@@ -728,13 +743,12 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         local update_proportion_modifier = icbm_data.launched_from_space and 13/9 or 2/3
         local surface_to_orbit_complete = icbm_data.launched_from == INTERPLANETARY or icbm_data.launched_from == ORBIT
 
-        local top_speed_modifier_max = Settings_Service.get_startup_setting({ setting = Startup_Settings_Constants.settings.GUIDANCE_SYSTEMS_RESEARCH_TOP_SPEED_MODIFIER.name })
-        top_speed_modifier_max =
-                top_speed_modifier_max * 10
-            +   top_speed_modifier_max * 6
-            +   top_speed_modifier_max * 14
-            +   top_speed_modifier_max * 25
-        top_speed_modifier_max = top_speed_modifier_max * 1.5
+        -- local top_speed_modifier_max = top_speed_research_modifier
+        -- top_speed_modifier_max =
+        --         top_speed_modifier_max * 8
+        --     +   top_speed_modifier_max * 16
+        --     +   top_speed_modifier_max * 32
+        -- top_speed_modifier_max = top_speed_modifier_max * 1.5
         -- Log.warn(top_speed_modifier)
         -- Log.warn(top_speed_modifier_max)
 
@@ -773,13 +787,13 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
             if (current_speed < top_speed) then
                 local pre_update_speed = current_speed
                 -- Log.debug(current_speed)
-                current_speed = starting_speed + current_speed + (((starting_speed + (current_speed > starting_speed and (current_speed - starting_speed) or 0)) * (E ^ 4)) * (1 - 1 / E ^ ((i / 6) - 1 / 6))) ^ 0.25
+                current_speed = starting_speed + current_speed + (((starting_speed + (current_speed > starting_speed and (current_speed - starting_speed) or 0)) * (E_TO_4)) * (1 - 1 / E ^ ((i / 6) - 1 / 6))) ^ 0.25
                 -- Log.debug(current_speed)
                 current_speed = current_speed + (i * (1 - check_proportion))
                 -- Log.debug(current_speed)
                 local top_speed_proportion = 1 - (top_speed_modifier / top_speed_modifier_max)
                 -- Log.debug(top_speed_proportion)
-                current_speed = current_speed + current_speed / (1 + (2.71 ^ 2) * top_speed_proportion)
+                current_speed = current_speed + current_speed / (1 + E_SQUARED * top_speed_proportion)
                 -- Log.debug(current_speed)
                 current_speed = original_starting_speed + pre_update_speed + current_speed
                 -- Log.debug(current_speed)
@@ -826,7 +840,7 @@ function icbm_utils.on_cargo_pod_finished_ascending(data)
         storage.icbm_utils = storage.icbm_utils or {}
         storage.icbm_utils.space_launches_initiated = icbm_utils.space_launches_initiated
     else
-        local rand_additional_time = (math_log(2.71 + target_distance, 2.71) * (magnitude ^ 1.66))
+        local rand_additional_time = (math_log(E + target_distance, E) * (magnitude ^ 1.66))
         if (type(rand_additional_time) ~= NUMBER or rand_additional_time < 1 or rand_additional_time >= math_huge) then rand_additional_time = 1 end
 
         time_to_target = time_to_target + math_random(60 * rand_additional_time) * magnitude

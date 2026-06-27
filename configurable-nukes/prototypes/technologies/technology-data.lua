@@ -32,14 +32,14 @@ if (sa_active) then
     local technology = data.raw["technology"]["electric-weapons-damage-3"]
     table.insert(technology.effects, {
         type = "ammo-damage",
-        ammo_category = "tesla-rocket",
+        ammo_category = "tesla-munition",
         modifier = 0.7
     })
 
     technology = data.raw["technology"]["electric-weapons-damage-4"]
     table.insert(technology.effects, {
         type = "ammo-damage",
-        ammo_category = "tesla-rocket",
+        ammo_category = "tesla-munition",
         modifier = 0.7
     })
 end
