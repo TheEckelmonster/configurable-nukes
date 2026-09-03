@@ -1,7 +1,36 @@
 
 -- Globals
 Log = require("__TheEckelmonster-core-library__.libs.log.log")
+Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 Event_Handler = require("__TheEckelmonster-core-library__.scripts.event-handler")
+
+---
+
+CN_PREFIX = "configurable-nukes-"
+CN_PREFIX_ESCAPED = "configurable%-nukes%-"
+
+FUNCTION = "function"
+NUMBER = "number"
+STRING = "string"
+TABLE = "table"
+
+local FUNCTION = FUNCTION
+local STRING = STRING
+
+local settings_registry = { registry = {}, }
+Settings_Registry = settings_registry
+function Settings_Registry:register_setting(params)
+    if (not params) then return end
+    if (type(params.func_name) ~= STRING) then return end
+    if (type(params.func) ~= FUNCTION) then return end
+
+    if (not self or not Settings_Registry) then
+        self = self or {}
+        Settings_Registry = self
+    end
+    self.registry = self.registry or {}
+    self.registry[#self.registry+1] = { func_name = params.func_name, func = params.func, }
+end
 
 ---
 
@@ -123,5 +152,61 @@ Event_Handler:register_event({
 Event_Handler:set_event_position({
     event_name = "on_configuration_changed",
     source_name = "control.on_configuration_changed",
+    new_position = 1,
+})
+
+
+local get_runtime_global_setting = Data_Utils.get_runtime_global_setting
+local get_startup_setting = Data_Utils.get_startup_setting
+
+local ipairs = ipairs
+local type = type
+
+local string = string
+local string_find = string.find
+local string_match = string.match
+local string_gsub = string.gsub
+local string_upper = string.upper
+local CN_PREFIX_ESCAPED = CN_PREFIX_ESCAPED
+local DOT_STAR = "(.*)"
+local DASH_ESCAPED = "%-"
+local UNDERSCORE = "_"
+Event_Handler:register_event({
+    event_name = "on_runtime_mod_setting_changed",
+    source_name = "settings_map.on_runtime_mod_setting_changed",
+    func_name = "settings_map.on_runtime_mod_setting_changed",
+    func = function (event)
+        if (not event or not event.setting or not string_find(event.setting, CN_PREFIX_ESCAPED)) then return end
+        local trimmed = string_match(event.setting, CN_PREFIX_ESCAPED .. DOT_STAR)
+        local subbed_to_upper = string_upper(string_gsub(trimmed, DASH_ESCAPED, UNDERSCORE))
+
+        storage.settings_map = storage.settings_map or {}
+        storage.settings_map.runtime_global = storage.settings_map.runtime_global or {}
+        storage.settings_map.startup = storage.settings_map.startup or {}
+
+        local setting_value = nil
+        local setting = nil
+        local planet = nil
+        if (Runtime_Global_Settings_Constants.settings[subbed_to_upper]) then
+            planet = Runtime_Global_Settings_Constants.settings[subbed_to_upper].planet
+            storage.settings_map.runtime_global[event.setting] = get_runtime_global_setting({ setting = event.setting, reindex = true, })
+            setting_value = storage.settings_map.runtime_global[event.setting]
+            setting = Runtime_Global_Settings_Constants.settings[subbed_to_upper]
+        elseif (Startup_Settings_Constants.settings[subbed_to_upper]) then
+            planet = Startup_Settings_Constants.settings[subbed_to_upper].planet
+            storage.settings_map.startup[event.setting] = get_startup_setting({ setting = event.setting, reindex = true, })
+            setting_value = storage.settings_map.startup[event.setting]
+            setting = Startup_Settings_Constants.settings[subbed_to_upper]
+        end
+
+        for _, registered in ipairs(Settings_Registry.registry or {}) do
+            if (registered.func and type(registered.func) == FUNCTION) then registered.func(event, { setting_constant = setting, setting_value = setting_value, surface_name = planet, }) end
+        end
+    end,
+})
+
+Event_Handler:set_event_position({
+    event_name = "on_runtime_mod_setting_changed",
+    source_name = "settings_map.on_runtime_mod_setting_changed",
     new_position = 1,
 })

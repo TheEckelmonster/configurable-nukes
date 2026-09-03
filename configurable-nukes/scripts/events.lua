@@ -5,7 +5,6 @@ Constants = require("scripts.constants.constants")
 Custom_Events = require("prototypes.custom-events.custom-events")
 Filters = require("scripts.constants.filters")
 
-Data_Utils = require("__TheEckelmonster-core-library__.libs.utils.data-utils")
 Settings_Service = require("__TheEckelmonster-core-library__.scripts.services.settings-serivce")
 
 Startup_Settings_Constants = require("settings.startup.startup-settings-constants")

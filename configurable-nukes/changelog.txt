@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.9.13
+Date: 2026-09-03
+  Bug Fixes:
+    - Fixed runtime error stemming from an 11 month old typo/variable name flip-flop (thanks to NLskillzNL for the report!)
+  Misc:
+    - Continuing to incrementally optimize as possible
+    - 2.1 update in progress
+---------------------------------------------------------------------------------------------------
 Version: 0.9.12
 Date: 2026-06-19
   Bug Fixes:
@@ -14,11 +22,11 @@ Date: 2026-06-19
 Version: 0.9.11
 Date: 2026-06-12
   Bug Fixes:
-    - Fixed payloader automation not accepting explosives (thanks to adoline for the report)
+    - Fixed payloader automation not accepting explosives (thanks to adoline for the report!)
       - Payloader previously would do nothing if explosvies were present in the input container
       - Was still possible to manually load a payload-vehicle with explosives
       - Payloader will now properly detect and load explosives into a provided payload-vehicle
-    - Fixed payloader leaving behind input and/or output containers if deleted via script (thanks to adoline for the report)
+    - Fixed payloader leaving behind input and/or output containers if deleted via script (thanks to adoline for the report!)
       - Added missing script_raised_destroyed event handler
     - Fixed the input and/or output payloader containers losing all circuit connections when the parent payloader was rotated, flipped, or mirrored
   Misc:
@@ -89,12 +97,12 @@ Date: 2026-03-03
   Bug Fixes:
     - Fixed payloaders not retaining their inventories properly when rotated/flipped
   Compatibility:
-    - [even-pickier-dollies] Payloader input and output chests should now properly move when the parent payloader is moved (thanks to NOiZE for the report)
+    - [even-pickier-dollies] Payloader input and output chests should now properly move when the parent payloader is moved (thanks to NOiZE for the report!)
 ---------------------------------------------------------------------------------------------------
 Version: 0.9.7
 Date: 2026-03-03
   Bug Fixes:
-    - Fixed startup error when lillys-incendiaries, by IonShield was present (thanks to Naarkerotics for the report)
+    - Fixed startup error when lillys-incendiaries, by IonShield was present (thanks to Naarkerotics for the report!)
   Misc:
     - Added lillys-incendiaries as an optional dependency
       - Did a basic test of the munitions added by lillys-incendiaries as payloads, to which they all appeared to function
@@ -123,11 +131,11 @@ Date: 2026-03-03
     - Added runtime settings for payload base damage and bonus damage modifier and addition
       - These settings can be used to increase the amount of damage dealt by payload delivered items (affects all possible payloads)
   Bug Fixes:
-    - Fixed consistent UPS drops due to improper caching logic related to space-platforms (thanks to UPD-8 for the report)
-    - Fixed circuit connected rocket-silos not firing in some unknown circumstances (thanks to _Loose_Caboose_ for the report)
+    - Fixed consistent UPS drops due to improper caching logic related to space-platforms (thanks to UPD-8 for the report!)
+    - Fixed circuit connected rocket-silos not firing in some unknown circumstances (thanks to _Loose_Caboose_ for the report!)
     - Fixed desyncs when circuit launching a rocket in a single-player save opened to multiplayer (non-dedicated host)
     - Fixed jerichos not delivering properly (sub-rockets previously weren't instantiating)
-    - [combat-mechanics-overhaul] Fixed the payload projectile (the actual rocket that drops upon delivery) colliding prematurely/not delivering properly when the "Rockets blockable" setting is enabled (thanks to dragocheese for the report)
+    - [combat-mechanics-overhaul] Fixed the payload projectile (the actual rocket that drops upon delivery) colliding prematurely/not delivering properly when the "Rockets blockable" setting is enabled (thanks to dragocheese for the report!)
     - Fixed lightning bolts not instantiating when a Mjölnir is delivered
   Misc:
     - Reduced the default value for the rocket-silos processed per tick setting when Space-Exploration is present (8 -> 3)
@@ -278,7 +286,7 @@ Version: 0.8.4
 Date: 2025-11-20
   Bug Fixes:
     - Fixed immediate multiplayer desyncs if you weren't the first player to join the instance
-      - Thanks to Techjar for the report and sharing the save
+      - Thanks to Techjar for the report! and sharing the save
   Misc:
     - Set the minimum version requirement if Space-Exploration is present to 0.7.35
 ---------------------------------------------------------------------------------------------------
