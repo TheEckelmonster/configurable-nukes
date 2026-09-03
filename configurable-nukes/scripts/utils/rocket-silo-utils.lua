@@ -591,7 +591,7 @@ function rocket_silo_utils.launch_rocket(event)
                         end
 
                         if (space_location and space_location.name == surface_name) then
-                            local orbit_rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(space_location)
+                            local orbit_rocket_silo_meta_data = Rocket_Silo_Meta_Repository.get_rocket_silo_meta_data(space_location.name)
                             if (orbit_rocket_silo_meta_data and orbit_rocket_silo_meta_data.valid) then
                                 for k, v in pairs(orbit_rocket_silo_meta_data.rocket_silos) do
                                     local entity = v.entity
