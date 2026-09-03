@@ -286,7 +286,7 @@ Version: 0.8.4
 Date: 2025-11-20
   Bug Fixes:
     - Fixed immediate multiplayer desyncs if you weren't the first player to join the instance
-      - Thanks to Techjar for the report! and sharing the save
+      - Thanks to Techjar for the report and sharing the save!
   Misc:
     - Set the minimum version requirement if Space-Exploration is present to 0.7.35
 ---------------------------------------------------------------------------------------------------
